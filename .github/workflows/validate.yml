@@ -8,10 +8,11 @@ permissions:
   contents: read
 
 jobs:
-  syntax:
+  validation:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - run: sudo apt-get update && sudo apt-get install -y lua5.1
       - name: Compile Lua files
         shell: bash
@@ -28,3 +29,11 @@ jobs:
             case "$entry" in ''|'##'*|'#'*) continue ;; esac
             test -f "$entry" || { echo "Missing TOC file: $entry" >&2; exit 1; }
           done < RaidLeadAssist.toc
+      - name: Run focused behavioral regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          lua5.1 tests/test_util_database.lua
+          lua5.1 tests/test_blizzard_provider.lua
+          lua5.1 tests/test_timer_selection.lua
+          lua5.1 tests/test_raid_warning.lua
