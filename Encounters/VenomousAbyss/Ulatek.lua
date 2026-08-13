@@ -5,11 +5,14 @@ Registry:Register({
     key = "ulatek",
     name = "Ula'tek",
     encounterID = 3492,
-    strategyStatus = "Pre-live final boss; automatic call timing intentionally disabled",
+    strategyStatus = "12.1 source-reviewed; not public PTR-tested; automatic timing intentionally disabled",
     explanation = {
-        "CAUSTIC WAVES > DODGE AND KEEP VENOM OFF THE EGGS.",
-        "SPECTRAL COILS > ASSIGNED SOAKERS IN.",
-        "RAGE OF THE SHACKLED > VENOMOUS HEART EXPOSED > BURN THE HEART.",
+        "CAUSTIC WAVES: DODGE. NEVER LET A WAVE TOUCH AN EGG.",
+        "SPECTRAL COILS: ASSIGNED GROUP SOAKS THE IMPACT.",
+        "HEROIC: ROTATE COILS SOAKERS. LAST SOAKERS CANNOT HELP WITH THE NEXT ONE.",
+        "CALL OF THE SERPENT: DODGE THE FALLING ADDS, THEN KILL THEM.",
+        "RAGE: DODGE FALLING DEBRIS.",
+        "RAGE EXPOSES THE HEART. USE DPS CDS AND BURN IT.",
     },
     calls = {
         {
@@ -24,8 +27,8 @@ Registry:Register({
         {
             key = "coils",
             ability = "Spectral Coils",
-            action = "Assigned soakers in",
-            warning = "SPECTRAL COILS > ASSIGNED SOAKERS IN",
+            action = "Assigned soak group in > rotate next",
+            warning = "SPECTRAL COILS > ASSIGNED SOAK GROUP IN > ROTATE NEXT",
             voice = "Coils",
             timing = false,
             iconSpellID = 1300530,
@@ -33,8 +36,8 @@ Registry:Register({
         {
             key = "serpents",
             ability = "Call of the Serpent",
-            action = "Control and kill priority adds",
-            warning = "CALL OF THE SERPENT > CONTROL > KILL PRIORITY ADDS",
+            action = "Dodge impacts > kill adds",
+            warning = "CALL OF SERPENT > DODGE IMPACTS > KILL ADDS",
             voice = "Adds",
             timing = false,
             iconSpellID = 1300751,
@@ -42,8 +45,8 @@ Registry:Register({
         {
             key = "heart",
             ability = "Rage of the Shackled",
-            action = "Heart exposed > DPS CDs",
-            warning = "HEART EXPOSED > DPS CDS > BURN HEART",
+            action = "Dodge debris > burn heart",
+            warning = "RAGE > DODGE DEBRIS > BURN EXPOSED HEART",
             voice = "Heart",
             timing = false,
             iconSpellID = 1286860,
