@@ -7,6 +7,7 @@ local Registry = {
     encounters = {},
     encountersByID = {},
     orderedKeys = {},
+    activeDifficultyKey = "heroic",
 }
 
 local function validateProfile(encounterKey, difficultyKey, profile)
@@ -72,6 +73,18 @@ local function buildProfile(profile)
     end
 end
 
+local function applyProfileAlias(encounter, difficultyKey)
+    local profile = encounter and encounter.profiles and encounter.profiles[difficultyKey]
+    if not profile then return false end
+    encounter.explanation = profile.explanation
+    encounter.calls = profile.calls
+    encounter.callsByKey = profile.callsByKey
+    encounter.spellMap = profile.spellMap
+    encounter.nameMap = profile.nameMap
+    encounter.activeDifficultyKey = difficultyKey
+    return true
+end
+
 local function validateEncounter(definition)
     assert(type(definition.key) == "string", "Encounter requires key")
     assert(type(definition.name) == "string", "Encounter requires name")
@@ -89,6 +102,7 @@ function Registry:Register(definition)
     for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
         buildProfile(definition.profiles[difficultyKey])
     end
+    applyProfileAlias(definition, self.activeDifficultyKey)
 
     self.encounters[definition.key] = definition
     self.orderedKeys[#self.orderedKeys + 1] = definition.key
@@ -97,6 +111,19 @@ function Registry:Register(definition)
         assert(not self.encountersByID[definition.encounterID], "Duplicate encounter ID")
         self.encountersByID[definition.encounterID] = definition
     end
+end
+
+function Registry:SetActiveDifficulty(difficultyKey)
+    if not Constants.DIFFICULTIES[difficultyKey] then return false end
+    self.activeDifficultyKey = difficultyKey
+    for _, key in ipairs(self.orderedKeys) do
+        applyProfileAlias(self.encounters[key], difficultyKey)
+    end
+    return true
+end
+
+function Registry:GetActiveDifficulty()
+    return self.activeDifficultyKey
 end
 
 function Registry:Get(key)
@@ -138,6 +165,12 @@ function Registry:FindByEncounterName(name)
 end
 
 function Registry:MatchCall(encounterKey, difficultyKey, spellID, timerName)
+    if not Constants.DIFFICULTIES[difficultyKey] then
+        timerName = spellID
+        spellID = difficultyKey
+        difficultyKey = self.activeDifficultyKey
+    end
+
     local profile = self:GetProfile(encounterKey, difficultyKey)
     if not profile then return nil end
 
