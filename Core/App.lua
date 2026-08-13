@@ -14,6 +14,7 @@ local SettingsUI = ns:GetModule("UI.SettingsFrame")
 
 local App = {
     activeBossKey = nil,
+    activeDifficultyKey = "heroic",
     manualLockUntil = {},
     visualCalledUntil = {},
     audioStates = {},
@@ -39,34 +40,50 @@ end
 function App:Initialize()
     Database:Initialize()
     self.db = Database:Get()
+
     if not Registry:Get(self.db.selectedBossKey) then
         local firstEncounter = Registry:GetOrdered()[1]
         self.db.selectedBossKey = firstEncounter and firstEncounter.key or "nekzali"
     end
+    if not Constants.DIFFICULTIES[self.db.selectedDifficultyKey] then self.db.selectedDifficultyKey = "heroic" end
+
     self.activeBossKey = self.db.selectedBossKey
+    self.activeDifficultyKey = self.db.selectedDifficultyKey
+    Registry:SetActiveDifficulty(self.activeDifficultyKey)
 
     Messages:Initialize(self.db)
     Audio:Initialize(self.db)
     Timeline:SetEncounter(self.activeBossKey)
     Timeline:Initialize()
     Encounter:Initialize()
+
     if Encounter:IsActive() then
-        -- ENCOUNTER_START is not replayed after /reload. Without that event we
-        -- cannot prove that the persisted boss selection is the active boss,
-        -- so consuming its timers could produce confidently wrong callouts.
-        self.timingAllowed = Encounter:IsHeroic() and Encounter:HasKnownEncounter()
+        local difficultyKey = Encounter:GetDifficultyKey()
+        if difficultyKey then
+            self.activeDifficultyKey = difficultyKey
+            self.db.selectedDifficultyKey = difficultyKey
+            Registry:SetActiveDifficulty(difficultyKey)
+            Timeline:SetEncounter(self.activeBossKey)
+        end
+
+        self.timingAllowed = difficultyKey ~= nil and Encounter:HasKnownEncounter()
         if not Encounter:HasKnownEncounter() then
             ns:Print("Encounter already in progress after reload: automatic timing disabled until the next pull; manual buttons remain available.")
+        elseif not difficultyKey then
+            ns:Print("This encounter difficulty has no Raid Lead Assist profile; automatic timing is disabled.")
         end
     end
 
     UI:Initialize(self.db, {
         onBossSelected = function(key) self:SelectBoss(key, false) end,
+        onDifficultySelected = function(key) self:SelectDifficulty(key, false) end,
         onExplanation = function() self:SendExplanation() end,
         onCall = function(callKey) self:SendCall(callKey) end,
         onUpdate = function() self:UpdateTiming() end,
         onSettings = function() SettingsUI:Open(self.activeBossKey) end,
     })
+    UI:SetDifficulty(self.activeDifficultyKey)
+    UI:SetDifficultyLocked(Encounter:IsActive())
 
     SettingsUI:Initialize(self.db, {
         getProviderSummary = function() return Timeline:GetProviderSummary() end,
@@ -81,17 +98,25 @@ function App:Initialize()
     EventBus:On("ENCOUNTER_STARTED", self, function(owner, _, difficultyID)
         RaidWarning:CancelBriefing()
         resetTransientState(owner)
-        owner.timingAllowed = difficultyID == Constants.HEROIC_DIFFICULTY_ID
+
+        local difficultyKey = Constants.DIFFICULTY_KEY_BY_ID[difficultyID]
+        if difficultyKey then
+            owner:SelectDifficulty(difficultyKey, true)
+            owner.timingAllowed = true
+        else
+            owner.timingAllowed = false
+            ns:Print("Only Normal, Heroic, and Mythic profiles are supported; automatic timing is disabled.")
+        end
+
+        UI:SetDifficultyLocked(true)
         UI:SetSettingsEnabled(false, "Settings are available outside active encounters.")
         SettingsUI:CloseForEncounter()
-        if not owner.timingAllowed then
-            ns:Print("Heroic profile only: automatic timing disabled; manual buttons remain available.")
-        end
     end)
     EventBus:On("ENCOUNTER_ENDED", self, function(owner)
         RaidWarning:CancelBriefing()
         resetTransientState(owner)
         owner.timingAllowed = true
+        UI:SetDifficultyLocked(false)
         local settingsEnabled, settingsReason = settingsAvailability()
         UI:SetSettingsEnabled(settingsEnabled, settingsReason)
         Timeline:Reset()
@@ -119,9 +144,31 @@ function App:Initialize()
     ns:Print("Loaded. Shift-drag the header to move. /rla for commands.")
 end
 
+function App:SelectDifficulty(key, automatic)
+    if not Constants.DIFFICULTIES[key] then return false end
+
+    local liveDifficulty = Encounter:IsActive() and Encounter:GetDifficultyKey() or nil
+    if not automatic and liveDifficulty and key ~= liveDifficulty then
+        ns:Print("Difficulty tabs are locked to " .. Constants.DIFFICULTIES[liveDifficulty].name .. " during this encounter.")
+        UI:SetDifficulty(liveDifficulty)
+        return false
+    end
+
+    RaidWarning:CancelBriefing()
+    self.activeDifficultyKey = key
+    self.db.selectedDifficultyKey = key
+    Registry:SetActiveDifficulty(key)
+    resetTransientState(self)
+    Timeline:SetEncounter(self.activeBossKey, automatic == true)
+    UI:SetDifficulty(key)
+    UI:ResetCallStates()
+    return true
+end
+
 function App:SelectBoss(key, automatic)
     local encounter = Registry:Get(key)
-    if not encounter then return end
+    local profile = Registry:GetProfile(key, self.activeDifficultyKey)
+    if not encounter or not profile then return end
 
     RaidWarning:CancelBriefing()
     self.activeBossKey = key
@@ -135,19 +182,19 @@ function App:SelectBoss(key, automatic)
 end
 
 function App:SendExplanation()
-    local encounter = Registry:Get(self.activeBossKey)
-    if encounter then RaidWarning:SendBriefing(Messages:GetExplanation(self.activeBossKey)) end
+    local profile = Registry:GetProfile(self.activeBossKey, self.activeDifficultyKey)
+    if profile then RaidWarning:SendBriefing(Messages:GetExplanation(self.activeBossKey, self.activeDifficultyKey)) end
 end
 
 function App:SendCall(callKey)
-    local encounter = Registry:Get(self.activeBossKey)
-    local call = encounter and encounter.callsByKey[callKey]
+    local profile = Registry:GetProfile(self.activeBossKey, self.activeDifficultyKey)
+    local call = profile and profile.callsByKey[callKey]
     if not call then return end
 
     local now = GetTime()
     if (self.manualLockUntil[callKey] or 0) > now then return end
 
-    if RaidWarning:Send(Messages:GetCallWarning(self.activeBossKey, callKey)) then
+    if RaidWarning:Send(Messages:GetCallWarning(self.activeBossKey, self.activeDifficultyKey, callKey)) then
         self.manualLockUntil[callKey] = now + Constants.MANUAL_CLICK_LOCK_SECONDS
         Timeline:AcknowledgeCall(callKey)
         self.visualCalledUntil[callKey] = now + Constants.CALLED_FEEDBACK_SECONDS
@@ -156,12 +203,12 @@ function App:SendCall(callKey)
 end
 
 function App:UpdateTiming()
-    local encounter = Registry:Get(self.activeBossKey)
-    if not encounter then return end
+    local profile = Registry:GetProfile(self.activeBossKey, self.activeDifficultyKey)
+    if not profile then return end
 
     if not self.timingAllowed then
-        for index = 1, #encounter.calls do
-            local call = encounter.calls[index]
+        for index = 1, #profile.calls do
+            local call = profile.calls[index]
             local state = (self.visualCalledUntil[call.key] or 0) > GetTime()
                 and Constants.CallState.CALLED
                 or Constants.CallState.IDLE
@@ -171,8 +218,8 @@ function App:UpdateTiming()
         return
     end
 
-    for index = 1, #encounter.calls do
-        local call = encounter.calls[index]
+    for index = 1, #profile.calls do
+        local call = profile.calls[index]
         local _, remaining = Timeline:GetTimerForCall(call.key)
         local state = Constants.CallState.IDLE
 
@@ -242,6 +289,11 @@ function App:RegisterSlashCommands()
             if argument == "on" then self.db.audioEnabled = true end
             if argument == "off" then self.db.audioEnabled = false end
             ns:Print("Audio: " .. (self.db.audioEnabled and "on" or "off"))
+        elseif command == "difficulty" then
+            argument = argument:lower()
+            if not self:SelectDifficulty(argument, false) then
+                ns:Print("Difficulty: normal | heroic | mythic")
+            end
         elseif command == "settings" then
             SettingsUI:Open(self.activeBossKey)
         elseif command == "provider" then
@@ -250,9 +302,10 @@ function App:RegisterSlashCommands()
         elseif command == "status" then
             local summary = Timeline:GetProviderSummary()
             local difficultyID = Encounter:GetDifficultyID()
-            ns:Print(("v%s | boss=%s | encounter=%s | difficulty=%s | timing=%s | providers=%s | db=%s"):format(
+            ns:Print(("v%s | boss=%s | profile=%s | encounter=%s | difficulty=%s | timing=%s | providers=%s | db=%s"):format(
                 tostring(ns.version),
                 tostring(self.activeBossKey or "none"),
+                tostring(self.activeDifficultyKey or "none"),
                 Encounter:IsActive() and "active" or "idle",
                 tostring(difficultyID or "none"),
                 self.timingAllowed and "on" or "off",
@@ -260,7 +313,7 @@ function App:RegisterSlashCommands()
                 tostring(self.db.schemaVersion or "unknown")
             ))
         else
-            ns:Print("/rla show | hide | toggle | settings | resetpos | audio on|off | provider | status")
+            ns:Print("/rla show | hide | toggle | settings | difficulty normal|heroic|mythic | resetpos | audio on|off | provider | status")
         end
     end
 end

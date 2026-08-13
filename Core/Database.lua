@@ -3,7 +3,7 @@ local _, ns = ...
 local Util = ns:GetModule("Core.Util")
 
 local Database = {
-    SCHEMA_VERSION = 2,
+    SCHEMA_VERSION = 3,
     newerSchemaDetected = false,
 }
 
@@ -13,6 +13,11 @@ local VALID_POINTS = {
     BOTTOMLEFT = true, BOTTOM = true, BOTTOMRIGHT = true,
 }
 
+local VALID_DIFFICULTIES = {
+    normal = true,
+    heroic = true,
+    mythic = true,
+}
 
 local function cloneValue(value, seen)
     if type(value) ~= "table" then return value end
@@ -31,8 +36,9 @@ local function cloneValue(value, seen)
 end
 
 local DEFAULTS = {
-    schemaVersion = 2,
+    schemaVersion = 3,
     selectedBossKey = "nekzali",
+    selectedDifficultyKey = "heroic",
     audioEnabled = true,
     forceShown = false,
     customMessages = {},
@@ -79,10 +85,27 @@ function Database:Migrate()
     if type(self.data.audioEnabled) ~= "boolean" then self.data.audioEnabled = DEFAULTS.audioEnabled end
     if type(self.data.forceShown) ~= "boolean" then self.data.forceShown = DEFAULTS.forceShown end
     if type(self.data.selectedBossKey) ~= "string" then self.data.selectedBossKey = DEFAULTS.selectedBossKey end
+    if not VALID_DIFFICULTIES[self.data.selectedDifficultyKey] then
+        self.data.selectedDifficultyKey = DEFAULTS.selectedDifficultyKey
+    end
     if type(self.data.customMessages) ~= "table" then self.data.customMessages = {} end
 
     if version < 2 then
         self.data.customMessages = type(self.data.customMessages) == "table" and self.data.customMessages or {}
+    end
+
+    if version < 3 then
+        local migrated = {}
+        for bossKey, profile in pairs(self.data.customMessages) do
+            if type(profile) == "table" then
+                if profile.explanation ~= nil or profile.calls ~= nil then
+                    migrated[bossKey] = { heroic = profile }
+                else
+                    migrated[bossKey] = profile
+                end
+            end
+        end
+        self.data.customMessages = migrated
     end
 
     if not self.newerSchemaDetected then
