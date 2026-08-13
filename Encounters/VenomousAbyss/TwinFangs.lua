@@ -7,7 +7,7 @@ Registry:Register({
     encounterID = 3421,
     strategyStatus = "12.1 PTR source-reviewed 2026-08-13; live Heroic pending",
     explanation = {
-        "ETERNAL VENOM: 7 STACKS = DEATH.",
+        "HEROIC: ETERNAL VENOM KILLS YOU AT 8 STACKS.",
         "RAVENOUS FEAST HITS 3 TIMES. EACH HIT NEEDS 3+ PLAYERS.",
         "EACH FEAST HIT REMOVES 1 VENOM STACK FROM PLAYERS HIT.",
         "HEROIC: USE A DIFFERENT SOAK GROUP FOR EACH FEAST HIT.",
