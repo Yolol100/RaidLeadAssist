@@ -37,3 +37,4 @@ jobs:
           lua5.1 tests/test_blizzard_provider.lua
           lua5.1 tests/test_timer_selection.lua
           lua5.1 tests/test_raid_warning.lua
+          lua5.1 tests/test_bossmod_providers.lua
