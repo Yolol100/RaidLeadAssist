@@ -1,0 +1,105 @@
+local _, ns = ...
+
+local Util = ns:GetModule("Core.Util")
+
+local Database = {
+    SCHEMA_VERSION = 2,
+    newerSchemaDetected = false,
+}
+
+local VALID_POINTS = {
+    TOPLEFT = true, TOP = true, TOPRIGHT = true,
+    LEFT = true, CENTER = true, RIGHT = true,
+    BOTTOMLEFT = true, BOTTOM = true, BOTTOMRIGHT = true,
+}
+
+
+local function cloneValue(value, seen)
+    if type(value) ~= "table" then return value end
+    seen = seen or {}
+    if seen[value] then return nil end
+
+    local copy = {}
+    seen[value] = copy
+    for key, child in pairs(value) do
+        local keyType = type(key)
+        if keyType == "string" or keyType == "number" then
+            copy[key] = cloneValue(child, seen)
+        end
+    end
+    return copy
+end
+
+local DEFAULTS = {
+    schemaVersion = 2,
+    selectedBossKey = "nekzali",
+    audioEnabled = true,
+    forceShown = false,
+    customMessages = {},
+    position = {
+        point = "CENTER",
+        relativePoint = "CENTER",
+        x = 0,
+        y = 40,
+    },
+}
+
+function Database:Initialize()
+    local stored = type(RaidLeadAssistDB) == "table" and RaidLeadAssistDB or {}
+    local storedVersion = tonumber(stored.schemaVersion) or 0
+
+    if storedVersion > self.SCHEMA_VERSION then
+        self.newerSchemaDetected = true
+        self.data = Util.CopyDefaults(cloneValue(stored) or {}, DEFAULTS)
+        self:Migrate()
+        return
+    end
+
+    RaidLeadAssistDB = Util.CopyDefaults(stored, DEFAULTS)
+    self.data = RaidLeadAssistDB
+    self:Migrate()
+end
+
+function Database:Migrate()
+    local version = tonumber(self.data.schemaVersion) or 0
+    self.newerSchemaDetected = version > self.SCHEMA_VERSION
+
+    if type(self.data.position) ~= "table" then
+        self.data.position = Util.CopyDefaults({}, DEFAULTS.position)
+    else
+        self.data.position = Util.CopyDefaults(self.data.position, DEFAULTS.position)
+    end
+
+    local position = self.data.position
+    if not VALID_POINTS[position.point] or not VALID_POINTS[position.relativePoint]
+        or type(position.x) ~= "number" or type(position.y) ~= "number" then
+        self.data.position = Util.CopyDefaults({}, DEFAULTS.position)
+    end
+
+    if type(self.data.audioEnabled) ~= "boolean" then self.data.audioEnabled = DEFAULTS.audioEnabled end
+    if type(self.data.forceShown) ~= "boolean" then self.data.forceShown = DEFAULTS.forceShown end
+    if type(self.data.selectedBossKey) ~= "string" then self.data.selectedBossKey = DEFAULTS.selectedBossKey end
+    if type(self.data.customMessages) ~= "table" then self.data.customMessages = {} end
+
+    if version < 2 then
+        self.data.customMessages = type(self.data.customMessages) == "table" and self.data.customMessages or {}
+    end
+
+    if not self.newerSchemaDetected then
+        self.data.schemaVersion = self.SCHEMA_VERSION
+    end
+end
+
+function Database:Get()
+    return self.data
+end
+
+function Database:HasNewerSchema()
+    return self.newerSchemaDetected == true
+end
+
+function Database:ResetPosition()
+    self.data.position = Util.CopyDefaults({}, DEFAULTS.position)
+end
+
+ns:RegisterModule("Core.Database", Database)
