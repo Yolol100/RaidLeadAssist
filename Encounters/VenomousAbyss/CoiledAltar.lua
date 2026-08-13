@@ -1,87 +1,66 @@
 local _, ns = ...
 local Registry = ns:GetModule("Encounters.Registry")
 
+local sever = { key="sever", ability="Sever", action="Tank through venom > raid clear frontal", warning="SEVER > TANK AIM THROUGH VENOM > RAID CLEAR FRONT", voice="Sever", spellIDs={1299680} }
+local dread = { key="dreadmarch", ability="Dreadmarch", action="Break shields > fixates face ghosts", warning="DREADMARCH > BREAK SHIELDS > FIXATES FACE GHOSTS", voice="Dreadmarch", spellIDs={1289900} }
+local night = { key="nightfall", ability="Eternal Nightfall", action="Break shield > interrupt", warning="ETERNAL NIGHTFALL > BREAK SHIELD > INTERRUPT", voice="Nightfall", spellIDs={1286918} }
+local spirit = { key="spiritcackle", ability="Spiritcackle", action="Kill Soulcoilers > interrupt Wail", warning="SPIRITCACKLE > KILL SOULCOILERS > INTERRUPT WAIL", voice="Add", spellIDs={1286441} }
+local intermission = { key="intermission", ability="Soulbinding", action="Stomp one fragment at a time", warning="SOULBINDING > STOMP 1 FRAGMENT AT A TIME > SPACE STOMPS", voice="Fragments", timing=false }
+local final = { key="final", ability="Final Phase", action="Balance both > kill together", warning="FINAL PHASE > KEEP BOTH EVEN > KILL TOGETHER", voice="Final phase", timing=false, iconSpellID=1298381 }
+local function guillotine(text)
+    return { key="guillotine", ability="Guillotine", action=text, warning=text, voice="Guillotine", spellIDs={1283489,1283485,1299266}, timerNames={"Guillotine","Grim Guillotine"} }
+end
+local function gloombomb(text)
+    return { key="gloombomb", ability="Gloombomb", action=text, warning=text, voice="Bomb", spellIDs={1286895} }
+end
+
 Registry:Register({
-    key = "altar",
-    name = "The Coiled Altar",
-    encounterID = 3429,
-    strategyStatus = "12.1 Heroic plan: PTR-video + Journal reviewed 2026-08-13; live pending",
-    explanation = {
-        "P1: TANK AIM SEVER THROUGH VENOM. RAID STAYS OUT OF THE FRONTAL.",
-        "GUILLOTINE: TEAM A/B ALTERNATE 5+ SOAKS. THEN RAID MOVES 40+ YARDS FROM THE AXE.",
-        "P2: BREAK DREADMARCH SHIELDS. FIXATED PLAYERS FACE THEIR MANIFESTATIONS.",
-        "TANK AIM SOUL SEVER THROUGH MANIFESTATIONS. RAID CLEARS THE FRONTAL.",
-        "NIGHTFALL: BREAK SHIELD, THEN INTERRUPT. SPIRITCACKLE: KILL ADDS AND KICK WAIL.",
-        "GLOOMBOMB TARGETS 15+ YARDS OUT. IF GRAVEBOUND, RECLAIM YOUR SOUL FRAGMENT.",
-        "SOULBINDING: STOMP 1 FRAGMENT AT A TIME, SPACE STOMPS 2+ SEC, NONE REACH ZUL'JAN.",
-        "FINAL: KEEP BOTH BOSSES EVEN AND KILL THEM TOGETHER.",
-    },
-    calls = {
-        {
-            key = "sever",
-            ability = "Sever",
-            action = "Tank through venom > raid clear frontal",
-            warning = "SEVER > TANK AIM THROUGH VENOM > RAID CLEAR FRONT",
-            voice = "Sever",
-            spellIDs = { 1299680 },
+    key="altar", name="The Coiled Altar", encounterID=3429,
+    strategyStatus="12.1 difficulty plans source-reviewed 2026-08-13; live validation pending",
+    profiles={
+        normal={
+            explanation={
+                "P1 PLAN: TANK AIMS SEVER THROUGH VENOM; RAID STAYS OUT OF THE FRONTAL.",
+                "GUILLOTINE: TEAM A/B ALTERNATE 5+ SOAKS, THEN RAID MOVES 40+ FROM AXE.",
+                "P2: BREAK DREADMARCH SHIELDS; FIXATED PLAYERS FACE THEIR MANIFESTATIONS.",
+                "TANK AIMS SOUL SEVER THROUGH MANIFESTATIONS; RAID CLEARS THE FRONT.",
+                "NIGHTFALL: BREAK SHIELD THEN INTERRUPT. SPIRITCACKLE: KILL ADDS, KICK WAIL.",
+                "GLOOMBOMB TARGETS 15+ YARDS OUT. RECLAIM SOUL FRAGMENTS FAST.",
+                "SOULBINDING: STOMP FRAGMENTS ONE AT A TIME. FINAL: KILL BOTH TOGETHER.",
+            },
+            calls={ sever, guillotine("GUILLOTINE > NEXT 5+ TEAM SOAK > THEN RAID 40+ FROM AXE"), dread, night, spirit, gloombomb("GLOOMBOMB > TARGETS 15+ OUT > RECLAIM FRAGMENTS"), intermission, final },
         },
-        {
-            key = "guillotine",
-            ability = "Guillotine",
-            action = "Next 5+ team soak > then 40+ from axe",
-            warning = "GUILLOTINE > NEXT 5+ TEAM SOAK > THEN RAID 40+ FROM AXE",
-            voice = "Guillotine",
-            spellIDs = { 1283489, 1283485, 1299266 },
-            timerNames = { "Guillotine", "Grim Guillotine" },
+        heroic={
+            explanation={
+                "P1 PLAN: SEVER CLEARS VENOM. GUILLOTINE TEAMS A/B ALTERNATE 5+ SOAKS.",
+                "AFTER EACH GUILLOTINE, RAID MOVES 40+ YARDS FROM THE AXE EXPLOSION.",
+                "P2: BREAK DREADMARCH SHIELDS; FIXATES FACE GHOSTS FOR TANK SOUL SEVER.",
+                "NIGHTFALL: BREAK SHIELD THEN KICK. SPIRITCACKLE: KILL ADDS AND KICK WAIL.",
+                "GLOOMBOMB TARGETS 15+ OUT; ANY GRAVEBOUND PLAYER RECLAIMS FRAGMENTS FAST.",
+                "SOULBINDING: STOMP 1 FRAGMENT AT A TIME AND SPACE RAID DAMAGE.",
+                "FINAL: HANDLE OLD MECHANICS, KEEP BOTH BOSSES EVEN, KILL TOGETHER.",
+            },
+            calls={ sever, guillotine("GUILLOTINE > TEAM A/B ROTATE 5+ SOAK > THEN 40+ FROM AXE"), dread, night, spirit, gloombomb("GLOOMBOMB > 15+ OUT > GRAVEBOUND RECLAIM FRAGMENTS"), intermission, final },
         },
-        {
-            key = "dreadmarch",
-            ability = "Dreadmarch",
-            action = "Break shields > fixates face ghosts",
-            warning = "DREADMARCH > BREAK SHIELDS > FIXATES FACE GHOSTS",
-            voice = "Dreadmarch",
-            spellIDs = { 1289900 },
-        },
-        {
-            key = "nightfall",
-            ability = "Eternal Nightfall",
-            action = "Break shield > interrupt",
-            warning = "ETERNAL NIGHTFALL > BREAK SHIELD > INTERRUPT",
-            voice = "Nightfall",
-            spellIDs = { 1286918 },
-        },
-        {
-            key = "spiritcackle",
-            ability = "Spiritcackle",
-            action = "Kill Soulcoilers > interrupt Wail",
-            warning = "SPIRITCACKLE > KILL SOULCOILERS > INTERRUPT WAIL",
-            voice = "Add",
-            spellIDs = { 1286441 },
-        },
-        {
-            key = "gloombomb",
-            ability = "Gloombomb",
-            action = "Targets 15+ out > reclaim fragment",
-            warning = "GLOOMBOMB > TARGETS 15+ OUT > RECLAIM SOUL FRAGMENT",
-            voice = "Bomb",
-            spellIDs = { 1286895 },
-        },
-        {
-            key = "intermission",
-            ability = "Soulbinding",
-            action = "Stomp one fragment at a time",
-            warning = "SOULBINDING > STOMP 1 FRAGMENT AT A TIME > SPACE STOMPS 2+ SEC",
-            voice = "Fragments",
-            timing = false,
-        },
-        {
-            key = "final",
-            ability = "Final Phase",
-            action = "Balance both > kill together",
-            warning = "FINAL PHASE > KEEP BOTH EVEN > KILL TOGETHER",
-            voice = "Final phase",
-            timing = false,
-            iconSpellID = 1298381,
+        mythic={
+            explanation={
+                "P1 PLAN: PERMANENT GUILLOTINED MEANS EVERY AXE USES A FRESH 5+ SOAK TEAM.",
+                "AXEGRINDERS NEVER DESPAWN: KEEP MOVEMENT LANES CLEAN AND DO NOT WASTE SPACE.",
+                "DREAD GHOSTS ARE PERSONAL: FIXATED PLAYERS FACE THEM AND KEEP GHOSTS APART.",
+                "SOUL SEVER KILLS GHOSTS. WAIL INTERRUPTS BRIEFLY REVEAL HIDDEN GHOSTS.",
+                "SPIRITCACKLE: AIM GLOOMBOMBS INTO SOULCOILERS TO REMOVE SPIRIT SHIELDS.",
+                "TOXIC DELUGE MUTATIONS MUST BE SPACED; NEVER CHAIN VENOM RUPTURES.",
+                "SOULBINDING: SPACE FRAGMENT STOMPS. FINAL: KEEP BOTH EVEN, KILL TOGETHER.",
+            },
+            calls={
+                sever,
+                guillotine("GUILLOTINE > FRESH 5+ SOAK TEAM > THEN RAID 40+ FROM AXE"),
+                dread, night,
+                { key="spiritcackle", ability="Spiritcackle", action="Gloombombs strip shields > kick Wail", warning="SPIRITCACKLE > AIM GLOOMBOMBS INTO SOULCOILERS > INTERRUPT WAIL", voice="Add", spellIDs={1286441} },
+                gloombomb("GLOOMBOMB > AIM AT SOULCOILER SHIELDS > THEN RECLAIM FRAGMENTS"),
+                { key="toxic", ability="Toxic Deluge", action="Spread mutations > no chain ruptures", warning="TOXIC DELUGE > SPREAD MUTATIONS > DO NOT CHAIN VENOM RUPTURES", voice="Spread", spellIDs={1299960} },
+                intermission, final,
+            },
         },
     },
 })

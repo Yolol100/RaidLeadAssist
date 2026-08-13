@@ -1,22 +1,8 @@
 local _, ns = ...
 local Registry = ns:GetModule("Encounters.Registry")
 
-Registry:Register({
-    key = "sentinels",
-    name = "Entombed Sentinels",
-    encounterID = 3445,
-    strategyStatus = "12.1 Heroic plan: YouTube-guide + Journal reviewed 2026-08-13; live pending",
-    explanation = {
-        "SPLIT INTO 2 FIXED TEAMS. KEEP THE BOSSES 30+ YARDS APART.",
-        "KEEP BOTH BOSS HEALTH BARS EVEN BEFORE EVERY STASIS.",
-        "BREATH TEAM: KILL COAGULATION FAST AND ASSIGNED PLAYERS STEP ON DROPLETS.",
-        "BLOOD TEAM: MIASMA TARGET STACKS AT THE BLOOD MARK.",
-        "BLIGHTED BLOOD TARGETS MOVE TO THE EDGE, THEN HEALERS DISPEL THEM THERE.",
-        "STASIS: USE FIXED 4-PLAYER TOXIN GROUPS. MAKE TWO PAIRS, THEN JOIN THE PAIRS.",
-        "TOXIN MUST REACH EXACTLY 4. WHEN CLEARED, STOP TOUCHING PLAYERS.",
-        "AFTER STASIS: RE-SPLIT IMMEDIATELY AND SEPARATE THE BOSSES AGAIN.",
-    },
-    calls = {
+local function baseCalls()
+    return {
         {
             key = "balance",
             ability = "Boss Health",
@@ -28,8 +14,8 @@ Registry:Register({
         {
             key = "stasis",
             ability = "Vitriolic Stasis",
-            action = "4-player groups > pair > join pairs > clear at 4",
-            warning = "STASIS > 4-PLAYER GROUPS > PAIR > JOIN PAIRS > CLEAR AT EXACTLY 4",
+            action = "4-player groups > clear at exactly 4",
+            warning = "STASIS > FIXED 4-PLAYER GROUPS > CLEAR TOXIN AT EXACTLY 4",
             voice = "Stasis",
             spellIDs = { 1284588 },
         },
@@ -64,6 +50,60 @@ Registry:Register({
             warning = "BLIGHTED BLOOD > TARGETS EDGE > DISPEL THERE",
             voice = "Dispel",
             spellIDs = { 1284483 },
+        },
+    }
+end
+
+local normalCalls = baseCalls()
+local heroicCalls = baseCalls()
+local mythicCalls = baseCalls()
+mythicCalls[#mythicCalls + 1] = {
+    key = "protovenom",
+    ability = "Shifting Protovenom",
+    action = "Marked players pair > avoid clean players",
+    warning = "PROTOVENOM > MARKED PLAYERS PAIR TOGETHER > AVOID CLEAN PLAYERS",
+    voice = "Pair",
+    spellIDs = { 1296878 },
+}
+
+Registry:Register({
+    key = "sentinels",
+    name = "Entombed Sentinels",
+    encounterID = 3445,
+    strategyStatus = "12.1 difficulty plans source-reviewed 2026-08-13; live validation pending",
+    profiles = {
+        normal = {
+            explanation = {
+                "PLAN: SPLIT INTO 2 FIXED TEAMS AND KEEP THE BOSSES 30+ YARDS APART.",
+                "KEEP BOTH BOSS HEALTH BARS EVEN BEFORE EACH STASIS.",
+                "BREATH TEAM: KILL COAGULATION FAST; ASSIGNED PLAYERS STEP ON DROPLETS.",
+                "BLOOD TEAM: MIASMA STACKS AT THE MARK; BLOOD TARGETS GO EDGE FOR DISPEL.",
+                "STASIS: FIXED 4-PLAYER GROUPS TOUCH UNTIL TOXIN IS EXACTLY 4.",
+                "WHEN YOUR TOXIN CLEARS, STOP TOUCHING PEOPLE. THEN RE-SPLIT FAST.",
+            },
+            calls = normalCalls,
+        },
+        heroic = {
+            explanation = {
+                "PLAN: TWO FIXED TEAMS, BOSSES 30+ YARDS APART, HEALTH KEPT EVEN.",
+                "BREATH TEAM: KILL COAGULATION; ASSIGNED PLAYERS STEP ON DROPLETS.",
+                "LIVING VENOM RETURNS: CONTROL IT AND DO NOT LET IT REACH THE BOSS.",
+                "BLOOD TEAM: MIASMA AT MARK; BLOOD TARGETS DROP THEIR POOLS AT THE EDGE.",
+                "STASIS: FIXED 4-PLAYER GROUPS. MAKE PAIRS, JOIN PAIRS, CLEAR AT EXACTLY 4.",
+                "AFTER STASIS: RE-SPLIT IMMEDIATELY AND SEPARATE THE BOSSES AGAIN.",
+            },
+            calls = heroicCalls,
+        },
+        mythic = {
+            explanation = {
+                "PLAN: HEROIC SPLIT PLUS FIXED PROTOVENOM PAIRS.",
+                "KEEP BOSSES 30+ APART AND HEALTH EVEN BEFORE EVERY STASIS.",
+                "BREATH: KILL SLIME, STOMP DROPLETS. BLOOD: MIASMA MARK, POOLS AT EDGE.",
+                "PROTOVENOM: MARKED PLAYERS PAIR TOGETHER; NEVER TOUCH CLEAN PLAYERS.",
+                "STASIS: FIXED 4-PLAYER GROUPS PAIR, JOIN PAIRS, CLEAR AT EXACTLY 4.",
+                "AFTER STASIS: RE-SPLIT FAST AND RETURN TO YOUR ORIGINAL SIDE.",
+            },
+            calls = mythicCalls,
         },
     },
 })

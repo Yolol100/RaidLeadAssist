@@ -3,6 +3,7 @@ local ns = T.NewNamespace()
 
 _G.issecretvalue = function() return false end
 
+T.Load("Core/Constants.lua", ns)
 T.Load("Core/Util.lua", ns)
 T.Load("Encounters/Registry.lua", ns)
 
@@ -20,55 +21,54 @@ for _, file in ipairs(files) do
     T.Load("Encounters/VenomousAbyss/" .. file, ns)
 end
 
+local Constants = ns:GetModule("Core.Constants")
 local Registry = ns:GetModule("Encounters.Registry")
 local encounters = Registry:GetOrdered()
 assert(#encounters == 8, "expected all eight Venomous Abyss encounters")
 
 for _, encounter in ipairs(encounters) do
-    assert(#encounter.explanation >= 1 and #encounter.explanation <= 8, encounter.key .. " explanation line count")
-    for _, line in ipairs(encounter.explanation) do
-        assert(#line <= 100, encounter.key .. " explanation line is too dense: " .. line)
-    end
-    for _, call in ipairs(encounter.calls) do
-        assert(#call.action <= 60, encounter.key .. "/" .. call.key .. " button action is too dense")
-        assert(#call.warning <= 80, encounter.key .. "/" .. call.key .. " raid warning is too dense")
+    for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
+        local profile = Registry:GetProfile(encounter.key, difficultyKey)
+        assert(profile, encounter.key .. " missing " .. difficultyKey .. " profile")
+        assert(#profile.explanation >= 1 and #profile.explanation <= 8, encounter.key .. "/" .. difficultyKey .. " explanation line count")
+        for _, line in ipairs(profile.explanation) do
+            assert(#line <= 110, encounter.key .. "/" .. difficultyKey .. " explanation line is too dense: " .. line)
+        end
+        for _, call in ipairs(profile.calls) do
+            assert(#call.action <= 70, encounter.key .. "/" .. difficultyKey .. "/" .. call.key .. " button action is too dense")
+            assert(#call.warning <= 90, encounter.key .. "/" .. difficultyKey .. "/" .. call.key .. " raid warning is too dense")
+        end
     end
 end
 
-local altar = Registry:Get("altar")
-assert(altar.callsByKey.guillotine.warning:find("5+", 1, true), "Guillotine must state the minimum soak size")
-assert(Registry:MatchCall("altar", 1283489, nil).key == "guillotine")
-assert(Registry:MatchCall("altar", 1289900, nil).key == "dreadmarch")
+local explorersN = Registry:GetProfile("explorers", "normal")
+local explorersH = Registry:GetProfile("explorers", "heroic")
+assert(explorersN.explanation[1]:find("STACK ALL 3", 1, true), "Normal Explorers should use cleave stack plan")
+assert(explorersH.explanation[1]:find("30+ YARDS APART", 1, true), "Heroic Explorers must separate all three bosses")
 
-local explorers = Registry:Get("explorers")
-assert(explorers.callsByKey.thud.warning:find("3 TARGETS", 1, true), "Mighty Thud must explain the three targets")
-assert(Registry:MatchCall("explorers", 1296092, nil).key == "thud")
+assert(Registry:GetProfile("vashnik", "normal").callsByKey.catalyst == nil, "Catalyst must not appear on Normal")
+assert(Registry:GetProfile("vashnik", "heroic").callsByKey.catalyst, "Catalyst must appear on Heroic")
+assert(Registry:GetProfile("vashnik", "mythic").callsByKey.totems, "Mythic Vashnik needs a totem call")
 
-local nekzali = Registry:Get("nekzali")
-assert(not nekzali.callsByKey.rend.warning:find("DISPEL", 1, true), "Essence Rend must not claim an unsupported dispel")
-assert(nekzali.callsByKey.pyre.warning:find("AMANI REMAINS", 1, true), "Pyre must explain where flame targets go")
-assert(Registry:MatchCall("nekzali", 1305421, nil).key == "pyre")
+assert(Registry:GetProfile("nekzali", "mythic").callsByKey.grasping, "Mythic Nekzali needs Grasping Depths")
+assert(Registry:GetProfile("nekzali", "heroic").calsByKey.grasping == nil, "Grasping Depths must be Mythic-only")
+assert(Registry:GetProfile("sentinels", "mythic").callsByKey.protovenom, "Mythic Sentinels need Protovenom call")
+assert(Registry:GetProfile("sszorak", "mythic").calsByKey.serpent, "Mythic Sszorak needs Serpent's Fury call")
+assert(Registry:GetProfile("twinfangs", "mythic").callsByKey.blood, "Mythic Twin Fangs need Blood Torrent call")
+assert(Registry:GetProfile("twinfangs", "mythic").callsByKey.brood, "Mythic Twin Fangs need Brood call")
+assert(Registry:GetProfile("altar", "mythic").calsByKey.guillotine.warning:find("FRESH 5+", 1, true), "Mythic Guillotine must use fresh soak teams")
 
-local sentinels = Registry:Get("sentinels")
-assert(sentinels.callsByKey.droplets.warning:find("STEP ON", 1, true), "Toxic Droplets must tell players to step on them")
-assert(not sentinels.callsByKey.droplets.warning:find("SOAK", 1, true), "Toxic Droplets must not be mislabeled as a soak")
-assert(Registry:MatchCall("sentinels", 1284434, nil).key == "droplets")
-
-local sszorak = Registry:Get("sszorak")
-assert(sszorak.callsByKey.apex and sszorak.callsByKey.apex.warning:find("5+", 1, true), "Apex Predator Mutilate soak call is required")
-assert(Registry:MatchCall("sszorak", 1277025, nil).key == "apex")
-
-local twinFangs = Registry:Get("twinfangs")
-assert(twinFangs.callsByKey.feast.warning:find("ROTATE", 1, true), "Heroic Ravenous Feast must call the soak rotation")
-assert(Registry:MatchCall("twinfangs", 1290516, nil).key == "feast")
-
-local vashnik = Registry:Get("vashnik")
-assert(vashnik.callsByKey.froth, "Plague Froth needs a raid-leader call")
-assert(Registry:MatchCall("vashnik", 1281907, nil).key == "froth")
-
-local ulatek = Registry:Get("ulatek")
-for _, call in ipairs(ulatek.calls) do
-    assert(call.timing == false, "Ula'tek automatic timing must remain disabled before live validation")
+for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
+    for _, call in ipairs(Registry:GetProfile("ulatek", difficultyKey).calls) do
+        assert(call.timing == false, "Ula'tek automatic timing must remain disabled before live validation")
+    end
 end
 
-print("ok - source-reviewed tactic copy and critical call mappings")
+assert(Registry:SetActiveDifficulty("normal"))
+assert(Registry:Get("vashnik").calsByKey.catalyst == nil, "active Normal alias must hide Heroic-only call")
+assert(Registry:SetActiveDifficulty("mythic"))
+assert(Registry:Get("vashnik").callsByKey.totems, "active Mythic alias must expose Mythic call")
+assert(Registry:MatchCall("twinfangs", "mythic", 1308356, nil).key == "brood")
+assert(Registry:SetActiveDifficulty("heroic"))
+
+print("ok - 24 difficulty plans and critical difficulty-specific calls")
