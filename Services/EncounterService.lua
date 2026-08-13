@@ -67,6 +67,10 @@ function EncounterService:IsActive()
     return self.currentEncounter ~= nil or self:IsNativeEncounterInProgress()
 end
 
+function EncounterService:HasKnownEncounter()
+    return self.currentEncounter ~= nil
+end
+
 function EncounterService:GetDifficultyID()
     if self.currentDifficultyID ~= nil then return self.currentDifficultyID end
     if self:IsNativeEncounterInProgress() then

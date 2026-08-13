@@ -51,7 +51,13 @@ function App:Initialize()
     Timeline:Initialize()
     Encounter:Initialize()
     if Encounter:IsActive() then
-        self.timingAllowed = Encounter:IsHeroic()
+        -- ENCOUNTER_START is not replayed after /reload. Without that event we
+        -- cannot prove that the persisted boss selection is the active boss,
+        -- so consuming its timers could produce confidently wrong callouts.
+        self.timingAllowed = Encounter:IsHeroic() and Encounter:HasKnownEncounter()
+        if not Encounter:HasKnownEncounter() then
+            ns:Print("Encounter already in progress after reload: automatic timing disabled until the next pull; manual buttons remain available.")
+        end
     end
 
     UI:Initialize(self.db, {
