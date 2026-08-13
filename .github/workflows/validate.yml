@@ -33,7 +33,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          lua5.1 tests/test_util_database.lua
-          lua5.1 tests/test_blizzard_provider.lua
-          lua5.1 tests/test_timer_selection.lua
-          lua5.1 tests/test_raid_warning.lua
+          for file in tests/test_*.lua; do
+            lua5.1 "$file"
+          done
