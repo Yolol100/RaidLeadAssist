@@ -10,8 +10,8 @@ Registry:Register({
         "VENOMOUS SURGE TARGETS: MOVE AWAY FROM THE RAID. YOU LEAVE CYSTS.",
         "CYSTS KNOCK THE RAID BUT GIVE A SHORT STICKY EFFECT AGAINST KNOCKBACK.",
         "RAGING CROSSWINDS: FOLLOW YOUR PERSONAL KNOCK DIRECTION.",
-        "MAELSTROM: USE THE CYST STICKY EFFECT AND STAY ON THE PLATFORM.",
-        "MAELSTROM IS A DAMAGE WINDOW. USE DPS CDS.",
+        "BEFORE MAELSTROM: POP A CYST SO THE RAID GETS THE STICKY EFFECT.",
+        "MAELSTROM: STAY ON THE PLATFORM AND USE DPS CDS.",
         "APEX PREDATOR: TANK COMBO. MUTILATE NEEDS 5+ PLAYERS IN THE FRONTAL.",
     },
     calls = {
@@ -26,8 +26,8 @@ Registry:Register({
         {
             key = "maelstrom",
             ability = "Howling Maelstrom",
-            action = "Use cyst adhesion > DPS CDs > stay on platform",
-            warning = "MAELSTROM > USE CYST ADHESION > DPS CDS > STAY ON PLATFORM",
+            action = "Pop cyst > stay on platform > DPS CDs",
+            warning = "MAELSTROM > POP CYST > STAY ON PLATFORM > DPS CDS",
             voice = "Maelstrom",
             spellIDs = { 1285732 },
         },
