@@ -8,7 +8,7 @@ local started, stopped, paused = {}, {}, {}
 _G.issecretvalue = function(value) return value == SECRET end
 _G.table.wipe = _G.table.wipe or function(tbl) for key in pairs(tbl) do tbl[key] = nil end end
 _G.BigWigsLoader = {
-    RegisterMessage = function(_, owner, name, callback) bwMessages[name] = callback end,
+    RegisterMessage = function(owner, name, callback) bwMessages[name] = callback end,
     UnregisterMessage = function() end,
 }
 _G.DBM = {
