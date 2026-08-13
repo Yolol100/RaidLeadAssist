@@ -2,9 +2,24 @@ local _, ns = ...
 
 local Constants = {
     ADDON_NAME = "Raid Lead Assist",
-    RAID_NAME = "THE VENOMOUS ABYSS · HEROIC",
+    RAID_NAME = "THE VENOMOUS ABYSS",
     INSTANCE_ID = 3004,
+
+    NORMAL_DIFFICULTY_ID = 14,
     HEROIC_DIFFICULTY_ID = 15,
+    MYTHIC_DIFFICULTY_ID = 16,
+
+    DIFFICULTY_ORDER = { "normal", "heroic", "mythic" },
+    DIFFICULTIES = {
+        normal = { key = "normal", name = "Normal", label = "NORMAL", id = 14 },
+        heroic = { key = "heroic", name = "Heroic", label = "HEROIC", id = 15 },
+        mythic = { key = "mythic", name = "Mythic", label = "MYTHIC", id = 16 },
+    },
+    DIFFICULTY_KEY_BY_ID = {
+        [14] = "normal",
+        [15] = "heroic",
+        [16] = "mythic",
+    },
 
     PREPARE_SECONDS = 5,
     PRESS_SECONDS = 3,
