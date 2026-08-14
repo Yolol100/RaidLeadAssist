@@ -72,6 +72,12 @@ local function sourceClass(timer)
     return timer and timer.providerName or nil
 end
 
+local function acknowledgementSource(timer)
+    if not timer then return nil end
+    if timer.bridge == "Blizzard" then return "BigWigs:Blizzard" end
+    return timer.providerName
+end
+
 local function isBetterCandidate(candidate, candidateRemaining, current, currentRemaining)
     if not current then return true end
 
@@ -95,6 +101,12 @@ end
 
 local function isSameOccurrence(candidate, existing)
     if not candidate or not existing or candidate.call ~= existing.call then return false end
+
+    -- Never let an expired representation drag a freshly started mechanic into
+    -- the previous occurrence merely because their end times happen to be close.
+    if existing.paused ~= true and isFiniteNumber(existing.expiration) and existing.expiration <= GetTime() then
+        return false
+    end
 
     if candidate.nativeEventID ~= nil and existing.nativeEventID ~= nil
         and candidate.nativeEventID == existing.nativeEventID then
@@ -206,6 +218,15 @@ function TimelineService:IsRecentlyAcknowledged(timer)
     self:PruneRecentAcknowledgements()
     local acknowledgement = self.recentAcknowledgements[timer.call.key]
     if not acknowledgement then return false end
+
+    -- Recent acknowledgement memory exists for a representation that arrives
+    -- late from another provider. The same provider starting again after an
+    -- explicit stop is a new lifecycle boundary and must be allowed to re-arm.
+    local source = acknowledgementSource(timer)
+    if source and acknowledgement.sources and acknowledgement.sources[source] then
+        return false
+    end
+
     return math.abs(timer.expiration - acknowledgement.expiration) <= Constants.DUPLICATE_TIMER_TOLERANCE
 end
 
@@ -255,7 +276,23 @@ function TimelineService:ProviderTimerStarted(providerName, sourceID, data)
 
     local id = timerID(providerName, sourceID)
     local now = GetTime()
-    local timer = self.timers[id] or { id = id }
+    local existing = self.timers[id]
+    local previousOccurrenceID
+    local previousAcknowledged = false
+    local previousCallKey
+
+    -- Bossmods can refresh/correct a live bar by sending another Begin/Start for
+    -- the same source ID instead of an Update callback. Preserve the occurrence
+    -- and acknowledgement while that old bar is still live; an explicit stop or
+    -- expiry remains the boundary that permits a genuinely new occurrence.
+    if existing and (existing.paused == true
+        or (isFiniteNumber(existing.expiration) and existing.expiration > now)) then
+        previousOccurrenceID = existing.occurrenceID
+        previousAcknowledged = existing.acknowledged == true
+        previousCallKey = existing.call and existing.call.key or nil
+    end
+
+    local timer = existing or { id = id }
     timer.sourceID = tostring(sourceID)
     timer.providerName = providerName
     timer.key = publicValue(data.key)
@@ -273,7 +310,13 @@ function TimelineService:ProviderTimerStarted(providerName, sourceID, data)
     timer.occurrenceID = nil
 
     self:MatchTimer(timer)
-    self:AssignOccurrence(timer)
+    local matchedCallKey = timer.call and timer.call.key or nil
+    if previousOccurrenceID and previousCallKey ~= nil and matchedCallKey == previousCallKey then
+        timer.occurrenceID = previousOccurrenceID
+        timer.acknowledged = previousAcknowledged
+    else
+        self:AssignOccurrence(timer)
+    end
 
     self.timers[id] = timer
     EventBus:Emit("TIMELINE_CHANGED")
@@ -430,6 +473,7 @@ function TimelineService:AcknowledgeCall(callKey)
     local now = GetTime()
     local selectedRemaining = self:GetRemaining(selected)
     local selectedExpiration = now + (type(selectedRemaining) == "number" and selectedRemaining or 0)
+    local acknowledgedSources = {}
 
     for _, timer in pairs(self.timers) do
         if timer.call and timer.call.key == callKey and not timer.acknowledged then
@@ -438,6 +482,8 @@ function TimelineService:AcknowledgeCall(callKey)
             local expiration = now + (type(remaining) == "number" and remaining or 0)
             if sameOccurrence or math.abs(expiration - selectedExpiration) <= Constants.DUPLICATE_TIMER_TOLERANCE then
                 timer.acknowledged = true
+                local source = acknowledgementSource(timer)
+                if source then acknowledgedSources[source] = true end
             end
         end
     end
@@ -445,6 +491,7 @@ function TimelineService:AcknowledgeCall(callKey)
     self.recentAcknowledgements[callKey] = {
         expiration = selectedExpiration,
         expiresAt = now + Constants.RECENT_ACKNOWLEDGEMENT_SECONDS,
+        sources = acknowledgedSources,
     }
 
     EventBus:Emit("TIMELINE_CHANGED")
