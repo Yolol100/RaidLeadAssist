@@ -2,11 +2,21 @@
 
 Raid Lead Assist is a raid-leader callout panel for The Venomous Abyss with separate Normal, Heroic, and Mythic strategy profiles.
 
-The main panel has three difficulty tabs. Each tab can define its own pre-pull raid plan, combat call buttons, Raid Warning text, timer identities, and optional per-call PREPARE/PRESS windows. Outside combat the raid leader can switch freely. When a supported encounter starts, the panel automatically selects and locks to the actual Normal, Heroic, or Mythic difficulty so calls cannot accidentally come from the wrong profile. Manual difficulty changes are blocked for the entire active encounter, including re-selecting the currently active difficulty, so a slash command cannot reset live timer state. Manual boss changes are also blocked while the current encounter is known; automatic encounter selection remains allowed.
+The main panel has three difficulty tabs. Each tab can define its own pre-pull raid plan, combat call buttons, Raid Warning text, timer identities, optional per-call PREPARE/PRESS windows, and boss-specific assignments. Outside combat the raid leader can switch freely. When a supported encounter starts, the panel automatically selects and locks to the actual Normal, Heroic, or Mythic difficulty so calls cannot accidentally come from the wrong profile. Manual difficulty changes are blocked for the entire active encounter, including re-selecting the currently active difficulty, so a slash command cannot reset live timer state. Manual boss changes are also blocked while the current encounter is known; automatic encounter selection remains allowed.
+
+## Boss assignments
+
+Assignments are configured before combat through the `ASSIGN` launcher on the main panel, the `ASSIGNMENTS` button in Settings, or `/rla assignments`. The editor is intentionally encounter-specific: it does not show one generic form for every boss. Each boss and difficulty defines only the assignment blocks its tactic needs, such as split teams, fixed four-player groups, soak rotations, crate/fish jobs, mobile coverage teams, interrupt rotations, egg owners, or intercept rotations.
+
+Every assignment slot accepts free text and also has a `ROSTER` picker. The picker reads the current party or raid roster and lets the raid leader select individual names or quickly toggle a complete current raid subgroup with G1-G8. Saved values are stored separately for every boss and difficulty.
+
+`ANNOUNCE` sends the filled assignment plan as pre-pull Raid Warnings. During combat, manual call buttons remain raid-leader controlled; when a call has a configured fixed assignment or rotation, Raid Lead Assist appends the relevant player/group text to that Raid Warning. Rotation counters reset between pulls and when the selected boss or difficulty changes. Raid Lead Assist does not inspect protected combat state to choose a player or alter the pre-pull plan.
+
+Assignment editing is blocked during an active encounter and during combat. Existing custom Raid Warning text remains a separate Settings workflow.
 
 Settings edits are bound to the currently selected difficulty. While Settings is open, manual difficulty changes are blocked so an in-progress Raid Warning draft cannot silently move between Normal, Heroic, and Mythic. Encounter-start difficulty selection is still allowed and closes/discards an open draft through the existing encounter safety path.
 
-Existing custom Raid Warning text from the previous Heroic-only schema migrates into the Heroic profile. Normal and Mythic customizations are stored separately.
+Existing custom Raid Warning text from the previous Heroic-only schema migrates into the Heroic profile. Normal and Mythic customizations are stored separately. Schema 4 adds isolated assignment storage without changing existing message overrides.
 
 ## Timer sources
 
@@ -38,6 +48,6 @@ On successful pushes to `main`, GitHub Actions retains the byte-verified `RaidLe
 
 ## Validation
 
-GitHub Actions compile every Lua file with Lua 5.1, verify the active TOC inventory, and run focused behavioral regressions for saved-variable schema safety, difficulty-profile isolation, Settings difficulty locking, active-encounter boss/difficulty locking, confirmation-dialog cancellation, Midnight secret-value handling at both adapter and service boundaries, Blizzard Encounter Timeline invalid-event races, real BigWigs/DBM callback shapes, provider precision, stable timer occurrence identity across provider updates, multi-provider timer selection/deduplication, late-provider acknowledgement, per-call timing boundaries, raid-warning pre-pull cancellation, and the 24 Normal/Heroic/Mythic encounter plans. CI then builds and byte-verifies the exact clean release ZIP inventory before retaining the verified main-branch artifact.
+GitHub Actions compile every Lua file with Lua 5.1, verify the active TOC inventory, and run focused behavioral regressions for saved-variable schema safety, difficulty-profile isolation, boss-specific assignment layouts, assignment validation and rotation reset, Settings difficulty locking, active-encounter boss/difficulty locking, confirmation-dialog cancellation, Midnight secret-value handling at both adapter and service boundaries, Blizzard Encounter Timeline invalid-event races, real BigWigs/DBM callback shapes, provider precision, stable timer occurrence identity across provider updates, multi-provider timer selection/deduplication, late-provider acknowledgement, per-call timing boundaries, raid-warning pre-pull cancellation, and the 24 Normal/Heroic/Mythic encounter plans. CI then builds and byte-verifies the exact clean release ZIP inventory before retaining the verified main-branch artifact.
 
 These automated checks are source and controlled-runtime evidence. They do not replace live Retail raid tests with Blizzard timelines, current BigWigs, and current DBM present.
