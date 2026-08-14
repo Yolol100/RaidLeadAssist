@@ -30,6 +30,7 @@ local function timerID(providerName, sourceID)
 end
 
 local function isFiniteNumber(value)
+    if Util.IsSecret(value) then return false end
     return type(value) == "number" and value == value and value > -math.huge and value < math.huge
 end
 
@@ -37,7 +38,14 @@ local function validSourceID(sourceID)
     return not Util.IsSecret(sourceID) and (type(sourceID) == "string" or type(sourceID) == "number")
 end
 
+local function publicValue(value)
+    if Util.IsSecret(value) then return nil end
+    return value
+end
+
 local function normalizePrecision(value, providerName, bridge)
+    value = publicValue(value)
+    bridge = publicValue(bridge)
     if value == Constants.TimerPrecision.NATIVE
         or value == Constants.TimerPrecision.EXACT
         or value == Constants.TimerPrecision.APPROXIMATE then
@@ -250,13 +258,13 @@ function TimelineService:ProviderTimerStarted(providerName, sourceID, data)
     local timer = self.timers[id] or { id = id }
     timer.sourceID = tostring(sourceID)
     timer.providerName = providerName
-    timer.key = data.key
-    timer.name = data.name
-    timer.icon = data.icon
+    timer.key = publicValue(data.key)
+    timer.name = publicValue(data.name)
+    timer.icon = publicValue(data.icon)
     timer.duration = data.duration
-    timer.nativeEventID = data.nativeEventID
-    timer.bridge = data.bridge
-    timer.precision = normalizePrecision(data.precision, providerName, data.bridge)
+    timer.nativeEventID = publicValue(data.nativeEventID)
+    timer.bridge = publicValue(data.bridge)
+    timer.precision = normalizePrecision(data.precision, providerName, timer.bridge)
     timer.startedAt = now
     timer.expiration = now + data.duration
     timer.paused = false
@@ -293,7 +301,7 @@ function TimelineService:ProviderTimerUpdated(providerName, sourceID, elapsed, t
 end
 
 function TimelineService:ProviderTimerPaused(providerName, sourceID, paused)
-    if not self.activeProviders[providerName] or not validSourceID(sourceID) then return end
+    if not self.activeProviders[providerName] or not validSourceID(sourceID) or Util.IsSecret(paused) then return end
 
     local timer = self.timers[timerID(providerName, sourceID)]
     if not timer then return end

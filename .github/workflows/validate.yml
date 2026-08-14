@@ -36,3 +36,5 @@ jobs:
           for file in tests/test_*.lua; do
             lua5.1 "$file"
           done
+      - name: Build and verify release ZIP
+        run: python3 scripts/build_release.py --output /tmp/RaidLeadAssist.zip

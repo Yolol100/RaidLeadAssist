@@ -37,6 +37,10 @@ local function settingsAvailability()
     return true
 end
 
+local function settingsAreOpen()
+    return SettingsUI.frame and type(SettingsUI.frame.IsShown) == "function" and SettingsUI.frame:IsShown()
+end
+
 function App:Initialize()
     Database:Initialize()
     self.db = Database:Get()
@@ -151,6 +155,12 @@ function App:SelectDifficulty(key, automatic)
     if not automatic and liveDifficulty and key ~= liveDifficulty then
         ns:Print("Difficulty tabs are locked to " .. Constants.DIFFICULTIES[liveDifficulty].name .. " during this encounter.")
         UI:SetDifficulty(liveDifficulty)
+        return false
+    end
+
+    if not automatic and key ~= self.activeDifficultyKey and settingsAreOpen() then
+        ns:Print("Close Settings before changing difficulty so an open Raid Warning draft cannot move to another profile.")
+        UI:SetDifficulty(self.activeDifficultyKey)
         return false
     end
 
