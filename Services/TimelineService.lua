@@ -10,6 +10,7 @@ local TimelineService = {
     timers = {},
     activeProviders = {},
     providerFailures = {},
+    recentAcknowledgements = {},
     nextOccurrenceID = 0,
 }
 
@@ -36,6 +37,23 @@ local function validSourceID(sourceID)
     return not Util.IsSecret(sourceID) and (type(sourceID) == "string" or type(sourceID) == "number")
 end
 
+local function normalizePrecision(value, providerName, bridge)
+    if value == Constants.TimerPrecision.NATIVE
+        or value == Constants.TimerPrecision.EXACT
+        or value == Constants.TimerPrecision.APPROXIMATE then
+        return value
+    end
+    if bridge == "Blizzard" or providerName == "Blizzard" then
+        return Constants.TimerPrecision.NATIVE
+    end
+    return Constants.TimerPrecision.EXACT
+end
+
+local function precisionRank(timer)
+    if timer and timer.precision == Constants.TimerPrecision.APPROXIMATE then return 2 end
+    return 1
+end
+
 local function effectiveProviderRank(timer)
     if timer and timer.bridge == "Blizzard" then return providerRank.Blizzard or 999 end
     return providerRank[timer and timer.providerName] or 999
@@ -50,10 +68,21 @@ local function isBetterCandidate(candidate, candidateRemaining, current, current
     if not current then return true end
 
     if candidate.occurrenceID and candidate.occurrenceID == current.occurrenceID then
-        return effectiveProviderRank(candidate) < effectiveProviderRank(current)
+        local candidatePrecision = precisionRank(candidate)
+        local currentPrecision = precisionRank(current)
+        if candidatePrecision ~= currentPrecision then return candidatePrecision < currentPrecision end
+
+        local candidateProvider = effectiveProviderRank(candidate)
+        local currentProvider = effectiveProviderRank(current)
+        if candidateProvider ~= currentProvider then return candidateProvider < currentProvider end
+        return candidateRemaining < currentRemaining
     end
 
-    return candidateRemaining < currentRemaining
+    if candidateRemaining ~= currentRemaining then return candidateRemaining < currentRemaining end
+    local candidatePrecision = precisionRank(candidate)
+    local currentPrecision = precisionRank(current)
+    if candidatePrecision ~= currentPrecision then return candidatePrecision < currentPrecision end
+    return effectiveProviderRank(candidate) < effectiveProviderRank(current)
 end
 
 local function isSameOccurrence(candidate, existing)
@@ -68,6 +97,10 @@ local function isSameOccurrence(candidate, existing)
 
     local delta = math.abs((existing.expiration or 0) - (candidate.expiration or 0))
     return delta <= Constants.DUPLICATE_TIMER_TOLERANCE
+end
+
+function TimelineService:IsActionable(timer)
+    return timer ~= nil and timer.precision ~= Constants.TimerPrecision.APPROXIMATE
 end
 
 function TimelineService:Initialize()
@@ -99,15 +132,11 @@ function TimelineService:RefreshProviders()
             if ok and started == true then
                 self.activeProviders[name] = provider
                 self.providerFailures[name] = nil
-                -- Seed existing native timeline events only after the provider is
-                -- active, otherwise ProviderTimerStarted would correctly reject them.
                 if type(provider.SeedExistingEvents) == "function" then
                     pcall(provider.SeedExistingEvents, provider)
                 end
                 changed = true
             else
-                -- Start may have registered only part of its callbacks before
-                -- failing. Always give the adapter a bounded cleanup chance.
                 pcall(provider.Stop, provider)
                 self.activeProviders[name] = nil
                 self:ProviderReset(name)
@@ -145,6 +174,7 @@ end
 
 function TimelineService:Reset()
     table.wipe(self.timers)
+    table.wipe(self.recentAcknowledgements)
     self.nextOccurrenceID = 0
     EventBus:Emit("TIMELINE_CHANGED")
 end
@@ -152,6 +182,23 @@ end
 function TimelineService:MatchTimer(timer)
     if not self.encounterKey then return end
     timer.call = Registry:MatchCall(self.encounterKey, timer.key, timer.name)
+end
+
+function TimelineService:PruneRecentAcknowledgements()
+    local now = GetTime()
+    for callKey, acknowledgement in pairs(self.recentAcknowledgements) do
+        if not acknowledgement.expiresAt or acknowledgement.expiresAt <= now then
+            self.recentAcknowledgements[callKey] = nil
+        end
+    end
+end
+
+function TimelineService:IsRecentlyAcknowledged(timer)
+    if not timer or not timer.call or not timer.expiration then return false end
+    self:PruneRecentAcknowledgements()
+    local acknowledgement = self.recentAcknowledgements[timer.call.key]
+    if not acknowledgement then return false end
+    return math.abs(timer.expiration - acknowledgement.expiration) <= Constants.DUPLICATE_TIMER_TOLERANCE
 end
 
 function TimelineService:AssignOccurrence(timer)
@@ -168,11 +215,13 @@ function TimelineService:AssignOccurrence(timer)
 
     self.nextOccurrenceID = self.nextOccurrenceID + 1
     timer.occurrenceID = self.nextOccurrenceID
+    if self:IsRecentlyAcknowledged(timer) then timer.acknowledged = true end
 end
 
 function TimelineService:RemapRecentTimers()
     local now = GetTime()
     self.nextOccurrenceID = 0
+    table.wipe(self.recentAcknowledgements)
 
     for id, timer in pairs(self.timers) do
         if not timer.startedAt or now - timer.startedAt > Constants.ENCOUNTER_REMAP_WINDOW_SECONDS then
@@ -207,6 +256,7 @@ function TimelineService:ProviderTimerStarted(providerName, sourceID, data)
     timer.duration = data.duration
     timer.nativeEventID = data.nativeEventID
     timer.bridge = data.bridge
+    timer.precision = normalizePrecision(data.precision, providerName, data.bridge)
     timer.startedAt = now
     timer.expiration = now + data.duration
     timer.paused = false
@@ -215,7 +265,6 @@ function TimelineService:ProviderTimerStarted(providerName, sourceID, data)
     timer.occurrenceID = nil
 
     self:MatchTimer(timer)
-
     self:AssignOccurrence(timer)
 
     self.timers[id] = timer
@@ -235,6 +284,11 @@ function TimelineService:ProviderTimerUpdated(providerName, sourceID, elapsed, t
     timer.startedAt = now - elapsed
     timer.expiration = now + remaining
     if timer.paused then timer.pausedRemaining = remaining end
+
+    local wasAcknowledged = timer.acknowledged == true
+    timer.occurrenceID = nil
+    self:AssignOccurrence(timer)
+    if wasAcknowledged then timer.acknowledged = true end
     EventBus:Emit("TIMELINE_CHANGED")
 end
 
@@ -290,7 +344,6 @@ function TimelineService:GetRemaining(timer)
     return math.max(0, timer.expiration - GetTime())
 end
 
-
 function TimelineService:PruneExpiredTimers()
     local now = GetTime()
     local changed = false
@@ -309,12 +362,12 @@ function TimelineService:PruneExpiredTimers()
     if changed then EventBus:Emit("TIMELINE_CHANGED") end
 end
 
-function TimelineService:GetNextTimer()
+local function selectNextTimer(self, actionableOnly)
     self:PruneExpiredTimers()
     local bestTimer, bestRemaining
 
     for _, timer in pairs(self.timers) do
-        if timer.call and not timer.acknowledged then
+        if timer.call and not timer.acknowledged and (not actionableOnly or self:IsActionable(timer)) then
             local remaining = self:GetRemaining(timer)
             if type(remaining) == "number" and remaining > 0
                 and isBetterCandidate(timer, remaining, bestTimer, bestRemaining) then
@@ -325,37 +378,67 @@ function TimelineService:GetNextTimer()
     end
 
     return bestTimer, bestRemaining
+end
+
+local function selectTimerForCall(self, callKey, actionableOnly)
+    self:PruneExpiredTimers()
+    local bestTimer, bestRemaining
+
+    for _, timer in pairs(self.timers) do
+        if timer.call and timer.call.key == callKey and not timer.acknowledged
+            and (not actionableOnly or self:IsActionable(timer)) then
+            local remaining = self:GetRemaining(timer)
+            if type(remaining) == "number" and remaining > 0
+                and isBetterCandidate(timer, remaining, bestTimer, bestRemaining) then
+                bestTimer = timer
+                bestRemaining = remaining
+            end
+        end
+    end
+
+    return bestTimer, bestRemaining
+end
+
+function TimelineService:GetNextTimer()
+    return selectNextTimer(self, false)
+end
+
+function TimelineService:GetNextActionableTimer()
+    return selectNextTimer(self, true)
 end
 
 function TimelineService:GetTimerForCall(callKey)
-    self:PruneExpiredTimers()
-    local bestTimer, bestRemaining
+    return selectTimerForCall(self, callKey, false)
+end
 
-    for _, timer in pairs(self.timers) do
-        if timer.call and timer.call.key == callKey and not timer.acknowledged then
-            local remaining = self:GetRemaining(timer)
-            if type(remaining) == "number" and remaining > 0
-                and isBetterCandidate(timer, remaining, bestTimer, bestRemaining) then
-                bestTimer = timer
-                bestRemaining = remaining
-            end
-        end
-    end
-
-    return bestTimer, bestRemaining
+function TimelineService:GetActionableTimerForCall(callKey)
+    return selectTimerForCall(self, callKey, true)
 end
 
 function TimelineService:AcknowledgeCall(callKey)
-    local selected = self:GetTimerForCall(callKey)
+    local selected = self:GetActionableTimerForCall(callKey)
+    if not selected then selected = self:GetTimerForCall(callKey) end
     if not selected or selected.acknowledged then return false end
+
+    local now = GetTime()
+    local selectedRemaining = self:GetRemaining(selected)
+    local selectedExpiration = now + (type(selectedRemaining) == "number" and selectedRemaining or 0)
 
     for _, timer in pairs(self.timers) do
         if timer.call and timer.call.key == callKey and not timer.acknowledged then
-            if timer.occurrenceID == selected.occurrenceID then
+            local sameOccurrence = timer.occurrenceID == selected.occurrenceID
+            local remaining = self:GetRemaining(timer)
+            local expiration = now + (type(remaining) == "number" and remaining or 0)
+            if sameOccurrence or math.abs(expiration - selectedExpiration) <= Constants.DUPLICATE_TIMER_TOLERANCE then
                 timer.acknowledged = true
             end
         end
     end
+
+    self.recentAcknowledgements[callKey] = {
+        expiration = selectedExpiration,
+        expiresAt = now + Constants.RECENT_ACKNOWLEDGEMENT_SECONDS,
+    }
 
     EventBus:Emit("TIMELINE_CHANGED")
     return true

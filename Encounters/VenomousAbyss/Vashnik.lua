@@ -2,12 +2,12 @@ local _, ns = ...
 local Registry = ns:GetModule("Encounters.Registry")
 
 local function imbibeCall(text)
-    return { key="imbibe", ability="Imbibe", action=text, warning=text, voice="Imbibe", spellIDs={1283164} }
+    return { key="imbibe", ability="Imbibe", action=text, warning=text, voice="Imbibe", spellIDs={1283164}, prepareSeconds=8, pressSeconds=5 }
 end
 local function frothCall(text)
-    return { key="froth", ability="Plague Froth", action=text, warning=text, voice="Froth", spellIDs={1281907} }
+    return { key="froth", ability="Plague Froth", action=text, warning=text, voice="Froth", spellIDs={1281907}, prepareSeconds=6, pressSeconds=3 }
 end
-local catalyst = { key="catalyst", ability="Malignant Catalyst", action="1 player in every Bile circle", warning="CATALYST > 1 PLAYER IN EVERY BILE CIRCLE", voice="Catalyst", spellIDs={1282525,1282509} }
+local catalyst = { key="catalyst", ability="Malignant Catalyst", action="1 player in every Bile circle", warning="CATALYST > 1 PLAYER IN EVERY BILE CIRCLE", voice="Catalyst", spellIDs={1282525,1282509}, prepareSeconds=7, pressSeconds=4 }
 
 Registry:Register({
     key="vashnik", name="Vashnik the Malignant", encounterID=3455,

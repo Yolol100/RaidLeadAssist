@@ -6,9 +6,9 @@ local function calls(crateAction, crateWarning)
         { key="killorder", ability="Kill Order", action="Nama > Iku > Gebbo", warning="KILL ORDER > NAMA FIRST > IKU SECOND > GEBBO LAST", voice="Kill order", timing=false },
         { key="crates", ability="Throw Junk", action=crateAction, warning=crateWarning, voice="Crates", timing=false },
         { key="fish", ability="Final Ascension", action="Feed fish to an unused controlled tortollan", warning="FINAL ASCENSION > FEED FISH TO AN UNUSED CONTROLLED TORTOLLAN NOW", voice="Fish", timing=false, iconSpellID=1292779 },
-        { key="thud", ability="Mighty Thud", action="3 targets > each target to soak group", warning="MIGHTY THUD > 3 TARGETS > EACH TARGET TO A SOAK GROUP", voice="Soak", spellIDs={1296092} },
+        { key="thud", ability="Mighty Thud", action="3 targets > each target to soak group", warning="MIGHTY THUD > 3 TARGETS > EACH TARGET TO A SOAK GROUP", voice="Soak", spellIDs={1296092}, prepareSeconds=7, pressSeconds=4 },
         { key="blink", ability="Blink Nova", action="Target edge > raid move away", warning="BLINK NOVA > TARGET EDGE > RAID MOVE AWAY", voice="Move away", spellIDs={1290711} },
-        { key="icebound", ability="Icebound Flames", action="Interrupt now", warning="ICEBOUND FLAMES > INTERRUPT NOW", voice="Interrupt", spellIDs={1286921} },
+        { key="icebound", ability="Icebound Flames", action="Interrupt now", warning="ICEBOUND FLAMES > INTERRUPT NOW", voice="Interrupt", spellIDs={1286921}, prepareSeconds=4, pressSeconds=1 },
     }
 end
 

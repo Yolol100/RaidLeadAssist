@@ -28,12 +28,51 @@ local Timeline = ns:GetModule("Services.TimelineService")
 Timeline:Initialize()
 Timeline:SetEncounter("boss")
 
-Timeline:ProviderTimerStarted("Blizzard", "b1", { key = 123, duration = 10, nativeEventID = 77 })
-now = 100.2
-Timeline:ProviderTimerStarted("BigWigs", "w1", { key = 123, duration = 9.9 })
+-- Approximate BigWigs data can preview an occurrence, but cannot drive a button.
+Timeline:ProviderTimerStarted("BigWigs", "approx-1", {
+    key = 123, duration = 10, precision = "approximate",
+})
+local preview = Timeline:GetTimerForCall("kick")
+assert(preview and preview.providerName == "BigWigs" and preview.precision == "approximate")
+assert(Timeline:GetActionableTimerForCall("kick") == nil)
+
+-- An exact source for the same occurrence must beat the approximate source.
+now = 100.1
+Timeline:ProviderTimerStarted("DBM", "exact-1", {
+    key = 123, duration = 9.9, precision = "exact",
+})
 local best = Timeline:GetTimerForCall("kick")
-assert(best and best.providerName == "BigWigs")
+local actionable = Timeline:GetActionableTimerForCall("kick")
+assert(best and best.providerName == "DBM")
+assert(actionable and actionable.providerName == "DBM")
 assert(Timeline:AcknowledgeCall("kick") == true)
 assert(Timeline:GetTimerForCall("kick") == nil)
 
-print("ok - timer selection and duplicate acknowledgement")
+-- Providers that disagree by several seconds still represent one occurrence.
+Timeline:Reset()
+now = 200
+Timeline:ProviderTimerStarted("Blizzard", "b2", {
+    key = 123, duration = 12, nativeEventID = 88, precision = "native",
+})
+now = 200.1
+Timeline:ProviderTimerStarted("DBM", "d2", {
+    key = 123, duration = 7.6, precision = "exact",
+})
+local blizzard = Timeline.timers["Blizzard|b2"]
+local dbm = Timeline.timers["DBM|d2"]
+assert(blizzard and dbm and blizzard.occurrenceID == dbm.occurrenceID,
+    "cross-provider drift within tolerance must cluster as one occurrence")
+assert(Timeline:GetActionableTimerForCall("kick").providerName == "DBM")
+assert(Timeline:AcknowledgeCall("kick") == true)
+
+-- Simulate those providers stopping, then a third provider arriving late.
+Timeline:ProviderTimerStopped("Blizzard", "b2")
+Timeline:ProviderTimerStopped("DBM", "d2")
+now = 200.2
+Timeline:ProviderTimerStarted("BigWigs", "late-2", {
+    key = 123, duration = 11.4, precision = "exact",
+})
+assert(Timeline:GetTimerForCall("kick") == nil,
+    "a late provider for an acknowledged occurrence must not re-arm the call")
+
+print("ok - timer precision, selection, drift deduplication, and acknowledgement")

@@ -36,14 +36,27 @@ T.Load("Services/Providers/DBMProvider.lua", ns)
 local BigWigs = ns:GetModule("Services.Providers.BigWigs")
 assert(BigWigs:Start(sink) == true)
 local module = { moduleName = "Boss" }
-bwMessages.BigWigs_StartBar(nil, module, 123, "Cast", 10, 456, false, nil, 77, nil)
+
+-- Real boss-module shape: eventID is the final BigWigs_StartBar argument.
+bwMessages.BigWigs_StartBar(nil, module, 123, "Cast", 10, 456, false, 10, nil, 77)
 assert(#started == 1 and started[1].provider == "BigWigs")
 assert(started[1].id == "Boss|event:77" and started[1].data.key == 123)
+assert(started[1].data.nativeEventID == 77 and started[1].data.precision == "exact")
 
-bwMessages.BigWigs_StartBar(nil, module, 123, "Approx", 10, 456, true, nil, 78, nil)
-assert(#started == 1, "approximate BigWigs bars must be ignored")
-bwMessages.BigWigs_StartBar(nil, module, 123, "Secret", SECRET, 456, false, nil, 79, nil)
-assert(#started == 1, "secret BigWigs durations must fail closed")
+-- Approximate BigWigs CD bars are retained, but uncertainty must survive the adapter.
+bwMessages.BigWigs_StartBar(nil, module, 123, "Approx", 10, 456, true, 10, nil, 78)
+assert(#started == 2 and started[2].data.precision == "approximate")
+assert(started[2].id == "Boss|event:78")
+
+-- BigWigs' Blizzard timeline bridge uses maxQueueDuration in the reliability slot.
+bwMessages.BigWigs_StartBar(nil, nil, nil, "Timeline Cast", 9, 456, 3, 10, 79, nil)
+assert(#started == 3)
+assert(started[3].id == "blizzard-timeline|event:79")
+assert(started[3].data.bridge == "Blizzard" and started[3].data.precision == "native")
+assert(started[3].data.nativeEventID == 79)
+
+bwMessages.BigWigs_StartBar(nil, module, 123, "Secret", SECRET, 456, false, 10, nil, 80)
+assert(#started == 3, "secret BigWigs durations must fail closed")
 bwMessages.BigWigs_PauseBar(nil, module, "Cast", 77)
 assert(#paused == 1 and paused[1].value == true)
 bwMessages.BigWigs_StopBar(nil, module, "Cast", 77)
@@ -55,6 +68,7 @@ assert(DBMProvider:Start(sink) == true)
 dbmCallbacks.DBM_TimerBegin(nil, "dbm-1", "Cast", 10, 456, "cd", 123, nil, nil, nil, false, "Cast", nil, nil, nil, nil, false, nil, true)
 assert(#started == 1 and started[1].provider == "DBM" and started[1].id == "dbm-1")
 assert(started[1].data.key == 123 and started[1].data.name == "Cast")
+assert(started[1].data.precision == "exact")
 
 dbmCallbacks.DBM_TimerBegin(nil, "dbm-variance", "Cast", 10, 456, "cd", 123, nil, nil, nil, false, "Cast", nil, nil, nil, nil, true, nil, true)
 assert(#started == 1, "variable DBM timers must be ignored")

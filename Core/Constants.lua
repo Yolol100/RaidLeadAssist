@@ -27,11 +27,18 @@ local Constants = {
     BRIEFING_CLICK_LOCK_SECONDS = 2.0,
     BRIEFING_LINE_DELAY = 0.50,
     CALLED_FEEDBACK_SECONDS = 0.8,
-    DUPLICATE_TIMER_TOLERANCE = 2.0,
+    DUPLICATE_TIMER_TOLERANCE = 5.0,
+    RECENT_ACKNOWLEDGEMENT_SECONDS = 8.0,
     TIMER_EXPIRY_GRACE_SECONDS = 1.0,
     ENCOUNTER_REMAP_WINDOW_SECONDS = 3.0,
 
     PROVIDER_PRIORITY = { "BigWigs", "DBM", "Blizzard" },
+
+    TimerPrecision = {
+        NATIVE = "native",
+        EXACT = "exact",
+        APPROXIMATE = "approximate",
+    },
 
     CallState = {
         IDLE = "IDLE",
@@ -40,5 +47,24 @@ local Constants = {
         CALLED = "CALLED",
     },
 }
+
+function Constants.GetCallTiming(call)
+    local prepare = type(call) == "table" and call.prepareSeconds or nil
+    local press = type(call) == "table" and call.pressSeconds or nil
+    if type(prepare) ~= "number" then prepare = Constants.PREPARE_SECONDS end
+    if type(press) ~= "number" then press = Constants.PRESS_SECONDS end
+    return prepare, press
+end
+
+function Constants.GetCallState(call, remaining, actionable)
+    if actionable == false or type(remaining) ~= "number" then
+        return Constants.CallState.IDLE
+    end
+
+    local prepare, press = Constants.GetCallTiming(call)
+    if remaining <= press then return Constants.CallState.PRESS end
+    if remaining <= prepare then return Constants.CallState.PREPARE end
+    return Constants.CallState.IDLE
+end
 
 ns:RegisterModule("Core.Constants", Constants)

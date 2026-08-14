@@ -20,7 +20,7 @@ end
 
 Registry:Register({
     key="ulatek", name="Ula'tek", encounterID=3492,
-    strategyStatus="12.1 Journal-derived; final boss excluded from public PTR raid testing; timing disabled",
+    strategyStatus="12.1 Journal-derived; no dedicated public Mythic PTR test located; live validation pending; timing disabled",
     profiles={
         normal={
             explanation={

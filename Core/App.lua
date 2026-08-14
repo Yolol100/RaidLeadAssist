@@ -220,17 +220,13 @@ function App:UpdateTiming()
 
     for index = 1, #profile.calls do
         local call = profile.calls[index]
-        local _, remaining = Timeline:GetTimerForCall(call.key)
+        local _, remaining = Timeline:GetActionableTimerForCall(call.key)
         local state = Constants.CallState.IDLE
 
         if (self.visualCalledUntil[call.key] or 0) > GetTime() then
             state = Constants.CallState.CALLED
         elseif remaining then
-            if remaining <= Constants.PRESS_SECONDS then
-                state = Constants.CallState.PRESS
-            elseif remaining <= Constants.PREPARE_SECONDS then
-                state = Constants.CallState.PREPARE
-            end
+            state = Constants.GetCallState(call, remaining, true)
         elseif (self.manualLockUntil[call.key] or 0) > GetTime() then
             state = Constants.CallState.CALLED
         end
@@ -238,7 +234,8 @@ function App:UpdateTiming()
         UI:SetCallState(call.key, state)
     end
 
-    local timer, remaining = Timeline:GetNextTimer()
+    local timer, remaining = Timeline:GetNextActionableTimer()
+    if not timer then timer, remaining = Timeline:GetNextTimer() end
     if not timer or not remaining then
         UI.timeline:SetIdle()
         return
@@ -246,12 +243,7 @@ function App:UpdateTiming()
 
     UI.timeline:SetTimer(timer, remaining)
 
-    local state = Constants.CallState.IDLE
-    if remaining <= Constants.PRESS_SECONDS then
-        state = Constants.CallState.PRESS
-    elseif remaining <= Constants.PREPARE_SECONDS then
-        state = Constants.CallState.PREPARE
-    end
+    local state = Constants.GetCallState(timer.call, remaining, Timeline:IsActionable(timer))
     UI.timeline:SetState(state)
 
     local occurrenceKey = table.concat({ timer.call.key, tostring(timer.occurrenceID or timer.sourceID) }, ":")

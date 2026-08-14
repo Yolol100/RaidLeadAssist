@@ -40,6 +40,7 @@ function DBMProvider:Start(sink)
             name = not Util.IsSecret(spellName) and spellName or (not Util.IsSecret(message) and message or nil),
             duration = duration,
             icon = Util.NormalizeTexture(icon),
+            precision = "exact",
         })
     end
 
