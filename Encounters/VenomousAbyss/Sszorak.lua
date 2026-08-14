@@ -4,14 +4,14 @@ local Registry = ns:GetModule("Encounters.Registry")
 local function baseCalls()
     return {
         { key="venom", ability="Venomous Surge", action="Targets out > drop cysts away", warning="VENOMOUS SURGE > TARGETS OUT > DROP CYSTS AWAY", voice="Venom", spellIDs={1305959} },
-        { key="maelstrom", ability="Howling Maelstrom", action="Pop cyst > stay on platform > DPS CDs", warning="MAELSTROM > POP CYST > STAY ON PLATFORM > DPS CDS", voice="Maelstrom", spellIDs={1285732} },
-        { key="apex", ability="Apex Predator", action="Mutilate > assigned 5+ soak", warning="APEX PREDATOR > MUTILATE > ASSIGNED 5+ SOAKERS IN", voice="Soak", spellIDs={1277025} },
+        { key="maelstrom", ability="Howling Maelstrom", action="Pop cyst > stay on platform > DPS CDs", warning="MAELSTROM > POP CYST > STAY ON PLATFORM > DPS CDS", voice="Maelstrom", spellIDs={1285732}, prepareSeconds=8, pressSeconds=5 },
+        { key="apex", ability="Apex Predator", action="Mutilate > assigned 5+ soak", warning="APEX PREDATOR > MUTILATE > ASSIGNED 5+ SOAKERS IN", voice="Soak", spellIDs={1277025,1285430}, prepareSeconds=7, pressSeconds=4 },
     }
 end
 
 Registry:Register({
     key="sszorak", name="Sszorak", encounterID=3420,
-    strategyStatus="12.1 difficulty plans source-reviewed 2026-08-13; live validation pending",
+    strategyStatus="12.1 difficulty plans source-reviewed 2026-08-14; live validation pending",
     profiles={
         normal={
             explanation={

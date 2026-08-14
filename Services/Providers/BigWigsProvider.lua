@@ -23,6 +23,12 @@ local function makeTimerID(module, text, eventID)
     return textAlias(module, text)
 end
 
+local function chooseEventID(preferred, fallback)
+    if preferred ~= nil and not Util.IsSecret(preferred) then return preferred end
+    if fallback ~= nil and not Util.IsSecret(fallback) then return fallback end
+    return nil
+end
+
 function BigWigsProvider:IsAvailable()
     return _G.BigWigsLoader and type(BigWigsLoader.RegisterMessage) == "function"
 end
@@ -62,9 +68,28 @@ function BigWigsProvider:Start(sink)
     self.aliases = {}
     self.timerModules = {}
 
-    self.onStart = function(_, module, key, text, duration, icon, isApproximate, _, eventID, _)
-        if Util.IsSecret(duration) or Util.IsSecret(key) or Util.IsSecret(text) or Util.IsSecret(isApproximate) then return end
-        if isApproximate or type(duration) ~= "number" or duration <= 0 then return end
+    -- BigWigs boss modules send:
+    -- module, key, text, duration, icon, isApproximate, maxTime, nil, eventID
+    -- The BigWigs Blizzard Timeline bridge has a different tail and may put
+    -- maxQueueDuration where boss modules put isApproximate. Parse both shapes
+    -- and keep the source uncertainty explicit instead of treating the layouts
+    -- as interchangeable.
+    self.onStart = function(_, module, key, text, duration, icon, reliability, _, eventIDA, eventIDB)
+        if Util.IsSecret(duration) or Util.IsSecret(key) or Util.IsSecret(text) or Util.IsSecret(reliability) then return end
+        if type(duration) ~= "number" or duration <= 0 then return end
+
+        local eventID = chooseEventID(eventIDB, eventIDA)
+        local bridge = module == nil and key == nil and eventID ~= nil
+        local precision
+        if bridge then
+            precision = "native"
+        elseif type(reliability) == "boolean" then
+            precision = reliability and "approximate" or "exact"
+        elseif reliability == nil then
+            precision = "exact"
+        else
+            precision = "approximate"
+        end
 
         local id = makeTimerID(module, text, eventID)
         if not id then return end
@@ -75,8 +100,9 @@ function BigWigsProvider:Start(sink)
             name = text,
             duration = duration,
             icon = Util.NormalizeTexture(icon),
-            nativeEventID = not Util.IsSecret(eventID) and eventID or nil,
-            bridge = module == nil and "Blizzard" or nil,
+            nativeEventID = eventID,
+            bridge = bridge and "Blizzard" or nil,
+            precision = precision,
         })
     end
 

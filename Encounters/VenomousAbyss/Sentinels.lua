@@ -18,6 +18,8 @@ local function baseCalls(bloodAction, bloodWarning)
             warning = "STASIS > FIXED 4-PLAYER GROUPS > CLEAR TOXIN AT EXACTLY 4",
             voice = "Stasis",
             spellIDs = { 1284588 },
+            prepareSeconds = 8,
+            pressSeconds = 5,
         },
         {
             key = "coagulation",
@@ -34,6 +36,8 @@ local function baseCalls(bloodAction, bloodWarning)
             warning = "TOXIC DROPLETS > ASSIGNED PLAYERS STEP ON THEM NOW",
             voice = "Droplets",
             spellIDs = { 1284434 },
+            prepareSeconds = 6,
+            pressSeconds = 3,
         },
         {
             key = "miasma",
@@ -85,6 +89,8 @@ mythicCalls[#mythicCalls + 1] = {
     warning = "PROTOVENOM > MARKED PLAYERS PAIR TOGETHER > AVOID CLEAN PLAYERS",
     voice = "Pair",
     spellIDs = { 1296878 },
+    prepareSeconds = 7,
+    pressSeconds = 4,
 }
 
 Registry:Register({

@@ -10,6 +10,10 @@ local Registry = {
     activeDifficultyKey = "heroic",
 }
 
+local function validTimingSeconds(value)
+    return type(value) == "number" and value == value and value >= 0 and value < math.huge
+end
+
 local function validateProfile(encounterKey, difficultyKey, profile)
     local label = encounterKey .. "/" .. difficultyKey
     assert(type(profile) == "table", "Encounter profile requires table: " .. label)
@@ -31,9 +35,22 @@ local function validateProfile(encounterKey, difficultyKey, profile)
         assert(type(call.action) == "string", "Call requires action: " .. label)
         assert(type(call.warning) == "string" and call.warning ~= "", "Call requires warning: " .. label)
         assert(#call.warning <= 200, "Raid Warning is too long: " .. label .. "/" .. call.key)
+
         if call.timing ~= false then
             assert(call.spellIDs or call.timerNames, "Timed call requires a timer identity: " .. label .. "/" .. call.key)
+            if call.prepareSeconds ~= nil then
+                assert(validTimingSeconds(call.prepareSeconds), "Invalid prepareSeconds: " .. label .. "/" .. call.key)
+            end
+            if call.pressSeconds ~= nil then
+                assert(validTimingSeconds(call.pressSeconds), "Invalid pressSeconds: " .. label .. "/" .. call.key)
+            end
+            local prepare, press = Constants.GetCallTiming(call)
+            assert(prepare >= press, "prepareSeconds must be >= pressSeconds: " .. label .. "/" .. call.key)
+        else
+            assert(call.prepareSeconds == nil and call.pressSeconds == nil,
+                "Manual call must not define automatic timing windows: " .. label .. "/" .. call.key)
         end
+
         seenCalls[call.key] = true
     end
 end

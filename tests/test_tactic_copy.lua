@@ -45,6 +45,12 @@ for _, encounter in ipairs(encounters) do
         for _, call in ipairs(profile.calls) do
             assert(#call.action <= 70)
             assert(#call.warning <= 90)
+            if call.timing ~= false then
+                local prepare, press = Constants.GetCallTiming(call)
+                assert(prepare >= press and press >= 0)
+            else
+                assert(call.prepareSeconds == nil and call.pressSeconds == nil)
+            end
         end
     end
 end
@@ -63,6 +69,8 @@ assert(explorersNormal.callsByKey.crates.warning ~= explorersHeroic.callsByKey.c
 assert(explorersHeroic.callsByKey.crates.warning ~= explorersMythic.callsByKey.crates.warning)
 assert(contains(explorersMythic.callsByKey.crates.warning, "ONE BREAK AT A TIME"))
 assert(contains(explorersNormal.callsByKey.fish.warning, "UNUSED"))
+assert(explorersNormal.callsByKey.icebound.prepareSeconds == 4)
+assert(explorersNormal.callsByKey.icebound.pressSeconds == 1)
 
 local sentinelsNormal = Registry:GetProfile("sentinels", "normal")
 local sentinelsHeroic = Registry:GetProfile("sentinels", "heroic")
@@ -77,6 +85,7 @@ assert(sentinelsMythic.callsByKey.living)
 assert(not contains(sentinelsNormal.callsByKey.blood.warning, "EDGE"))
 assert(contains(sentinelsHeroic.callsByKey.blood.warning, "EDGE"))
 assert(sentinelsMythic.callsByKey.protovenom)
+assert(sentinelsNormal.callsByKey.stasis.prepareSeconds == 8)
 
 local vashnikNormal = Registry:GetProfile("vashnik", "normal")
 local vashnikHeroic = Registry:GetProfile("vashnik", "heroic")
@@ -88,30 +97,37 @@ assert(vashnikMythic.callsByKey.totems.ability == "Malignant Tumors")
 assert(contains(vashnikMythic.callsByKey.totems.warning, "PLAGUE WAVES"))
 assert(contains(vashnikMythic.callsByKey.froth.warning, "TUMORS"))
 assert(contains(planText("vashnik", "mythic"), "PLAGUE WAVE"))
+assert(vashnikNormal.callsByKey.imbibe.prepareSeconds == 8)
 
 assert(Registry:GetProfile("nekzali", "mythic").callsByKey.grasping)
 assert(Registry:GetProfile("nekzali", "heroic").callsByKey.grasping == nil)
+assert(Registry:GetProfile("nekzali", "mythic").callsByKey.invoke.pressSeconds == 2)
 assert(Registry:GetProfile("sszorak", "mythic").callsByKey.serpent)
+assert(Registry:MatchCall("sszorak", "normal", 1285430, nil).key == "apex")
 
 for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
     local twin = Registry:GetProfile("twinfangs", difficultyKey)
     assert(twin.callsByKey.globules)
     assert(twin.callsByKey.stone)
+    assert(contains(twin.callsByKey.feast.warning, "A > B > C"))
+    assert(twin.callsByKey.feast.prepareSeconds == 8)
 end
-assert(not contains(Registry:GetProfile("twinfangs", "normal").callsByKey.feast.warning, "A > B > C"))
-assert(contains(Registry:GetProfile("twinfangs", "heroic").callsByKey.feast.warning, "A > B > C"))
-assert(contains(Registry:GetProfile("twinfangs", "mythic").callsByKey.feast.warning, "A > B > C"))
+assert(not contains(planText("twinfangs", "normal"), "SAME SOAKERS"))
 assert(Registry:GetProfile("twinfangs", "mythic").callsByKey.blood)
 assert(Registry:GetProfile("twinfangs", "mythic").callsByKey.brood)
 assert(Registry:GetProfile("twinfangs", "mythic").callsByKey.tainted)
 assert(Registry:MatchCall("twinfangs", "normal", 1289237, nil).key == "globules")
+assert(Registry:MatchCall("twinfangs", "normal", 1289192, nil).key == "globules")
 assert(Registry:MatchCall("twinfangs", "normal", 1289092, nil).key == "stone")
+assert(Registry:MatchCall("twinfangs", "normal", 1288538, nil).key == "stone")
+assert(Registry:MatchCall("twinfangs", "normal", 1288484, nil).key == "stone")
 
 for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
     assert(Registry:GetProfile("altar", difficultyKey).callsByKey.toxic)
 end
 assert(contains(Registry:GetProfile("altar", "heroic").callsByKey.toxic.warning, "NEVER STACK RUPTURES"))
 assert(contains(Registry:GetProfile("altar", "mythic").callsByKey.toxic.warning, "BEFORE NEXT DELUGE"))
+assert(Registry:GetProfile("altar", "normal").callsByKey.guillotine.prepareSeconds == 8)
 
 local ulatekNormal = Registry:GetProfile("ulatek", "normal")
 local ulatekHeroic = Registry:GetProfile("ulatek", "heroic")
@@ -121,6 +137,7 @@ assert(ulatekHeroic.callsByKey.sting)
 assert(ulatekMythic.callsByKey.sting)
 assert(contains(ulatekHeroic.callsByKey.coils.warning, "ROTATE GROUPS"))
 assert(contains(ulatekMythic.callsByKey.coils.warning, "ROTATE GROUPS"))
+assert(contains(Registry:Get("ulatek").strategyStatus, "no dedicated public Mythic PTR test located"))
 for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
     for _, call in ipairs(Registry:GetProfile("ulatek", difficultyKey).calls) do
         assert(call.timing == false)
@@ -134,4 +151,4 @@ assert(Registry:Get("vashnik").callsByKey.totems)
 assert(Registry:MatchCall("twinfangs", "mythic", 1308356, nil).key == "brood")
 assert(Registry:SetActiveDifficulty("heroic"))
 
-print("ok - difficulty profiles and tactic alignment")
+print("ok - difficulty profiles, timer aliases, and tactic alignment")

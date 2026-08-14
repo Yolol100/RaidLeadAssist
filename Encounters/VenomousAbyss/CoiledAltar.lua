@@ -2,19 +2,19 @@ local _, ns = ...
 local Registry = ns:GetModule("Encounters.Registry")
 
 local sever = { key="sever", ability="Sever", action="Tank through venom > raid clear frontal", warning="SEVER > TANK AIM THROUGH VENOM > RAID CLEAR FRONT", voice="Sever", spellIDs={1299680} }
-local dread = { key="dreadmarch", ability="Dreadmarch", action="Break shields > fixates face ghosts", warning="DREADMARCH > BREAK SHIELDS > FIXATES FACE GHOSTS", voice="Dreadmarch", spellIDs={1289900} }
-local night = { key="nightfall", ability="Eternal Nightfall", action="Break shield > interrupt", warning="ETERNAL NIGHTFALL > BREAK SHIELD > INTERRUPT", voice="Nightfall", spellIDs={1286918} }
+local dread = { key="dreadmarch", ability="Dreadmarch", action="Break shields > fixates face ghosts", warning="DREADMARCH > BREAK SHIELDS > FIXATES FACE GHOSTS", voice="Dreadmarch", spellIDs={1289900}, prepareSeconds=7, pressSeconds=4 }
+local night = { key="nightfall", ability="Eternal Nightfall", action="Break shield > interrupt", warning="ETERNAL NIGHTFALL > BREAK SHIELD > INTERRUPT", voice="Nightfall", spellIDs={1286918}, prepareSeconds=5, pressSeconds=2 }
 local spirit = { key="spiritcackle", ability="Spiritcackle", action="Kill Soulcoilers > interrupt Wail", warning="SPIRITCACKLE > KILL SOULCOILERS > INTERRUPT WAIL", voice="Add", spellIDs={1286441} }
 local intermission = { key="intermission", ability="Soulbinding", action="Stomp one fragment at a time", warning="SOULBINDING > STOMP 1 FRAGMENT AT A TIME > SPACE STOMPS", voice="Fragments", timing=false }
 local final = { key="final", ability="Final Phase", action="Balance both > kill together", warning="FINAL PHASE > KEEP BOTH EVEN > KILL TOGETHER", voice="Final phase", timing=false, iconSpellID=1298381 }
 local function guillotine(text)
-    return { key="guillotine", ability="Guillotine", action=text, warning=text, voice="Guillotine", spellIDs={1283489,1283485,1299266}, timerNames={"Guillotine","Grim Guillotine"} }
+    return { key="guillotine", ability="Guillotine", action=text, warning=text, voice="Guillotine", spellIDs={1283489,1283485,1299266}, timerNames={"Guillotine","Grim Guillotine"}, prepareSeconds=8, pressSeconds=5 }
 end
 local function gloombomb(text)
     return { key="gloombomb", ability="Gloombomb", action=text, warning=text, voice="Bomb", spellIDs={1286895} }
 end
 local function toxic(text)
-    return { key="toxic", ability="Toxic Deluge", action=text, warning=text, voice="Venom", spellIDs={1299960} }
+    return { key="toxic", ability="Toxic Deluge", action=text, warning=text, voice="Venom", spellIDs={1299960}, prepareSeconds=7, pressSeconds=4 }
 end
 
 Registry:Register({

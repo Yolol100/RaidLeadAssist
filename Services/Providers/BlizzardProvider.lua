@@ -15,9 +15,6 @@ local function safeTimelineCall(methodName, ...)
     local api = C_EncounterTimeline and C_EncounterTimeline[methodName]
     if type(api) ~= "function" then return nil end
 
-    -- Timeline IDs become invalid as events enter a terminal state and are
-    -- removed. The generated API marks these queries RequiresValidTimelineEvent,
-    -- so a normal state/removal race must not escape into the addon event loop.
     local ok, result = pcall(api, ...)
     if not ok or Util.IsSecret(result) then return nil end
     return result
@@ -98,6 +95,7 @@ function BlizzardProvider:AddEvent(info, fallbackEventID, durationOverride)
         duration = duration,
         icon = icon,
         nativeEventID = eventID,
+        precision = "native",
     })
 end
 

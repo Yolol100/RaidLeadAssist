@@ -38,6 +38,7 @@ Provider:SeedExistingEvents()
 assert(#started == 1, "existing active timeline events should seed exactly once")
 assert(started[1].provider == "Blizzard" and started[1].sourceID == "7", "seeded timer identity should be stable")
 assert(started[1].data.duration == 9 and started[1].data.key == 123, "seed should prefer current remaining time and preserve spell identity")
+assert(started[1].data.precision == "native", "Blizzard Encounter Timeline events must remain native precision")
 
 C_EncounterTimeline.GetEventTimeRemaining = function()
     remainingCalls = remainingCalls + 1
@@ -49,4 +50,4 @@ local callsBeforeSecret = remainingCalls
 assert(Provider:GetSafeRemaining(SECRET) == nil, "secret timeline IDs must be rejected before API use")
 assert(remainingCalls == callsBeforeSecret, "secret timeline IDs must never reach RequiresValidTimelineEvent APIs")
 
-print("ok - Blizzard timeline validity and secret guards")
+print("ok - Blizzard timeline validity, precision, and secret guards")

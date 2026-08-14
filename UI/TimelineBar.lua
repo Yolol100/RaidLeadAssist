@@ -16,10 +16,7 @@ function TimelineBar:Create(parent)
     frame:SetMinMaxValues(0, 1)
     frame:SetValue(0)
     frame:SetStatusBarColor(
-        Theme.colors.venomDark[1],
-        Theme.colors.venomDark[2],
-        Theme.colors.venomDark[3],
-        0.82
+        Theme.colors.venomDark[1], Theme.colors.venomDark[2], Theme.colors.venomDark[3], 0.82
     )
     frame:SetBackdrop({ bgFile = Theme.texture, edgeFile = Theme.texture, edgeSize = 1 })
     frame:SetBackdropColor(0.03, 0.07, 0.05, 1)
@@ -71,8 +68,18 @@ function TimelineBar:SetTimer(timer, remaining)
     local duration = math.max(timer.duration or 0.1, 0.1)
     self.frame:SetMinMaxValues(0, duration)
     self.frame:SetValue(Util.Clamp(remaining or 0, 0, duration))
-    self.frame.label:SetText(timer.call and timer.call.ability or timer.name or "Boss timer")
-    self.frame.time:SetText(remaining and tostring(math.max(0, math.ceil(remaining))) or "--")
+
+    local label = timer.call and timer.call.ability or timer.name or "Boss timer"
+    local approximate = timer.precision == Constants.TimerPrecision.APPROXIMATE
+    if approximate then label = label .. " (approx)" end
+    self.frame.label:SetText(label)
+
+    if remaining then
+        local seconds = tostring(math.max(0, math.ceil(remaining)))
+        self.frame.time:SetText(approximate and ("~" .. seconds) or seconds)
+    else
+        self.frame.time:SetText("--")
+    end
 
     local icon = Util.NormalizeTexture(timer.icon)
     if not icon and timer.call then
@@ -93,18 +100,12 @@ function TimelineBar:SetState(state)
         self.frame:SetBackdropBorderColor(Theme.colors.teal[1], Theme.colors.teal[2], Theme.colors.teal[3], 1)
     elseif state == Constants.CallState.PREPARE then
         self.frame:SetStatusBarColor(
-            Theme.colors.venomBright[1],
-            Theme.colors.venomBright[2],
-            Theme.colors.venomBright[3],
-            0.88
+            Theme.colors.venomBright[1], Theme.colors.venomBright[2], Theme.colors.venomBright[3], 0.88
         )
         self.frame:SetBackdropBorderColor(Theme.colors.venom[1], Theme.colors.venom[2], Theme.colors.venom[3], 1)
     else
         self.frame:SetStatusBarColor(
-            Theme.colors.venomDark[1],
-            Theme.colors.venomDark[2],
-            Theme.colors.venomDark[3],
-            0.82
+            Theme.colors.venomDark[1], Theme.colors.venomDark[2], Theme.colors.venomDark[3], 0.82
         )
         self.frame:SetBackdropBorderColor(0.22, 0.36, 0.27, 1)
     end

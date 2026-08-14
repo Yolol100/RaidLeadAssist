@@ -10,6 +10,8 @@ local function baseCalls(pyreWarning)
             warning = "ADDS > BREAK SHIELDS > KILL BEFORE WELL",
             voice = "Adds",
             spellIDs = { 1295397, 1297630 },
+            prepareSeconds = 7,
+            pressSeconds = 4,
         },
         {
             key = "rend",
@@ -51,6 +53,8 @@ local function baseCalls(pyreWarning)
             warning = pyreWarning,
             voice = "Pyre",
             spellIDs = { 1305421, 1290679 },
+            prepareSeconds = 8,
+            pressSeconds = 5,
         },
         {
             key = "phase2",
@@ -74,6 +78,8 @@ mythicCalls[#mythicCalls + 1] = {
     warning = "GRASPING DEPTHS > ASSIGNED TEAM IN WELL > KILL DROWNED ECHO > GET OUT",
     voice = "Well team",
     spellIDs = { 1293212 },
+    prepareSeconds = 8,
+    pressSeconds = 5,
 }
 mythicCalls[#mythicCalls + 1] = {
     key = "invoke",
@@ -82,13 +88,15 @@ mythicCalls[#mythicCalls + 1] = {
     warning = "INVOKE > STOP CASTING BEFORE IT HITS > THEN DODGE CULTISTS",
     voice = "Stop casts",
     spellIDs = { 1299673 },
+    prepareSeconds = 5,
+    pressSeconds = 2,
 }
 
 Registry:Register({
     key = "nekzali",
     name = "Nek'zali the Soulcoiler",
     encounterID = 3470,
-    strategyStatus = "12.1 difficulty plans source-reviewed 2026-08-13; live validation pending",
+    strategyStatus = "12.1 difficulty plans source-reviewed 2026-08-14; live validation pending",
     profiles = {
         normal = {
             explanation = {
