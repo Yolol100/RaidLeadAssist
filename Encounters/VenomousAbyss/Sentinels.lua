@@ -1,7 +1,7 @@
 local _, ns = ...
 local Registry = ns:GetModule("Encounters.Registry")
 
-local function baseCalls()
+local function baseCalls(bloodAction, bloodWarning)
     return {
         {
             key = "balance",
@@ -46,17 +46,38 @@ local function baseCalls()
         {
             key = "blood",
             ability = "Blighted Blood",
-            action = "Targets edge > dispel there",
-            warning = "BLIGHTED BLOOD > TARGETS EDGE > DISPEL THERE",
+            action = bloodAction,
+            warning = bloodWarning,
             voice = "Dispel",
             spellIDs = { 1284483 },
         },
     }
 end
 
-local normalCalls = baseCalls()
-local heroicCalls = baseCalls()
-local mythicCalls = baseCalls()
+local livingVenom = {
+    key = "living",
+    ability = "Living Venom",
+    action = "Clear return lane > dodge venom",
+    warning = "LIVING VENOM > CLEAR RETURN LANE > DODGE RETURNING VENOM",
+    voice = "Return lane",
+    timing = false,
+}
+
+local normalCalls = baseCalls(
+    "Dispel infected players",
+    "BLIGHTED BLOOD > DISPEL INFECTED PLAYERS"
+)
+local heroicCalls = baseCalls(
+    "Targets edge > dispel > drop pools",
+    "BLIGHTED BLOOD > TARGETS EDGE > DISPEL > DROP POOLS THERE"
+)
+heroicCalls[#heroicCalls + 1] = livingVenom
+
+local mythicCalls = baseCalls(
+    "Targets edge > dispel > drop pools",
+    "BLIGHTED BLOOD > TARGETS EDGE > DISPEL > DROP POOLS THERE"
+)
+mythicCalls[#mythicCalls + 1] = livingVenom
 mythicCalls[#mythicCalls + 1] = {
     key = "protovenom",
     ability = "Shifting Protovenom",
@@ -70,14 +91,14 @@ Registry:Register({
     key = "sentinels",
     name = "Entombed Sentinels",
     encounterID = 3445,
-    strategyStatus = "12.1 difficulty plans source-reviewed 2026-08-13; live validation pending",
+    strategyStatus = "12.1 difficulty plans source-reviewed 2026-08-14; live validation pending",
     profiles = {
         normal = {
             explanation = {
-                "PLAN: SPLIT INTO 2 FIXED TEAMS AND KEEP THE BOSSES 30+ YARDS APART.",
+                "PLAN: TWO FIXED TEAMS. ANCHOR BOSSES 40+ YARDS APART TO AVOID CROSS-MARKS.",
                 "KEEP BOTH BOSS HEALTH BARS EVEN BEFORE EACH STASIS.",
                 "BREATH TEAM: KILL COAGULATION FAST; ASSIGNED PLAYERS STEP ON DROPLETS.",
-                "BLOOD TEAM: MIASMA STACKS AT THE MARK; BLOOD TARGETS GO EDGE FOR DISPEL.",
+                "BLOOD TEAM: MIASMA STACKS AT MARK; DISPEL BLIGHTED BLOOD WHEN SAFE.",
                 "STASIS: FIXED 4-PLAYER GROUPS TOUCH UNTIL TOXIN IS EXACTLY 4.",
                 "WHEN YOUR TOXIN CLEARS, STOP TOUCHING PEOPLE. THEN RE-SPLIT FAST.",
             },
@@ -85,20 +106,22 @@ Registry:Register({
         },
         heroic = {
             explanation = {
-                "PLAN: TWO FIXED TEAMS, BOSSES 30+ YARDS APART, HEALTH KEPT EVEN.",
+                "PLAN: TWO FIXED TEAMS. ANCHOR BOSSES 40+ YARDS APART; KEEP HEALTH EVEN.",
                 "BREATH TEAM: KILL COAGULATION; ASSIGNED PLAYERS STEP ON DROPLETS.",
-                "LIVING VENOM RETURNS: CONTROL IT AND DO NOT LET IT REACH THE BOSS.",
-                "BLOOD TEAM: MIASMA AT MARK; BLOOD TARGETS DROP THEIR POOLS AT THE EDGE.",
-                "STASIS: FIXED 4-PLAYER GROUPS. MAKE PAIRS, JOIN PAIRS, CLEAR AT EXACTLY 4.",
-                "AFTER STASIS: RE-SPLIT IMMEDIATELY AND SEPARATE THE BOSSES AGAIN.",
+                "LIVING VENOM: CLEAR ITS RETURN LANE AFTER 4 SEC; DODGE IT BACK TO BREATH.",
+                "BLOOD TEAM: MIASMA AT MARK; BLOOD VENOM POOLS GO TO THE EDGE.",
+                "BLIGHTED BLOOD: DISPEL WHEN SAFE AND KEEP THE DROP AWAY FROM THE RAID.",
+                "STASIS: FIXED 4-PLAYER GROUPS. PAIR, JOIN PAIRS, CLEAR AT EXACTLY 4.",
+                "AFTER STASIS: RE-SPLIT IMMEDIATELY AND RETURN TO YOUR ORIGINAL SIDE.",
             },
             calls = heroicCalls,
         },
         mythic = {
             explanation = {
                 "PLAN: HEROIC SPLIT PLUS FIXED PROTOVENOM PAIRS.",
-                "KEEP BOSSES 30+ APART AND HEALTH EVEN BEFORE EVERY STASIS.",
-                "BREATH: KILL SLIME, STOMP DROPLETS. BLOOD: MIASMA MARK, POOLS AT EDGE.",
+                "KEEP BOSSES 40+ YARDS APART AND HEALTH EVEN BEFORE EVERY STASIS.",
+                "BREATH: KILL SLIME, STOMP DROPLETS, AND CLEAR LIVING VENOM RETURN LANES.",
+                "BLOOD: MIASMA AT MARK; BLOOD VENOM POOLS GO TO THE EDGE.",
                 "PROTOVENOM: MARKED PLAYERS PAIR TOGETHER; NEVER TOUCH CLEAN PLAYERS.",
                 "STASIS: FIXED 4-PLAYER GROUPS PAIR, JOIN PAIRS, CLEAR AT EXACTLY 4.",
                 "AFTER STASIS: RE-SPLIT FAST AND RETURN TO YOUR ORIGINAL SIDE.",

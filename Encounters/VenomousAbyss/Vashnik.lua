@@ -4,12 +4,14 @@ local Registry = ns:GetModule("Encounters.Registry")
 local function imbibeCall(text)
     return { key="imbibe", ability="Imbibe", action=text, warning=text, voice="Imbibe", spellIDs={1283164} }
 end
-local froth = { key="froth", ability="Plague Froth", action="Targets out > dodge 4 waves", warning="PLAGUE FROTH > TARGETS MOVE OUT > DODGE 4 WAVES", voice="Froth", spellIDs={1281907} }
+local function frothCall(text)
+    return { key="froth", ability="Plague Froth", action=text, warning=text, voice="Froth", spellIDs={1281907} }
+end
 local catalyst = { key="catalyst", ability="Malignant Catalyst", action="1 player in every Bile circle", warning="CATALYST > 1 PLAYER IN EVERY BILE CIRCLE", voice="Catalyst", spellIDs={1282525,1282509} }
 
 Registry:Register({
     key="vashnik", name="Vashnik the Malignant", encounterID=3455,
-    strategyStatus="12.1 difficulty plans source-reviewed 2026-08-13; live validation pending",
+    strategyStatus="12.1 difficulty plans source-reviewed 2026-08-14; live validation pending",
     profiles={
         normal={
             explanation={
@@ -19,7 +21,10 @@ Registry:Register({
                 "FROTH TARGETS MOVE OUT. WHEN IT ENDS, EVERYONE DODGES THE 4 WAVES.",
                 "TANKS SWAP AS DRIPPING FANGS BECOMES DANGEROUS.",
             },
-            calls={ imbibeCall("IMBIBE > BOSS TO PLANNED PAIR > KILL VENOMS BEFORE CENTER"), froth },
+            calls={
+                imbibeCall("IMBIBE > BOSS TO PLANNED PAIR > KILL VENOMS BEFORE CENTER"),
+                frothCall("PLAGUE FROTH > TARGETS MOVE OUT > DODGE 4 WAVES"),
+            },
         },
         heroic={
             explanation={
@@ -29,21 +34,26 @@ Registry:Register({
                 "FROTH TARGETS MOVE OUT. WHEN IT ENDS, DODGE ALL 4 WAVES.",
                 "USE HEALING CDS FOR LATER IMBIBES AS TOXIC VAPOR BUILDS.",
             },
-            calls={ imbibeCall("IMBIBE > BOSS TO PLANNED PAIR > KILL VENOMS BEFORE CENTER"), catalyst, froth },
+            calls={
+                imbibeCall("IMBIBE > BOSS TO PLANNED PAIR > KILL VENOMS BEFORE CENTER"),
+                catalyst,
+                frothCall("PLAGUE FROTH > TARGETS MOVE OUT > DODGE 4 WAVES"),
+            },
         },
         mythic={
             explanation={
-                "PLAN: HEROIC FOUNTAIN ROTATION PLUS MALIGNANT TOTEMS ON EVERY IMBIBE.",
-                "IMBIBE: KILL MALIGNANT TOTEMS FIRST, THEN KILL VENOMS BEFORE CENTER.",
-                "TOTEMS MUST DIE FAST; EACH MALIGNANCE WAVE MAKES LATER DAMAGE WORSE.",
+                "PLAN: HEROIC FOUNTAIN ROTATION PLUS MALIGNANT TUMORS ON EACH IMBIBE.",
+                "IMBIBE: CONTROL LIVING VENOMS AND MARK TUMORS FOR THE NEXT PLAGUE FROTH.",
+                "FROTH TARGETS: AIM A PLAGUE WAVE THROUGH TUMORS TO CLEAR THEIR HARDENED DEFENSE.",
+                "AFTER THE WAVE: HARD SWAP ANY TUMOR STILL ALIVE, THEN FINISH LIVING VENOMS.",
                 "CATALYST: EVERY BILE CIRCLE GETS A PREASSIGNED SOAKER.",
-                "FROTH TARGETS OUT; DODGE THE 4 WAVES. KEEP FOUNTAIN STACKS BALANCED.",
-                "USE HEALING CDS ON PLANNED IMBIBES AS TOXIC VAPOR RAMPS.",
+                "KEEP FOUNTAIN STACKS BALANCED AND USE HEALING CDS AS TOXIC VAPOR RAMPS.",
             },
             calls={
-                imbibeCall("IMBIBE > KILL MALIGNANT TOTEMS > THEN VENOMS BEFORE CENTER"),
-                { key="totems", ability="Malignant Totems", action="Kill totems first", warning="MALIGNANT TOTEMS > HARD SWAP > KILL THEM FIRST", voice="Totems", timing=false, iconSpellID=1283164 },
-                catalyst, froth,
+                imbibeCall("IMBIBE > CONTROL VENOMS > MARK TUMORS FOR PLAGUE FROTH"),
+                { key="totems", ability="Malignant Tumors", action="Line Plague Waves through Tumors", warning="MALIGNANT TUMORS > FROTH TARGETS LINE PLAGUE WAVES THROUGH THEM", voice="Tumors", timing=false, iconSpellID=1283164 },
+                catalyst,
+                frothCall("PLAGUE FROTH > AIM WAVES THROUGH TUMORS > THEN DODGE"),
             },
         },
     },
