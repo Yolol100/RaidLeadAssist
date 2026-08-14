@@ -16,16 +16,22 @@ local function textAlias(module, text)
     return moduleID(module) .. "|text:" .. tostring(text)
 end
 
+local function validEventID(eventID)
+    if Util.IsSecret(eventID) then return false end
+    local valueType = type(eventID)
+    return valueType == "string" or valueType == "number"
+end
+
 local function makeTimerID(module, text, eventID)
-    if eventID ~= nil and not Util.IsSecret(eventID) then
+    if validEventID(eventID) then
         return moduleID(module) .. "|event:" .. tostring(eventID)
     end
     return textAlias(module, text)
 end
 
-local function chooseEventID(preferred, fallback)
-    if preferred ~= nil and not Util.IsSecret(preferred) then return preferred end
-    if fallback ~= nil and not Util.IsSecret(fallback) then return fallback end
+local function chooseEventID(primary, fallback)
+    if validEventID(primary) then return primary end
+    if validEventID(fallback) then return fallback end
     return nil
 end
 
@@ -37,7 +43,7 @@ function BigWigsProvider:Remember(module, text, eventID, id)
     self.aliases = self.aliases or {}
     local alias = textAlias(module, text)
     if alias then self.aliases[alias] = id end
-    if eventID ~= nil and not Util.IsSecret(eventID) then
+    if validEventID(eventID) then
         self.aliases["event:" .. tostring(eventID)] = id
     end
 end
@@ -45,7 +51,7 @@ end
 function BigWigsProvider:Resolve(module, text, eventID)
     local direct = makeTimerID(module, text, eventID)
     if direct and self.aliases and self.aliases[direct] then return self.aliases[direct] end
-    if eventID ~= nil and not Util.IsSecret(eventID) and self.aliases then
+    if validEventID(eventID) and self.aliases then
         local byEvent = self.aliases["event:" .. tostring(eventID)]
         if byEvent then return byEvent end
     end
@@ -69,17 +75,19 @@ function BigWigsProvider:Start(sink)
     self.timerModules = {}
 
     -- BigWigs boss modules send:
-    -- module, key, text, duration, icon, isApproximate, maxTime, nil, eventID
-    -- The BigWigs Blizzard Timeline bridge has a different tail and may put
-    -- maxQueueDuration where boss modules put isApproximate. Parse both shapes
-    -- and keep the source uncertainty explicit instead of treating the layouts
-    -- as interchangeable.
+    -- module, key, text, duration, icon, isApproximate, maxTime, eventID, spellIndicators
+    -- The BigWigs Blizzard Timeline bridge uses the same callback with module/key nil,
+    -- maxQueueDuration in the isApproximate slot, total duration in maxTime, and the
+    -- native event ID in eventID (some bridge paths also repeat it in the final slot).
+    -- Never treat a regular boss bar's spellIndicators value as native event identity.
     self.onStart = function(_, module, key, text, duration, icon, reliability, _, eventIDA, eventIDB)
         if Util.IsSecret(duration) or Util.IsSecret(key) or Util.IsSecret(text) or Util.IsSecret(reliability) then return end
         if type(duration) ~= "number" or duration <= 0 then return end
 
-        local eventID = chooseEventID(eventIDB, eventIDA)
-        local bridge = module == nil and key == nil and eventID ~= nil
+        local bridgeShape = module == nil and key == nil
+        local eventID = bridgeShape and chooseEventID(eventIDA, eventIDB)
+            or (validEventID(eventIDA) and eventIDA or nil)
+        local bridge = bridgeShape and eventID ~= nil
         local precision
         if bridge then
             precision = "native"
