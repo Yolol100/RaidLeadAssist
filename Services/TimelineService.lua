@@ -293,10 +293,9 @@ function TimelineService:ProviderTimerUpdated(providerName, sourceID, elapsed, t
     timer.expiration = now + remaining
     if timer.paused then timer.pausedRemaining = remaining end
 
-    local wasAcknowledged = timer.acknowledged == true
-    timer.occurrenceID = nil
-    self:AssignOccurrence(timer)
-    if wasAcknowledged then timer.acknowledged = true end
+    -- A provider update adjusts the same live bar. Its occurrence identity must
+    -- stay stable so PREPARE/PRESS audio and acknowledgement state cannot re-arm.
+    if not timer.occurrenceID and timer.call then self:AssignOccurrence(timer) end
     EventBus:Emit("TIMELINE_CHANGED")
 end
 
