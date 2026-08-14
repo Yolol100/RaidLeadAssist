@@ -13,6 +13,7 @@ Core/Util.lua
 Core/EventBus.lua
 Core/Database.lua
 Encounters/Registry.lua
+Encounters/AssignmentRegistry.lua
 Encounters/VenomousAbyss/Nekzali.lua
 Encounters/VenomousAbyss/Sentinels.lua
 Encounters/VenomousAbyss/Explorers.lua
@@ -24,6 +25,8 @@ Encounters/VenomousAbyss/Ulatek.lua
 Services/RaidWarningService.lua
 Services/MessageService.lua
 Services/AudioService.lua
+Services/RosterService.lua
+Services/AssignmentService.lua
 Services/Providers/BigWigsProvider.lua
 Services/Providers/DBMProvider.lua
 Services/Providers/BlizzardProvider.lua
@@ -36,6 +39,11 @@ UI/CallButton.lua
 UI/ActionButton.lua
 UI/SettingsField.lua
 UI/ConfirmDialog.lua
+UI/AssignmentSlot.lua
+UI/RosterPicker.lua
+UI/AssignmentFrame.lua
+UI/AssignmentLaunchers.lua
 UI/SettingsFrame.lua
 UI/MainFrame.lua
 Core/App.lua
+Core/AssignmentIntegration.lua
