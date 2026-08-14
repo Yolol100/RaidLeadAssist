@@ -37,4 +37,19 @@ jobs:
             lua5.1 "$file"
           done
       - name: Build and verify release ZIP
-        run: python3 scripts/build_release.py --output /tmp/RaidLeadAssist.zip
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/build_release.py --output dist/RaidLeadAssist.zip
+          sha256sum dist/RaidLeadAssist.zip > dist/RaidLeadAssist.zip.sha256
+      - name: Upload verified release artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: RaidLeadAssist-${{ github.sha }}
+          path: |
+            dist/RaidLeadAssist.zip
+            dist/RaidLeadAssist.zip.sha256
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
