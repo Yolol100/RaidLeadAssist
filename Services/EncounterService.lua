@@ -34,8 +34,11 @@ function EncounterService:OnEvent(eventName, ...)
 
         if self.currentEncounter then
             EventBus:Emit("ENCOUNTER_SELECTED", self.currentEncounter.key, true)
-            EventBus:Emit("ENCOUNTER_STARTED", encounterID, difficultyID)
         end
+        -- Always notify the app that a pull started. Unknown encounters must
+        -- explicitly disable automatic timing instead of leaving the previous
+        -- supported encounter's timer state active.
+        EventBus:Emit("ENCOUNTER_STARTED", encounterID, difficultyID)
         return
     end
 
