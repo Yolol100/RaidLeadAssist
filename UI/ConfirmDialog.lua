@@ -73,10 +73,7 @@ function ConfirmDialog:Create(parent)
     end)
 
     cancel:SetScript("OnClick", function()
-        overlay:Hide()
-        local callback = instance.onCancel
-        instance:ClearCallbacks()
-        if callback then callback() end
+        instance:Hide()
     end)
 
     return instance
@@ -99,8 +96,10 @@ function ConfirmDialog:Show(title, message, onSave, onDiscard, onCancel)
 end
 
 function ConfirmDialog:Hide()
+    local callback = self.onCancel
     self.overlay:Hide()
     self:ClearCallbacks()
+    if callback then callback() end
 end
 
 function ConfirmDialog:IsShown()
