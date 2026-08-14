@@ -100,11 +100,16 @@ function App:Initialize()
         resetTransientState(owner)
 
         local difficultyKey = Constants.DIFFICULTY_KEY_BY_ID[difficultyID]
-        if difficultyKey then
+        if not Encounter:HasKnownEncounter() then
+            owner.timingAllowed = false
+            Timeline:Reset()
+            ns:Print("This encounter has no Raid Lead Assist profile; automatic timing is disabled. Manual buttons remain available.")
+        elseif difficultyKey then
             owner:SelectDifficulty(difficultyKey, true)
             owner.timingAllowed = true
         else
             owner.timingAllowed = false
+            Timeline:Reset()
             ns:Print("Only Normal, Heroic, and Mythic profiles are supported; automatic timing is disabled.")
         end
 
