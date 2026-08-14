@@ -19,6 +19,9 @@ local Integration = {}
 
 local function canEditAssignments()
     if Encounter:IsActive() then return false, "Assignments are available outside active encounters." end
+    if type(InCombatLockdown) == "function" and InCombatLockdown() then
+        return false, "Assignments are pre-pull only. Leave combat before editing the plan."
+    end
     if Database:HasNewerSchema() then return false, "Assignments were created by a newer Raid Lead Assist version. Update the addon before editing them." end
     return true
 end
