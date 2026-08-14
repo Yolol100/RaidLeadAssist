@@ -37,16 +37,19 @@ local BigWigs = ns:GetModule("Services.Providers.BigWigs")
 assert(BigWigs:Start(sink) == true)
 local module = { moduleName = "Boss" }
 
--- Real boss-module shape: eventID is the final BigWigs_StartBar argument.
-bwMessages.BigWigs_StartBar(nil, module, 123, "Cast", 10, 456, false, 10, nil, 77)
+-- Current BigWigs boss-module shape:
+-- module, key, text, duration, icon, isApprox, maxTime, eventID, spellIndicators.
+-- The final spellIndicators value must never replace native event identity.
+bwMessages.BigWigs_StartBar(nil, module, 123, "Cast", 10, 456, false, 10, 77, { 1, 2 })
 assert(#started == 1 and started[1].provider == "BigWigs")
 assert(started[1].id == "Boss|event:77" and started[1].data.key == 123)
 assert(started[1].data.nativeEventID == 77 and started[1].data.precision == "exact")
 
 -- Approximate BigWigs CD bars are retained, but uncertainty must survive the adapter.
-bwMessages.BigWigs_StartBar(nil, module, 123, "Approx", 10, 456, true, 10, nil, 78)
+bwMessages.BigWigs_StartBar(nil, module, 123, "Approx", 10, 456, true, 10, 78, 511)
 assert(#started == 2 and started[2].data.precision == "approximate")
 assert(started[2].id == "Boss|event:78")
+assert(started[2].data.nativeEventID == 78, "spell indicator masks must not become event IDs")
 
 -- BigWigs' Blizzard timeline bridge uses maxQueueDuration in the reliability slot.
 bwMessages.BigWigs_StartBar(nil, nil, nil, "Timeline Cast", 9, 456, 3, 10, 79, nil)
@@ -55,8 +58,13 @@ assert(started[3].id == "blizzard-timeline|event:79")
 assert(started[3].data.bridge == "Blizzard" and started[3].data.precision == "native")
 assert(started[3].data.nativeEventID == 79)
 
-bwMessages.BigWigs_StartBar(nil, module, 123, "Secret", SECRET, 456, false, 10, nil, 80)
-assert(#started == 3, "secret BigWigs durations must fail closed")
+-- Some bridge paths repeat the native event ID in the final slot.
+bwMessages.BigWigs_StartBar(nil, nil, nil, "Timeline Cast 2", 8, 456, 3, nil, 80, 80)
+assert(#started == 4 and started[4].id == "blizzard-timeline|event:80")
+assert(started[4].data.nativeEventID == 80 and started[4].data.precision == "native")
+
+bwMessages.BigWigs_StartBar(nil, module, 123, "Secret", SECRET, 456, false, 10, 81, nil)
+assert(#started == 4, "secret BigWigs durations must fail closed")
 bwMessages.BigWigs_PauseBar(nil, module, "Cast", 77)
 assert(#paused == 1 and paused[1].value == true)
 bwMessages.BigWigs_StopBar(nil, module, "Cast", 77)
