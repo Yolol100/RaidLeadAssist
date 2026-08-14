@@ -156,10 +156,15 @@ end
 function App:SelectDifficulty(key, automatic)
     if not Constants.DIFFICULTIES[key] then return false end
 
-    local liveDifficulty = Encounter:IsActive() and Encounter:GetDifficultyKey() or nil
-    if not automatic and liveDifficulty and key ~= liveDifficulty then
-        ns:Print("Difficulty tabs are locked to " .. Constants.DIFFICULTIES[liveDifficulty].name .. " during this encounter.")
-        UI:SetDifficulty(liveDifficulty)
+    if not automatic and Encounter:IsActive() then
+        local liveDifficulty = Encounter:GetDifficultyKey()
+        if liveDifficulty then
+            ns:Print("Difficulty is locked to " .. Constants.DIFFICULTIES[liveDifficulty].name .. " during this encounter.")
+            UI:SetDifficulty(liveDifficulty)
+        else
+            ns:Print("Difficulty changes are locked during an active encounter.")
+            UI:SetDifficulty(self.activeDifficultyKey)
+        end
         return false
     end
 
@@ -183,7 +188,12 @@ end
 function App:SelectBoss(key, automatic)
     local encounter = Registry:Get(key)
     local profile = Registry:GetProfile(key, self.activeDifficultyKey)
-    if not encounter or not profile then return end
+    if not encounter or not profile then return false end
+
+    if not automatic and Encounter:IsActive() and Encounter:HasKnownEncounter() then
+        ns:Print("Boss selection is locked to the active encounter.")
+        return false
+    end
 
     RaidWarning:CancelBriefing()
     self.activeBossKey = key
@@ -194,6 +204,7 @@ function App:SelectBoss(key, automatic)
     UI:ResetCallStates()
 
     if automatic then UI:Show() end
+    return true
 end
 
 function App:SendExplanation()
