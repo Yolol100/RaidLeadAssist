@@ -17,6 +17,13 @@ local function normalizeTimerID(id)
     return tostring(id)
 end
 
+local function normalizeTimerCount(value)
+    if Util.IsSecret(value) or type(value) ~= "number" then return nil end
+    if value ~= value or value <= 0 or value == math.huge or value == -math.huge then return nil end
+    if value ~= math.floor(value) then return nil end
+    return value
+end
+
 local function encounterIDForMod(mod)
     if type(mod) ~= "table" then return nil end
     local encounterID = mod.encounterId
@@ -68,7 +75,7 @@ function DBMProvider:Start(sink)
 
     self.sink = sink
 
-    self.onBegin = function(_, id, message, duration, icon, simpleType, spellID, _, _, _, fade, spellName, _, _, _, _, hasVariance, _, isEnabled)
+    self.onBegin = function(_, id, message, duration, icon, simpleType, spellID, _, _, _, fade, spellName, _, timerCount, _, _, hasVariance, _, isEnabled)
         local timerID = normalizeTimerID(id)
         if not timerID then return end
         if Util.IsSecret(duration) or Util.IsSecret(simpleType) or Util.IsSecret(fade)
@@ -82,6 +89,7 @@ function DBMProvider:Start(sink)
             name = not Util.IsSecret(spellName) and spellName or (not Util.IsSecret(message) and message or nil),
             duration = duration,
             icon = Util.NormalizeTexture(icon),
+            count = normalizeTimerCount(timerCount),
             precision = "exact",
             faded = fade == true,
         })

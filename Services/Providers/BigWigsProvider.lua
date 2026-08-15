@@ -5,6 +5,8 @@ local Util = ns:GetModule("Core.Util")
 local BigWigsProvider = {}
 BigWigsProvider.__index = BigWigsProvider
 
+local PENDING_EVENT_MAX_AGE = 1
+
 local function moduleID(module)
     if module == nil then return "blizzard-timeline" end
     if type(module) == "table" and type(module.moduleName) == "string" then return module.moduleName end
@@ -20,6 +22,21 @@ local function validEventID(eventID)
     if Util.IsSecret(eventID) then return false end
     local valueType = type(eventID)
     return valueType == "string" or valueType == "number"
+end
+
+local function normalizeCounter(value)
+    if Util.IsSecret(value) or type(value) ~= "number" then return nil end
+    if value ~= value or value <= 0 or value == math.huge or value == -math.huge then return nil end
+    if value ~= math.floor(value) then return nil end
+    return value
+end
+
+local function clock()
+    local getTime = _G.GetTime
+    if type(getTime) ~= "function" then return nil end
+    local ok, value = pcall(getTime)
+    if not ok or Util.IsSecret(value) or type(value) ~= "number" or value ~= value then return nil end
+    return value
 end
 
 local function makeTimerID(module, text, eventID)
@@ -93,15 +110,40 @@ end
 function BigWigsProvider:RememberPendingEventID(module, key, text, eventID)
     if not validEventID(eventID) then return end
     local correlation = directTimerKey(module, key, text)
-    if correlation then self.pendingEventIDs[correlation] = eventID end
+    if not correlation then return end
+
+    self.pendingEventIDs[correlation] = {
+        eventID = eventID,
+        recordedAt = clock(),
+        moduleName = moduleID(module),
+    }
 end
 
 function BigWigsProvider:TakePendingEventID(module, key, text)
     local correlation = directTimerKey(module, key, text)
     if not correlation then return nil end
-    local eventID = self.pendingEventIDs[correlation]
+
+    local pending = self.pendingEventIDs[correlation]
     self.pendingEventIDs[correlation] = nil
-    return eventID
+    if type(pending) ~= "table" or not validEventID(pending.eventID) then return nil end
+
+    local current = clock()
+    if pending.recordedAt and current
+        and (current < pending.recordedAt or current - pending.recordedAt > PENDING_EVENT_MAX_AGE) then
+        return nil
+    end
+
+    return pending.eventID
+end
+
+function BigWigsProvider:ClearPendingForModule(module)
+    if not self.pendingEventIDs then return end
+    local wanted = moduleID(module)
+    for correlation, pending in pairs(self.pendingEventIDs) do
+        if type(pending) == "table" and pending.moduleName == wanted then
+            self.pendingEventIDs[correlation] = nil
+        end
+    end
 end
 
 function BigWigsProvider:SeedEncounterHint()
@@ -149,7 +191,7 @@ function BigWigsProvider:Start(sink)
     -- code sends the optional timeline event ID in the final StartBar slot immediately before the
     -- matching Timer/CastTimer event. RLA records that value only as one-shot metadata and attaches
     -- it to the matching direct timer; StartBar itself never creates a second direct timer.
-    local function startDirectTimer(module, key, duration, text, icon, isApproximate, isBarEnabled)
+    local function startDirectTimer(module, key, duration, text, counter, icon, isApproximate, isBarEnabled)
         local encounterID = encounterIDForModule(module)
         if not encounterID then return end
         if Util.IsSecret(duration) or Util.IsSecret(key) or Util.IsSecret(text)
@@ -166,18 +208,19 @@ function BigWigsProvider:Start(sink)
             name = text,
             duration = duration,
             icon = Util.NormalizeTexture(icon),
+            count = normalizeCounter(counter),
             encounterID = encounterID,
             nativeEventID = nativeEventID,
             precision = isApproximate == true and "approximate" or "exact",
         })
     end
 
-    self.onTimer = function(_, module, key, duration, _, text, _, icon, isApproximate, isBarEnabled)
-        startDirectTimer(module, key, duration, text, icon, isApproximate, isBarEnabled)
+    self.onTimer = function(_, module, key, duration, _, text, counter, icon, isApproximate, isBarEnabled)
+        startDirectTimer(module, key, duration, text, counter, icon, isApproximate, isBarEnabled)
     end
 
-    self.onCastTimer = function(_, module, key, duration, _, text, _, icon, _, isBarEnabled)
-        startDirectTimer(module, key, duration, text, icon, false, isBarEnabled)
+    self.onCastTimer = function(_, module, key, duration, _, text, counter, icon, _, isBarEnabled)
+        startDirectTimer(module, key, duration, text, counter, icon, false, isBarEnabled)
     end
 
     self.onStart = function(_, module, key, text, duration, icon, reliability, _, eventIDA, eventIDB)
@@ -189,7 +232,8 @@ function BigWigsProvider:Start(sink)
 
             -- In v419.2/current BossPrototype, normal Bar/CDBar/CastBar puts its optional
             -- timeline event ID in the final StartBar slot. Treat it as metadata only after
-            -- a real boss module has been verified and consume it exactly once.
+            -- a real boss module has been verified and consume it exactly once. If the matching
+            -- Timer/CastTimer never arrives, the metadata is considered stale after one second.
             if validEventID(eventIDB) then
                 self:RememberPendingEventID(module, key, text, eventIDB)
             end
@@ -237,6 +281,8 @@ function BigWigsProvider:Start(sink)
 
     self.onStopModule = function(_, module)
         local wanted = moduleID(module)
+        self:ClearPendingForModule(module)
+
         local ids = {}
         for id, ownerModule in pairs(self.timerModules) do
             if ownerModule == wanted then ids[#ids + 1] = id end

@@ -64,6 +64,15 @@ local function publicValue(value)
     return value
 end
 
+local function normalizeTimerCount(value)
+    if not isFiniteNumber(value) or value <= 0 or value ~= math.floor(value) then return nil end
+    return value
+end
+
+local function countsConflict(first, second)
+    return first ~= nil and second ~= nil and first ~= second
+end
+
 local function normalizePrecision(value, providerName, bridge)
     value = publicValue(value)
     bridge = publicValue(bridge)
@@ -149,10 +158,17 @@ local function isSameOccurrence(candidate, existing)
         return false
     end
 
+    -- A shared Blizzard timeline event is the strongest identity signal. Count
+    -- metadata is secondary because one provider can legitimately omit or mislabel it.
     if candidate.nativeEventID ~= nil and existing.nativeEventID ~= nil
         and candidate.nativeEventID == existing.nativeEventID then
         return true
     end
+
+    -- DBM timerCount and BigWigs counter describe mechanic occurrence. When both
+    -- providers publish a count and disagree, never collapse those timers solely
+    -- because their expirations happen to fall within the duplicate tolerance.
+    if countsConflict(candidate.count, existing.count) then return false end
 
     if sourceClass(candidate) == sourceClass(existing) then return false end
 
@@ -323,6 +339,7 @@ function TimelineService:IsRecentlyAcknowledged(timer)
         return false
     end
 
+    if countsConflict(timer.count, acknowledgement.count) then return false end
     return math.abs(timer.expiration - acknowledgement.expiration) <= Constants.DUPLICATE_TIMER_TOLERANCE
 end
 
@@ -377,16 +394,18 @@ function TimelineService:ProviderTimerStarted(providerName, sourceID, data)
     local previousOccurrenceID
     local previousAcknowledged = false
     local previousCallKey
+    local previousCount
 
     -- Bossmods can refresh/correct a live bar by sending another Begin/Start for
     -- the same source ID instead of an Update callback. Preserve the occurrence
-    -- and acknowledgement while that old bar is still live; an explicit stop or
-    -- expiry remains the boundary that permits a genuinely new occurrence.
+    -- and acknowledgement while that old bar is still live; an explicit stop,
+    -- expiry, call change, or explicit mechanic-count change is a new boundary.
     if existing and (existing.paused == true
         or (isFiniteNumber(existing.expiration) and existing.expiration > now)) then
         previousOccurrenceID = existing.occurrenceID
         previousAcknowledged = existing.acknowledged == true
         previousCallKey = existing.call and existing.call.key or nil
+        previousCount = existing.count
     end
 
     local timer = existing or { id = id }
@@ -395,6 +414,7 @@ function TimelineService:ProviderTimerStarted(providerName, sourceID, data)
     timer.key = publicValue(data.key)
     timer.name = publicValue(data.name)
     timer.icon = publicValue(data.icon)
+    timer.count = normalizeTimerCount(data.count)
     timer.duration = data.duration
     timer.nativeEventID = publicValue(data.nativeEventID)
     timer.bridge = publicValue(data.bridge)
@@ -409,7 +429,8 @@ function TimelineService:ProviderTimerStarted(providerName, sourceID, data)
 
     self:MatchTimer(timer)
     local matchedCallKey = timer.call and timer.call.key or nil
-    if previousOccurrenceID and previousCallKey ~= nil and matchedCallKey == previousCallKey then
+    if previousOccurrenceID and previousCallKey ~= nil and matchedCallKey == previousCallKey
+        and not countsConflict(previousCount, timer.count) then
         timer.occurrenceID = previousOccurrenceID
         timer.acknowledged = previousAcknowledged
     else
@@ -591,10 +612,10 @@ function TimelineService:AcknowledgeCall(callKey)
 
     for _, timer in pairs(self.timers) do
         if timer.call and timer.call.key == callKey and not timer.acknowledged then
-            local sameOccurrence = timer.occurrenceID == selected.occurrenceID
-            local remaining = self:GetRemaining(timer)
-            local expiration = now + (type(remaining) == "number" and remaining or 0)
-            if sameOccurrence or math.abs(expiration - selectedExpiration) <= Constants.DUPLICATE_TIMER_TOLERANCE then
+            local sameOccurrence = timer == selected
+                or timer.occurrenceID == selected.occurrenceID
+                or isSameOccurrence(timer, selected)
+            if sameOccurrence then
                 timer.acknowledged = true
                 local source = acknowledgementSource(timer)
                 if source then acknowledgedSources[source] = true end
@@ -605,6 +626,7 @@ function TimelineService:AcknowledgeCall(callKey)
     self.recentAcknowledgements[callKey] = {
         expiration = selectedExpiration,
         expiresAt = now + Constants.RECENT_ACKNOWLEDGEMENT_SECONDS,
+        count = selected.count,
         sources = acknowledgedSources,
     }
 
