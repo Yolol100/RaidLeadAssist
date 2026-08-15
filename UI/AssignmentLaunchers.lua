@@ -8,8 +8,8 @@ local AssignmentLaunchers = {}
 function AssignmentLaunchers:Attach(mainUI, settingsUI, onOpen)
     if mainUI and mainUI.frame and not mainUI.frame.assignmentButton then
         local button = CreateFrame("Button", nil, mainUI.frame)
-        button:SetSize(60, 20)
-        button:SetPoint("TOPRIGHT", -82, -3)
+        button:SetSize(68, 24)
+        button:SetPoint("TOPRIGHT", -82, -1)
         button:SetFrameLevel(mainUI.frame:GetFrameLevel() + 2)
         button.text = button:CreateFontString(nil, "OVERLAY")
         button.text:SetFont(Theme.font, 9, "OUTLINE")
@@ -30,7 +30,7 @@ function AssignmentLaunchers:Attach(mainUI, settingsUI, onOpen)
         local button = ActionButton:Create(settingsUI.frame, {
             text = "ASSIGNMENTS",
             width = 104,
-            height = 22,
+            height = 24,
             fontSize = 9,
             variant = "secondary",
         })
