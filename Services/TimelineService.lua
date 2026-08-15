@@ -11,6 +11,7 @@ local TimelineService = {
     activeProviders = {},
     providerFailures = {},
     recentAcknowledgements = {},
+    blizzardSuppressionSources = {},
     nextOccurrenceID = 0,
 }
 
@@ -18,6 +19,26 @@ local providers = {
     BigWigs = ns:GetModule("Services.Providers.BigWigs"),
     DBM = ns:GetModule("Services.Providers.DBM"),
     Blizzard = ns:GetModule("Services.Providers.Blizzard"),
+}
+
+local addonDiagnostics = {
+    BigWigs = {
+        core = "BigWigs",
+        pack = "BigWigs_TheVenomousAbyss",
+        packLabel = "Venomous pack",
+    },
+    DBM = {
+        core = "DBM-Core",
+        pack = "DBM-Raids-Midnight",
+        packLabel = "Midnight raid pack",
+    },
+}
+
+local watchedAddons = {
+    BigWigs = true,
+    ["BigWigs_TheVenomousAbyss"] = true,
+    ["DBM-Core"] = true,
+    ["DBM-Raids-Midnight"] = true,
 }
 
 local providerRank = {}
@@ -78,6 +99,26 @@ local function acknowledgementSource(timer)
     return timer.providerName
 end
 
+local function isBlizzardRepresentation(providerName, dataOrTimer)
+    return providerName == "Blizzard"
+        or (type(dataOrTimer) == "table" and dataOrTimer.bridge == "Blizzard")
+end
+
+local function addonMetadata(addonName, field)
+    local api = C_AddOns and C_AddOns.GetAddOnMetadata or _G.GetAddOnMetadata
+    if type(api) ~= "function" then return nil end
+    local ok, value = pcall(api, addonName, field)
+    if not ok or Util.IsSecret(value) or value == nil or value == "" then return nil end
+    return tostring(value)
+end
+
+local function addonLoaded(addonName)
+    local api = C_AddOns and C_AddOns.IsAddOnLoaded or _G.IsAddOnLoaded
+    if type(api) ~= "function" then return false end
+    local ok, loaded = pcall(api, addonName)
+    return ok and loaded == true
+end
+
 local function isBetterCandidate(candidate, candidateRemaining, current, currentRemaining)
     if not current then return true end
 
@@ -123,6 +164,56 @@ function TimelineService:IsActionable(timer)
     return timer ~= nil and timer.precision ~= Constants.TimerPrecision.APPROXIMATE
 end
 
+function TimelineService:IsBlizzardSuppressed()
+    return next(self.blizzardSuppressionSources) ~= nil
+end
+
+function TimelineService:SetBlizzardSuppressedByProvider(sourceName, suppressed)
+    if type(sourceName) ~= "string" or sourceName == "" or Util.IsSecret(suppressed) then return false end
+
+    local hadSource = self.blizzardSuppressionSources[sourceName] == true
+    local wantsSource = suppressed == true
+    if hadSource == wantsSource then return false end
+
+    if wantsSource then
+        self.blizzardSuppressionSources[sourceName] = true
+    else
+        self.blizzardSuppressionSources[sourceName] = nil
+    end
+
+    local nowSuppressed = self:IsBlizzardSuppressed()
+    local changedTimers = false
+
+    if nowSuppressed then
+        for id, timer in pairs(self.timers) do
+            if isBlizzardRepresentation(timer.providerName, timer) then
+                self.timers[id] = nil
+                changedTimers = true
+            end
+        end
+    else
+        local blizzard = self.activeProviders.Blizzard
+        if blizzard and type(blizzard.SeedExistingEvents) == "function" then
+            pcall(blizzard.SeedExistingEvents, blizzard)
+        end
+    end
+
+    EventBus:Emit("TIMELINE_PROVIDER_CHANGED", self:GetProviderDiagnostics())
+    if changedTimers then EventBus:Emit("TIMELINE_CHANGED") end
+    return true
+end
+
+function TimelineService:ProviderEncounterHint(providerName, encounterID)
+    if Util.IsSecret(providerName) or Util.IsSecret(encounterID) then return false end
+    if type(providerName) ~= "string" then return false end
+
+    if type(encounterID) == "string" then encounterID = tonumber(encounterID) end
+    if type(encounterID) ~= "number" then return false end
+
+    EventBus:Emit("PROVIDER_ENCOUNTER_HINT", providerName, encounterID)
+    return true
+end
+
 function TimelineService:Initialize()
     self:RefreshProviders()
 
@@ -130,10 +221,11 @@ function TimelineService:Initialize()
     self.discoveryFrame:RegisterEvent("ADDON_LOADED")
     self.discoveryFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
     self.discoveryFrame:SetScript("OnEvent", function(_, eventName, loadedAddon)
-        if eventName == "ADDON_LOADED" and loadedAddon ~= "BigWigs" and loadedAddon ~= "DBM-Core" then
-            return
-        end
-        C_Timer.After(0, function() self:RefreshProviders() end)
+        if eventName == "ADDON_LOADED" and not watchedAddons[loadedAddon] then return end
+        C_Timer.After(0, function()
+            self:RefreshProviders()
+            EventBus:Emit("TIMELINE_PROVIDER_CHANGED", self:GetProviderDiagnostics())
+        end)
     end)
 end
 
@@ -152,7 +244,8 @@ function TimelineService:RefreshProviders()
             if ok and started == true then
                 self.activeProviders[name] = provider
                 self.providerFailures[name] = nil
-                if type(provider.SeedExistingEvents) == "function" then
+                if type(provider.SeedExistingEvents) == "function"
+                    and not (name == "Blizzard" and self:IsBlizzardSuppressed()) then
                     pcall(provider.SeedExistingEvents, provider)
                 end
                 changed = true
@@ -169,12 +262,13 @@ function TimelineService:RefreshProviders()
             pcall(provider.Stop, provider)
             self.activeProviders[name] = nil
             self:ProviderReset(name)
+            if name == "DBM" then self:SetBlizzardSuppressedByProvider("DBM", false) end
             changed = true
         end
     end
 
     if changed then
-        EventBus:Emit("TIMELINE_PROVIDER_CHANGED", self:GetProviderSummary())
+        EventBus:Emit("TIMELINE_PROVIDER_CHANGED", self:GetProviderDiagnostics())
     end
 end
 
@@ -187,7 +281,7 @@ function TimelineService:SetEncounter(encounterKey, preserveRecentTimers)
     end
 
     local blizzard = self.activeProviders.Blizzard
-    if blizzard and type(blizzard.SeedExistingEvents) == "function" then
+    if not self:IsBlizzardSuppressed() and blizzard and type(blizzard.SeedExistingEvents) == "function" then
         pcall(blizzard.SeedExistingEvents, blizzard)
     end
 end
@@ -272,6 +366,7 @@ end
 
 function TimelineService:ProviderTimerStarted(providerName, sourceID, data)
     if not self.activeProviders[providerName] or type(data) ~= "table" or not validSourceID(sourceID) then return end
+    if self:IsBlizzardSuppressed() and isBlizzardRepresentation(providerName, data) then return end
     if not isFiniteNumber(data.duration) or data.duration <= 0 then return end
 
     local id = timerID(providerName, sourceID)
@@ -504,6 +599,46 @@ function TimelineService:GetProviderSummary()
         if self.activeProviders[name] then active[#active + 1] = name end
     end
     return table.concat(active, ", ")
+end
+
+function TimelineService:GetProviderDiagnostics()
+    local active = {}
+
+    for _, name in ipairs(Constants.PROVIDER_PRIORITY) do
+        if self.activeProviders[name] then
+            if name == "Blizzard" then
+                active[#active + 1] = "Blizzard native"
+            else
+                local spec = addonDiagnostics[name]
+                local coreVersion = spec and addonMetadata(spec.core, "Version") or nil
+                local label = name .. (coreVersion and (" " .. coreVersion) or "")
+                if spec then
+                    local packVersion = addonMetadata(spec.pack, "Version")
+                    local packState
+                    if packVersion then
+                        packState = addonLoaded(spec.pack) and "loaded" or "installed/not loaded"
+                        label = label .. (" [%s %s%s]"):format(
+                            spec.packLabel,
+                            packState,
+                            packVersion ~= coreVersion and (" " .. packVersion) or ""
+                        )
+                    else
+                        label = label .. (" [%s missing]"):format(spec.packLabel)
+                    end
+                end
+                active[#active + 1] = label
+            end
+        end
+    end
+
+    if self:IsBlizzardSuppressed() then
+        local sources = {}
+        for sourceName in pairs(self.blizzardSuppressionSources) do sources[#sources + 1] = sourceName end
+        table.sort(sources)
+        active[#active + 1] = "Blizzard timers suppressed by " .. table.concat(sources, "+")
+    end
+
+    return table.concat(active, "; ")
 end
 
 ns:RegisterModule("Services.TimelineService", TimelineService)
