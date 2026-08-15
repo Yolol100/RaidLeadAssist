@@ -83,6 +83,30 @@ function BigWigsProvider:Forget(id)
     end
 end
 
+function BigWigsProvider:SeedEncounterHint()
+    if not self.sink or not _G.BigWigs or type(BigWigs.IterateBossModules) ~= "function"
+        or type(self.sink.ProviderEncounterHint) ~= "function" then
+        return false
+    end
+
+    local foundEncounterID
+    local ok = pcall(function()
+        for _, module in BigWigs:IterateBossModules() do
+            if type(module) == "table" and type(module.IsEngaged) == "function" then
+                local engagedOK, engaged = pcall(module.IsEngaged, module)
+                if engagedOK and engaged == true then
+                    foundEncounterID = encounterIDForModule(module)
+                    if foundEncounterID then break end
+                end
+            end
+        end
+    end)
+
+    if not ok or not foundEncounterID then return false end
+    self.sink:ProviderEncounterHint("BigWigs", foundEncounterID)
+    return true
+end
+
 function BigWigsProvider:Start(sink)
     if not self:IsAvailable() then return false end
 
