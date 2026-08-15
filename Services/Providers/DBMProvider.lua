@@ -25,6 +25,17 @@ local function encounterIDForMod(mod)
     if type(encounterID) == "string" then return tonumber(encounterID) end
 end
 
+local function canSupplyBossTimers()
+    if not _G.DBM then return false end
+    if type(DBM.Options) ~= "table" then return true end
+
+    -- DBM 12.1.3 Timer:Start returns before DBM_TimerBegin when either of
+    -- these global boss-bar switches is enabled. In that mode DBM cannot be
+    -- RLA's timer authority, so Blizzard-derived data must remain available.
+    return DBM.Options.HideDBMBars ~= true
+        and DBM.Options.DontShowBossTimers ~= true
+end
+
 function DBMProvider:IsAvailable()
     return _G.DBM and type(DBM.RegisterCallback) == "function"
 end
@@ -107,7 +118,7 @@ function DBMProvider:Start(sink)
 
     self.onIgnoreBlizzard = function()
         if type(self.sink.SetBlizzardSuppressedByProvider) == "function" then
-            self.sink:SetBlizzardSuppressedByProvider("DBM", true)
+            self.sink:SetBlizzardSuppressedByProvider("DBM", canSupplyBossTimers())
         end
     end
 

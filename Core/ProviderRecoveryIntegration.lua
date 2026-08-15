@@ -1,5 +1,6 @@
 local _, ns = ...
 
+local Constants = ns:GetModule("Core.Constants")
 local EventBus = ns:GetModule("Core.EventBus")
 local Timeline = ns:GetModule("Services.TimelineService")
 local Encounter = ns:GetModule("Services.EncounterService")
@@ -12,10 +13,14 @@ local function seedActiveBossmods()
     if not Encounter:IsActive() or Encounter:HasKnownEncounter() then return false end
 
     local seeded = false
-    for _, provider in pairs(Timeline.activeProviders or {}) do
+    for _, providerName in ipairs(Constants.PROVIDER_PRIORITY) do
+        local provider = (Timeline.activeProviders or {})[providerName]
         if provider and type(provider.SeedEncounterHint) == "function" then
             local ok, result = pcall(provider.SeedEncounterHint, provider)
-            if ok and result == true then seeded = true end
+            if ok and result == true then
+                seeded = true
+                if Encounter:HasKnownEncounter() then return true end
+            end
         end
     end
     return seeded
