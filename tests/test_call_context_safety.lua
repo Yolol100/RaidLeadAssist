@@ -92,9 +92,17 @@ assert(App:SendExplanation() == false, "all active encounters must block the pre
 assert(#warnings == 0 and briefings == 0)
 
 assert(handlers.ENCOUNTER_STARTED, "encounter start guard must be registered")
+assert(handlers.ENCOUNTER_RECOVERED, "encounter recovery guard must be registered")
 handlers.ENCOUNTER_STARTED()
 assert(explanationEnabled == false and callEnabled == false,
     "unsafe active encounter must disable visible plan/call controls")
+
+known = true
+encounterModule.currentEncounter = { key = "boss" }
+difficulty = "heroic"
+handlers.ENCOUNTER_RECOVERED()
+assert(explanationEnabled == false and callEnabled == true,
+    "verified recovery must re-enable combat calls while keeping the pre-pull plan disabled")
 
 known = true
 encounterModule.currentEncounter = { key = "boss" }
@@ -126,4 +134,4 @@ assert(App:SendExplanation() == false and briefings == 1,
 assert(App:SendCall("kick") == true, "verified supported encounter must allow the configured combat call")
 assert(#warnings == 1 and warnings[1] == "BASE WARNING")
 
-print("ok - active encounter Raid Warning context and pre-pull plan lifecycle")
+print("ok - active encounter Raid Warning context, recovery and pre-pull lifecycle")
