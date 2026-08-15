@@ -7,6 +7,15 @@ local Util = ns:GetModule("Core.Util")
 local TimelineBar = {}
 TimelineBar.__index = TimelineBar
 
+local function sourceLabel(timer)
+    if not timer then return nil end
+    if timer.bridge == "Blizzard" then return "Blizzard/BW" end
+    if timer.providerName == "BigWigs" then return "BigWigs" end
+    if timer.providerName == "DBM" then return "DBM" end
+    if timer.providerName == "Blizzard" then return "Blizzard" end
+    return timer.providerName
+end
+
 function TimelineBar:Create(parent)
     local instance = setmetatable({}, TimelineBar)
 
@@ -70,6 +79,8 @@ function TimelineBar:SetTimer(timer, remaining)
     self.frame:SetValue(Util.Clamp(remaining or 0, 0, duration))
 
     local label = timer.call and timer.call.ability or timer.name or "Boss timer"
+    local source = sourceLabel(timer)
+    if source then label = label .. " · " .. source end
     local approximate = timer.precision == Constants.TimerPrecision.APPROXIMATE
     if approximate then label = label .. " (approx)" end
     self.frame.label:SetText(label)
