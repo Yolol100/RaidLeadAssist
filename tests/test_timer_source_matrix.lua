@@ -63,9 +63,10 @@ for _, source in ipairs({ "BigWigs", "DBM", "Blizzard" }) do
 end
 
 -- Every two-source combination must reconcile one mechanic and prefer the
--- configured bossmod order: BigWigs, then DBM, then Blizzard.
+-- configured order for equally precise representations: DBM, then BigWigs,
+-- then Blizzard.
 local pairsToCheck = {
-    { "BigWigs", "DBM", "BigWigs" },
+    { "BigWigs", "DBM", "DBM" },
     { "BigWigs", "Blizzard", "BigWigs" },
     { "DBM", "Blizzard", "DBM" },
 }
@@ -91,11 +92,11 @@ now = now + 0.1
 local blizzard, blizzardID = start("Blizzard", 9.8)
 assert(bw.occurrenceID == dbm.occurrenceID and dbm.occurrenceID == blizzard.occurrenceID,
     "all three sources must reconcile one occurrence")
-assert(Timeline:GetActionableTimerForCall("kick").providerName == "BigWigs")
-Timeline:ProviderTimerStopped("BigWigs", bwID)
-assert(Timeline:GetActionableTimerForCall("kick").providerName == "DBM",
-    "DBM must take over when BigWigs disappears")
+assert(Timeline:GetActionableTimerForCall("kick").providerName == "DBM")
 Timeline:ProviderTimerStopped("DBM", dbmID)
+assert(Timeline:GetActionableTimerForCall("kick").providerName == "BigWigs",
+    "BigWigs must take over when DBM disappears")
+Timeline:ProviderTimerStopped("BigWigs", bwID)
 assert(Timeline:GetActionableTimerForCall("kick").providerName == "Blizzard",
     "Blizzard must remain a usable final fallback")
 Timeline:ProviderTimerStopped("Blizzard", blizzardID)
@@ -124,4 +125,4 @@ local remaining = Timeline:GetActionableTimerForCall("kick")
 assert(remaining and remaining.id == later.id and not later.acknowledged,
     "acknowledging one occurrence must not suppress a later mechanic")
 
-print("ok - complete BigWigs/DBM/Blizzard source matrix and bounded deduplication")
+print("ok - DBM-first BigWigs/DBM/Blizzard source matrix and bounded deduplication")
