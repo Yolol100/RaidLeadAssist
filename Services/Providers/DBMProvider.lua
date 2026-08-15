@@ -29,6 +29,29 @@ function DBMProvider:IsAvailable()
     return _G.DBM and type(DBM.RegisterCallback) == "function"
 end
 
+function DBMProvider:SeedEncounterHint()
+    if not self.sink or not _G.DBM or type(DBM.Mods) ~= "table"
+        or type(self.sink.ProviderEncounterHint) ~= "function" then
+        return false
+    end
+
+    for index = 1, #DBM.Mods do
+        local mod = DBM.Mods[index]
+        if type(mod) == "table" and type(mod.IsInCombat) == "function" then
+            local ok, inCombat = pcall(mod.IsInCombat, mod)
+            if ok and inCombat == true then
+                local encounterID = encounterIDForMod(mod)
+                if encounterID then
+                    self.sink:ProviderEncounterHint("DBM", encounterID)
+                    return true
+                end
+            end
+        end
+    end
+
+    return false
+end
+
 function DBMProvider:Start(sink)
     if not self:IsAvailable() then return false end
 
