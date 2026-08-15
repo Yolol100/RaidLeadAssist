@@ -13,6 +13,8 @@ local heroic = Registry:GetProfile("twinfangs", "heroic")
 assert(heroic)
 
 local text = table.concat(heroic.explanation, "\n")
-assert(string.find(text, "HEROIC: ETERNAL VENOM KILLS YOU AT 8 STACKS.", 1, true))
+assert(string.find(text, "KEEP STACKS LOW", 1, true), "Heroic strategy must retain actionable Eternal Venom guidance")
+assert(string.find(text, "3+ PLAYERS PER HIT", 1, true), "Heroic strategy must state the stable Ravenous Feast minimum")
+assert(not string.find(text, "KILLS YOU AT 8 STACKS", 1, true), "volatile PTR death thresholds must not be hard-coded")
 
-print("ok - Twin Fangs Heroic venom threshold")
+print("ok - Twin Fangs uses stable venom and Feast invariants")
