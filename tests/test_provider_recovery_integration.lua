@@ -40,6 +40,7 @@ ns:RegisterModule("Services.TimelineService", {
 })
 
 T.Load("Core/ProviderRecoveryIntegration.lua", ns)
+local Integration = ns:GetModule("Core.ProviderRecoveryIntegration")
 
 assert(frameScripts.OnEvent, "PLAYER_ENTERING_WORLD recovery frame must be registered")
 frameScripts.OnEvent()
@@ -52,7 +53,7 @@ assert(#queued == 0, "successful recovery must stop the bounded retry loop")
 known = false
 seedSucceeds = false
 seedCalls = 0
-handlers.TIMELINE_PROVIDER_CHANGED()
+handlers.TIMELINE_PROVIDER_CHANGED(Integration)
 assert(#queued == 1)
 for expectedAttempt = 1, 3 do
     local item = table.remove(queued, 1)
@@ -62,15 +63,15 @@ for expectedAttempt = 1, 3 do
 end
 assert(#queued == 0, "late recovery probing must stop after three attempts")
 
-handlers.TIMELINE_PROVIDER_CHANGED()
+handlers.TIMELINE_PROVIDER_CHANGED(Integration)
 assert(#queued == 1)
-handlers.ENCOUNTER_STARTED()
+handlers.ENCOUNTER_STARTED(Integration)
 local cancelled = table.remove(queued, 1)
 cancelled.callback()
 assert(seedCalls == 3, "authoritative ENCOUNTER_START must cancel stale recovery probes")
 
 active = false
-handlers.TIMELINE_PROVIDER_CHANGED()
+handlers.TIMELINE_PROVIDER_CHANGED(Integration)
 local inactive = table.remove(queued, 1)
 inactive.callback()
 assert(seedCalls == 3, "provider changes outside encounters must not trigger recovery work")
