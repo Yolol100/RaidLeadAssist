@@ -53,6 +53,7 @@ local module = {
 bwMessages.BigWigs_Timer(nil, module, 123, 10, 10, "Cast", 0, 456, false, true)
 assert(#started == 1 and started[1].provider == "BigWigs")
 assert(started[1].id == "Boss|text:Cast" and started[1].data.key == 123)
+assert(started[1].data.encounterID == 3420)
 assert(started[1].data.nativeEventID == nil and started[1].data.precision == "exact")
 
 bwMessages.BigWigs_Timer(nil, module, 123, 10, 10, "Approx", 0, 456, true, true)
@@ -60,6 +61,11 @@ assert(#started == 2 and started[2].data.precision == "approximate")
 
 bwMessages.BigWigs_Timer(nil, module, 123, 10, 10, "Disabled", 0, 456, false, false)
 assert(#started == 2, "disabled BigWigs bars must stay disabled as an RLA data source")
+
+-- Plugins/API/test/wipe/keystone tools also emit BigWigs_Timer but do not own a boss encounter.
+local plugin = { moduleName = "Bars" }
+bwMessages.BigWigs_Timer(nil, plugin, 123, 10, 10, "Cast", 0, 456, false, true)
+assert(#started == 2, "non-boss BigWigs plugin timers must never become RLA boss calls")
 
 -- A regular BigWigs_StartBar is visual-bar transport and must not be interpreted
 -- as a second direct timer. In v419.2 its trailing slot can contain eventId/spell-indicator data.
