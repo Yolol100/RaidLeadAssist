@@ -32,7 +32,9 @@ local Constants = {
     TIMER_EXPIRY_GRACE_SECONDS = 1.0,
     ENCOUNTER_REMAP_WINDOW_SECONDS = 3.0,
 
-    PROVIDER_PRIORITY = { "BigWigs", "DBM", "Blizzard" },
+    -- DBM is the primary bossmod source for this deployment. BigWigs remains a
+    -- fully supported optional source, while Blizzard is the native fallback.
+    PROVIDER_PRIORITY = { "DBM", "BigWigs", "Blizzard" },
 
     TimerPrecision = {
         NATIVE = "native",
