@@ -10,6 +10,10 @@ local EncounterService = {
 }
 
 function EncounterService:Initialize()
+    EventBus:On("PROVIDER_ENCOUNTER_HINT", self, function(owner, providerName, encounterID)
+        owner:TryRecoverFromProvider(providerName, encounterID)
+    end)
+
     self.frame = CreateFrame("Frame")
     self.frame:SetScript("OnEvent", function(_, eventName, ...)
         self:OnEvent(eventName, ...)
@@ -64,6 +68,32 @@ function EncounterService:IsNativeEncounterInProgress()
 
     local ok, active = pcall(C_InstanceEncounter.IsEncounterInProgress)
     return ok and active == true
+end
+
+function EncounterService:TryRecoverFromProvider(providerName, encounterID)
+    -- Bossmods are hints, never the authority for whether combat is real. This
+    -- recovery path exists for /reload during a pull, where ENCOUNTER_START was
+    -- missed. WoW must independently confirm an active encounter, the correct
+    -- raid instance and a supported difficulty before the hint can select state.
+    if self.currentEncounter or not self:IsNativeEncounterInProgress() or not self:IsInRaidInstance() then
+        return false
+    end
+
+    if type(encounterID) == "string" then encounterID = tonumber(encounterID) end
+    if type(encounterID) ~= "number" then return false end
+
+    local encounter = Registry:FindByEncounterID(encounterID)
+    if not encounter then return false end
+
+    local _, _, difficultyID = GetInstanceInfo()
+    local difficultyKey = Constants.DIFFICULTY_KEY_BY_ID[difficultyID]
+    if not difficultyKey then return false end
+
+    self.currentEncounter = encounter
+    self.currentDifficultyID = difficultyID
+    EventBus:Emit("ENCOUNTER_SELECTED", encounter.key, true)
+    EventBus:Emit("ENCOUNTER_RECOVERED", encounterID, difficultyID, providerName)
+    return true
 end
 
 function EncounterService:IsActive()
