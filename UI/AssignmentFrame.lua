@@ -176,9 +176,16 @@ function AssignmentFrame:Initialize(database, callbacks)
     self.announceButton = ActionButton:Create(frame, { text = "ANNOUNCE", width = 102, height = 30, fontSize = 9, variant = "secondary" })
     self.announceButton:SetPoint("RIGHT", self.saveButton, "LEFT", -8, 0)
     self.announceButton:SetScript("OnClick", function()
-        local missing = Assignments:GetMissingRequired(self.currentBossKey, self.currentDifficultyKey, self:GetDraftValues())
+        local values = self:GetDraftValues()
+        local missing = Assignments:GetMissingRequired(self.currentBossKey, self.currentDifficultyKey, values)
         if #missing > 0 then
             self:SetStatus("Complete required assignments before announcing.", "error")
+            return
+        end
+        local valid, validation = Assignments:ValidateBossDraft(self.currentBossKey, self.currentDifficultyKey, values)
+        if not valid then
+            self:SetStatus(validation and validation.message or "Fix invalid assignments before announcing.", "error")
+            self:RefreshRequiredStatus()
             return
         end
         if self.dirty and not self:SaveCurrent(true) then return end
@@ -274,15 +281,33 @@ end
 function AssignmentFrame:RefreshRequiredStatus()
     if not self.currentBossKey then return end
     local values = self:GetDraftValues()
+    for index = 1, #self.activeSlots do self.activeSlots[index]:SetInvalid(false) end
+
     local missing = Assignments:GetMissingRequired(self.currentBossKey, self.currentDifficultyKey, values)
-    if #missing == 0 then
-        self.required:SetText("Required assignments complete.")
-        self.required:SetTextColor(Theme.colors.success[1], Theme.colors.success[2], Theme.colors.success[3], 1)
-    else
+    if #missing > 0 then
         self.required:SetText(("Missing %d required: %s"):format(#missing, table.concat(missing, ", ")))
         self.required:SetTextColor(Theme.colors.error[1], Theme.colors.error[2], Theme.colors.error[3], 1)
+        if self.announceButton then self.announceButton:SetActionEnabled(false) end
+        return
     end
-    if self.announceButton then self.announceButton:SetActionEnabled(#missing == 0 and hasAnyValue(values)) end
+
+    local valid, validation = Assignments:ValidateBossDraft(self.currentBossKey, self.currentDifficultyKey, values)
+    if not valid then
+        self.required:SetText(validation and validation.message or "Fix invalid assignments.")
+        self.required:SetTextColor(Theme.colors.error[1], Theme.colors.error[2], Theme.colors.error[3], 1)
+        if validation and validation.assignmentKey then
+            for index = 1, #self.activeSlots do
+                local slot = self.activeSlots[index]
+                if slot.assignmentKey == validation.assignmentKey then slot:SetInvalid(true) break end
+            end
+        end
+        if self.announceButton then self.announceButton:SetActionEnabled(false) end
+        return
+    end
+
+    self.required:SetText("Required assignments complete and plan validation passed.")
+    self.required:SetTextColor(Theme.colors.success[1], Theme.colors.success[2], Theme.colors.success[3], 1)
+    if self.announceButton then self.announceButton:SetActionEnabled(hasAnyValue(values)) end
 end
 
 function AssignmentFrame:BuildLayout()
@@ -374,6 +399,7 @@ function AssignmentFrame:SaveCurrent(silent)
             end
         end
         self:SetStatus(result and result.message or "Unable to save assignments.", "error")
+        self:RefreshRequiredStatus()
         return false
     end
     self:SetDirty(false)
@@ -382,7 +408,7 @@ function AssignmentFrame:SaveCurrent(silent)
     if #missing > 0 then
         self:SetStatus(("Saved as draft · %d required assignment(s) still empty."):format(#missing), "error")
     else
-        self:SetStatus("Saved. Calls now use this pre-pull plan.", "success")
+        self:SetStatus("Saved. Calls now use this validated pre-pull plan.", "success")
     end
     if not silent then ns:Print("Assignments saved for " .. Registry:Get(self.currentBossKey).name .. ".") end
     return true
