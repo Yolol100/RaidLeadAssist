@@ -161,7 +161,9 @@ local function isSameOccurrence(candidate, existing)
 end
 
 function TimelineService:IsActionable(timer)
-    return timer ~= nil and timer.precision ~= Constants.TimerPrecision.APPROXIMATE
+    return timer ~= nil
+        and timer.precision ~= Constants.TimerPrecision.APPROXIMATE
+        and timer.faded ~= true
 end
 
 function TimelineService:IsBlizzardSuppressed()
@@ -367,7 +369,7 @@ end
 function TimelineService:ProviderTimerStarted(providerName, sourceID, data)
     if not self.activeProviders[providerName] or type(data) ~= "table" or not validSourceID(sourceID) then return end
     if self:IsBlizzardSuppressed() and isBlizzardRepresentation(providerName, data) then return end
-    if not isFiniteNumber(data.duration) or data.duration <= 0 then return end
+    if Util.IsSecret(data.faded) or not isFiniteNumber(data.duration) or data.duration <= 0 then return end
 
     local id = timerID(providerName, sourceID)
     local now = GetTime()
@@ -397,6 +399,7 @@ function TimelineService:ProviderTimerStarted(providerName, sourceID, data)
     timer.nativeEventID = publicValue(data.nativeEventID)
     timer.bridge = publicValue(data.bridge)
     timer.precision = normalizePrecision(data.precision, providerName, timer.bridge)
+    timer.faded = data.faded == true
     timer.startedAt = now
     timer.expiration = now + data.duration
     timer.paused = false
@@ -434,6 +437,22 @@ function TimelineService:ProviderTimerUpdated(providerName, sourceID, elapsed, t
     -- A provider update adjusts the same live bar. Its occurrence identity must
     -- stay stable so PREPARE/PRESS audio and acknowledgement state cannot re-arm.
     if not timer.occurrenceID and timer.call then self:AssignOccurrence(timer) end
+    EventBus:Emit("TIMELINE_CHANGED")
+end
+
+function TimelineService:ProviderTimerFaded(providerName, sourceID, faded)
+    if not self.activeProviders[providerName] or not validSourceID(sourceID) or Util.IsSecret(faded) then return end
+
+    local timer = self.timers[timerID(providerName, sourceID)]
+    if not timer then return end
+
+    local nextFaded = faded == true
+    if timer.faded == nextFaded then return end
+    timer.faded = nextFaded
+
+    -- Fading is a presentation/actionability change, not a new timer occurrence.
+    -- Keep expiration, occurrence identity and acknowledgement untouched so an
+    -- unfade cannot replay PREPARE/PRESS for the same mechanic.
     EventBus:Emit("TIMELINE_CHANGED")
 end
 
