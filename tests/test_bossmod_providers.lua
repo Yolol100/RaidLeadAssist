@@ -14,6 +14,7 @@ _G.BigWigsLoader = {
 }
 _G.DBM = {
     Options = { IgnoreBlizzAPI = false },
+    Mods = {},
     RegisterCallback = function(_, name, callback) dbmCallbacks[name] = callback end,
     UnregisterCallback = function() end,
 }
@@ -43,11 +44,17 @@ T.Load("Core/Util.lua", ns)
 T.Load("Services/Providers/BigWigsProvider.lua", ns)
 T.Load("Services/Providers/DBMProvider.lua", ns)
 
-local BigWigs = ns:GetModule("Services.Providers.BigWigs")
-assert(BigWigs:Start(sink) == true)
+local BigWigsProvider = ns:GetModule("Services.Providers.BigWigs")
+assert(BigWigsProvider:Start(sink) == true)
 local module = {
     moduleName = "Boss",
     GetEncounterID = function() return 3420 end,
+    IsEngaged = function() return true end,
+}
+_G.BigWigs = {
+    IterateBossModules = function()
+        return next, { Boss = module }, nil
+    end,
 }
 
 -- BigWigs v419.2/current upstream boss modules expose the canonical data bus as:
@@ -96,6 +103,15 @@ assert(#stopped == 1 and stopped[1].id == "Boss|text:Cast")
 bwMessages.BigWigs_OnBossEngageMidEncounter(nil, module)
 assert(#hints == 1 and hints[1].provider == "BigWigs" and hints[1].encounterID == 3420)
 
+-- RLA can load after BigWigs has already sent the mid-encounter event. Seed the
+-- retained public IsEngaged/GetEncounterID state so recovery does not depend on event order.
+hints = {}
+assert(BigWigsProvider:SeedEncounterHint() == true)
+assert(#hints == 1 and hints[1].provider == "BigWigs" and hints[1].encounterID == 3420)
+module.IsEngaged = function() return false end
+hints = {}
+assert(BigWigsProvider:SeedEncounterHint() == false and #hints == 0)
+
 started, stopped, paused, updated = {}, {}, {}, {}
 local DBMProvider = ns:GetModule("Services.Providers.DBM")
 assert(DBMProvider:Start(sink) == true)
@@ -134,4 +150,17 @@ assert(suppression[#suppression].provider == "DBM" and suppression[#suppression]
 dbmCallbacks.DBM_Pull(nil, { encounterId = 3421 })
 assert(hints[#hints].provider == "DBM" and hints[#hints].encounterID == 3421)
 
-print("ok - exact BigWigs v419.2 and DBM 12.1.3 provider contracts")
+-- DBM can also recover its combat state before RLA has registered DBM_Pull.
+local dbmMod = {
+    encounterId = 3421,
+    IsInCombat = function() return true end,
+}
+DBM.Mods = { dbmMod }
+hints = {}
+assert(DBMProvider:SeedEncounterHint() == true)
+assert(#hints == 1 and hints[1].provider == "DBM" and hints[1].encounterID == 3421)
+dbmMod.IsInCombat = function() return false end
+hints = {}
+assert(DBMProvider:SeedEncounterHint() == false and #hints == 0)
+
+print("ok - exact BigWigs v419.2 and DBM 12.1.3 provider contracts plus late recovery state")
