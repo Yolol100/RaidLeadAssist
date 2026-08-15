@@ -29,12 +29,19 @@ local function containsControl(value)
     return value:find("[%z\1-\8\11\12\14-\31\127]") ~= nil
 end
 
-local function countPlayers(value)
-    local count = 0
+local function parsePlayers(value)
+    local players = {}
+    local seen = {}
     for part in tostring(value or ""):gmatch("[^,]+") do
-        if trim(part) ~= "" then count = count + 1 end
+        local name = trim(part)
+        if name ~= "" then
+            local key = name:lower()
+            if seen[key] then return nil, name end
+            seen[key] = true
+            players[#players + 1] = { name = name, key = key }
+        end
     end
-    return count
+    return players
 end
 
 local function getProfile(database, bossKey, difficultyKey, create)
@@ -82,10 +89,10 @@ local function counterKey(bossKey, difficultyKey, rotation)
 end
 
 local function appendFragment(base, fragment, maxLength)
-    if type(fragment) ~= "string" or fragment == "" then return base end
+    if type(fragment) ~= "string" or fragment == "" then return base, true end
     local candidate = base == "" and fragment or (base .. " > " .. fragment)
-    if #candidate <= maxLength then return candidate end
-    return base
+    if #candidate <= maxLength then return candidate, true end
+    return base, false
 end
 
 function AssignmentService:Initialize(database)
@@ -140,12 +147,13 @@ function AssignmentService:ValidateDefinitionValue(definition, value)
 
     local kind = definition and definition.kind or "assignee"
     if kind == "assignee" or kind == "rotation" then
-        local players = countPlayers(normalized)
-        if definition.exactPlayers and players ~= definition.exactPlayers then
-            return false, ("requires exactly %d players; found %d."):format(definition.exactPlayers, players)
+        local players, duplicate = parsePlayers(normalized)
+        if not players then return false, "contains duplicate player " .. duplicate .. "." end
+        if definition.exactPlayers and #players ~= definition.exactPlayers then
+            return false, ("requires exactly %d unique players; found %d."):format(definition.exactPlayers, #players)
         end
-        if definition.minPlayers and players < definition.minPlayers then
-            return false, ("requires at least %d players; found %d."):format(definition.minPlayers, players)
+        if definition.minPlayers and #players < definition.minPlayers then
+            return false, ("requires at least %d unique players; found %d."):format(definition.minPlayers, #players)
         end
     end
 
@@ -173,20 +181,52 @@ function AssignmentService:GetValues(bossKey, difficultyKey)
     return result
 end
 
-function AssignmentService:ApplyBossDraft(bossKey, difficultyKey, values)
-    if not self.database then return false, { message = "Assignments are not initialized." } end
+function AssignmentService:ValidateBossDraft(bossKey, difficultyKey, values)
     if type(values) ~= "table" then return false, { message = "Assignment values are missing." } end
 
     local definitions = self:GetDefinitions(bossKey, difficultyKey)
     local clean = {}
+    local exclusive = {}
+
     for index = 1, #definitions do
         local definition = definitions[index]
         local ok, normalized = self:ValidateDefinitionValue(definition, values[definition.key])
         if not ok then
             return false, { assignmentKey = definition.key, message = definition.label .. " " .. normalized }
         end
-        if normalized ~= "" then clean[definition.key] = normalized end
+        if normalized ~= "" then
+            clean[definition.key] = normalized
+            if definition.exclusiveGroup then
+                local players = assert(parsePlayers(normalized))
+                local bucket = exclusive[definition.exclusiveGroup]
+                if not bucket then
+                    bucket = {}
+                    exclusive[definition.exclusiveGroup] = bucket
+                end
+                for playerIndex = 1, #players do
+                    local player = players[playerIndex]
+                    local previous = bucket[player.key]
+                    if previous then
+                        return false, {
+                            assignmentKey = definition.key,
+                            message = ("%s overlaps %s: %s is assigned to both."):format(definition.label, previous.label, player.name),
+                        }
+                    end
+                    bucket[player.key] = { label = definition.label, assignmentKey = definition.key }
+                end
+            end
+        end
     end
+
+    return true, clean
+end
+
+function AssignmentService:ApplyBossDraft(bossKey, difficultyKey, values)
+    if not self.database then return false, { message = "Assignments are not initialized." } end
+
+    local ok, result = self:ValidateBossDraft(bossKey, difficultyKey, values)
+    if not ok then return false, result end
+    local clean = result
 
     local boss = self.database.assignments[bossKey]
     if type(boss) ~= "table" then
@@ -276,11 +316,15 @@ function AssignmentService:GetCallFragments(bossKey, difficultyKey, callKey)
 end
 
 function AssignmentService:BuildCallWarning(baseWarning, bossKey, difficultyKey, callKey)
-    if type(baseWarning) ~= "string" or baseWarning == "" then return baseWarning end
+    if type(baseWarning) ~= "string" or baseWarning == "" then return baseWarning, true end
     local result = baseWarning
     local fragments = self:GetCallFragments(bossKey, difficultyKey, callKey)
-    for index = 1, #fragments do result = appendFragment(result, fragments[index], self.MAX_WARNING_LENGTH) end
-    return result
+    for index = 1, #fragments do
+        local appended
+        result, appended = appendFragment(result, fragments[index], self.MAX_WARNING_LENGTH)
+        if not appended then return baseWarning, false end
+    end
+    return result, true
 end
 
 function AssignmentService:AdvanceCall(bossKey, difficultyKey, callKey)
