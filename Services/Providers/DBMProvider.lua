@@ -17,6 +17,14 @@ local function normalizeTimerID(id)
     return tostring(id)
 end
 
+local function encounterIDForMod(mod)
+    if type(mod) ~= "table" then return nil end
+    local encounterID = mod.encounterId
+    if Util.IsSecret(encounterID) then return nil end
+    if type(encounterID) == "number" then return encounterID end
+    if type(encounterID) == "string" then return tonumber(encounterID) end
+end
+
 function DBMProvider:IsAvailable()
     return _G.DBM and type(DBM.RegisterCallback) == "function"
 end
@@ -72,8 +80,30 @@ function DBMProvider:Start(sink)
         end
     end
 
+    self.onIgnoreBlizzard = function()
+        if type(self.sink.SetBlizzardSuppressedByProvider) == "function" then
+            self.sink:SetBlizzardSuppressedByProvider("DBM", true)
+        end
+    end
+
+    self.onResumeBlizzard = function()
+        if type(self.sink.SetBlizzardSuppressedByProvider) == "function" then
+            self.sink:SetBlizzardSuppressedByProvider("DBM", false)
+        end
+    end
+
+    self.onPull = function(_, mod)
+        local encounterID = encounterIDForMod(mod)
+        if encounterID and type(self.sink.ProviderEncounterHint) == "function" then
+            self.sink:ProviderEncounterHint("DBM", encounterID)
+        end
+    end
+
     self.onReset = function()
         self.sink:ProviderReset("DBM")
+        if type(self.sink.SetBlizzardSuppressedByProvider) == "function" then
+            self.sink:SetBlizzardSuppressedByProvider("DBM", false)
+        end
     end
 
     DBM:RegisterCallback("DBM_TimerBegin", self.onBegin)
@@ -82,14 +112,28 @@ function DBMProvider:Start(sink)
     DBM:RegisterCallback("DBM_TimerPause", self.onPause)
     DBM:RegisterCallback("DBM_TimerResume", self.onResume)
     DBM:RegisterCallback("DBM_TimerFadeUpdate", self.onFadeUpdate)
+    DBM:RegisterCallback("DBM_IgnoreBlizzAPI", self.onIgnoreBlizzard)
+    DBM:RegisterCallback("DBM_ResumeBlizzAPI", self.onResumeBlizzard)
+    DBM:RegisterCallback("DBM_Pull", self.onPull)
     DBM:RegisterCallback("DBM_Wipe", self.onReset)
     DBM:RegisterCallback("DBM_Kill", self.onReset)
+
+    -- A reload can happen after DBM has already taken authority over Blizzard's
+    -- Encounter Timeline. Reconstruct that public DBM state instead of waiting
+    -- for a callback that has already happened.
+    if DBM.Options and DBM.Options.IgnoreBlizzAPI == true then
+        self.onIgnoreBlizzard()
+    end
 
     return true
 end
 
 function DBMProvider:Stop()
     if not _G.DBM or not DBM.UnregisterCallback then return end
+
+    if self.sink and type(self.sink.SetBlizzardSuppressedByProvider) == "function" then
+        self.sink:SetBlizzardSuppressedByProvider("DBM", false)
+    end
 
     local callbacks = {
         DBM_TimerBegin = self.onBegin,
@@ -98,6 +142,9 @@ function DBMProvider:Stop()
         DBM_TimerPause = self.onPause,
         DBM_TimerResume = self.onResume,
         DBM_TimerFadeUpdate = self.onFadeUpdate,
+        DBM_IgnoreBlizzAPI = self.onIgnoreBlizzard,
+        DBM_ResumeBlizzAPI = self.onResumeBlizzard,
+        DBM_Pull = self.onPull,
         DBM_Wipe = self.onReset,
         DBM_Kill = self.onReset,
     }
