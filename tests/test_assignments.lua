@@ -15,14 +15,48 @@ for _, bossKey in ipairs(bosses) do
         local layout = Registry:GetLayout(bossKey, difficultyKey)
         assert(type(layout.summary) == "string", "layout summary missing: " .. bossKey .. "/" .. difficultyKey)
         assert(type(layout.sections) == "table", "layout sections missing: " .. bossKey .. "/" .. difficultyKey)
+        local seen = {}
+        for _, definition in ipairs(Registry:GetDefinitions(bossKey, difficultyKey)) do
+            assert(not seen[definition.key], "assignment keys must be unique per boss/difficulty")
+            seen[definition.key] = true
+            assert(definition.kind == "assignee" or definition.kind == "rotation" or definition.kind == "rule" or definition.kind == "sequence",
+                "every assignment must expose a supported field kind")
+        end
     end
 end
 
-assert(#Registry:GetDefinitions("sszorak", "heroic") == 3, "Sszorak should be a focused Mutilate rotation")
-assert(#Registry:GetDefinitions("ulatek", "normal") == 0, "Normal Ula'tek should not invent fixed assignments")
+assert(#Registry:GetDefinitions("sszorak", "heroic") == 3, "Sszorak should stay a focused Mutilate rotation")
+assert(#Registry:GetDefinitions("ulatek", "normal") == 1, "Normal Ula'tek should expose optional egg ownership")
 assert(#Registry:GetDefinitions("ulatek", "mythic") > #Registry:GetDefinitions("ulatek", "heroic"), "Mythic Ula'tek needs extra intercept planning")
 assert(#Registry:GetLayout("twinfangs", "mythic").sections == 4, "Mythic Twin Fangs should have four tactic-specific assignment blocks")
 assert(#Registry:GetLayout("vashnik", "normal").sections == 1, "Normal Vashnik should stay lightweight")
+
+local vashnikNormal = Registry:GetDefinitions("vashnik", "normal")
+assert(vashnikNormal[1].key == "fountain_order" and vashnikNormal[1].kind == "sequence", "Vashnik Normal must use one sequence field")
+
+local nekHeroic = Registry:GetDefinitions("nekzali", "heroic")
+local cremationRules = 0
+for _, definition in ipairs(nekHeroic) do
+    if definition.key:find("cremation_", 1, true) then
+        assert(definition.kind == "rule", "Cremation must be a movement rule, not a roster assignment")
+        cremationRules = cremationRules + 1
+    end
+end
+assert(cremationRules == 2, "Heroic Nek'zali should expose two Cremation rules")
+
+local sentinels = Registry:GetDefinitions("sentinels", "heroic")
+for _, definition in ipairs(sentinels) do
+    if definition.key:find("stasis_", 1, true) then
+        assert(definition.exactPlayers == 4, "Helical Toxin groups must encode exact four-player validation")
+    end
+end
+
+local twinMythic = Registry:GetDefinitions("twinfangs", "mythic")
+for _, definition in ipairs(twinMythic) do
+    if definition.key:find("brood_kick_", 1, true) then
+        assert(definition.rotation == nil and definition.kind == "assignee", "Broodling kicks are simultaneous coverage, not a rotating cast assignment")
+    end
+end
 
 local ok, values = Assignments:ApplyBossDraft("sszorak", "heroic", {
     mutilate_a = "Alpha, Bravo, Charlie, Delta, Echo",
@@ -32,6 +66,27 @@ assert(ok, values and values.message)
 assert(Assignments:GetValue("sszorak", "heroic", "mutilate_a") == "Alpha, Bravo, Charlie, Delta, Echo")
 assert(Assignments:GetValue("sszorak", "normal", "mutilate_a") == "", "difficulty assignments must stay isolated")
 
+local invalidGroup, groupError = Assignments:ApplyBossDraft("sszorak", "heroic", {
+    mutilate_a = "Alpha, Bravo, Charlie, Delta",
+    mutilate_b = "Foxtrot, Golf, Hotel, India, Juliet",
+})
+assert(not invalidGroup and groupError.assignmentKey == "mutilate_a", "Mutilate must reject fewer than five configured players")
+assert(groupError.message:find("at least 5", 1, true), "Mutilate validation should explain the five-player minimum")
+
+local invalidStasis, stasisError = Assignments:ApplyBossDraft("sentinels", "heroic", {
+    breath_side = "Alpha",
+    blood_side = "Bravo",
+    stasis_a = "One, Two, Three",
+    stasis_b = "Four, Five, Six, Seven",
+})
+assert(not invalidStasis and stasisError.assignmentKey == "stasis_a", "Stasis must reject non-four-player groups")
+assert(stasisError.message:find("exactly 4", 1, true), "Stasis validation should explain the exact group size")
+
+ok = Assignments:ApplyBossDraft("sszorak", "heroic", {
+    mutilate_a = "Alpha, Bravo, Charlie, Delta, Echo",
+    mutilate_b = "Foxtrot, Golf, Hotel, India, Juliet",
+})
+assert(ok)
 local first = Assignments:BuildCallWarning("APEX PREDATOR", "sszorak", "heroic", "apex")
 assert(first:find("TEAM A: Alpha", 1, true), "first Mutilate call should use Team A")
 Assignments:AdvanceCall("sszorak", "heroic", "apex")
@@ -43,6 +98,14 @@ assert(reset:find("TEAM A: Alpha", 1, true), "rotation should reset between pull
 
 local missing = Assignments:GetMissingRequired("sszorak", "heroic")
 assert(#missing == 0, "filled required Sszorak slots should be complete")
+
+ok = Assignments:ApplyBossDraft("vashnik", "mythic", {
+    bile_team = "Alpha, Bravo",
+    fountain_order = "NW+NE > SE+SW > NW+SW",
+    tumor_left = "Left Froth -> left lane",
+    tumor_right = "Right Froth -> right lane",
+})
+assert(ok, "rule and sequence fields should accept tactic text without roster-count validation")
 
 ok = Assignments:ApplyBossDraft("ulatek", "mythic", {
     coil_a = "Group One",
@@ -67,4 +130,4 @@ for index = 1, #plan do assert(#plan[index] <= Assignments.MAX_WARNING_LENGTH, "
 local invalid, err = Assignments:ApplyBossDraft("sszorak", "heroic", { mutilate_a = "Bad\1Name" })
 assert(not invalid and err and err.assignmentKey == "mutilate_a", "control characters must be rejected")
 
-print("ok - boss-specific assignment layouts, persistence, validation, and rotations")
+print("ok - typed boss assignments, group-size validation, persistence, and rotations")
