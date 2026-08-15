@@ -10,6 +10,7 @@ local prints = {}
 local handlers = {}
 local explanationEnabled = true
 local callEnabled = true
+local encounterModule
 
 _G.GetTime = function() return now end
 _G.InCombatLockdown = function() return false end
@@ -48,11 +49,13 @@ ns:RegisterModule("Services.AssignmentService", {
     AdvanceCall = function() end,
 })
 ns:RegisterModule("Services.TimelineService", { AcknowledgeCall = function() end })
-ns:RegisterModule("Services.EncounterService", {
+encounterModule = {
+    currentEncounter = nil,
     IsActive = function() return active end,
     HasKnownEncounter = function() return known end,
     GetDifficultyKey = function() return difficulty end,
-})
+}
+ns:RegisterModule("Services.EncounterService", encounterModule)
 ns:RegisterModule("UI.MainFrame", {
     explanationButton = { frame = { SetEnabled = function(_, value) explanationEnabled = value end } },
     callButtons = { { frame = { SetEnabled = function(_, value) callEnabled = value end } } },
@@ -94,8 +97,14 @@ assert(explanationEnabled == false and callEnabled == false,
     "unsafe active encounter must disable visible plan/call controls")
 
 known = true
+encounterModule.currentEncounter = { key = "boss" }
 difficulty = nil
 assert(App:SendCall("kick") == false, "unsupported difficulty must block manual Raid Warnings")
+assert(#warnings == 0)
+
+difficulty = "heroic"
+encounterModule.currentEncounter = { key = "other" }
+assert(App:SendCall("kick") == false, "stale selected boss must not send a call for another live encounter")
 assert(#warnings == 0)
 
 active = false
@@ -106,6 +115,7 @@ assert(explanationEnabled == true and callEnabled == true,
 active = true
 known = true
 difficulty = "heroic"
+encounterModule.currentEncounter = { key = "boss" }
 assert(App:SendCall("kick") == true, "verified supported encounter must allow the configured call")
 assert(#warnings == 1 and warnings[1] == "BASE WARNING")
 
