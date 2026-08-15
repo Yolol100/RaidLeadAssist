@@ -2,15 +2,25 @@ local _, ns = ...
 
 local AssignmentRegistry = {}
 
+local VALID_KINDS = {
+    assignee = true,
+    rotation = true,
+    rule = true,
+    sequence = true,
+}
+
 local function slot(key, label, options)
     options = options or {}
     return {
         key = key,
         label = label,
+        kind = options.kind or (options.rotation and "rotation" or "assignee"),
         callKey = options.callKey,
         callLabel = options.callLabel,
         rotation = options.rotation,
         required = options.required == true,
+        exactPlayers = options.exactPlayers,
+        minPlayers = options.minPlayers,
         helper = options.helper,
     }
 end
@@ -33,9 +43,9 @@ local PYRE = section("pyre", "Hungering Pyre", "Choose the players who always jo
     slot("pyre_soak", "Pyre Soak Team", { callKey = "pyre", callLabel = "SOAK", required = true }),
 })
 
-local CREMATION = section("cremation", "Cremation Lanes", "Heroic+: keep corpse cleanup predictable by giving the two sides an owner or small team.", 2, {
-    slot("cremation_left", "Left Side", { helper = "Handles nearby remains when selected by Slithering Flame." }),
-    slot("cremation_right", "Right Side", { helper = "Handles nearby remains when selected by Slithering Flame." }),
+local CREMATION = section("cremation", "Cremation Rules", "Heroic+: Slithering Flame chooses its target dynamically. Store the movement rule instead of pretending a player can be preselected.", 2, {
+    slot("cremation_left", "Left-side Rule", { kind = "rule", helper = "Example: left target burns the left corpse zone." }),
+    slot("cremation_right", "Right-side Rule", { kind = "rule", helper = "Example: right target burns the right corpse zone." }),
 })
 
 local WELL = section("well", "Grasping Depths", "Mythic: alternate fresh teams into the Soulcoil Well because leaving applies Soul Exhaustion.", 2, {
@@ -48,20 +58,20 @@ local SENTINEL_SPLIT = section("split", "Raid Split", "Build two stable sides be
     slot("blood_side", "Blood Side", { required = true }),
 })
 
-local SENTINEL_STASIS = section("stasis", "Helical Toxin Groups", "Players clear Helical Toxins at exactly four applications. Put four names in each group you intend to use.", 2, {
-    slot("stasis_a", "Group A", { callKey = "stasis", callLabel = "GROUP A", required = true }),
-    slot("stasis_b", "Group B", { callKey = "stasis", callLabel = "GROUP B", required = true }),
-    slot("stasis_c", "Group C", { callKey = "stasis", callLabel = "GROUP C" }),
-    slot("stasis_d", "Group D", { callKey = "stasis", callLabel = "GROUP D" }),
-    slot("stasis_e", "Group E", { callKey = "stasis", callLabel = "GROUP E" }),
+local SENTINEL_STASIS = section("stasis", "Helical Toxin Groups", "Players clear Helical Toxins at exactly four applications. Put exactly four names in each configured group.", 2, {
+    slot("stasis_a", "Group A", { callKey = "stasis", callLabel = "GROUP A", required = true, exactPlayers = 4 }),
+    slot("stasis_b", "Group B", { callKey = "stasis", callLabel = "GROUP B", required = true, exactPlayers = 4 }),
+    slot("stasis_c", "Group C", { callKey = "stasis", callLabel = "GROUP C", exactPlayers = 4 }),
+    slot("stasis_d", "Group D", { callKey = "stasis", callLabel = "GROUP D", exactPlayers = 4 }),
+    slot("stasis_e", "Group E", { callKey = "stasis", callLabel = "GROUP E", exactPlayers = 4 }),
 })
 
-local SENTINEL_HEAL = section("healers", "Blood-side Healer Jobs", "Optional names for predictable Blood dispel ownership; actual debuff targets remain dynamic.", 2, {
+local SENTINEL_HEAL = section("healers", "Blood-side Healer Jobs", "Optional names for predictable dispel ownership; actual debuff targets remain dynamic.", 2, {
     slot("blood_dispel_a", "Dispel A"),
     slot("blood_dispel_b", "Dispel B"),
 })
 
-local EXPLORER_CRATES_NORMAL = section("crates", "Crates & Fish", "Assign who opens crates and who is responsible for getting the fish to an unused controlled tortollan.", 2, {
+local EXPLORER_CRATES_NORMAL = section("crates", "Crates & Fish", "Assign who opens crates and who gets the fish to an unused controlled tortollan.", 2, {
     slot("crate_a", "Crate Breaker", { callKey = "crates", callLabel = "BREAKER", required = true }),
     slot("fish_a", "Fish Runner", { callKey = "fish", callLabel = "RUNNER", required = true }),
 })
@@ -77,66 +87,64 @@ local EXPLORER_FISH = section("fish", "Fish Runners", "Choose one or two reliabl
     slot("fish_b", "Runner 2", { callKey = "fish", callLabel = "RUNNER 2", rotation = "fish" }),
 })
 
-local EXPLORER_THUD = section("thud", "Mighty Thud Soak Points", "The three targets are random. These groups define where each marked target should bring its impact, not who gets targeted.", 3, {
-    slot("thud_a", "Soak A", { callKey = "thud", callLabel = "A", required = true }),
-    slot("thud_b", "Soak B", { callKey = "thud", callLabel = "B", required = true }),
-    slot("thud_c", "Soak C", { callKey = "thud", callLabel = "C", required = true }),
+local EXPLORER_THUD = section("thud", "Mighty Thud Soak Points", "The three targets are random. These are the groups waiting at soak points A, B and C; they are not preselected targets.", 3, {
+    slot("thud_a", "Soak Point A", { callKey = "thud", callLabel = "POINT A", required = true }),
+    slot("thud_b", "Soak Point B", { callKey = "thud", callLabel = "POINT B", required = true }),
+    slot("thud_c", "Soak Point C", { callKey = "thud", callLabel = "POINT C", required = true }),
 })
 
-local VASHNIK_BILE = section("bile", "Catalytic Bile Coverage", "Heroic+: choose a small mobile soak team. Members claim an unsoaked Bile impact instead of using fixed player targets.", 1, {
+local VASHNIK_BILE = section("bile", "Catalytic Bile Coverage", "Heroic+: choose a mobile soak team. Members claim an unsoaked impact; RLA does not choose a live target.", 1, {
     slot("bile_team", "Bile Soak Team", { callKey = "catalyst", callLabel = "SOAK TEAM", required = true }),
 })
 
-local VASHNIK_FOUNTAINS = section("fountains", "Fountain Plan", "Optional pre-pull ownership for moving the boss through your chosen fountain order.", 3, {
-    slot("fountain_1", "Pair 1"),
-    slot("fountain_2", "Pair 2"),
-    slot("fountain_3", "Pair 3"),
+local VASHNIK_FOUNTAINS = section("fountains", "Fountain Sequence", "Store the planned boss movement order. This is a tactic sequence, not a roster assignment.", 1, {
+    slot("fountain_order", "Fountain Order", { kind = "sequence", helper = "Example: NW+NE > SE+SW > NW+SW" }),
 })
 
-local VASHNIK_TUMOR = section("tumors", "Mythic Tumor Lanes", "Plague Froth targets are random. Use these as lane/position anchors so selected players know where to aim their Plague Waves.", 2, {
-    slot("tumor_left", "Left Lane Anchor"),
-    slot("tumor_right", "Right Lane Anchor"),
+local VASHNIK_TUMOR = section("tumors", "Mythic Tumor Rules", "Plague Froth targets are random. Save lane rules so selected players know where to aim their waves.", 2, {
+    slot("tumor_left", "Left Lane Rule", { kind = "rule", helper = "Example: left Froth aims through left Tumor lane." }),
+    slot("tumor_right", "Right Lane Rule", { kind = "rule", helper = "Example: right Froth aims through right Tumor lane." }),
 })
 
-local SSZORAK_MUTILATE = section("mutilate", "Mutilate Rotation", "Every Mutilate needs at least five players. Rotate teams because a previous hit massively increases damage from the next one.", 3, {
-    slot("mutilate_a", "Team A", { callKey = "apex", callLabel = "TEAM A", rotation = "mutilate", required = true }),
-    slot("mutilate_b", "Team B", { callKey = "apex", callLabel = "TEAM B", rotation = "mutilate", required = true }),
-    slot("mutilate_c", "Team C", { callKey = "apex", callLabel = "TEAM C", rotation = "mutilate" }),
+local SSZORAK_MUTILATE = section("mutilate", "Mutilate Rotation", "Every Mutilate needs at least five players. Rotate teams because repeat damage is heavily increased.", 3, {
+    slot("mutilate_a", "Team A", { callKey = "apex", callLabel = "TEAM A", rotation = "mutilate", required = true, minPlayers = 5 }),
+    slot("mutilate_b", "Team B", { callKey = "apex", callLabel = "TEAM B", rotation = "mutilate", required = true, minPlayers = 5 }),
+    slot("mutilate_c", "Team C", { callKey = "apex", callLabel = "TEAM C", rotation = "mutilate", minPlayers = 5 }),
 })
 
-local TWIN_FEAST = section("feast", "Ravenous Feast", "Three hits happen in quick succession. On Heroic/Mythic the Feasted debuff makes repeating the same player unsafe.", 3, {
+local TWIN_FEAST = section("feast", "Ravenous Feast", "Three hits happen in quick succession. On Heroic/Mythic Feasted makes repeating the same player unsafe.", 3, {
     slot("feast_a", "Hit 1 · Group A", { callKey = "feast", callLabel = "HIT 1 A", required = true }),
     slot("feast_b", "Hit 2 · Group B", { callKey = "feast", callLabel = "HIT 2 B", required = true }),
     slot("feast_c", "Hit 3 · Group C", { callKey = "feast", callLabel = "HIT 3 C", required = true }),
 })
 
-local TWIN_STONE = section("stone", "Stone Breaker Rotation", "Never leave an impact empty. Rotate players because each soak increases their later Stone Breaker damage.", 3, {
+local TWIN_STONE = section("stone", "Stone Breaker Rotation", "Never leave an impact empty. Rotate players because each soak increases later Stone Breaker damage.", 3, {
     slot("stone_a", "Breaker A", { callKey = "stone", callLabel = "A", rotation = "stone", required = true }),
     slot("stone_b", "Breaker B", { callKey = "stone", callLabel = "B", rotation = "stone", required = true }),
     slot("stone_c", "Breaker C", { callKey = "stone", callLabel = "C", rotation = "stone" }),
 })
 
-local TWIN_BROOD = section("brood", "Broodling Interrupts", "Mythic only: an interrupted Visceral Burst makes that Broodling retreat.", 3, {
-    slot("brood_kick_a", "Kick A", { callKey = "brood", callLabel = "KICK A", rotation = "brood", required = true }),
-    slot("brood_kick_b", "Kick B", { callKey = "brood", callLabel = "KICK B", rotation = "brood", required = true }),
-    slot("brood_kick_c", "Kick C", { callKey = "brood", callLabel = "KICK C", rotation = "brood" }),
+local TWIN_BROOD = section("brood", "Broodling Interrupt Coverage", "Mythic: Broodlings can need coverage at the same time. Assign separate kick owners instead of one rotating interrupter.", 3, {
+    slot("brood_kick_a", "Broodling 1 Kick", { callKey = "brood", callLabel = "KICK 1", required = true }),
+    slot("brood_kick_b", "Broodling 2 Kick", { callKey = "brood", callLabel = "KICK 2", required = true }),
+    slot("brood_kick_c", "Broodling 3 Kick", { callKey = "brood", callLabel = "KICK 3" }),
 })
 
-local TWIN_BLOOD = section("tainted", "Tainted Blood", "Mythic only: optional healer/player coverage for the blood founts created during Feast.", 2, {
+local TWIN_BLOOD = section("tainted", "Tainted Blood", "Mythic: optional healer/player coverage for blood founts created during Feast.", 2, {
     slot("tainted_a", "Fount Team A", { callKey = "tainted", callLabel = "FOUNT A" }),
     slot("tainted_b", "Fount Team B", { callKey = "tainted", callLabel = "FOUNT B" }),
 })
 
-local ALTAR_GUILLOTINE_AB = section("guillotine", "Guillotine Soak Rotation", "Each axe needs at least five players. Rotate the soak teams because repeat Guillotine damage is heavily increased.", 2, {
-    slot("guillotine_a", "Team A", { callKey = "guillotine", callLabel = "TEAM A", rotation = "guillotine", required = true }),
-    slot("guillotine_b", "Team B", { callKey = "guillotine", callLabel = "TEAM B", rotation = "guillotine", required = true }),
+local ALTAR_GUILLOTINE_AB = section("guillotine", "Guillotine Soak Rotation", "Each axe needs at least five players. Rotate teams because repeat Guillotine damage is heavily increased.", 2, {
+    slot("guillotine_a", "Team A", { callKey = "guillotine", callLabel = "TEAM A", rotation = "guillotine", required = true, minPlayers = 5 }),
+    slot("guillotine_b", "Team B", { callKey = "guillotine", callLabel = "TEAM B", rotation = "guillotine", required = true, minPlayers = 5 }),
 })
 
 local ALTAR_GUILLOTINE_MYTHIC = section("guillotine", "Guillotine Soak Rotation", "Mythic Guillotined is permanent, so plan fresh 5+ player teams for later axes.", 4, {
-    slot("guillotine_a", "Team A", { callKey = "guillotine", callLabel = "TEAM A", rotation = "guillotine", required = true }),
-    slot("guillotine_b", "Team B", { callKey = "guillotine", callLabel = "TEAM B", rotation = "guillotine", required = true }),
-    slot("guillotine_c", "Team C", { callKey = "guillotine", callLabel = "TEAM C", rotation = "guillotine", required = true }),
-    slot("guillotine_d", "Team D", { callKey = "guillotine", callLabel = "TEAM D", rotation = "guillotine" }),
+    slot("guillotine_a", "Team A", { callKey = "guillotine", callLabel = "TEAM A", rotation = "guillotine", required = true, minPlayers = 5 }),
+    slot("guillotine_b", "Team B", { callKey = "guillotine", callLabel = "TEAM B", rotation = "guillotine", required = true, minPlayers = 5 }),
+    slot("guillotine_c", "Team C", { callKey = "guillotine", callLabel = "TEAM C", rotation = "guillotine", required = true, minPlayers = 5 }),
+    slot("guillotine_d", "Team D", { callKey = "guillotine", callLabel = "TEAM D", rotation = "guillotine", minPlayers = 5 }),
 })
 
 local ALTAR_KICKS = section("kicks", "Soulcoiler Interrupts", "Preassign Wail coverage. On Mythic the interrupt also briefly reveals hidden Manifestations of Dread.", 3, {
@@ -145,12 +153,21 @@ local ALTAR_KICKS = section("kicks", "Soulcoiler Interrupts", "Preassign Wail co
     slot("wail_kick_c", "Wail Kick C", { callKey = "spiritcackle", callLabel = "WAIL C", rotation = "wail" }),
 })
 
+local ULATEK_EGG_NORMAL = section("eggs", "Doomscale Egg Handler", "Normal already has egg handling. Optionally name who owns that interaction before the pull.", 1, {
+    slot("egg_handler", "Egg Handler"),
+})
+
 local ULATEK_COILS = section("coils", "Spectral Coil Rotation", "Heroic+: players who mitigate one Coil cannot mitigate the next, so alternate groups.", 2, {
     slot("coil_a", "Coil Group A", { callKey = "coils", callLabel = "GROUP A", rotation = "coils", required = true }),
     slot("coil_b", "Coil Group B", { callKey = "coils", callLabel = "GROUP B", rotation = "coils", required = true }),
 })
 
-local ULATEK_EGGS = section("eggs", "Doomscale Eggs", "Heroic/Mythic: touching an egg starts its hatch; on Heroic+ it also triggers Mass Gestation on that side. Give each side an owner.", 2, {
+local ULATEK_EGGS_HEROIC = section("eggs", "Doomscale Eggs", "Heroic: disturbing an egg also triggers Mass Gestation on that side. Give each side an owner.", 2, {
+    slot("egg_left", "Left Egg Owner", { required = true }),
+    slot("egg_right", "Right Egg Owner", { required = true }),
+})
+
+local ULATEK_EGGS_MYTHIC = section("eggs", "Doomscale Eggs", "Mythic: assign each side before the pull and keep carriers separated while handling Noxious Shell.", 2, {
     slot("egg_left", "Left Egg Carrier", { callKey = "eggs", callLabel = "LEFT", required = true }),
     slot("egg_right", "Right Egg Carrier", { callKey = "eggs", callLabel = "RIGHT", required = true }),
 })
@@ -163,9 +180,9 @@ local ULATEK_INCUBATION = section("incubation", "Toxic Incubation Intercepts", "
 
 local LAYOUTS = {
     nekzali = {
-        normal = layout("Simple soak plan.", { PYRE }),
-        heroic = layout("Pyre soak plus predictable corpse-cleanup lanes.", { PYRE, CREMATION }),
-        mythic = layout("Pyre soak, alternating Well teams and corpse-cleanup lanes.", { PYRE, WELL, CREMATION }),
+        normal = layout("Simple fixed soak plan.", { PYRE }),
+        heroic = layout("Pyre soak plus static Cremation movement rules for dynamically selected targets.", { PYRE, CREMATION }),
+        mythic = layout("Pyre soak, alternating Well teams and static Cremation movement rules.", { PYRE, WELL, CREMATION }),
     },
     sentinels = {
         normal = layout("Split the raid first, then build exact four-player Stasis groups.", { SENTINEL_SPLIT, SENTINEL_STASIS, SENTINEL_HEAL }),
@@ -173,14 +190,14 @@ local LAYOUTS = {
         mythic = layout("Stable sides and complete four-player Stasis planning; Protovenom remains a dynamic matching rule.", { SENTINEL_SPLIT, SENTINEL_STASIS, SENTINEL_HEAL }),
     },
     explorers = {
-        normal = layout("One clear crate/fish owner plus three Thud destinations.", { EXPLORER_CRATES_NORMAL, EXPLORER_THUD }),
+        normal = layout("One clear crate/fish owner plus three soak-point groups for random Thud targets.", { EXPLORER_CRATES_NORMAL, EXPLORER_THUD }),
         heroic = layout("Rotate crate breakers, keep fish responsibility explicit and define three Thud soak points.", { EXPLORER_CRATES_ROTATION, EXPLORER_FISH, EXPLORER_THUD }),
         mythic = layout("Strict crate rotation because Mythic breaks hit the raid, plus fish and Thud planning.", { EXPLORER_CRATES_ROTATION, EXPLORER_FISH, EXPLORER_THUD }),
     },
     vashnik = {
-        normal = layout("No mandatory named player assignment; use the fountain order as an optional pre-pull plan.", { VASHNIK_FOUNTAINS }),
-        heroic = layout("Mobile Catalytic Bile coverage plus your fountain order.", { VASHNIK_BILE, VASHNIK_FOUNTAINS }),
-        mythic = layout("Bile coverage, fountain order and Tumor lanes; Froth targets themselves stay dynamic.", { VASHNIK_BILE, VASHNIK_FOUNTAINS, VASHNIK_TUMOR }),
+        normal = layout("No mandatory named assignment; save only the planned fountain sequence.", { VASHNIK_FOUNTAINS }),
+        heroic = layout("Mobile Catalytic Bile coverage plus the planned fountain sequence.", { VASHNIK_BILE, VASHNIK_FOUNTAINS }),
+        mythic = layout("Bile coverage, fountain sequence and Tumor lane rules; Froth targets themselves stay dynamic.", { VASHNIK_BILE, VASHNIK_FOUNTAINS, VASHNIK_TUMOR }),
     },
     sszorak = {
         normal = layout("The assignment screen is almost entirely the Mutilate rotation.", { SSZORAK_MUTILATE }),
@@ -190,7 +207,7 @@ local LAYOUTS = {
     twinfangs = {
         normal = layout("Three Feast groups and a separate Stone Breaker rotation.", { TWIN_FEAST, TWIN_STONE }),
         heroic = layout("Three Feast groups are critical because Feasted punishes repeats; keep Stone Breaker separate.", { TWIN_FEAST, TWIN_STONE }),
-        mythic = layout("Feast, Stone Breaker, Broodling kicks and optional Tainted Blood coverage each get their own block.", { TWIN_FEAST, TWIN_STONE, TWIN_BROOD, TWIN_BLOOD }),
+        mythic = layout("Feast, Stone Breaker, simultaneous Broodling kick coverage and optional Tainted Blood coverage each get their own block.", { TWIN_FEAST, TWIN_STONE, TWIN_BROOD, TWIN_BLOOD }),
     },
     altar = {
         normal = layout("Two Guillotine teams; interrupt ownership can stay lightweight.", { ALTAR_GUILLOTINE_AB, ALTAR_KICKS }),
@@ -198,9 +215,9 @@ local LAYOUTS = {
         mythic = layout("Fresh Guillotine teams are the dominant assignment, with a dedicated Wail interrupt rotation.", { ALTAR_GUILLOTINE_MYTHIC, ALTAR_KICKS }),
     },
     ulatek = {
-        normal = layout("No mandatory named assignment: use the ordinary boss plan and raid calls.", {}),
-        heroic = layout("Alternate Spectral Coil groups and assign an owner to each Doomscale Egg side.", { ULATEK_COILS, ULATEK_EGGS }),
-        mythic = layout("Coil rotation, egg-side owners and a dedicated Toxic Incubation intercept rotation.", { ULATEK_COILS, ULATEK_EGGS, ULATEK_INCUBATION }),
+        normal = layout("Only optional egg ownership is useful as a fixed pre-pull responsibility on Normal.", { ULATEK_EGG_NORMAL }),
+        heroic = layout("Alternate Spectral Coil groups and assign an owner to each Doomscale Egg side.", { ULATEK_COILS, ULATEK_EGGS_HEROIC }),
+        mythic = layout("Coil rotation, egg-side carriers and a dedicated Toxic Incubation intercept rotation.", { ULATEK_COILS, ULATEK_EGGS_MYTHIC, ULATEK_INCUBATION }),
     },
 }
 
@@ -218,14 +235,18 @@ local function validateLayouts()
                 local item = profile.sections[sectionIndex]
                 assert(type(item.key) == "string" and type(item.title) == "string", "Assignment section requires identity")
                 assert(type(item.columns) == "number" and item.columns >= 1 and item.columns <= 4, "Invalid assignment columns")
-                assert(type(item.slots) == "table", "Assignment section requires slots")
                 for slotIndex = 1, #item.slots do
                     local definition = item.slots[slotIndex]
                     assert(type(definition.key) == "string" and definition.key ~= "", "Assignment requires key")
                     assert(type(definition.label) == "string" and definition.label ~= "", "Assignment requires label")
+                    assert(VALID_KINDS[definition.kind], "Invalid assignment kind: " .. tostring(definition.kind))
                     assert(not seen[definition.key], "Duplicate assignment key: " .. bossKey .. "/" .. difficultyKey .. "/" .. definition.key)
-                    if definition.callKey ~= nil then assert(type(definition.callKey) == "string" and definition.callKey ~= "", "Invalid callKey") end
-                    if definition.rotation ~= nil then assert(type(definition.rotation) == "string" and definition.rotation ~= "", "Invalid rotation") end
+                    if definition.rotation ~= nil then
+                        assert(definition.kind == "rotation", "Rotating assignment must use rotation kind")
+                        assert(type(definition.rotation) == "string" and definition.rotation ~= "", "Invalid rotation")
+                    end
+                    if definition.exactPlayers ~= nil then assert(definition.exactPlayers >= 1, "Invalid exactPlayers") end
+                    if definition.minPlayers ~= nil then assert(definition.minPlayers >= 1, "Invalid minPlayers") end
                     seen[definition.key] = true
                 end
             end
