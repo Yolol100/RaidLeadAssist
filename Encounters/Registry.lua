@@ -14,6 +14,34 @@ local function validTimingSeconds(value)
     return type(value) == "number" and value == value and value >= 0 and value < math.huge
 end
 
+local function validateIdentityList(call, label)
+    local hasIdentity = false
+
+    if call.spellIDs ~= nil then
+        assert(type(call.spellIDs) == "table" and #call.spellIDs > 0,
+            "spellIDs must be a non-empty table: " .. label .. "/" .. tostring(call.key))
+        for _, spellID in ipairs(call.spellIDs) do
+            local numericID = Util.ToNumericID(spellID)
+            assert(numericID and numericID > 0 and numericID == math.floor(numericID),
+                "Invalid spell ID: " .. label .. "/" .. tostring(call.key))
+        end
+        hasIdentity = true
+    end
+
+    if call.timerNames ~= nil then
+        assert(type(call.timerNames) == "table" and #call.timerNames > 0,
+            "timerNames must be a non-empty table: " .. label .. "/" .. tostring(call.key))
+        for _, timerName in ipairs(call.timerNames) do
+            local normalized = type(timerName) == "string" and Util.NormalizeTimerName(timerName) or nil
+            assert(normalized and normalized ~= "",
+                "Invalid timer name: " .. label .. "/" .. tostring(call.key))
+        end
+        hasIdentity = true
+    end
+
+    return hasIdentity
+end
+
 local function validateProfile(encounterKey, difficultyKey, profile)
     local label = encounterKey .. "/" .. difficultyKey
     assert(type(profile) == "table", "Encounter profile requires table: " .. label)
@@ -29,15 +57,15 @@ local function validateProfile(encounterKey, difficultyKey, profile)
     local seenCalls = {}
     for index = 1, #profile.calls do
         local call = profile.calls[index]
-        assert(type(call.key) == "string", "Call requires key: " .. label)
+        assert(type(call.key) == "string" and call.key ~= "", "Call requires key: " .. label)
         assert(not seenCalls[call.key], "Duplicate call key: " .. label .. "/" .. call.key)
-        assert(type(call.ability) == "string", "Call requires ability: " .. label)
-        assert(type(call.action) == "string", "Call requires action: " .. label)
+        assert(type(call.ability) == "string" and call.ability ~= "", "Call requires ability: " .. label)
+        assert(type(call.action) == "string" and call.action ~= "", "Call requires action: " .. label)
         assert(type(call.warning) == "string" and call.warning ~= "", "Call requires warning: " .. label)
         assert(#call.warning <= 200, "Raid Warning is too long: " .. label .. "/" .. call.key)
 
         if call.timing ~= false then
-            assert(call.spellIDs or call.timerNames, "Timed call requires a timer identity: " .. label .. "/" .. call.key)
+            assert(validateIdentityList(call, label), "Timed call requires a timer identity: " .. label .. "/" .. call.key)
             if call.prepareSeconds ~= nil then
                 assert(validTimingSeconds(call.prepareSeconds), "Invalid prepareSeconds: " .. label .. "/" .. call.key)
             end
@@ -103,9 +131,21 @@ local function applyProfileAlias(encounter, difficultyKey)
 end
 
 local function validateEncounter(definition)
-    assert(type(definition.key) == "string", "Encounter requires key")
-    assert(type(definition.name) == "string", "Encounter requires name")
+    assert(type(definition.key) == "string" and definition.key ~= "", "Encounter requires key")
+    assert(type(definition.name) == "string" and definition.name ~= "", "Encounter requires name")
+    assert(type(definition.encounterID) == "number" and definition.encounterID > 0
+        and definition.encounterID == math.floor(definition.encounterID), "Encounter requires a positive integer encounterID")
+    assert(type(definition.strategyStatus) == "string" and definition.strategyStatus ~= "",
+        "Encounter requires strategyStatus: " .. definition.key)
     assert(type(definition.profiles) == "table", "Encounter requires difficulty profiles")
+
+    if definition.encounterAliases ~= nil then
+        assert(type(definition.encounterAliases) == "table", "encounterAliases must be a table: " .. definition.key)
+        for _, alias in ipairs(definition.encounterAliases) do
+            local normalized = type(alias) == "string" and Util.Normalize(alias) or nil
+            assert(normalized and normalized ~= "", "Invalid encounter alias: " .. definition.key)
+        end
+    end
 
     for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
         validateProfile(definition.key, difficultyKey, definition.profiles[difficultyKey])

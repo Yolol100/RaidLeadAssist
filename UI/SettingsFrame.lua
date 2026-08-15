@@ -86,6 +86,20 @@ function SettingsFrame:Initialize(database, callbacks)
     end)
     self.audioButton = audioButton
 
+    local timingButton = ActionButton:Create(frame, {
+        text = "AUTO  ON",
+        width = 76,
+        height = 22,
+        fontSize = 9,
+        variant = "primary",
+    })
+    timingButton:SetPoint("RIGHT", audioButton, "LEFT", -6, 0)
+    timingButton:SetScript("OnClick", function()
+        database.automaticTimingEnabled = not database.automaticTimingEnabled
+        self:RefreshTimingButton()
+    end)
+    self.timingButton = timingButton
+
     self.bossDropdown = Dropdown:Create(frame)
     self.bossDropdown.frame:SetPoint("TOPLEFT", Theme.settings.padding, -82)
     self.bossDropdown.frame:SetPoint("TOPRIGHT", -Theme.settings.padding, -82)
@@ -175,6 +189,7 @@ function SettingsFrame:Initialize(database, callbacks)
 
     table.insert(UISpecialFrames, "RaidLeadAssistSettingsFrame")
     self:RefreshAudioButton()
+    self:RefreshTimingButton()
     self:ConfigureBossDropdown(database.selectedBossKey)
     self:SetDirty(false)
 end
@@ -187,6 +202,17 @@ function SettingsFrame:RefreshAudioButton()
     else
         self.audioButton:SetActionText("VOICE  OFF")
         self.audioButton:SetActionVariant("secondary")
+    end
+end
+
+function SettingsFrame:RefreshTimingButton()
+    if not self.timingButton then return end
+    if self.database.automaticTimingEnabled ~= false then
+        self.timingButton:SetActionText("AUTO  ON")
+        self.timingButton:SetActionVariant("primary")
+    else
+        self.timingButton:SetActionText("AUTO  OFF")
+        self.timingButton:SetActionVariant("secondary")
     end
 end
 

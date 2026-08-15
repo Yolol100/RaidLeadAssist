@@ -33,6 +33,14 @@ function AudioService:IsEnabled()
     return self.database and self.database.audioEnabled ~= false
 end
 
+function AudioService:GetDiagnostics()
+    if not self:IsEnabled() then return "off" end
+    if not self.voiceID then self:RefreshVoice() end
+    if self.voiceID then return "TTS voice " .. tostring(self.voiceID) end
+    if SOUNDKIT and SOUNDKIT.RAID_WARNING then return "raid-warning sound fallback" end
+    return "unavailable"
+end
+
 function AudioService:Speak(text)
     if not self:IsEnabled() or type(text) ~= "string" or text == "" then return end
     if not self.voiceID then self:RefreshVoice() end

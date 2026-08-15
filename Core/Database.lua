@@ -3,7 +3,7 @@ local _, ns = ...
 local Util = ns:GetModule("Core.Util")
 
 local Database = {
-    SCHEMA_VERSION = 4,
+    SCHEMA_VERSION = 5,
     newerSchemaDetected = false,
 }
 
@@ -36,10 +36,11 @@ local function cloneValue(value, seen)
 end
 
 local DEFAULTS = {
-    schemaVersion = 4,
+    schemaVersion = 5,
     selectedBossKey = "nekzali",
     selectedDifficultyKey = "heroic",
     audioEnabled = true,
+    automaticTimingEnabled = true,
     forceShown = false,
     customMessages = {},
     assignments = {},
@@ -84,6 +85,9 @@ function Database:Migrate()
     end
 
     if type(self.data.audioEnabled) ~= "boolean" then self.data.audioEnabled = DEFAULTS.audioEnabled end
+    if type(self.data.automaticTimingEnabled) ~= "boolean" then
+        self.data.automaticTimingEnabled = DEFAULTS.automaticTimingEnabled
+    end
     if type(self.data.forceShown) ~= "boolean" then self.data.forceShown = DEFAULTS.forceShown end
     if type(self.data.selectedBossKey) ~= "string" then self.data.selectedBossKey = DEFAULTS.selectedBossKey end
     if not VALID_DIFFICULTIES[self.data.selectedDifficultyKey] then

@@ -41,6 +41,91 @@ local function settingsAreOpen()
     return SettingsUI.frame and type(SettingsUI.frame.IsShown) == "function" and SettingsUI.frame:IsShown()
 end
 
+function App:IsAutomaticTimingEnabled()
+    return self.timingAllowed == true and self.db and self.db.automaticTimingEnabled ~= false
+end
+
+local function profileUsesAutomaticTiming(profile)
+    if type(profile) ~= "table" or type(profile.calls) ~= "table" then return false end
+    for index = 1, #profile.calls do
+        if profile.calls[index].timing ~= false then return true end
+    end
+    return false
+end
+
+local function currentTimerTrafficSummary()
+    local totals = {}
+    for _, timer in pairs(Timeline.timers or {}) do
+        local label
+        if timer.providerName == "BigWigs" and timer.bridge == "Blizzard" then
+            label = "BigWigs -> Blizzard"
+        elseif timer.providerName == "Blizzard" then
+            label = "Blizzard native"
+        elseif timer.providerName == "DBM" then
+            label = "DBM direct"
+        elseif timer.providerName == "BigWigs" then
+            label = "BigWigs direct"
+        end
+        if label then
+            local item = totals[label] or { active = 0, matched = 0 }
+            item.active = item.active + 1
+            if timer.call then item.matched = item.matched + 1 end
+            totals[label] = item
+        end
+    end
+
+    local parts = {}
+    for _, label in ipairs({ "DBM direct", "BigWigs direct", "BigWigs -> Blizzard", "Blizzard native" }) do
+        local item = totals[label]
+        if item then
+            parts[#parts + 1] = ("%s %d active/%d matched"):format(label, item.active, item.matched)
+        end
+    end
+    return table.concat(parts, "; ")
+end
+
+function App:PrintDoctor()
+    local encounter = Registry:Get(self.activeBossKey)
+    local profile = Registry:GetProfile(self.activeBossKey, self.activeDifficultyKey)
+    local canWarn = RaidWarning:CanSend()
+    local inRaidInstance = Encounter:IsInRaidInstance()
+    local ready = true
+
+    if Database:HasNewerSchema() or not encounter or not profile then ready = false end
+    if not inRaidInstance or not canWarn then ready = false end
+    if Encounter:IsActive() and (not Encounter:HasKnownEncounter() or not Encounter:GetDifficultyKey()) then ready = false end
+    local profileUsesTiming = profileUsesAutomaticTiming(profile)
+    if self.db.automaticTimingEnabled ~= false and profileUsesTiming and Timeline:GetProviderSummary() == "" then ready = false end
+    if Audio:GetDiagnostics() == "unavailable" and Audio:IsEnabled() then ready = false end
+
+    ns:Print(("Doctor: %s | v%s | db=%s | boss=%s | profile=%s"):format(
+        ready and "READY" or "CHECK",
+        tostring(ns.version),
+        tostring(self.db.schemaVersion or "unknown"),
+        tostring(self.activeBossKey or "none"),
+        tostring(self.activeDifficultyKey or "none")
+    ))
+    ns:Print(("Context: raid=%s | encounter=%s | verified=%s | /rw=%s"):format(
+        inRaidInstance and "yes" or "no",
+        Encounter:IsActive() and "active" or "idle",
+        Encounter:HasKnownEncounter() and "yes" or "no",
+        canWarn and "ready" or "needs raid leader/assistant"
+    ))
+    ns:Print(("Automatic timing: user=%s | profile=%s | runtime=%s | audio=%s"):format(
+        self.db.automaticTimingEnabled ~= false and "on" or "off",
+        profileUsesTiming and "timed" or "manual-only",
+        self.timingAllowed and "allowed" or "blocked",
+        Audio:GetDiagnostics()
+    ))
+
+    local providers = Timeline:GetProviderDiagnostics()
+    ns:Print("Providers: " .. (providers ~= "" and providers or "manual only"))
+    local observed = currentTimerTrafficSummary()
+    ns:Print("Active timer traffic: " .. (observed ~= "" and observed or "none"))
+    ns:Print("Tested bossmod contracts: DBM 12.1.3; BigWigs v419.2")
+    if encounter and encounter.strategyStatus then ns:Print("Strategy: " .. encounter.strategyStatus) end
+end
+
 function App:Initialize()
     Database:Initialize()
     self.db = Database:Get()
@@ -249,7 +334,7 @@ function App:UpdateTiming()
     local profile = Registry:GetProfile(self.activeBossKey, self.activeDifficultyKey)
     if not profile then return end
 
-    if not self.timingAllowed then
+    if not self:IsAutomaticTimingEnabled() then
         for index = 1, #profile.calls do
             local call = profile.calls[index]
             local state = (self.visualCalledUntil[call.key] or 0) > GetTime()
@@ -324,6 +409,12 @@ function App:RegisterSlashCommands()
             if argument == "on" then self.db.audioEnabled = true end
             if argument == "off" then self.db.audioEnabled = false end
             ns:Print("Audio: " .. (self.db.audioEnabled and "on" or "off"))
+        elseif command == "timing" then
+            argument = argument:lower()
+            if argument == "on" then self.db.automaticTimingEnabled = true end
+            if argument == "off" then self.db.automaticTimingEnabled = false end
+            if SettingsUI.RefreshTimingButton then SettingsUI:RefreshTimingButton() end
+            ns:Print("Automatic timing: " .. (self.db.automaticTimingEnabled and "on" or "off"))
         elseif command == "difficulty" then
             argument = argument:lower()
             if not self:SelectDifficulty(argument, false) then
@@ -334,6 +425,10 @@ function App:RegisterSlashCommands()
         elseif command == "provider" then
             local summary = Timeline:GetProviderDiagnostics()
             ns:Print("Timer sources: " .. (summary ~= "" and summary or "none"))
+            local observed = currentTimerTrafficSummary()
+            ns:Print("Active timer traffic: " .. (observed ~= "" and observed or "none"))
+        elseif command == "doctor" then
+            self:PrintDoctor()
         elseif command == "status" then
             local summary = Timeline:GetProviderSummary()
             local difficultyID = Encounter:GetDifficultyID()
@@ -343,12 +438,12 @@ function App:RegisterSlashCommands()
                 tostring(self.activeDifficultyKey or "none"),
                 Encounter:IsActive() and "active" or "idle",
                 tostring(difficultyID or "none"),
-                self.timingAllowed and "on" or "off",
+                self:IsAutomaticTimingEnabled() and "on" or (self.db.automaticTimingEnabled == false and "user-off" or "blocked"),
                 summary ~= "" and summary or "none",
                 tostring(self.db.schemaVersion or "unknown")
             ))
         else
-            ns:Print("/rla show | hide | toggle | settings | difficulty normal|heroic|mythic | resetpos | audio on|off | provider | status")
+            ns:Print("/rla show | hide | toggle | settings | difficulty normal|heroic|mythic | resetpos | audio on|off | timing on|off | provider | doctor | status")
         end
     end
 end
