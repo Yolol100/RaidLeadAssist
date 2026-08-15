@@ -63,7 +63,7 @@ function DBMProvider:Start(sink)
         if Util.IsSecret(duration) or Util.IsSecret(simpleType) or Util.IsSecret(fade)
             or Util.IsSecret(hasVariance) or Util.IsSecret(isEnabled) then return end
         if type(duration) ~= "number" or duration <= 0 then return end
-        if hasVariance == true or fade == true or isEnabled ~= true then return end
+        if hasVariance == true or isEnabled ~= true then return end
         if not ALLOWED_TYPES[simpleType] then return end
 
         self.sink:ProviderTimerStarted("DBM", timerID, {
@@ -72,6 +72,7 @@ function DBMProvider:Start(sink)
             duration = duration,
             icon = Util.NormalizeTexture(icon),
             precision = "exact",
+            faded = fade == true,
         })
     end
 
@@ -98,8 +99,9 @@ function DBMProvider:Start(sink)
 
     self.onFadeUpdate = function(_, id, _, _, fade)
         local timerID = normalizeTimerID(id)
-        if timerID and fade == true then
-            self.sink:ProviderTimerStopped("DBM", timerID, "faded")
+        if not timerID or Util.IsSecret(fade) then return end
+        if type(self.sink.ProviderTimerFaded) == "function" then
+            self.sink:ProviderTimerFaded("DBM", timerID, fade == true)
         end
     end
 
