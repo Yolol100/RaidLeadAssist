@@ -3,7 +3,7 @@ local ns = T.NewNamespace()
 local SECRET = {}
 local bwMessages = {}
 local dbmCallbacks = {}
-local started, stopped, paused = {}, {}, {}
+local started, stopped, paused, updated = {}, {}, {}, {}
 local hints, suppression = {}, {}
 
 _G.issecretvalue = function(value) return value == SECRET end
@@ -28,7 +28,9 @@ end
 function sink:ProviderTimerPaused(provider, id, value)
     paused[#paused + 1] = { provider = provider, id = id, value = value }
 end
-function sink:ProviderTimerUpdated() end
+function sink:ProviderTimerUpdated(provider, id, elapsed, total)
+    updated[#updated + 1] = { provider = provider, id = id, elapsed = elapsed, total = total }
+end
 function sink:ProviderReset() end
 function sink:ProviderEncounterHint(provider, encounterID)
     hints[#hints + 1] = { provider = provider, encounterID = encounterID }
@@ -94,7 +96,7 @@ assert(#stopped == 1 and stopped[1].id == "Boss|text:Cast")
 bwMessages.BigWigs_OnBossEngageMidEncounter(nil, module)
 assert(#hints == 1 and hints[1].provider == "BigWigs" and hints[1].encounterID == 3420)
 
-started, stopped, paused = {}, {}, {}
+started, stopped, paused, updated = {}, {}, {}, {}
 local DBMProvider = ns:GetModule("Services.Providers.DBM")
 assert(DBMProvider:Start(sink) == true)
 
@@ -104,6 +106,9 @@ assert(#started == 1 and started[1].provider == "DBM" and started[1].id == "dbm-
 assert(started[1].data.key == 123 and started[1].data.name == "Cast")
 assert(started[1].data.precision == "exact")
 
+dbmCallbacks.DBM_TimerUpdate(nil, "dbm-1", 3, 12)
+assert(#updated == 1 and updated[1].id == "dbm-1" and updated[1].elapsed == 3 and updated[1].total == 12)
+
 dbmCallbacks.DBM_TimerBegin(nil, "dbm-variance", "Cast", 10, 456, "cd", 123, nil, nil, nil, false, "Cast", nil, nil, nil, nil, true, nil, true)
 assert(#started == 1, "variable DBM timers must be ignored")
 dbmCallbacks.DBM_TimerBegin(nil, "dbm-disabled", "Cast", 10, 456, "cd", 123, nil, nil, nil, false, "Cast", nil, nil, nil, nil, false, nil, false)
@@ -111,8 +116,15 @@ assert(#started == 1, "disabled DBM timers must be ignored")
 
 dbmCallbacks.DBM_TimerPause(nil, "dbm-1")
 assert(#paused == 1 and paused[1].value == true)
+dbmCallbacks.DBM_TimerResume(nil, "dbm-1")
+assert(#paused == 2 and paused[2].value == false)
+
+-- Exact 12.1.3 fade update: id, spellId, modId, fade, spellName.
+dbmCallbacks.DBM_TimerFadeUpdate(nil, "dbm-1", 123, 2888, true, "Cast")
+assert(#stopped == 1 and stopped[1].id == "dbm-1" and stopped[1].reason == "faded")
+
 dbmCallbacks.DBM_TimerStop(nil, "dbm-1")
-assert(#stopped == 1 and stopped[1].id == "dbm-1")
+assert(#stopped == 2 and stopped[2].id == "dbm-1")
 
 dbmCallbacks.DBM_IgnoreBlizzAPI()
 assert(suppression[#suppression].provider == "DBM" and suppression[#suppression].value == true)
