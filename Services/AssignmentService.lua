@@ -29,6 +29,14 @@ local function containsControl(value)
     return value:find("[%z\1-\8\11\12\14-\31\127]") ~= nil
 end
 
+local function countPlayers(value)
+    local count = 0
+    for part in tostring(value or ""):gmatch("[^,]+") do
+        if trim(part) ~= "" then count = count + 1 end
+    end
+    return count
+end
+
 local function getProfile(database, bossKey, difficultyKey, create)
     if type(database.assignments) ~= "table" then database.assignments = {} end
     local boss = database.assignments[bossKey]
@@ -126,6 +134,24 @@ function AssignmentService:ValidateValue(value)
     return true, normalized
 end
 
+function AssignmentService:ValidateDefinitionValue(definition, value)
+    local ok, normalized = self:ValidateValue(value)
+    if not ok or normalized == "" then return ok, normalized end
+
+    local kind = definition and definition.kind or "assignee"
+    if kind == "assignee" or kind == "rotation" then
+        local players = countPlayers(normalized)
+        if definition.exactPlayers and players ~= definition.exactPlayers then
+            return false, ("requires exactly %d players; found %d."):format(definition.exactPlayers, players)
+        end
+        if definition.minPlayers and players < definition.minPlayers then
+            return false, ("requires at least %d players; found %d."):format(definition.minPlayers, players)
+        end
+    end
+
+    return true, normalized
+end
+
 function AssignmentService:GetDefinitions(bossKey, difficultyKey)
     return AssignmentRegistry:GetDefinitions(bossKey, difficultyKey)
 end
@@ -155,9 +181,9 @@ function AssignmentService:ApplyBossDraft(bossKey, difficultyKey, values)
     local clean = {}
     for index = 1, #definitions do
         local definition = definitions[index]
-        local ok, normalized = self:ValidateValue(values[definition.key])
+        local ok, normalized = self:ValidateDefinitionValue(definition, values[definition.key])
         if not ok then
-            return false, { assignmentKey = definition.key, message = definition.label .. ": " .. normalized }
+            return false, { assignmentKey = definition.key, message = definition.label .. " " .. normalized }
         end
         if normalized ~= "" then clean[definition.key] = normalized end
     end
