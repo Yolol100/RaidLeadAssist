@@ -93,14 +93,16 @@ function BigWigsProvider:Start(sink)
 
     -- BigWigs v419.2 and current upstream expose two relevant contracts:
     --   BigWigs_Timer(module, key, duration, maxTime, text, counter, icon, isApproximate, isBarEnabled)
-    -- is the canonical boss-module timer data bus. It fires even when the visual bar is disabled,
-    -- so RLA explicitly respects isBarEnabled and never turns a disabled BigWigs timer into a call.
+    -- is the canonical boss-module timer data bus. BigWigs plugins, API timers,
+    -- wipe timers and keystone tools also emit this message, so RLA only accepts
+    -- direct timers from modules that expose a real public encounter ID.
     --   BigWigs_StartBar(nil, nil, text, duration, icon, maxQueueDuration, maxTime, eventID, ...)
     -- is also used by the BigWigs Blizzard Timeline bridge. Only that nil-module bridge shape is
     -- allowed to contribute native event identity; normal StartBar trailing values are not trusted
     -- as event IDs because the receiving contract also uses that slot for spell indicators.
     self.onTimer = function(_, module, key, duration, _, text, _, icon, isApproximate, isBarEnabled)
-        if module == nil then return end
+        local encounterID = encounterIDForModule(module)
+        if not encounterID then return end
         if Util.IsSecret(duration) or Util.IsSecret(key) or Util.IsSecret(text)
             or Util.IsSecret(isApproximate) or Util.IsSecret(isBarEnabled) then return end
         if type(duration) ~= "number" or duration <= 0 or isBarEnabled ~= true then return end
@@ -114,6 +116,7 @@ function BigWigsProvider:Start(sink)
             name = text,
             duration = duration,
             icon = Util.NormalizeTexture(icon),
+            encounterID = encounterID,
             precision = isApproximate == true and "approximate" or "exact",
         })
     end
