@@ -34,7 +34,13 @@ jobs:
         run: |
           set -euo pipefail
           for file in tests/test_*.lua; do
-            lua5.1 "$file"
+            if ! output="$(lua5.1 "$file" 2>&1)"; then
+              printf '%s\n' "$output"
+              message="$(printf '%s' "$output" | tr '\r\n' '  ' | sed 's/%/%25/g')"
+              echo "::error file=$file::$message"
+              exit 1
+            fi
+            printf '%s\n' "$output"
           done
       - name: Build and verify release ZIP
         shell: bash
