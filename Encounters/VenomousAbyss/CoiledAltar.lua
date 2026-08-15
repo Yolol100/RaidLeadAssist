@@ -19,6 +19,7 @@ end
 
 Registry:Register({
     key="altar", name="The Coiled Altar", encounterID=3429,
+    encounterAliases={"The Bargained Crown"},
     strategyStatus="12.1 difficulty plans source-reviewed 2026-08-15; live validation pending",
     profiles={
         normal={
