@@ -50,18 +50,20 @@ local function callContextSafety()
 end
 
 local function refreshCallAvailability()
-    local enabled, reason = callContextSafety()
+    local callsEnabled, reason = callContextSafety()
+    local planEnabled = callsEnabled and not Encounter:IsActive()
 
     local explanationFrame = UI.explanationButton and UI.explanationButton.frame
-    if explanationFrame and type(explanationFrame.SetEnabled) == "function" then explanationFrame:SetEnabled(enabled) end
+    if explanationFrame and type(explanationFrame.SetEnabled) == "function" then explanationFrame:SetEnabled(planEnabled) end
 
     for index = 1, #(UI.callButtons or {}) do
         local frame = UI.callButtons[index] and UI.callButtons[index].frame
-        if frame and type(frame.SetEnabled) == "function" then frame:SetEnabled(enabled) end
+        if frame and type(frame.SetEnabled) == "function" then frame:SetEnabled(callsEnabled) end
     end
 
-    UI.callsDisabledReason = enabled and nil or reason
-    return enabled, reason
+    UI.callsDisabledReason = callsEnabled and nil or reason
+    UI.planDisabledReason = planEnabled and nil or (Encounter:IsActive() and "Boss Plan is pre-pull only." or reason)
+    return callsEnabled, reason
 end
 
 local function openAssignments()
@@ -122,6 +124,10 @@ end
 
 local originalSendExplanation = App.SendExplanation
 function App:SendExplanation()
+    if Encounter:IsActive() then
+        ns:Print("Boss Plan is pre-pull only.")
+        return false
+    end
     local safe, reason = callContextSafety()
     if not safe then
         ns:Print(reason)
