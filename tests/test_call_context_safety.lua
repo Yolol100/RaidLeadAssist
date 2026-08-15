@@ -88,7 +88,7 @@ ns:RegisterModule("Core.App", App)
 T.Load("Core/AssignmentIntegration.lua", ns)
 
 assert(App:SendCall("kick") == false, "unknown active encounter must block manual Raid Warnings")
-assert(App:SendExplanation() == false, "unknown active encounter must block the raid plan")
+assert(App:SendExplanation() == false, "all active encounters must block the pre-pull raid plan")
 assert(#warnings == 0 and briefings == 0)
 
 assert(handlers.ENCOUNTER_STARTED, "encounter start guard must be registered")
@@ -110,13 +110,20 @@ assert(#warnings == 0)
 active = false
 handlers.ENCOUNTER_ENDED()
 assert(explanationEnabled == true and callEnabled == true,
-    "leaving the encounter must restore manual controls")
+    "leaving the encounter must restore pre-pull plan and manual call controls")
+assert(App:SendExplanation() == true and briefings == 1,
+    "raid plan must remain usable outside encounters")
 
 active = true
 known = true
 difficulty = "heroic"
 encounterModule.currentEncounter = { key = "boss" }
-assert(App:SendCall("kick") == true, "verified supported encounter must allow the configured call")
+handlers.ENCOUNTER_STARTED()
+assert(explanationEnabled == false and callEnabled == true,
+    "verified active encounters should keep combat calls enabled but disable the pre-pull plan")
+assert(App:SendExplanation() == false and briefings == 1,
+    "raid plan must not send after the pull has begun")
+assert(App:SendCall("kick") == true, "verified supported encounter must allow the configured combat call")
 assert(#warnings == 1 and warnings[1] == "BASE WARNING")
 
-print("ok - active encounter Raid Warning context fails closed")
+print("ok - active encounter Raid Warning context and pre-pull plan lifecycle")
