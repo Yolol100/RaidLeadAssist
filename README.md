@@ -4,6 +4,8 @@ Raid Lead Assist is a raid-leader callout panel for The Venomous Abyss with sepa
 
 The main panel has three difficulty tabs. Each tab can define its own pre-pull raid plan, combat call buttons, Raid Warning text, timer identities, optional per-call PREPARE/PRESS windows, and boss-specific assignments. Outside combat the raid leader can switch freely. When a supported encounter starts, the panel automatically selects and locks to the actual Normal, Heroic, or Mythic difficulty so calls cannot accidentally come from the wrong profile. Manual difficulty and boss changes are blocked during the active encounter; automatic encounter selection remains allowed.
 
+Active encounter calls fail closed. During a pull, Raid Lead Assist verifies that the detected boss, selected boss profile, live difficulty, and selected Normal/Heroic/Mythic profile all agree before a manual combat Raid Warning can be sent. If the encounter is unknown, the difficulty is unsupported, or the active boss/profile state is stale or mismatched, automatic timing is idled and manual raid-plan/combat-call controls are disabled instead of reusing a previous profile. The Boss Plan is pre-pull only and is disabled during every active encounter; verified combat-call buttons remain available during a supported pull.
+
 ## Boss assignments
 
 Assignments are configured before combat through the `ASSIGN` launcher on the main panel, the `ASSIGNMENTS` button in Settings, or `/rla assignments`. The editor is intentionally encounter-specific: each boss and difficulty shows only the blocks its tactic needs.
@@ -35,7 +37,7 @@ Cross-provider timers for the same call are clustered by native event identity w
 
 The provider adapters and TimelineService fail closed on Midnight secret values. Secret timer durations, update values, identities, metadata, and pause state are not retained or used for call decisions.
 
-Ula'tek remains manual-timing only until the final boss has been validated in the live Retail client. Its current difficulty plans are Journal-derived and intentionally do not claim live raid validation.
+Ula'tek remains manual-timing only until the final boss has been validated in the live Retail client. Its current difficulty plans are Journal-derived and intentionally do not claim live raid validation. Where pre-release guide text and newer Encounter Journal data disagree, Raid Lead Assist keeps automatic timing disabled and avoids changing difficulty behavior solely from an older guide surface.
 
 ## Encounter-data policy
 
@@ -61,6 +63,6 @@ On successful pushes to `main`, GitHub Actions retains the byte-verified `RaidLe
 
 ## Validation
 
-GitHub Actions compile every Lua file with Lua 5.1, verify the active TOC inventory, and run focused behavioral regressions for saved-variable schema safety, difficulty-profile isolation, boss-specific typed assignment layouts, duplicate/overlap and hard group-size validation, all-or-nothing assignment call composition, assignment rotation reset, assignment-to-encounter call bindings, Settings difficulty locking, active-encounter boss/difficulty locking, confirmation-dialog cancellation, Midnight secret-value handling at both adapter and service boundaries, Blizzard Encounter Timeline invalid-event races, real BigWigs/DBM callback shapes, provider precision, stable timer occurrence identity across provider updates, multi-provider timer selection/deduplication, late-provider acknowledgement, per-call timing boundaries, raid-warning pre-pull cancellation, and the 24 Normal/Heroic/Mythic encounter plans. CI then builds and byte-verifies the exact clean release ZIP inventory before retaining the verified main-branch artifact.
+GitHub Actions compile every Lua file with Lua 5.1, verify the active TOC inventory, and run focused behavioral regressions for saved-variable schema safety, difficulty-profile isolation, boss-specific typed assignment layouts, duplicate/overlap and hard group-size validation, all-or-nothing assignment call composition, assignment rotation reset, assignment-to-encounter call bindings, Settings difficulty locking, active-encounter boss/difficulty locking, fail-closed manual-call context, pre-pull Boss Plan lifecycle, confirmation-dialog cancellation, Midnight secret-value handling at both adapter and service boundaries, Blizzard Encounter Timeline invalid-event races, real BigWigs/DBM callback shapes, provider precision, stable timer occurrence identity across provider updates, multi-provider timer selection/deduplication, late-provider acknowledgement, per-call timing boundaries, raid-warning pre-pull cancellation, and the 24 Normal/Heroic/Mythic encounter plans. CI then builds and byte-verifies the exact clean release ZIP inventory before retaining the verified main-branch artifact.
 
 These automated checks are source and controlled-runtime evidence. They do not replace a live Retail raid-leader usability pass, keyboard/gamepad verification in the WoW client, or live combat tests with current Blizzard timelines, BigWigs, and DBM present.
