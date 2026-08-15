@@ -32,6 +32,11 @@ local function callContextSafety()
         return false, "Active encounter is not verified; Raid Warning plans and calls are disabled until a supported pull is identified."
     end
 
+    local liveEncounter = Encounter.currentEncounter
+    if type(liveEncounter) ~= "table" or liveEncounter.key ~= App.activeBossKey then
+        return false, "Active boss does not match the selected Raid Lead Assist profile; Raid Warning plans and calls are disabled."
+    end
+
     local liveDifficulty = Encounter:GetDifficultyKey()
     if not liveDifficulty or liveDifficulty ~= App.activeDifficultyKey then
         return false, "Active encounter difficulty is not a verified Normal, Heroic, or Mythic profile; Raid Warning plans and calls are disabled."
