@@ -166,12 +166,15 @@ function App:SendCall(callKey)
     return false
 end
 
-EventBus:On("ENCOUNTER_STARTED", Integration, function()
+local function refreshForActiveEncounter()
     Assignments:ResetRuntime()
     AssignmentUI:CloseForEncounter()
     local enabled, reason = refreshCallAvailability()
     if not enabled then ns:Print(reason) end
-end)
+end
+
+EventBus:On("ENCOUNTER_STARTED", Integration, refreshForActiveEncounter)
+EventBus:On("ENCOUNTER_RECOVERED", Integration, refreshForActiveEncounter)
 
 EventBus:On("ENCOUNTER_ENDED", Integration, function()
     Assignments:ResetRuntime()
