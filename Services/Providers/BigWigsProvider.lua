@@ -35,6 +35,13 @@ local function chooseEventID(primary, fallback)
     return nil
 end
 
+local function directTimerKey(module, key, text)
+    if module == nil or Util.IsSecret(key) or Util.IsSecret(text) then return nil end
+    local keyType = type(key)
+    if keyType ~= "string" and keyType ~= "number" then return nil end
+    return table.concat({ moduleID(module), tostring(key), tostring(text) }, "|")
+end
+
 local function encounterIDForModule(module)
     if type(module) ~= "table" then return nil end
 
@@ -83,6 +90,20 @@ function BigWigsProvider:Forget(id)
     end
 end
 
+function BigWigsProvider:RememberPendingEventID(module, key, text, eventID)
+    if not validEventID(eventID) then return end
+    local correlation = directTimerKey(module, key, text)
+    if correlation then self.pendingEventIDs[correlation] = eventID end
+end
+
+function BigWigsProvider:TakePendingEventID(module, key, text)
+    local correlation = directTimerKey(module, key, text)
+    if not correlation then return nil end
+    local eventID = self.pendingEventIDs[correlation]
+    self.pendingEventIDs[correlation] = nil
+    return eventID
+end
+
 function BigWigsProvider:SeedEncounterHint()
     if not self.sink or not _G.BigWigs or type(BigWigs.IterateBossModules) ~= "function"
         or type(self.sink.ProviderEncounterHint) ~= "function" then
@@ -114,17 +135,21 @@ function BigWigsProvider:Start(sink)
     self.owner = self.owner or {}
     self.aliases = {}
     self.timerModules = {}
+    self.pendingEventIDs = {}
 
-    -- BigWigs v419.2 and current upstream expose two relevant contracts:
+    -- BigWigs v419.2 and current upstream expose three relevant contracts:
     --   BigWigs_Timer(module, key, duration, maxTime, text, counter, icon, isApproximate, isBarEnabled)
-    -- is the canonical boss-module timer data bus. BigWigs plugins, API timers,
-    -- wipe timers and keystone tools also emit this message, so RLA only accepts
-    -- direct timers from modules that expose a real public encounter ID.
+    -- is the canonical regular boss-module timer data bus.
+    --   BigWigs_CastTimer(module, key, duration, maxTime, text, counter, icon, rawText, isBarEnabled)
+    -- is the equivalent data bus for boss cast bars. BigWigs plugins, API timers, wipe timers and
+    -- keystone tools can also emit timer-like messages, so RLA only accepts direct timers from
+    -- modules that expose a real public encounter ID.
     --   BigWigs_StartBar(nil, nil, text, duration, icon, maxQueueDuration, maxTime, eventID, ...)
-    -- is also used by the BigWigs Blizzard Timeline bridge. Only that nil-module bridge shape is
-    -- allowed to contribute native event identity; normal StartBar trailing values are not trusted
-    -- as event IDs because the receiving contract also uses that slot for spell indicators.
-    self.onTimer = function(_, module, key, duration, _, text, _, icon, isApproximate, isBarEnabled)
+    -- is used by the Blizzard Timeline bridge. For normal boss bars, BigWigs' own Bar/CDBar/CastBar
+    -- code sends the optional timeline event ID in the final StartBar slot immediately before the
+    -- matching Timer/CastTimer event. RLA records that value only as one-shot metadata and attaches
+    -- it to the matching direct timer; StartBar itself never creates a second direct timer.
+    local function startDirectTimer(module, key, duration, text, icon, isApproximate, isBarEnabled)
         local encounterID = encounterIDForModule(module)
         if not encounterID then return end
         if Util.IsSecret(duration) or Util.IsSecret(key) or Util.IsSecret(text)
@@ -133,7 +158,8 @@ function BigWigsProvider:Start(sink)
 
         local id = makeTimerID(module, text, nil)
         if not id then return end
-        self:Remember(module, text, nil, id)
+        local nativeEventID = self:TakePendingEventID(module, key, text)
+        self:Remember(module, text, nativeEventID, id)
         self.timerModules[id] = moduleID(module)
         self.sink:ProviderTimerStarted("BigWigs", id, {
             key = key,
@@ -141,13 +167,35 @@ function BigWigsProvider:Start(sink)
             duration = duration,
             icon = Util.NormalizeTexture(icon),
             encounterID = encounterID,
+            nativeEventID = nativeEventID,
             precision = isApproximate == true and "approximate" or "exact",
         })
     end
 
+    self.onTimer = function(_, module, key, duration, _, text, _, icon, isApproximate, isBarEnabled)
+        startDirectTimer(module, key, duration, text, icon, isApproximate, isBarEnabled)
+    end
+
+    self.onCastTimer = function(_, module, key, duration, _, text, _, icon, _, isBarEnabled)
+        startDirectTimer(module, key, duration, text, icon, false, isBarEnabled)
+    end
+
     self.onStart = function(_, module, key, text, duration, icon, reliability, _, eventIDA, eventIDB)
         local bridgeShape = module == nil and key == nil
-        if not bridgeShape then return end
+        if not bridgeShape then
+            local encounterID = encounterIDForModule(module)
+            if not encounterID or Util.IsSecret(duration) or Util.IsSecret(key) or Util.IsSecret(text) then return end
+            if type(duration) ~= "number" or duration <= 0 then return end
+
+            -- In v419.2/current BossPrototype, normal Bar/CDBar/CastBar puts its optional
+            -- timeline event ID in the final StartBar slot. Treat it as metadata only after
+            -- a real boss module has been verified and consume it exactly once.
+            if validEventID(eventIDB) then
+                self:RememberPendingEventID(module, key, text, eventIDB)
+            end
+            return
+        end
+
         if Util.IsSecret(duration) or Util.IsSecret(text) or Util.IsSecret(reliability) then return end
         if type(duration) ~= "number" or duration <= 0 then return end
 
@@ -208,6 +256,7 @@ function BigWigsProvider:Start(sink)
     end
 
     BigWigsLoader.RegisterMessage(self.owner, "BigWigs_Timer", self.onTimer)
+    BigWigsLoader.RegisterMessage(self.owner, "BigWigs_CastTimer", self.onCastTimer)
     BigWigsLoader.RegisterMessage(self.owner, "BigWigs_StartBar", self.onStart)
     BigWigsLoader.RegisterMessage(self.owner, "BigWigs_StopBar", self.onStop)
     BigWigsLoader.RegisterMessage(self.owner, "BigWigs_PauseBar", self.onPause)
@@ -226,6 +275,7 @@ function BigWigsProvider:Stop()
 
     local messages = {
         "BigWigs_Timer",
+        "BigWigs_CastTimer",
         "BigWigs_StartBar",
         "BigWigs_StopBar",
         "BigWigs_PauseBar",
@@ -243,6 +293,7 @@ function BigWigsProvider:Stop()
     end
     if self.aliases then table.wipe(self.aliases) end
     if self.timerModules then table.wipe(self.timerModules) end
+    if self.pendingEventIDs then table.wipe(self.pendingEventIDs) end
 end
 
 ns:RegisterModule("Services.Providers.BigWigs", setmetatable({}, BigWigsProvider))
