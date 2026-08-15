@@ -23,6 +23,22 @@ local function setEditBorder(instance)
     instance.edit:SetBackdropBorderColor(color[1], color[2], color[3], 1)
 end
 
+local function showHelper(instance)
+    local definition = instance.definition
+    local helper = definition and definition.helper
+    local tooltip = _G.GameTooltip
+    if type(helper) ~= "string" or helper == "" or not tooltip then return end
+    tooltip:SetOwner(instance.edit, "ANCHOR_TOP")
+    tooltip:SetText(definition.label or "Assignment", 1, 1, 1)
+    tooltip:AddLine(helper, 0.82, 0.86, 0.82, true)
+    tooltip:Show()
+end
+
+local function hideHelper(instance)
+    local definition = instance.definition
+    if definition and definition.helper and _G.GameTooltip then _G.GameTooltip:Hide() end
+end
+
 function AssignmentSlot:Create(parent)
     local instance = setmetatable({}, AssignmentSlot)
 
@@ -89,6 +105,8 @@ function AssignmentSlot:Create(parent)
     edit:SetScript("OnTabPressed", function()
         if instance.onTab then instance.onTab(instance, IsShiftKeyDown and IsShiftKeyDown() == true) end
     end)
+    edit:SetScript("OnEnter", function() showHelper(instance) end)
+    edit:SetScript("OnLeave", function() hideHelper(instance) end)
     roster:SetScript("OnClick", function()
         if instance.onRoster then instance.onRoster(instance) end
     end)
@@ -102,9 +120,10 @@ function AssignmentSlot:SetDefinition(definition)
     local suffix = definition and definition.required and "  *" or ""
     local fieldKind = definition and definition.kind or "assignee"
     local usesRoster = fieldKind == "assignee" or fieldKind == "rotation"
+    local helperSuffix = definition and definition.helper and " · ?" or ""
 
     self.label:SetText((definition and definition.label or "Assignment") .. suffix)
-    self.kind:SetText(KIND_LABELS[fieldKind] or "ASSIGNMENT")
+    self.kind:SetText((KIND_LABELS[fieldKind] or "ASSIGNMENT") .. helperSuffix)
 
     self.edit:ClearAllPoints()
     self.edit:SetPoint("BOTTOMLEFT", 8, 8)
