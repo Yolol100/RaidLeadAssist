@@ -83,6 +83,7 @@ function TimelineBar:SetTimer(timer, remaining)
     if source then label = label .. " · " .. source end
     local approximate = timer.precision == Constants.TimerPrecision.APPROXIMATE
     if approximate then label = label .. " (approx)" end
+    if timer.faded == true then label = label .. " (faded)" end
     self.frame.label:SetText(label)
 
     if remaining then
