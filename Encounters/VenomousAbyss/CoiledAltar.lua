@@ -19,13 +19,13 @@ end
 
 Registry:Register({
     key="altar", name="The Coiled Altar", encounterID=3429,
-    strategyStatus="12.1 difficulty plans source-reviewed 2026-08-14; live validation pending",
+    strategyStatus="12.1 difficulty plans source-reviewed 2026-08-15; live validation pending",
     profiles={
         normal={
             explanation={
                 "P1 PLAN: TANK AIMS SEVER THROUGH VENOM; RAID STAYS OUT OF THE FRONTAL.",
                 "TOXIC DELUGE: DODGE IMPACTS AND SET COALESCED VENOM FOR THE NEXT SEVER.",
-                "GUILLOTINE: TEAM A/B ALTERNATE 5+ SOAKS, THEN RAID MOVES 40+ FROM AXE.",
+                "GUILLOTINE: 5+ PLAYERS SOAK. A SECOND COVERAGE TEAM IS OPTIONAL ON NORMAL.",
                 "P2: BREAK DREADMARCH SHIELDS; FIXATES FACE GHOSTS FOR TANK SOUL SEVER.",
                 "NIGHTFALL: BREAK SHIELD THEN INTERRUPT. SPIRITCACKLE: KILL ADDS, KICK WAIL.",
                 "GLOOMBOMB TARGETS 15+ YARDS OUT. RECLAIM SOUL FRAGMENTS FAST.",
@@ -34,7 +34,7 @@ Registry:Register({
             calls={
                 sever,
                 toxic("TOXIC DELUGE > DODGE IMPACTS > SET GLOBULES FOR NEXT SEVER"),
-                guillotine("GUILLOTINE > NEXT 5+ TEAM SOAK > THEN RAID 40+ FROM AXE"),
+                guillotine("GUILLOTINE > ASSIGNED 5+ SOAKERS IN > THEN RAID 40+ FROM AXE"),
                 dread, night, spirit,
                 gloombomb("GLOOMBOMB > TARGETS 15+ OUT > RECLAIM FRAGMENTS"),
                 intermission, final,
