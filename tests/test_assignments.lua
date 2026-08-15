@@ -33,6 +33,7 @@ assert(#Registry:GetLayout("vashnik", "normal").sections == 1, "Normal Vashnik s
 
 local vashnikNormal = Registry:GetDefinitions("vashnik", "normal")
 assert(vashnikNormal[1].key == "fountain_order" and vashnikNormal[1].kind == "sequence", "Vashnik Normal must use one sequence field")
+assert(vashnikNormal[1].helper:find("Blood+Shadow", 1, true), "Vashnik sequence help must use the three real fountain types")
 
 local nekHeroic = Registry:GetDefinitions("nekzali", "heroic")
 local cremationRules = 0
@@ -48,6 +49,7 @@ local sentinels = Registry:GetDefinitions("sentinels", "heroic")
 for _, definition in ipairs(sentinels) do
     if definition.key:find("stasis_", 1, true) then
         assert(definition.exactPlayers == 4, "Helical Toxin groups must encode exact four-player validation")
+        assert(definition.exclusiveGroup == "stasis", "Helical Toxin groups must reject cross-group overlap")
     end
 end
 
@@ -55,8 +57,16 @@ local twinMythic = Registry:GetDefinitions("twinfangs", "mythic")
 for _, definition in ipairs(twinMythic) do
     if definition.key:find("brood_kick_", 1, true) then
         assert(definition.rotation == nil and definition.kind == "assignee", "Broodling kicks are simultaneous coverage, not a rotating cast assignment")
+        assert(definition.exclusiveGroup == "brood", "simultaneous Broodling kick owners must be distinct")
+    elseif definition.key:find("feast_", 1, true) then
+        assert(definition.minPlayers == 3, "every Ravenous Feast hit must require at least three configured players")
+        assert(definition.exclusiveGroup == "feast", "Feast groups must reject repeated Feasted players")
     end
 end
+
+local altarNormal = Registry:GetDefinitions("altar", "normal")
+assert(altarNormal[1].key == "guillotine_a" and altarNormal[1].required, "Normal Altar needs one required Guillotine team")
+assert(altarNormal[2].key == "guillotine_b" and not altarNormal[2].required, "Normal Altar second Guillotine team should be optional")
 
 local ok, values = Assignments:ApplyBossDraft("sszorak", "heroic", {
     mutilate_a = "Alpha, Bravo, Charlie, Delta, Echo",
@@ -71,7 +81,21 @@ local invalidGroup, groupError = Assignments:ApplyBossDraft("sszorak", "heroic",
     mutilate_b = "Foxtrot, Golf, Hotel, India, Juliet",
 })
 assert(not invalidGroup and groupError.assignmentKey == "mutilate_a", "Mutilate must reject fewer than five configured players")
-assert(groupError.message:find("at least 5", 1, true), "Mutilate validation should explain the five-player minimum")
+assert(groupError.message:find("at least 5 unique players", 1, true), "Mutilate validation should explain the five-player minimum")
+
+local duplicateGroup, duplicateError = Assignments:ApplyBossDraft("sszorak", "heroic", {
+    mutilate_a = "Alpha, Bravo, Charlie, Delta, alpha",
+    mutilate_b = "Foxtrot, Golf, Hotel, India, Juliet",
+})
+assert(not duplicateGroup and duplicateError.assignmentKey == "mutilate_a", "one assignment must reject duplicate player names case-insensitively")
+assert(duplicateError.message:find("duplicate player", 1, true), "duplicate-player validation must explain the error")
+
+local overlapGroup, overlapError = Assignments:ApplyBossDraft("sszorak", "heroic", {
+    mutilate_a = "Alpha, Bravo, Charlie, Delta, Echo",
+    mutilate_b = "Echo, Foxtrot, Golf, Hotel, India",
+})
+assert(not overlapGroup and overlapError.assignmentKey == "mutilate_b", "distinct Mutilate teams must reject overlap")
+assert(overlapError.message:find("assigned to both", 1, true), "overlap validation must name the conflict")
 
 local invalidStasis, stasisError = Assignments:ApplyBossDraft("sentinels", "heroic", {
     breath_side = "Alpha",
@@ -80,15 +104,34 @@ local invalidStasis, stasisError = Assignments:ApplyBossDraft("sentinels", "hero
     stasis_b = "Four, Five, Six, Seven",
 })
 assert(not invalidStasis and stasisError.assignmentKey == "stasis_a", "Stasis must reject non-four-player groups")
-assert(stasisError.message:find("exactly 4", 1, true), "Stasis validation should explain the exact group size")
+assert(stasisError.message:find("exactly 4 unique players", 1, true), "Stasis validation should explain the exact group size")
+
+local invalidFeast, feastError = Assignments:ApplyBossDraft("twinfangs", "heroic", {
+    feast_a = "One, Two",
+    feast_b = "Three, Four, Five",
+    feast_c = "Six, Seven, Eight",
+    stone_a = "Nine",
+    stone_b = "Ten",
+})
+assert(not invalidFeast and feastError.assignmentKey == "feast_a", "Ravenous Feast must reject fewer than three configured players per hit")
+assert(feastError.message:find("at least 3 unique players", 1, true), "Feast validation should explain the three-player minimum")
+
+local overlapFeast, overlapFeastError = Assignments:ApplyBossDraft("twinfangs", "heroic", {
+    feast_a = "One, Two, Three",
+    feast_b = "Three, Four, Five",
+    feast_c = "Six, Seven, Eight",
+    stone_a = "Nine",
+    stone_b = "Ten",
+})
+assert(not overlapFeast and overlapFeastError.assignmentKey == "feast_b", "Feasted players must not appear in consecutive Feast groups")
 
 ok = Assignments:ApplyBossDraft("sszorak", "heroic", {
     mutilate_a = "Alpha, Bravo, Charlie, Delta, Echo",
     mutilate_b = "Foxtrot, Golf, Hotel, India, Juliet",
 })
 assert(ok)
-local first = Assignments:BuildCallWarning("APEX PREDATOR", "sszorak", "heroic", "apex")
-assert(first:find("TEAM A: Alpha", 1, true), "first Mutilate call should use Team A")
+local first, firstComplete = Assignments:BuildCallWarning("APEX PREDATOR", "sszorak", "heroic", "apex")
+assert(firstComplete and first:find("TEAM A: Alpha", 1, true), "first Mutilate call should use Team A")
 Assignments:AdvanceCall("sszorak", "heroic", "apex")
 local second = Assignments:BuildCallWarning("APEX PREDATOR", "sszorak", "heroic", "apex")
 assert(second:find("TEAM B: Foxtrot", 1, true), "second Mutilate call should use Team B")
@@ -101,7 +144,7 @@ assert(#missing == 0, "filled required Sszorak slots should be complete")
 
 ok = Assignments:ApplyBossDraft("vashnik", "mythic", {
     bile_team = "Alpha, Bravo",
-    fountain_order = "NW+NE > SE+SW > NW+SW",
+    fountain_order = "Blood+Shadow > Shadow+Flame > Flame+Blood",
     tumor_left = "Left Froth -> left lane",
     tumor_right = "Right Froth -> right lane",
 })
@@ -127,7 +170,20 @@ local plan = Assignments:GetPlanLines("ulatek", "mythic")
 assert(#plan >= 7, "Ula'tek Mythic plan should announce configured jobs")
 for index = 1, #plan do assert(#plan[index] <= Assignments.MAX_WARNING_LENGTH, "assignment plan line too long") end
 
+local overflowOk = Assignments:ApplyBossDraft("twinfangs", "normal", {
+    feast_a = "AlphaLongPlayerNameOne, AlphaLongPlayerNameTwo, AlphaLongPlayerNameThree",
+    feast_b = "BravoLongPlayerNameOne, BravoLongPlayerNameTwo, BravoLongPlayerNameThree",
+    feast_c = "CharlieLongPlayerOne, CharlieLongPlayerTwo, CharlieLongPlayerThree",
+    stone_a = "StoneOne",
+    stone_b = "StoneTwo",
+})
+assert(overflowOk, "long but valid assignments should save")
+local feastBase = "RAVENOUS FEAST > 3 HITS > 3+ PER HIT > GROUPS A > B > C"
+local overflowWarning, overflowComplete = Assignments:BuildCallWarning(feastBase, "twinfangs", "normal", "feast")
+assert(overflowComplete == false, "oversized assignment detail must be reported as incomplete")
+assert(overflowWarning == feastBase, "overflow must fall back to the complete base call rather than a misleading partial assignment")
+
 local invalid, err = Assignments:ApplyBossDraft("sszorak", "heroic", { mutilate_a = "Bad\1Name" })
 assert(not invalid and err and err.assignmentKey == "mutilate_a", "control characters must be rejected")
 
-print("ok - typed boss assignments, group-size validation, persistence, and rotations")
+print("ok - typed assignments, uniqueness, overlap safety, group sizes, overflow fallback, persistence, and rotations")
