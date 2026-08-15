@@ -72,7 +72,7 @@ function App:Initialize()
 
         self.timingAllowed = difficultyKey ~= nil and Encounter:HasKnownEncounter()
         if not Encounter:HasKnownEncounter() then
-            ns:Print("Encounter already in progress after reload: automatic timing disabled until the next pull; manual buttons remain available.")
+            ns:Print("Encounter already in progress after reload: calls and automatic timing stay disabled until the active boss is verified by WoW plus BigWigs/DBM, or until the next pull.")
         elseif not difficultyKey then
             ns:Print("This encounter difficulty has no Raid Lead Assist profile; automatic timing is disabled.")
         end
@@ -90,7 +90,7 @@ function App:Initialize()
     UI:SetDifficultyLocked(Encounter:IsActive())
 
     SettingsUI:Initialize(self.db, {
-        getProviderSummary = function() return Timeline:GetProviderSummary() end,
+        getProviderSummary = function() return Timeline:GetProviderDiagnostics() end,
         canOpen = settingsAvailability,
     })
     local settingsEnabled, settingsReason = settingsAvailability()
@@ -107,19 +107,36 @@ function App:Initialize()
         if not Encounter:HasKnownEncounter() then
             owner.timingAllowed = false
             Timeline:Reset()
-            ns:Print("This encounter has no Raid Lead Assist profile; automatic timing is disabled. Manual buttons remain available.")
+            ns:Print("This encounter has no Raid Lead Assist profile; calls and automatic timing are disabled for this pull.")
         elseif difficultyKey then
             owner:SelectDifficulty(difficultyKey, true)
             owner.timingAllowed = true
         else
             owner.timingAllowed = false
             Timeline:Reset()
-            ns:Print("Only Normal, Heroic, and Mythic profiles are supported; automatic timing is disabled.")
+            ns:Print("Only Normal, Heroic, and Mythic profiles are supported; calls and automatic timing are disabled.")
         end
 
         UI:SetDifficultyLocked(true)
         UI:SetSettingsEnabled(false, "Settings are available outside active encounters.")
         SettingsUI:CloseForEncounter()
+    end)
+    EventBus:On("ENCOUNTER_RECOVERED", self, function(owner, _, difficultyID, providerName)
+        local difficultyKey = Constants.DIFFICULTY_KEY_BY_ID[difficultyID]
+        if not difficultyKey or not Encounter:HasKnownEncounter() then return end
+
+        RaidWarning:CancelBriefing()
+        resetTransientState(owner)
+        owner:SelectDifficulty(difficultyKey, true)
+        owner.timingAllowed = true
+        UI:SetDifficultyLocked(true)
+        UI:SetSettingsEnabled(false, "Settings are available outside active encounters.")
+        SettingsUI:CloseForEncounter()
+        UI:ResetCallStates()
+        ns:Print(("Recovered active %s encounter after reload using a verified %s encounter hint; timing restored."):format(
+            tostring(owner.activeBossKey or "boss"),
+            tostring(providerName or "bossmod")
+        ))
     end)
     EventBus:On("ENCOUNTER_ENDED", self, function(owner)
         RaidWarning:CancelBriefing()
@@ -315,7 +332,7 @@ function App:RegisterSlashCommands()
         elseif command == "settings" then
             SettingsUI:Open(self.activeBossKey)
         elseif command == "provider" then
-            local summary = Timeline:GetProviderSummary()
+            local summary = Timeline:GetProviderDiagnostics()
             ns:Print("Timer sources: " .. (summary ~= "" and summary or "none"))
         elseif command == "status" then
             local summary = Timeline:GetProviderSummary()
