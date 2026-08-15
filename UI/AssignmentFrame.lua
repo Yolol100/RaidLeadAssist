@@ -7,6 +7,7 @@ local Assignments = ns:GetModule("Services.AssignmentService")
 local Theme = ns:GetModule("UI.Theme")
 local Dropdown = ns:GetModule("UI.Dropdown")
 local ActionButton = ns:GetModule("UI.ActionButton")
+local ConfirmDialog = ns:GetModule("UI.ConfirmDialog")
 local AssignmentSlot = ns:GetModule("UI.AssignmentSlot")
 local RosterPicker = ns:GetModule("UI.RosterPicker")
 
@@ -18,6 +19,7 @@ local AssignmentFrame = {
     activeSlots = {},
     difficultyTabs = {},
     dirty = false,
+    allowHide = false,
     callbacks = {},
 }
 
@@ -29,6 +31,13 @@ local function sectionHeight(section)
     local columns = math.max(1, tonumber(section.columns) or 1)
     local rows = math.max(1, math.ceil(#section.slots / columns))
     return 48 + (rows * 68) + (math.max(0, rows - 1) * 8) + 12
+end
+
+local function hasAnyValue(values)
+    for _, value in pairs(values or {}) do
+        if type(value) == "string" and value:match("%S") then return true end
+    end
+    return false
 end
 
 function AssignmentFrame:SetStatus(text, kind)
@@ -72,6 +81,8 @@ function AssignmentFrame:Initialize(database, callbacks)
     frame:SetBackdrop({ bgFile = Theme.texture, edgeFile = Theme.texture, edgeSize = 1 })
     setBackdrop(frame, Theme.colors.backgroundSolid)
     frame:SetBackdropBorderColor(Theme.colors.border[1], Theme.colors.border[2], Theme.colors.border[3], 1)
+    local safeScale = math.min(1, (UIParent:GetWidth() - 40) / 760, (UIParent:GetHeight() - 40) / 680)
+    frame:SetScale(math.max(0.72, safeScale))
     frame:Hide()
 
     local eyebrow = frame:CreateFontString(nil, "OVERLAY")
@@ -89,17 +100,17 @@ function AssignmentFrame:Initialize(database, callbacks)
     local subtitle = frame:CreateFontString(nil, "OVERLAY")
     subtitle:SetFont(Theme.font, 9, "OUTLINE")
     subtitle:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -5)
-    subtitle:SetText("Each boss shows only the jobs that tactic actually needs. Names are fixed before combat.")
+    subtitle:SetText("Each boss shows only the jobs its tactic needs. Dynamic targets use pre-pull rules, not live decisions.")
     subtitle:SetTextColor(Theme.colors.muted[1], Theme.colors.muted[2], Theme.colors.muted[3], 1)
 
     local close = CreateFrame("Button", nil, frame)
-    close:SetSize(28, 28)
-    close:SetPoint("TOPRIGHT", -10, -10)
+    close:SetSize(32, 32)
+    close:SetPoint("TOPRIGHT", -8, -8)
     close.text = close:CreateFontString(nil, "OVERLAY")
     close.text:SetAllPoints()
     close.text:SetFont(Theme.font, 14, "OUTLINE")
     close.text:SetText("X")
-    close:SetScript("OnClick", function() self:Close() end)
+    close:SetScript("OnClick", function() self:RequestClose() end)
 
     self.bossDropdown = Dropdown:Create(frame)
     self.bossDropdown.frame:SetPoint("TOPLEFT", 18, -82)
@@ -112,7 +123,7 @@ function AssignmentFrame:Initialize(database, callbacks)
     for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
         local info = Constants.DIFFICULTIES[difficultyKey]
         local tab = CreateFrame("Button", nil, frame, "BackdropTemplate")
-        tab:SetSize(tabWidth, 27)
+        tab:SetSize(tabWidth, 30)
         tab:SetBackdrop({ bgFile = Theme.texture, edgeFile = Theme.texture, edgeSize = 1 })
         if previous then tab:SetPoint("LEFT", previous, "RIGHT", 6, 0) else tab:SetPoint("TOPLEFT", self.bossDropdown.frame, "BOTTOMLEFT", 0, -7) end
         tab.text = tab:CreateFontString(nil, "OVERLAY")
@@ -132,7 +143,7 @@ function AssignmentFrame:Initialize(database, callbacks)
     self.summary:SetTextColor(Theme.colors.muted[1], Theme.colors.muted[2], Theme.colors.muted[3], 1)
 
     local scroll = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
-    scroll:SetPoint("TOPLEFT", 18, -154)
+    scroll:SetPoint("TOPLEFT", 18, -157)
     scroll:SetPoint("BOTTOMRIGHT", -36, 76)
 
     local content = CreateFrame("Frame", nil, scroll)
@@ -144,17 +155,17 @@ function AssignmentFrame:Initialize(database, callbacks)
     self.status = frame:CreateFontString(nil, "OVERLAY")
     self.status:SetFont(Theme.font, 9, "OUTLINE")
     self.status:SetPoint("BOTTOMLEFT", 18, 37)
-    self.status:SetPoint("RIGHT", -330, 0)
+    self.status:SetPoint("RIGHT", -350, 0)
     self.status:SetJustifyH("LEFT")
 
     self.required = frame:CreateFontString(nil, "OVERLAY")
     self.required:SetFont(Theme.font, 8, "OUTLINE")
     self.required:SetPoint("BOTTOMLEFT", 18, 18)
-    self.required:SetPoint("RIGHT", -330, 0)
+    self.required:SetPoint("RIGHT", -350, 0)
     self.required:SetJustifyH("LEFT")
     self.required:SetTextColor(Theme.colors.muted[1], Theme.colors.muted[2], Theme.colors.muted[3], 1)
 
-    self.resetButton = ActionButton:Create(frame, { text = "RESET", width = 78, height = 30, fontSize = 9, variant = "secondary" })
+    self.resetButton = ActionButton:Create(frame, { text = "CLEAR DRAFT", width = 96, height = 30, fontSize = 9, variant = "secondary" })
     self.resetButton:SetPoint("BOTTOMRIGHT", -18, 18)
     self.resetButton:SetScript("OnClick", function() self:ResetCurrent() end)
 
@@ -165,11 +176,30 @@ function AssignmentFrame:Initialize(database, callbacks)
     self.announceButton = ActionButton:Create(frame, { text = "ANNOUNCE", width = 102, height = 30, fontSize = 9, variant = "secondary" })
     self.announceButton:SetPoint("RIGHT", self.saveButton, "LEFT", -8, 0)
     self.announceButton:SetScript("OnClick", function()
+        local missing = Assignments:GetMissingRequired(self.currentBossKey, self.currentDifficultyKey, self:GetDraftValues())
+        if #missing > 0 then
+            self:SetStatus("Complete required assignments before announcing.", "error")
+            return
+        end
         if self.dirty and not self:SaveCurrent(true) then return end
         if self.callbacks.onAnnounce then self.callbacks.onAnnounce(self.currentBossKey, self.currentDifficultyKey) end
     end)
 
     self.frame = frame
+    self.confirmDialog = ConfirmDialog:Create(frame)
+
+    frame:SetScript("OnHide", function()
+        if self.allowHide then return end
+        if self.confirmDialog and self.confirmDialog:IsShown() then
+            frame:Show()
+            self.confirmDialog:Hide()
+            return
+        end
+        if not self.dirty then return end
+        frame:Show()
+        self:RequestClose()
+    end)
+
     table.insert(UISpecialFrames, "RaidLeadAssistAssignmentFrame")
     self:SetDirty(false)
 end
@@ -197,6 +227,18 @@ function AssignmentFrame:EnsureSection(index)
     return section
 end
 
+function AssignmentFrame:FocusAdjacentSlot(control, backwards)
+    for index = 1, #self.activeSlots do
+        if self.activeSlots[index] == control then
+            local target = backwards and index - 1 or index + 1
+            if target < 1 then target = #self.activeSlots end
+            if target > #self.activeSlots then target = 1 end
+            if self.activeSlots[target] then self.activeSlots[target]:Focus() end
+            return
+        end
+    end
+end
+
 function AssignmentFrame:EnsureSlot(index)
     if self.slotPool[index] then return self.slotPool[index] end
     local slot = AssignmentSlot:Create(self.content)
@@ -215,6 +257,7 @@ function AssignmentFrame:EnsureSlot(index)
             self:RefreshRequiredStatus()
         end)
     end)
+    slot:SetOnTab(function(control, backwards) self:FocusAdjacentSlot(control, backwards) end)
     self.slotPool[index] = slot
     return slot
 end
@@ -230,7 +273,8 @@ end
 
 function AssignmentFrame:RefreshRequiredStatus()
     if not self.currentBossKey then return end
-    local missing = Assignments:GetMissingRequired(self.currentBossKey, self.currentDifficultyKey, self:GetDraftValues())
+    local values = self:GetDraftValues()
+    local missing = Assignments:GetMissingRequired(self.currentBossKey, self.currentDifficultyKey, values)
     if #missing == 0 then
         self.required:SetText("Required assignments complete.")
         self.required:SetTextColor(Theme.colors.success[1], Theme.colors.success[2], Theme.colors.success[3], 1)
@@ -238,6 +282,7 @@ function AssignmentFrame:RefreshRequiredStatus()
         self.required:SetText(("Missing %d required: %s"):format(#missing, table.concat(missing, ", ")))
         self.required:SetTextColor(Theme.colors.error[1], Theme.colors.error[2], Theme.colors.error[3], 1)
     end
+    if self.announceButton then self.announceButton:SetActionEnabled(#missing == 0 and hasAnyValue(values)) end
 end
 
 function AssignmentFrame:BuildLayout()
@@ -300,7 +345,6 @@ function AssignmentFrame:BuildLayout()
     end
 
     self.content:SetHeight(math.max(1, y))
-    self.announceButton:SetActionEnabled(true)
 end
 
 function AssignmentFrame:Load(bossKey, difficultyKey)
@@ -311,7 +355,7 @@ function AssignmentFrame:Load(bossKey, difficultyKey)
     self:RefreshDifficultyTabs()
     self:BuildLayout()
     self:SetDirty(false)
-    self:SetStatus("Edit the jobs this tactic needs, then save.", "muted")
+    self:SetStatus("Fill only the jobs this tactic needs, then save.", "muted")
     self:RefreshRequiredStatus()
     return true
 end
@@ -323,7 +367,11 @@ function AssignmentFrame:SaveCurrent(silent)
     if not ok then
         for index = 1, #self.activeSlots do
             local slot = self.activeSlots[index]
-            if result and result.assignmentKey == slot.assignmentKey then slot:SetInvalid(true) slot:Focus() break end
+            if result and result.assignmentKey == slot.assignmentKey then
+                slot:SetInvalid(true)
+                slot:Focus()
+                break
+            end
         end
         self:SetStatus(result and result.message or "Unable to save assignments.", "error")
         return false
@@ -332,38 +380,66 @@ function AssignmentFrame:SaveCurrent(silent)
     self:RefreshRequiredStatus()
     local missing = Assignments:GetMissingRequired(self.currentBossKey, self.currentDifficultyKey)
     if #missing > 0 then
-        self:SetStatus(("Saved · %d required assignment(s) still empty."):format(#missing), "error")
+        self:SetStatus(("Saved as draft · %d required assignment(s) still empty."):format(#missing), "error")
     else
-        self:SetStatus("Saved. Calls now include the relevant assigned player or group.", "success")
+        self:SetStatus("Saved. Calls now use this pre-pull plan.", "success")
     end
     if not silent then ns:Print("Assignments saved for " .. Registry:Get(self.currentBossKey).name .. ".") end
     return true
 end
 
 function AssignmentFrame:ResetCurrent()
-    Assignments:ResetBoss(self.currentBossKey, self.currentDifficultyKey)
-    self:BuildLayout()
-    self:SetDirty(false)
-    self:SetStatus("Assignments reset for this boss and difficulty.", "success")
+    for index = 1, #self.activeSlots do
+        self.activeSlots[index]:SetText("")
+        self.activeSlots[index]:SetInvalid(false)
+    end
+    self:SetDirty(true)
+    self:SetStatus("Assignments cleared as a draft. Save to apply or close and discard.", "muted")
     self:RefreshRequiredStatus()
 end
 
+function AssignmentFrame:ConfirmTransition(message, onContinue, onCancel)
+    if not self.dirty then
+        onContinue()
+        return
+    end
+    self.confirmDialog:Show(
+        "Unsaved assignment changes",
+        message,
+        function()
+            if self:SaveCurrent(true) then onContinue() end
+        end,
+        function() onContinue() end,
+        onCancel
+    )
+end
+
 function AssignmentFrame:RequestBossChange(key)
-    if key == self.currentBossKey then return end
-    if self.dirty and not self:SaveCurrent(true) then return end
-    self:Load(key, self.currentDifficultyKey)
+    if key == self.currentBossKey or not Registry:Get(key) then return end
+    local current = self.currentBossKey
+    self:ConfirmTransition(
+        "Save this assignment plan before switching bosses?",
+        function() self:Load(key, self.currentDifficultyKey) end,
+        function() self.bossDropdown:SetSelected(current, Registry:GetOrdered()) end
+    )
 end
 
 function AssignmentFrame:RequestDifficultyChange(key)
-    if key == self.currentDifficultyKey then return end
-    if self.dirty and not self:SaveCurrent(true) then return end
-    self:Load(self.currentBossKey, key)
+    if key == self.currentDifficultyKey or not Constants.DIFFICULTIES[key] then return end
+    self:ConfirmTransition(
+        "Save this assignment plan before switching difficulty?",
+        function() self:Load(self.currentBossKey, key) end,
+        function() self:RefreshDifficultyTabs() end
+    )
 end
 
 function AssignmentFrame:Open(bossKey, difficultyKey)
     if self.callbacks.canOpen then
         local allowed, reason = self.callbacks.canOpen()
-        if not allowed then ns:Print(reason or "Assignments are available outside active encounters.") return false end
+        if not allowed then
+            ns:Print(reason or "Assignments are available outside active encounters.")
+            return false
+        end
     end
     self:Initialize(self.database, self.callbacks)
     self:Load(bossKey or self.database.selectedBossKey, difficultyKey or self.database.selectedDifficultyKey or "heroic")
@@ -372,17 +448,35 @@ function AssignmentFrame:Open(bossKey, difficultyKey)
     return true
 end
 
-function AssignmentFrame:Close()
-    if self.dirty and not self:SaveCurrent(true) then return end
+function AssignmentFrame:HideNow()
     RosterPicker:Hide()
     if self.bossDropdown and self.bossDropdown.Close then self.bossDropdown:Close() end
+    self.allowHide = true
     if self.frame then self.frame:Hide() end
+    self.allowHide = false
+end
+
+function AssignmentFrame:RequestClose()
+    if self.confirmDialog and self.confirmDialog:IsShown() then return end
+    self:ConfirmTransition(
+        "Save this assignment plan before closing?",
+        function() self:HideNow() end,
+        function() end
+    )
+end
+
+function AssignmentFrame:Close()
+    self:RequestClose()
 end
 
 function AssignmentFrame:CloseForEncounter()
     RosterPicker:Hide()
     self.dirty = false
-    if self.frame then self.frame:Hide() end
+    if self.confirmDialog and self.confirmDialog:IsShown() then
+        self.confirmDialog:ClearCallbacks()
+        self.confirmDialog.overlay:Hide()
+    end
+    self:HideNow()
 end
 
 ns:RegisterModule("UI.AssignmentFrame", AssignmentFrame)
