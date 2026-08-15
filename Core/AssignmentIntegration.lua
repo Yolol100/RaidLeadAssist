@@ -84,8 +84,11 @@ function App:SendCall(callKey)
     if (self.manualLockUntil[callKey] or 0) > now then return end
 
     local baseWarning = Messages:GetCallWarning(self.activeBossKey, self.activeDifficultyKey, callKey)
-    local warning = Assignments:BuildCallWarning(baseWarning, self.activeBossKey, self.activeDifficultyKey, callKey)
+    local warning, assignmentComplete = Assignments:BuildCallWarning(baseWarning, self.activeBossKey, self.activeDifficultyKey, callKey)
     if RaidWarning:Send(warning) then
+        if assignmentComplete == false then
+            ns:Print("Assignment detail exceeded the Raid Warning limit; the base call was sent without partial assignment text. Use pre-pull ANNOUNCE for the full plan.")
+        end
         self.manualLockUntil[callKey] = now + Constants.MANUAL_CLICK_LOCK_SECONDS
         Timeline:AcknowledgeCall(callKey)
         self.visualCalledUntil[callKey] = now + Constants.CALLED_FEEDBACK_SECONDS
