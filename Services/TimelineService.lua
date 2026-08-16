@@ -68,6 +68,11 @@ local function validSourceID(sourceID)
     return isFiniteNumber(sourceID)
 end
 
+local function validOptionalBoolean(value)
+    if Util.IsSecret(value) then return false end
+    return value == nil or type(value) == "boolean"
+end
+
 local function publicValue(value)
     if Util.IsSecret(value) then return nil end
     return value
@@ -211,7 +216,10 @@ function TimelineService:IsBlizzardSuppressed()
 end
 
 function TimelineService:SetBlizzardSuppressedByProvider(sourceName, suppressed)
-    if type(sourceName) ~= "string" or sourceName == "" or Util.IsSecret(suppressed) then return false end
+    if type(sourceName) ~= "string" or sourceName == ""
+        or Util.IsSecret(suppressed) or type(suppressed) ~= "boolean" then
+        return false
+    end
 
     local hadSource = self.blizzardSuppressionSources[sourceName] == true
     local wantsSource = suppressed == true
@@ -454,7 +462,10 @@ function TimelineService:ProviderTimerStarted(providerName, sourceID, data)
         self:RefreshProviderAuthority("DBM")
     end
     if self:IsBlizzardSuppressed() and isBlizzardRepresentation(providerName, data) then return end
-    if Util.IsSecret(data.faded) or not isFiniteNumber(data.duration) or data.duration <= 0 then return end
+    if not validOptionalBoolean(data.faded)
+        or not isFiniteNumber(data.duration) or data.duration <= 0 then
+        return
+    end
 
     local encounterID, invalidEncounterID = normalizeEncounterID(data.encounterID)
     if invalidEncounterID then return end
@@ -535,7 +546,10 @@ function TimelineService:ProviderTimerUpdated(providerName, sourceID, elapsed, t
 end
 
 function TimelineService:ProviderTimerFaded(providerName, sourceID, faded)
-    if not self.activeProviders[providerName] or not validSourceID(sourceID) or Util.IsSecret(faded) then return end
+    if not self.activeProviders[providerName] or not validSourceID(sourceID)
+        or Util.IsSecret(faded) or type(faded) ~= "boolean" then
+        return
+    end
 
     local timer = self.timers[timerID(providerName, sourceID)]
     if not timer then return end
@@ -551,7 +565,10 @@ function TimelineService:ProviderTimerFaded(providerName, sourceID, faded)
 end
 
 function TimelineService:ProviderTimerPaused(providerName, sourceID, paused)
-    if not self.activeProviders[providerName] or not validSourceID(sourceID) or Util.IsSecret(paused) then return end
+    if not self.activeProviders[providerName] or not validSourceID(sourceID)
+        or Util.IsSecret(paused) or type(paused) ~= "boolean" then
+        return
+    end
 
     local id = timerID(providerName, sourceID)
     local timer = self.timers[id]
