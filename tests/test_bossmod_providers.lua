@@ -12,9 +12,13 @@ _G.BigWigsLoader = {
     RegisterMessage = function(owner, name, callback) bwMessages[name] = callback end,
     UnregisterMessage = function() end,
 }
+local dbmBossModule = { id = "2888", encounterId = 3421 }
 _G.DBM = {
     Options = { IgnoreBlizzAPI = false },
-    Mods = {},
+    Mods = { dbmBossModule },
+    GetModByName = function(_, id)
+        if tostring(id) == dbmBossModule.id then return dbmBossModule end
+    end,
     RegisterCallback = function(_, name, callback) dbmCallbacks[name] = callback end,
     UnregisterCallback = function() end,
 }
@@ -127,23 +131,25 @@ started, stopped, paused, updated, faded = {}, {}, {}, {}, {}
 local DBMProvider = ns:GetModule("Services.Providers.DBM")
 assert(DBMProvider:Start(sink) == true)
 
--- DBM-Core 12.1.3/current upstream DBM_TimerBegin shape.
-dbmCallbacks.DBM_TimerBegin(nil, "dbm-1", "Cast", 10, 456, "cd", 123, nil, nil, nil, false, "Cast", nil, nil, nil, nil, false, nil, true)
+-- DBM-Core 12.1.3/current upstream DBM_TimerBegin shape. The public mod ID is
+-- resolved to the loaded boss module's real encounterId before RLA sees it.
+dbmCallbacks.DBM_TimerBegin(nil, "dbm-1", "Cast", 10, 456, "cd", 123, nil, 2888, nil, false, "Cast", nil, nil, nil, nil, false, nil, true)
 assert(#started == 1 and started[1].provider == "DBM" and started[1].id == "dbm-1")
 assert(started[1].data.key == 123 and started[1].data.name == "Cast")
+assert(started[1].data.encounterID == 3421)
 assert(started[1].data.precision == "exact" and started[1].data.faded == false)
 
 dbmCallbacks.DBM_TimerUpdate(nil, "dbm-1", 3, 12)
 assert(#updated == 1 and updated[1].id == "dbm-1" and updated[1].elapsed == 3 and updated[1].total == 12)
 
-dbmCallbacks.DBM_TimerBegin(nil, "dbm-variance", "Cast", 10, 456, "cd", 123, nil, nil, nil, false, "Cast", nil, nil, nil, nil, true, nil, true)
+dbmCallbacks.DBM_TimerBegin(nil, "dbm-variance", "Cast", 10, 456, "cd", 123, nil, 2888, nil, false, "Cast", nil, nil, nil, nil, true, nil, true)
 assert(#started == 1, "variable DBM timers must be ignored")
-dbmCallbacks.DBM_TimerBegin(nil, "dbm-disabled", "Cast", 10, 456, "cd", 123, nil, nil, nil, false, "Cast", nil, nil, nil, nil, false, nil, false)
+dbmCallbacks.DBM_TimerBegin(nil, "dbm-disabled", "Cast", 10, 456, "cd", 123, nil, 2888, nil, false, "Cast", nil, nil, nil, nil, false, nil, false)
 assert(#started == 1, "disabled DBM timers must be ignored")
 
 -- A faded DBM bar still exists. Preserve it as non-actionable state so a later unfade
 -- can restore the same timer occurrence instead of losing it permanently.
-dbmCallbacks.DBM_TimerBegin(nil, "dbm-faded", "Faded", 10, 456, "cd", 124, nil, nil, nil, true, "Faded", nil, nil, nil, nil, false, nil, true)
+dbmCallbacks.DBM_TimerBegin(nil, "dbm-faded", "Faded", 10, 456, "cd", 124, nil, 2888, nil, true, "Faded", nil, nil, nil, nil, false, nil, true)
 assert(#started == 2 and started[2].id == "dbm-faded" and started[2].data.faded == true)
 
 dbmCallbacks.DBM_TimerPause(nil, "dbm-1")
@@ -165,8 +171,10 @@ assert(#faded == 2, "secret fade state must fail closed")
 dbmCallbacks.DBM_TimerStop(nil, "dbm-1")
 assert(#stopped == 1 and stopped[1].id == "dbm-1")
 
+DBM.Options.IgnoreBlizzAPI = true
 dbmCallbacks.DBM_IgnoreBlizzAPI()
 assert(suppression[#suppression].provider == "DBM" and suppression[#suppression].value == true)
+DBM.Options.IgnoreBlizzAPI = false
 dbmCallbacks.DBM_ResumeBlizzAPI()
 assert(suppression[#suppression].provider == "DBM" and suppression[#suppression].value == false)
 
@@ -186,4 +194,4 @@ dbmMod.IsInCombat = function() return false end
 hints = {}
 assert(DBMProvider:SeedEncounterHint() == false and #hints == 0)
 
-print("ok - exact BigWigs/DBM contracts, event enrichment, cast timers, fade lifecycle, and late recovery state")
+print("ok - exact BigWigs/DBM contracts, boss encounter identity, event enrichment, cast timers, fade lifecycle, authority state, and late recovery")

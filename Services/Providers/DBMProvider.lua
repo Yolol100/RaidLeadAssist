@@ -24,12 +24,43 @@ local function normalizeTimerCount(value)
     return value
 end
 
+local function normalizeEncounterID(value)
+    if Util.IsSecret(value) then return nil end
+    if type(value) == "string" then value = tonumber(value) end
+    if type(value) ~= "number" or value ~= value or value <= 0 or value == math.huge or value == -math.huge then return nil end
+    if value ~= math.floor(value) then return nil end
+    return value
+end
+
 local function encounterIDForMod(mod)
     if type(mod) ~= "table" then return nil end
-    local encounterID = mod.encounterId
-    if Util.IsSecret(encounterID) then return nil end
-    if type(encounterID) == "number" then return encounterID end
-    if type(encounterID) == "string" then return tonumber(encounterID) end
+    return normalizeEncounterID(mod.encounterId)
+end
+
+local function encounterIDForModID(modID)
+    if Util.IsSecret(modID) then return nil end
+    if type(modID) ~= "string" and type(modID) ~= "number" then return nil end
+    if not _G.DBM then return nil end
+
+    local mod
+    if type(DBM.GetModByName) == "function" then
+        local ok, result = pcall(DBM.GetModByName, DBM, modID)
+        if ok and type(result) == "table" then mod = result end
+    end
+
+    if not mod and type(DBM.Mods) == "table" then
+        local wanted = tostring(modID)
+        for index = 1, #DBM.Mods do
+            local candidate = DBM.Mods[index]
+            if type(candidate) == "table" and not Util.IsSecret(candidate.id)
+                and tostring(candidate.id) == wanted then
+                mod = candidate
+                break
+            end
+        end
+    end
+
+    return encounterIDForMod(mod)
 end
 
 local function canSupplyBossTimers()
@@ -45,6 +76,18 @@ end
 
 function DBMProvider:IsAvailable()
     return _G.DBM and type(DBM.RegisterCallback) == "function"
+end
+
+function DBMProvider:CanSupplyBossTimers()
+    return canSupplyBossTimers()
+end
+
+function DBMProvider:RefreshAuthority()
+    if not self.sink or type(self.sink.SetBlizzardSuppressedByProvider) ~= "function" then return false end
+
+    local ignoreBlizzard = _G.DBM and type(DBM.Options) == "table"
+        and DBM.Options.IgnoreBlizzAPI == true
+    return self.sink:SetBlizzardSuppressedByProvider("DBM", ignoreBlizzard and canSupplyBossTimers())
 end
 
 function DBMProvider:SeedEncounterHint()
@@ -75,7 +118,9 @@ function DBMProvider:Start(sink)
 
     self.sink = sink
 
-    self.onBegin = function(_, id, message, duration, icon, simpleType, spellID, _, _, _, fade, spellName, _, timerCount, _, _, hasVariance, _, isEnabled)
+    self.onBegin = function(_, id, message, duration, icon, simpleType, spellID, _, modID, _, fade, spellName, _, timerCount, _, _, hasVariance, _, isEnabled)
+        self:RefreshAuthority()
+
         local timerID = normalizeTimerID(id)
         if not timerID then return end
         if Util.IsSecret(duration) or Util.IsSecret(simpleType) or Util.IsSecret(fade)
@@ -84,12 +129,20 @@ function DBMProvider:Start(sink)
         if hasVariance == true or isEnabled ~= true then return end
         if not ALLOWED_TYPES[simpleType] then return end
 
+        -- Current DBM exposes self.mod.id in TimerBegin. Resolve that public mod
+        -- identity back to the loaded DBM boss module and require its real
+        -- encounterId. This rejects utility/non-boss DBM timers and prevents a
+        -- direct timer from being interpreted under another RLA encounter.
+        local encounterID = encounterIDForModID(modID)
+        if not encounterID then return end
+
         self.sink:ProviderTimerStarted("DBM", timerID, {
             key = Util.ToNumericID(spellID) or (not Util.IsSecret(spellID) and spellID or nil),
             name = not Util.IsSecret(spellName) and spellName or (not Util.IsSecret(message) and message or nil),
             duration = duration,
             icon = Util.NormalizeTexture(icon),
             count = normalizeTimerCount(timerCount),
+            encounterID = encounterID,
             precision = "exact",
             faded = fade == true,
         })
@@ -125,9 +178,7 @@ function DBMProvider:Start(sink)
     end
 
     self.onIgnoreBlizzard = function()
-        if type(self.sink.SetBlizzardSuppressedByProvider) == "function" then
-            self.sink:SetBlizzardSuppressedByProvider("DBM", canSupplyBossTimers())
-        end
+        self:RefreshAuthority()
     end
 
     self.onResumeBlizzard = function()
@@ -163,21 +214,20 @@ function DBMProvider:Start(sink)
     DBM:RegisterCallback("DBM_Kill", self.onReset)
 
     -- A reload can happen after DBM has already taken authority over Blizzard's
-    -- Encounter Timeline. Reconstruct that public DBM state instead of waiting
-    -- for a callback that has already happened.
-    if DBM.Options and DBM.Options.IgnoreBlizzAPI == true then
-        self.onIgnoreBlizzard()
-    end
+    -- Encounter Timeline. Reconstruct the effective public DBM state instead of
+    -- waiting for a callback that may already have happened. Global DBM bar-off
+    -- settings always yield authority back to native Blizzard timing.
+    self:RefreshAuthority()
 
     return true
 end
 
 function DBMProvider:Stop()
-    if not _G.DBM or not DBM.UnregisterCallback then return end
-
     if self.sink and type(self.sink.SetBlizzardSuppressedByProvider) == "function" then
         self.sink:SetBlizzardSuppressedByProvider("DBM", false)
     end
+
+    if not _G.DBM or not DBM.UnregisterCallback then return end
 
     local callbacks = {
         DBM_TimerBegin = self.onBegin,

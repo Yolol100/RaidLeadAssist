@@ -18,6 +18,7 @@ _G.DBM = {
 local sink = {
     SetBlizzardSuppressedByProvider = function(_, provider, value)
         suppression[#suppression + 1] = { provider = provider, value = value }
+        return true
     end,
     ProviderReset = function() end,
 }
@@ -26,26 +27,30 @@ T.Load("Core/Util.lua", ns)
 T.Load("Services/Providers/DBMProvider.lua", ns)
 local provider = ns:GetModule("Services.Providers.DBM")
 assert(provider:Start(sink) == true)
+assert(provider:CanSupplyBossTimers() == true)
 
+DBM.Options.IgnoreBlizzAPI = true
 callbacks.DBM_IgnoreBlizzAPI()
 assert(suppression[#suppression].provider == "DBM" and suppression[#suppression].value == true,
     "DBM should suppress Blizzard-derived timers while its boss timer feed is usable")
 
 DBM.Options.HideDBMBars = true
-callbacks.DBM_IgnoreBlizzAPI()
+assert(provider:CanSupplyBossTimers() == false)
+provider:RefreshAuthority()
 assert(suppression[#suppression].value == false,
-    "global HideDBMBars prevents DBM_TimerBegin, so Blizzard fallback must stay available")
+    "global HideDBMBars prevents DBM_TimerBegin, so an authority refresh must yield to Blizzard")
 
 DBM.Options.HideDBMBars = false
 DBM.Options.DontShowBossTimers = true
-callbacks.DBM_IgnoreBlizzAPI()
+provider:RefreshAuthority()
 assert(suppression[#suppression].value == false,
     "global DontShowBossTimers prevents DBM_TimerBegin, so Blizzard fallback must stay available")
 
 DBM.Options.DontShowBossTimers = false
-callbacks.DBM_IgnoreBlizzAPI()
+provider:RefreshAuthority()
 assert(suppression[#suppression].value == true,
-    "restoring DBM boss timers must restore DBM authority")
+    "restoring DBM boss timers must restore DBM authority while IgnoreBlizzAPI remains active")
+DBM.Options.IgnoreBlizzAPI = false
 callbacks.DBM_ResumeBlizzAPI()
 assert(suppression[#suppression].value == false,
     "DBM_ResumeBlizzAPI must always restore Blizzard-derived timers")
@@ -65,4 +70,4 @@ assert(provider:Start(sink) == true)
 assert(#suppression == 1 and suppression[1].value == true,
     "reload recovery must reconstruct DBM suppression when its boss timer feed is usable")
 
-print("ok - DBM authority yields to Blizzard-derived fallback when global DBM boss bars cannot emit timers")
+print("ok - DBM authority self-reconciles and yields to Blizzard when global boss bars cannot emit timers")
