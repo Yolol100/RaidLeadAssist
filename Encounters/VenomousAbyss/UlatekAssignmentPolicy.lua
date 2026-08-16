@@ -4,10 +4,10 @@ local AssignmentRegistry = ns:GetModule("Encounters.AssignmentRegistry")
 
 local baseGetLayout = AssignmentRegistry.GetLayout
 
--- The base assignment registry predates the final 12.1 source review. Keep this
--- difficulty-specific overlay narrow: Heroic still benefits from explicit egg-side
--- ownership, but Soul Constrictor and Mass Gestation are Mythic-only and therefore
--- must not create Heroic Coil rotation fields or Mass Gestation instructions.
+-- The base assignment registry predates the latest pre-release Ula'tek review.
+-- Keep this compatibility overlay narrow until live raid validation settles the
+-- Heroic/Mythic mechanic split. The current pre-release plan does not expose
+-- Heroic Coil rotation fields or Mass Gestation instructions.
 local HEROIC_LAYOUT = {
     summary = "Assign one owner to each Doomscale Egg side; Heroic Coil and Fangs targets stay live and dynamic.",
     sections = {
