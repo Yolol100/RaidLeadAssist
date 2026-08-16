@@ -79,8 +79,11 @@ function Database:Migrate()
     end
 
     local position = self.data.position
+    local function isFiniteNumber(value)
+        return type(value) == "number" and value == value and value > -math.huge and value < math.huge
+    end
     if not VALID_POINTS[position.point] or not VALID_POINTS[position.relativePoint]
-        or type(position.x) ~= "number" or type(position.y) ~= "number" then
+        or not isFiniteNumber(position.x) or not isFiniteNumber(position.y) then
         self.data.position = Util.CopyDefaults({}, DEFAULTS.position)
     end
 

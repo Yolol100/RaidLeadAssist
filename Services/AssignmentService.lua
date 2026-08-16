@@ -114,15 +114,29 @@ function AssignmentService:NormalizeStored()
                     difficulties[difficultyKey] = nil
                 else
                     local allowed = definitionMap(bossKey, difficultyKey)
+                    local candidate = {}
                     for assignmentKey, value in pairs(values) do
-                        if not allowed[assignmentKey] then
-                            values[assignmentKey] = nil
-                        else
-                            local ok, normalized = self:ValidateValue(value)
-                            if not ok or normalized == "" then values[assignmentKey] = nil else values[assignmentKey] = normalized end
-                        end
+                        if allowed[assignmentKey] then candidate[assignmentKey] = value end
                     end
-                    if next(values) == nil then difficulties[difficultyKey] = nil end
+
+                    local maxAttempts = #self:GetDefinitions(bossKey, difficultyKey) + 1
+                    local clean
+                    for _ = 1, maxAttempts do
+                        local ok, result = self:ValidateBossDraft(bossKey, difficultyKey, candidate)
+                        if ok then
+                            clean = result
+                            break
+                        end
+                        local badKey = result and result.assignmentKey
+                        if type(badKey) ~= "string" or candidate[badKey] == nil then
+                            clean = {}
+                            break
+                        end
+                        candidate[badKey] = nil
+                    end
+
+                    difficulties[difficultyKey] = clean or {}
+                    if next(difficulties[difficultyKey]) == nil then difficulties[difficultyKey] = nil end
                 end
             end
             if next(difficulties) == nil then stored[bossKey] = nil end
