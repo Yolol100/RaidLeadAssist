@@ -69,6 +69,14 @@ local function normalizeTimerCount(value)
     return value
 end
 
+local function normalizeEncounterID(value)
+    if Util.IsSecret(value) then return nil, true end
+    if value == nil then return nil, false end
+    if type(value) == "string" then value = tonumber(value) end
+    if not isFiniteNumber(value) or value <= 0 or value ~= math.floor(value) then return nil, true end
+    return value, false
+end
+
 local function countsConflict(first, second)
     return first ~= nil and second ~= nil and first ~= second
 end
@@ -221,6 +229,35 @@ function TimelineService:SetBlizzardSuppressedByProvider(sourceName, suppressed)
     return true
 end
 
+function TimelineService:RefreshProviderAuthority(providerName)
+    local provider = self.activeProviders[providerName]
+    if not provider or type(provider.RefreshAuthority) ~= "function" then return false end
+    local ok, changed = pcall(provider.RefreshAuthority, provider)
+    return ok and changed == true
+end
+
+function TimelineService:RefreshProviderAuthorities()
+    local changed = false
+    for _, name in ipairs(Constants.PROVIDER_PRIORITY) do
+        if self:RefreshProviderAuthority(name) then changed = true end
+    end
+    return changed
+end
+
+function TimelineService:GetSelectedEncounterID()
+    if not self.encounterKey or type(Registry.Get) ~= "function" then return nil end
+    local encounter = Registry:Get(self.encounterKey)
+    local encounterID = encounter and encounter.encounterID or nil
+    return normalizeEncounterID(encounterID)
+end
+
+function TimelineService:EncounterIDMatchesCurrent(encounterID)
+    local normalized, invalid = normalizeEncounterID(encounterID)
+    if invalid or not normalized then return false end
+    local selected = self:GetSelectedEncounterID()
+    return selected ~= nil and selected == normalized
+end
+
 function TimelineService:ProviderEncounterHint(providerName, encounterID)
     if Util.IsSecret(providerName) or Util.IsSecret(encounterID) then return false end
     if type(providerName) ~= "string" then return false end
@@ -250,7 +287,11 @@ end
 function TimelineService:RefreshProviders()
     local changed = false
 
-    for name, provider in pairs(providers) do
+    -- Provider activation follows the same explicit order used for timer
+    -- selection. Do not let Lua table iteration decide which authority starts
+    -- first during reload or load-on-demand recovery.
+    for _, name in ipairs(Constants.PROVIDER_PRIORITY) do
+        local provider = providers[name]
         local available = false
         if provider and type(provider.IsAvailable) == "function" then
             local ok, result = pcall(provider.IsAvailable, provider)
@@ -285,6 +326,7 @@ function TimelineService:RefreshProviders()
         end
     end
 
+    self:RefreshProviderAuthorities()
     if changed then
         EventBus:Emit("TIMELINE_PROVIDER_CHANGED", self:GetProviderDiagnostics())
     end
@@ -366,7 +408,9 @@ function TimelineService:RemapRecentTimers()
     table.wipe(self.recentAcknowledgements)
 
     for id, timer in pairs(self.timers) do
-        if not timer.startedAt or now - timer.startedAt > Constants.ENCOUNTER_REMAP_WINDOW_SECONDS then
+        if timer.encounterID and not self:EncounterIDMatchesCurrent(timer.encounterID) then
+            self.timers[id] = nil
+        elseif not timer.startedAt or now - timer.startedAt > Constants.ENCOUNTER_REMAP_WINDOW_SECONDS then
             self.timers[id] = nil
         else
             timer.call = nil
@@ -385,8 +429,20 @@ end
 
 function TimelineService:ProviderTimerStarted(providerName, sourceID, data)
     if not self.activeProviders[providerName] or type(data) ~= "table" or not validSourceID(sourceID) then return end
+
+    -- DBM can stop emitting its public timer feed when the user disables boss
+    -- bars while DBM itself still has IgnoreBlizzAPI set. A native Blizzard
+    -- event is the execution boundary where stale suppression must be reconciled
+    -- before that fallback event is accepted or rejected.
+    if isBlizzardRepresentation(providerName, data) then
+        self:RefreshProviderAuthority("DBM")
+    end
     if self:IsBlizzardSuppressed() and isBlizzardRepresentation(providerName, data) then return end
     if Util.IsSecret(data.faded) or not isFiniteNumber(data.duration) or data.duration <= 0 then return end
+
+    local encounterID, invalidEncounterID = normalizeEncounterID(data.encounterID)
+    if invalidEncounterID then return end
+    if encounterID and not self:EncounterIDMatchesCurrent(encounterID) then return end
 
     local id = timerID(providerName, sourceID)
     local now = GetTime()
@@ -415,6 +471,7 @@ function TimelineService:ProviderTimerStarted(providerName, sourceID, data)
     timer.name = publicValue(data.name)
     timer.icon = publicValue(data.icon)
     timer.count = normalizeTimerCount(data.count)
+    timer.encounterID = encounterID
     timer.duration = data.duration
     timer.nativeEventID = publicValue(data.nativeEventID)
     timer.bridge = publicValue(data.bridge)
@@ -634,19 +691,44 @@ function TimelineService:AcknowledgeCall(callKey)
     return true
 end
 
+local function providerIsUsable(self, name)
+    local provider = self.activeProviders[name]
+    if not provider then return false end
+
+    if name == "Blizzard" then
+        return not self:IsBlizzardSuppressed()
+    end
+
+    local spec = addonDiagnostics[name]
+    if spec and not addonMetadata(spec.pack, "Version") then return false end
+
+    if type(provider.CanSupplyBossTimers) == "function" then
+        local ok, canSupply = pcall(provider.CanSupplyBossTimers, provider)
+        if not ok or canSupply ~= true then return false end
+    end
+
+    return true
+end
+
 function TimelineService:GetProviderSummary()
+    self:RefreshProviderAuthorities()
     local active = {}
     for _, name in ipairs(Constants.PROVIDER_PRIORITY) do
-        if self.activeProviders[name] then active[#active + 1] = name end
+        if providerIsUsable(self, name) then active[#active + 1] = name end
     end
     return table.concat(active, ", ")
+end
+
+function TimelineService:HasUsableTimingSource()
+    return self:GetProviderSummary() ~= ""
 end
 
 function TimelineService:GetProviderDiagnostics()
     local active = {}
 
     for _, name in ipairs(Constants.PROVIDER_PRIORITY) do
-        if self.activeProviders[name] then
+        local provider = self.activeProviders[name]
+        if provider then
             if name == "Blizzard" then
                 active[#active + 1] = "Blizzard native"
             else
@@ -665,6 +747,13 @@ function TimelineService:GetProviderDiagnostics()
                         )
                     else
                         label = label .. (" [%s missing]"):format(spec.packLabel)
+                    end
+                end
+
+                if type(provider.CanSupplyBossTimers) == "function" then
+                    local ok, canSupply = pcall(provider.CanSupplyBossTimers, provider)
+                    if ok and canSupply ~= true then
+                        label = label .. " [boss timer feed disabled]"
                     end
                 end
                 active[#active + 1] = label
