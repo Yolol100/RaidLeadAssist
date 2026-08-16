@@ -91,6 +91,18 @@ assert(secretPrecision and secretPrecision.precision == Constants.TimerPrecision
     "secret precision must fail closed as approximate")
 assert(not Timeline:IsActionable(secretPrecision), "secret precision must never be actionable")
 
+Timeline:ProviderTimerStarted("BigWigs", "secret-bridge", {
+    key = 123,
+    name = "Mechanic",
+    duration = 10,
+    encounterID = 1001,
+    bridge = SECRET,
+})
+local secretBridge = Timeline.timers["BigWigs|secret-bridge"]
+assert(secretBridge and secretBridge.precision == Constants.TimerPrecision.APPROXIMATE,
+    "secret bridge metadata must fail closed as approximate")
+assert(not Timeline:IsActionable(secretBridge), "secret bridge metadata must never be actionable")
+
 -- Missing precision retains the documented source default for compatibility.
 Timeline:ProviderTimerStarted("DBM", "implicit-direct", {
     key = 123, name = "Mechanic", duration = 10, encounterID = 1001,
@@ -101,8 +113,32 @@ Timeline:ProviderTimerStarted("Blizzard", "implicit-native", {
 })
 assert(Timeline.timers["Blizzard|implicit-native"].precision == Constants.TimerPrecision.NATIVE)
 
--- Malformed provider identities and source IDs must be inert instead of crashing or colliding.
+-- Boolean state must remain boolean. Malformed producer metadata is ignored instead of
+-- being interpreted through Lua truthiness and changing actionability or authority.
 local before = timerCount()
+Timeline:ProviderTimerStarted("DBM", "bad-faded-start", {
+    key = 123, name = "Mechanic", duration = 10, encounterID = 1001, precision = "exact", faded = "false",
+})
+assert(timerCount() == before, "malformed faded state on start must be rejected")
+Timeline:ProviderTimerStarted("DBM", "boolean-state", {
+    key = 123, name = "Mechanic", duration = 10, encounterID = 1001, precision = "exact", faded = false,
+})
+local booleanTimer = Timeline.timers["DBM|boolean-state"]
+assert(booleanTimer and not booleanTimer.paused and not booleanTimer.faded)
+Timeline:ProviderTimerPaused("DBM", "boolean-state", "true")
+Timeline:ProviderTimerFaded("DBM", "boolean-state", 1)
+assert(not booleanTimer.paused, "malformed paused state must be ignored")
+assert(not booleanTimer.faded, "malformed faded update must be ignored")
+
+Timeline:SetBlizzardSuppressedByProvider("DBM", true)
+assert(Timeline:IsBlizzardSuppressed(), "valid suppression fixture must engage")
+assert(Timeline:SetBlizzardSuppressedByProvider("DBM", "false") == false,
+    "malformed suppression state must be ignored")
+assert(Timeline:IsBlizzardSuppressed(), "malformed suppression state must not release authority")
+Timeline:SetBlizzardSuppressedByProvider("DBM", false)
+
+-- Malformed provider identities and source IDs must be inert instead of crashing or colliding.
+before = timerCount()
 local invalidSourceIDs = { "", "   ", 0 / 0, math.huge, -math.huge }
 for _, sourceID in ipairs(invalidSourceIDs) do
     Timeline:ProviderTimerStarted("DBM", sourceID, {
@@ -112,8 +148,20 @@ end
 assert(timerCount() == before, "invalid source IDs must not create timers")
 assertNoCrash(function() Timeline:ProviderTimerStopped(nil, "x") end, "nil provider stop")
 assertNoCrash(function() Timeline:ProviderTimerStopped(42, "x") end, "numeric provider stop")
+assertNoCrash(function() Timeline:ProviderTimerStopped(SECRET, "x") end, "secret provider stop")
 assertNoCrash(function() Timeline:ProviderReset(nil) end, "nil provider reset")
 assertNoCrash(function() Timeline:ProviderReset(42) end, "numeric provider reset")
+assertNoCrash(function() Timeline:ProviderReset(SECRET) end, "secret provider reset")
+
+-- Malformed durations never create state.
+before = timerCount()
+local invalidDurations = { 0, -1, 0 / 0, math.huge, -math.huge, SECRET }
+for index, duration in ipairs(invalidDurations) do
+    Timeline:ProviderTimerStarted("DBM", "bad-duration-" .. index, {
+        key = 123, name = "Mechanic", duration = duration, encounterID = 1001, precision = "exact",
+    })
+end
+assert(timerCount() == before, "invalid durations must not create timers")
 
 -- Cross-encounter direct timers are always rejected.
 before = timerCount()
@@ -122,7 +170,7 @@ Timeline:ProviderTimerStarted("BigWigs", "wrong-encounter", {
 })
 assert(timerCount() == before, "cross-encounter timer must be rejected")
 
--- Deterministic state-machine stress: thousands of mixed event-order transitions.
+-- Deterministic state-machine stress: many mixed event-order transitions.
 local seed = 0x51A7E
 local function rnd(maximum)
     seed = (seed * 1103515245 + 12345) % 2147483648
@@ -135,8 +183,8 @@ local ids = {
     Blizzard = { "z1", "z2", "z3" },
 }
 local providers = { "DBM", "BigWigs", "Blizzard" }
-local precisions = { nil, "exact", "native", "approximate", "estimated", SECRET }
-local steps = 12000
+local precisionCases = { "missing", "exact", "native", "approximate", "estimated", SECRET }
+local steps = 50000
 
 for step = 1, steps do
     local op = rnd(9)
@@ -144,16 +192,16 @@ for step = 1, steps do
     local sourceID = ids[providerName][rnd(3)]
 
     if op <= 3 then
-        local precision = precisions[rnd(#precisions)]
+        local precision = precisionCases[rnd(#precisionCases)]
         local data = {
             key = 123,
             name = "Mechanic",
             duration = rnd(20),
             encounterID = providerName == "Blizzard" and nil or 1001,
-            precision = precision,
             faded = false,
             count = rnd(4),
         }
+        if precision ~= "missing" then data.precision = precision end
         Timeline:ProviderTimerStarted(providerName, sourceID, data)
     elseif op == 4 then
         Timeline:ProviderTimerUpdated(providerName, sourceID, rnd(5) - 1, rnd(20))
