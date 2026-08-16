@@ -8,20 +8,27 @@ local originalInitialize = MainFrame.Initialize
 function MainFrame:Initialize(database, callbacks)
     originalInitialize(self, database, callbacks)
 
-    self.settingsButton:SetSize(62, 26)
-    self.settingsButton:ClearAllPoints()
-    self.settingsButton:SetPoint("TOPRIGHT", -Theme.padding, -1)
+    local settingsButton = self.frame and self.frame.settingsButton
+    if settingsButton then
+        settingsButton:SetSize(62, 26)
+        settingsButton:ClearAllPoints()
+        settingsButton:SetPoint("TOPRIGHT", -Theme.padding, -1)
+    end
 
-    self.explanationButton.frame.name:SetText("SEND PRE-PULL PLAN")
+    if self.explanationButton and self.explanationButton.frame then
+        self.explanationButton.frame.name:SetText("SEND PRE-PULL PLAN")
+    end
 
-    self.frame.drag:SetScript("OnEnter", function(button)
-        GameTooltip:SetOwner(button, "ANCHOR_TOP")
-        GameTooltip:SetText("Shift-drag to move Raid Lead Assist", 0.82, 0.86, 0.82, 1)
-        GameTooltip:Show()
-    end)
-    self.frame.drag:SetScript("OnLeave", function()
-        GameTooltip:Hide()
-    end)
+    if self.frame and self.frame.drag then
+        self.frame.drag:SetScript("OnEnter", function(button)
+            GameTooltip:SetOwner(button, "ANCHOR_TOP")
+            GameTooltip:SetText("Shift-drag to move Raid Lead Assist", 0.82, 0.86, 0.82, 1)
+            GameTooltip:Show()
+        end)
+        self.frame.drag:SetScript("OnLeave", function()
+            GameTooltip:Hide()
+        end)
+    end
 end
 
 ns:RegisterModule("UI.MainFrameEnhancements", {})
