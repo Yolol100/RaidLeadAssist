@@ -15,7 +15,6 @@ T.Load("Encounters/VenomousAbyss/Sszorak.lua", ns)
 T.Load("Encounters/VenomousAbyss/TwinFangs.lua", ns)
 T.Load("Encounters/VenomousAbyss/CoiledAltar.lua", ns)
 T.Load("Encounters/VenomousAbyss/Ulatek.lua", ns)
-T.Load("Encounters/VenomousAbyss/UlatekAssignmentPolicy.lua", ns)
 
 local Registry = ns:GetModule("Encounters.Registry")
 local Assignments = ns:GetModule("Encounters.AssignmentRegistry")
