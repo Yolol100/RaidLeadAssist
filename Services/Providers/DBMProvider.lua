@@ -129,13 +129,20 @@ function DBMProvider:Start(sink)
         if hasVariance == true or isEnabled ~= true then return end
         if not ALLOWED_TYPES[simpleType] then return end
 
+        -- Current DBM exposes self.mod.id in TimerBegin. Resolve that public mod
+        -- identity back to the loaded DBM boss module and require its real
+        -- encounterId. This rejects utility/non-boss DBM timers and prevents a
+        -- direct timer from being interpreted under another RLA encounter.
+        local encounterID = encounterIDForModID(modID)
+        if not encounterID then return end
+
         self.sink:ProviderTimerStarted("DBM", timerID, {
             key = Util.ToNumericID(spellID) or (not Util.IsSecret(spellID) and spellID or nil),
             name = not Util.IsSecret(spellName) and spellName or (not Util.IsSecret(message) and message or nil),
             duration = duration,
             icon = Util.NormalizeTexture(icon),
             count = normalizeTimerCount(timerCount),
-            encounterID = encounterIDForModID(modID),
+            encounterID = encounterID,
             precision = "exact",
             faded = fade == true,
         })
