@@ -165,8 +165,10 @@ assert(#faded == 2, "secret fade state must fail closed")
 dbmCallbacks.DBM_TimerStop(nil, "dbm-1")
 assert(#stopped == 1 and stopped[1].id == "dbm-1")
 
+DBM.Options.IgnoreBlizzAPI = true
 dbmCallbacks.DBM_IgnoreBlizzAPI()
 assert(suppression[#suppression].provider == "DBM" and suppression[#suppression].value == true)
+DBM.Options.IgnoreBlizzAPI = false
 dbmCallbacks.DBM_ResumeBlizzAPI()
 assert(suppression[#suppression].provider == "DBM" and suppression[#suppression].value == false)
 
@@ -186,4 +188,4 @@ dbmMod.IsInCombat = function() return false end
 hints = {}
 assert(DBMProvider:SeedEncounterHint() == false and #hints == 0)
 
-print("ok - exact BigWigs/DBM contracts, event enrichment, cast timers, fade lifecycle, and late recovery state")
+print("ok - exact BigWigs/DBM contracts, event enrichment, cast timers, fade lifecycle, authority state, and late recovery")
