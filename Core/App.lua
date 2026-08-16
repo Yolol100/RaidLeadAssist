@@ -342,7 +342,7 @@ function App:UpdateTiming()
                 or Constants.CallState.IDLE
             UI:SetCallState(call.key, state)
         end
-        UI.timeline:SetIdle()
+        UI.timeline:SetIdle("AUTO TIMING OFF")
         return
     end
 
@@ -360,6 +360,11 @@ function App:UpdateTiming()
         end
 
         UI:SetCallState(call.key, state)
+    end
+
+    if not profileUsesAutomaticTiming(profile) then
+        UI.timeline:SetIdle("MANUAL CALLS ONLY")
+        return
     end
 
     local timer, remaining = Timeline:GetNextActionableTimer()
