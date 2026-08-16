@@ -553,11 +553,20 @@ end
 function TimelineService:ProviderTimerPaused(providerName, sourceID, paused)
     if not self.activeProviders[providerName] or not validSourceID(sourceID) or Util.IsSecret(paused) then return end
 
-    local timer = self.timers[timerID(providerName, sourceID)]
+    local id = timerID(providerName, sourceID)
+    local timer = self.timers[id]
     if not timer then return end
 
     if paused and not timer.paused then
-        timer.pausedRemaining = self:GetRemaining(timer)
+        local remaining = self:GetRemaining(timer)
+        if not isFiniteNumber(remaining) or remaining <= 0 then
+            -- A stale pause arriving after the bar's deadline must not turn an
+            -- expired occurrence into an indefinitely paused/live occurrence.
+            self.timers[id] = nil
+            EventBus:Emit("TIMELINE_CHANGED")
+            return
+        end
+        timer.pausedRemaining = remaining
         timer.paused = true
     elseif not paused and timer.paused then
         timer.expiration = GetTime() + (timer.pausedRemaining or 0)
