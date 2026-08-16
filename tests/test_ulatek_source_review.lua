@@ -8,7 +8,6 @@ T.Load("Core/Util.lua", ns)
 T.Load("Encounters/Registry.lua", ns)
 T.Load("Encounters/VenomousAbyss/Ulatek.lua", ns)
 T.Load("Encounters/AssignmentRegistry.lua", ns)
-T.Load("Encounters/VenomousAbyss/UlatekAssignmentPolicy.lua", ns)
 
 local Registry = ns:GetModule("Encounters.Registry")
 local Assignments = ns:GetModule("Encounters.AssignmentRegistry")
@@ -48,8 +47,8 @@ assert(not hasDefinition("heroic", "coil_a") and not hasDefinition("heroic", "co
 assert(hasDefinition("mythic", "coil_a") and hasDefinition("mythic", "coil_b"),
     "Mythic assignment layout must keep Coil rotation groups")
 
--- The current Heroic assignment overlay deliberately avoids Mass Gestation copy
--- until the live difficulty split can be verified in the raid client.
+-- Heroic egg ownership is now canonical in AssignmentRegistry and deliberately avoids
+-- Mass Gestation copy until the live difficulty split can be verified in the raid client.
 local heroicLayout = Assignments:GetLayout("ulatek", "heroic")
 for _, section in ipairs(heroicLayout.sections) do
     assert(not contains(section.description, "Mass Gestation"), "Heroic egg assignment copy must not claim Mass Gestation before live validation")
@@ -73,6 +72,16 @@ end
 assert(contains(mythic.callsByKey.bite.warning, "WAVES"),
     "Mythic Serpent's Bite should warn that Volatile Purge creates Caustic Waves")
 
+-- Manual-call icons must identify the mechanic they label, not unrelated timeline events.
+assert(mythic.callsByKey.eggs.iconSpellID == 1299650,
+    "Hardened Eggs must use the Hardened spell identity")
+assert(mythic.callsByKey.incubation.iconSpellID == 1299759,
+    "Toxic Incubation must use the Toxic Incubation spell identity")
+assert(mythic.callsByKey.eggs.iconSpellID ~= 1292188,
+    "Hardened Eggs must not reuse the Caustic Waves spell identity")
+assert(mythic.callsByKey.incubation.iconSpellID ~= 1302982,
+    "Toxic Incubation must not reuse the Virulent Spit spell identity")
+
 -- Ula'tek stays deliberately manual-only until public bossmod timing is complete and stable.
 for _, difficultyKey in ipairs({ "normal", "heroic", "mythic" }) do
     for _, call in ipairs(Registry:GetProfile("ulatek", difficultyKey).calls) do
@@ -80,4 +89,4 @@ for _, difficultyKey in ipairs({ "normal", "heroic", "mythic" }) do
     end
 end
 
-print("ok - Ula'tek pre-release plan contract keeps difficulty mechanics separated and manual calls current")
+print("ok - Ula'tek pre-release plan contract keeps difficulty mechanics, icon identities and manual calls current")
