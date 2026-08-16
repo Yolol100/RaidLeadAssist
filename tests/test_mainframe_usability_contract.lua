@@ -5,34 +5,41 @@ local function read(path)
     return content
 end
 
-local mainEnhancements = read("UI/MainFrameEnhancements.lua")
-local timingStatus = read("Core/TimingStatusIntegration.lua")
+local mainFrame = read("UI/MainFrame.lua")
+local app = read("Core/App.lua")
 local timeline = read("UI/TimelineBar.lua")
+local toc = read("RaidLeadAssist.toc")
 
 local function contains(text, needle)
     return string.find(text, needle, 1, true) ~= nil
 end
 
 -- Primary utility controls should not be smaller than the project's compact 24px-equivalent target.
-assert(contains(mainEnhancements, 'settingsButton:SetSize(62, 26)'),
+assert(contains(mainFrame, 'frame.settingsButton:SetSize(62, 26)'),
     "Settings control should use an easier compact hit target")
-assert(contains(mainEnhancements, 'self.frame.settingsButton'),
-    "Main-frame enhancement must target the settings button where MainFrame actually owns it")
 
 -- The plan action is only valid before the pull; its label should say so before users click it.
-assert(contains(mainEnhancements, 'SetText("SEND PRE-PULL PLAN")'),
+assert(contains(mainFrame, 'SetText("SEND PRE-PULL PLAN")'),
     "Boss Plan action should expose its pre-pull lifecycle in the visible label")
 
 -- Moving the panel currently requires a modifier, so that hidden interaction needs discoverability.
-assert(contains(mainEnhancements, 'Shift-drag to move Raid Lead Assist'),
+assert(contains(mainFrame, 'Shift-drag to move Raid Lead Assist'),
     "Main panel should explain its Shift-drag movement affordance")
 
 -- Deliberate states must not look like a broken timer integration.
-assert(contains(timingStatus, 'UI.timeline:SetIdle("AUTO TIMING OFF")'),
+assert(contains(app, 'UI.timeline:SetIdle("AUTO TIMING OFF")'),
     "Disabled automatic timing should be explicit")
-assert(contains(timingStatus, 'UI.timeline:SetIdle("MANUAL CALLS ONLY")'),
+assert(contains(app, 'UI.timeline:SetIdle("MANUAL CALLS ONLY")'),
     "Profiles with no automatic calls should display intentional manual-only state")
 assert(contains(timeline, 'function TimelineBar:SetIdle(label)'),
     "Timeline idle state should support a contextual label")
 
-print("ok - raid-leader surface exposes pre-pull, movement, compact target and manual-timing states")
+-- These behaviors are canonical now; the runtime should not depend on late monkey-patch files.
+assert(not contains(toc, "UI/MainFrameEnhancements.lua"),
+    "Main-frame usability behavior should live in UI/MainFrame.lua")
+assert(not contains(toc, "Core/TimingStatusIntegration.lua"),
+    "Timing status behavior should live in Core/App.lua")
+assert(not contains(toc, "Encounters/VenomousAbyss/UlatekAssignmentPolicy.lua"),
+    "Ula'tek assignment policy should live in AssignmentRegistry.lua")
+
+print("ok - raid-leader surface exposes pre-pull, movement, compact target and manual-timing states canonically")
