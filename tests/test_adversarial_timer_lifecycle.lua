@@ -84,12 +84,10 @@ local expiredOccurrence = expired.occurrenceID
 assert(Timeline:AcknowledgeCall("mechanic") == true)
 now = now + 3
 Timeline:ProviderTimerPaused("DBM", "shared-id", true)
-local stalePaused = Timeline.timers["DBM|shared-id"]
-assert(stalePaused and stalePaused.paused == true and stalePaused.pausedRemaining == 0,
-    "fixture requires the late pause to land after expiry")
+assert(Timeline.timers["DBM|shared-id"] == nil,
+    "late pause after expiry must discard the stale timer instead of freezing it")
 
--- A fresh Begin/Start after the old deadline must not inherit the expired occurrence merely
--- because the stale pause callback marked the old representation as paused.
+-- A fresh Begin/Start after the old deadline must not inherit the expired occurrence.
 local fresh = startDBM(10, 1)
 assert(fresh.occurrenceID ~= expiredOccurrence,
     "restart after an expired late-pause timer must create a new occurrence")
