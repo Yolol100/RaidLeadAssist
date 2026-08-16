@@ -79,7 +79,7 @@ assert(started[4].data.encounterID == 3470,
 
 dbmCallbacks.DBM_TimerBegin(nil, "dbm-unknown", "Unknown module", 10, 456, "cd", 123,
     nil, "not-loaded", nil, false, "Unknown module", nil, 6, nil, nil, false, nil, true)
-assert(#started == 5 and started[5].data.encounterID == nil,
-    "unknown DBM module IDs must remain unscoped instead of being mistaken for encounter IDs")
+assert(#started == 4,
+    "unresolved DBM module IDs must fail closed instead of creating an unscoped direct boss timer")
 
 print("ok - DBM and BigWigs occurrence metadata and encounter identity are consumed safely")
