@@ -8,6 +8,7 @@ T.Load("Core/Util.lua", ns)
 T.Load("Encounters/Registry.lua", ns)
 T.Load("Encounters/VenomousAbyss/Ulatek.lua", ns)
 T.Load("Encounters/AssignmentRegistry.lua", ns)
+T.Load("Encounters/VenomousAbyss/UlatekAssignmentPolicy.lua", ns)
 
 local Registry = ns:GetModule("Encounters.Registry")
 local Assignments = ns:GetModule("Encounters.AssignmentRegistry")
@@ -60,6 +61,15 @@ assert(mythic.callsByKey.fangs, "Mythic requires a Grasping Fangs manual call")
 assert(contains(mythic.callsByKey.fangs.warning, "ONE AT A TIME"),
     "Mythic Fangs copy should warn against stacking raid-wide Blight Vein")
 
+-- Serpent's Bite requires raid coordination on every supported difficulty.
+for _, profile in ipairs({ normal, heroic, mythic }) do
+    assert(profile.callsByKey.bite, "Every Ula'tek difficulty requires a Serpent's Bite manual call")
+    assert(contains(profile.callsByKey.bite.warning, "LEECH"), "Serpent's Bite call must tell the raid to leech the venom")
+    assert(contains(profile.callsByKey.bite.warning, "SPREAD 7+"), "Volatile Purge call must preserve 7+ yard spread guidance")
+end
+assert(contains(mythic.callsByKey.bite.warning, "WAVES"),
+    "Mythic Serpent's Bite should warn that Volatile Purge creates Caustic Waves")
+
 -- Ula'tek stays deliberately manual-only until public bossmod timing is complete and stable.
 for _, difficultyKey in ipairs({ "normal", "heroic", "mythic" }) do
     for _, call in ipairs(Registry:GetProfile("ulatek", difficultyKey).calls) do
@@ -67,4 +77,4 @@ for _, difficultyKey in ipairs({ "normal", "heroic", "mythic" }) do
     end
 end
 
-print("ok - Ula'tek source review keeps Heroic and Mythic mechanics separated and manual calls current")
+print("ok - Ula'tek source review keeps difficulty mechanics separated and manual calls current")
