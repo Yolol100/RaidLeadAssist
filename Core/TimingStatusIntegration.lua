@@ -2,7 +2,6 @@ local _, ns = ...
 
 local App = ns:GetModule("Core.App")
 local Registry = ns:GetModule("Encounters.Registry")
-local Timeline = ns:GetModule("Services.TimelineService")
 local UI = ns:GetModule("UI.MainFrame")
 
 local originalUpdateTiming = App.UpdateTiming
@@ -26,11 +25,7 @@ function App:UpdateTiming(...)
         return
     end
 
-    if profileHasAutomaticTiming(profile) then return end
-
-    local timer, remaining = Timeline:GetNextActionableTimer()
-    if not timer then timer, remaining = Timeline:GetNextTimer() end
-    if not timer or not remaining then
+    if not profileHasAutomaticTiming(profile) then
         UI.timeline:SetIdle("MANUAL CALLS ONLY")
     end
 end
