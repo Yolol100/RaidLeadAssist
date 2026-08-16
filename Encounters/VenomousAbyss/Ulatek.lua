@@ -16,8 +16,8 @@ local function calls(coilText, fangsText, includeSting, biteText, includeMythic)
         result[#result+1] = { key="sting", ability="Petrifying Sting", action="Target out > everyone clear 10+ yards", warning="PETRIFYING STING > TARGET OUT > EVERYONE CLEAR 10+ YARDS", voice="Sting", timing=false, iconSpellID=1303414 }
     end
     if includeMythic then
-        result[#result+1] = { key="eggs", ability="Hardened Eggs", action="Break shell > carriers spread 3+", warning="HARDENED EGGS > BREAK SHELL > CARRIERS SPREAD 3+ YARDS", voice="Eggs", timing=false, iconSpellID=1292188 }
-        result[#result+1] = { key="incubation", ability="Toxic Incubation", action="Assigned intercepts rotate", warning="TOXIC INCUBATION > ASSIGNED INTERCEPTS ROTATE > DO NOT DOUBLE SOAK", voice="Intercept", timing=false, iconSpellID=1302982 }
+        result[#result+1] = { key="eggs", ability="Hardened Eggs", action="Break shell > carriers spread 3+", warning="HARDENED EGGS > BREAK SHELL > CARRIERS SPREAD 3+ YARDS", voice="Eggs", timing=false, iconSpellID=1299650 }
+        result[#result+1] = { key="incubation", ability="Toxic Incubation", action="Assigned intercepts rotate", warning="TOXIC INCUBATION > ASSIGNED INTERCEPTS ROTATE > DO NOT DOUBLE SOAK", voice="Intercept", timing=false, iconSpellID=1299759 }
     end
     return result
 end
