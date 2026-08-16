@@ -64,10 +64,10 @@ function TimelineBar:Create(parent)
     return instance
 end
 
-function TimelineBar:SetIdle()
+function TimelineBar:SetIdle(label)
     self.frame:SetMinMaxValues(0, 1)
     self.frame:SetValue(0)
-    self.frame.label:SetText("NO LINKED TIMER")
+    self.frame.label:SetText(label or "NO LINKED TIMER")
     self.frame.time:SetText("--")
     self.frame.icon:SetTexture(134400)
     self:SetState(Constants.CallState.IDLE)
