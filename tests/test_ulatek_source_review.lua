@@ -32,29 +32,32 @@ local normal = Registry:GetProfile("ulatek", "normal")
 local heroic = Registry:GetProfile("ulatek", "heroic")
 local mythic = Registry:GetProfile("ulatek", "mythic")
 
--- Current 12.1 source review: Soul Constrictor and Mass Gestation are Mythic-only.
-assert(not contains(planText("heroic"), "SOUL CONSTRICTOR"), "Heroic must not claim Mythic-only Soul Constrictor")
-assert(not contains(planText("heroic"), "MASS GESTATION"), "Heroic must not claim Mythic-only Mass Gestation")
+-- Pre-release strategy currently scopes Soul Constrictor and Mass Gestation to Mythic.
+-- Keep this as a plan contract, not a claim of completed live raid validation.
+assert(not contains(planText("heroic"), "SOUL CONSTRICTOR"), "Heroic plan must not include Soul Constrictor before live validation supports it")
+assert(not contains(planText("heroic"), "MASS GESTATION"), "Heroic plan must not include Mass Gestation before live validation supports it")
 assert(contains(planText("mythic"), "SOUL CONSTRICTOR"), "Mythic should retain Soul Constrictor rotation guidance")
 assert(contains(planText("mythic"), "MASS GESTATION"), "Mythic should retain Mass Gestation guidance")
 
--- Heroic Spectral Coils is a shared raid soak; only Mythic requires alternating groups.
-assert(not contains(heroic.callsByKey.coils.warning, "ROTATE"), "Heroic Spectral Coils must not force a Mythic rotation")
+-- Current pre-release plan treats Heroic Spectral Coils as a shared raid soak;
+-- the explicit alternating-group assignment remains Mythic-only pending live validation.
+assert(not contains(heroic.callsByKey.coils.warning, "ROTATE"), "Heroic Spectral Coils must not force a pre-release Mythic rotation")
 assert(contains(mythic.callsByKey.coils.warning, "ROTATE"), "Mythic Spectral Coils must retain the rotation")
 assert(not hasDefinition("heroic", "coil_a") and not hasDefinition("heroic", "coil_b"),
-    "Heroic assignment layout must not require Mythic-only Coil rotation groups")
+    "Heroic assignment layout must not require Coil rotation groups in the current pre-release plan")
 assert(hasDefinition("mythic", "coil_a") and hasDefinition("mythic", "coil_b"),
     "Mythic assignment layout must keep Coil rotation groups")
 
--- Doomscale Eggs exist on Normal/Heroic, but only Mythic links disturbing them to Mass Gestation.
+-- The current Heroic assignment overlay deliberately avoids Mass Gestation copy
+-- until the live difficulty split can be verified in the raid client.
 local heroicLayout = Assignments:GetLayout("ulatek", "heroic")
 for _, section in ipairs(heroicLayout.sections) do
-    assert(not contains(section.description, "Mass Gestation"), "Heroic egg assignment copy must not claim Mass Gestation")
+    assert(not contains(section.description, "Mass Gestation"), "Heroic egg assignment copy must not claim Mass Gestation before live validation")
 end
 assert(hasDefinition("heroic", "egg_left") and hasDefinition("heroic", "egg_right"),
     "Heroic may still preassign left/right Doomscale Egg owners")
 
--- Grasping Fangs is a Heroic/Mythic raid-lead mechanic and must have a manual call.
+-- Grasping Fangs is present in the current Heroic/Mythic pre-release plan and needs a manual call.
 assert(normal.callsByKey.fangs == nil, "Normal should not expose a Heroic mechanic")
 assert(heroic.callsByKey.fangs, "Heroic requires a Grasping Fangs manual call")
 assert(mythic.callsByKey.fangs, "Mythic requires a Grasping Fangs manual call")
@@ -77,4 +80,4 @@ for _, difficultyKey in ipairs({ "normal", "heroic", "mythic" }) do
     end
 end
 
-print("ok - Ula'tek source review keeps difficulty mechanics separated and manual calls current")
+print("ok - Ula'tek pre-release plan contract keeps difficulty mechanics separated and manual calls current")
