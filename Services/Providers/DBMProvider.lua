@@ -11,23 +11,34 @@ local ALLOWED_TYPES = {
     cast = true,
 }
 
+local function isFiniteNumber(value)
+    return type(value) == "number" and value == value and value > -math.huge and value < math.huge
+end
+
+local function validOptionalBoolean(value)
+    return not Util.IsSecret(value) and (value == nil or type(value) == "boolean")
+end
+
 local function normalizeTimerID(id)
     if Util.IsSecret(id) then return nil end
-    if type(id) ~= "string" and type(id) ~= "number" then return nil end
+    if type(id) == "string" then
+        if not id:match("%S") then return nil end
+        return id
+    end
+    if not isFiniteNumber(id) then return nil end
     return tostring(id)
 end
 
 local function normalizeTimerCount(value)
-    if Util.IsSecret(value) or type(value) ~= "number" then return nil end
-    if value ~= value or value <= 0 or value == math.huge or value == -math.huge then return nil end
-    if value ~= math.floor(value) then return nil end
+    if Util.IsSecret(value) or not isFiniteNumber(value) then return nil end
+    if value <= 0 or value ~= math.floor(value) then return nil end
     return value
 end
 
 local function normalizeEncounterID(value)
     if Util.IsSecret(value) then return nil end
     if type(value) == "string" then value = tonumber(value) end
-    if type(value) ~= "number" or value ~= value or value <= 0 or value == math.huge or value == -math.huge then return nil end
+    if not isFiniteNumber(value) or value <= 0 then return nil end
     if value ~= math.floor(value) then return nil end
     return value
 end
@@ -39,7 +50,8 @@ end
 
 local function encounterIDForModID(modID)
     if Util.IsSecret(modID) then return nil end
-    if type(modID) ~= "string" and type(modID) ~= "number" then return nil end
+    if type(modID) ~= "string" and not isFiniteNumber(modID) then return nil end
+    if type(modID) == "string" and not modID:match("%S") then return nil end
     if not _G.DBM then return nil end
 
     local mod
@@ -123,9 +135,9 @@ function DBMProvider:Start(sink)
 
         local timerID = normalizeTimerID(id)
         if not timerID then return end
-        if Util.IsSecret(duration) or Util.IsSecret(simpleType) or Util.IsSecret(fade)
-            or Util.IsSecret(hasVariance) or Util.IsSecret(isEnabled) then return end
-        if type(duration) ~= "number" or duration <= 0 then return end
+        if Util.IsSecret(duration) or Util.IsSecret(simpleType) or Util.IsSecret(isEnabled)
+            or not validOptionalBoolean(fade) or not validOptionalBoolean(hasVariance) then return end
+        if not isFiniteNumber(duration) or duration <= 0 then return end
         if hasVariance == true or isEnabled ~= true then return end
         if not ALLOWED_TYPES[simpleType] then return end
 
@@ -171,7 +183,7 @@ function DBMProvider:Start(sink)
 
     self.onFadeUpdate = function(_, id, _, _, fade)
         local timerID = normalizeTimerID(id)
-        if not timerID or Util.IsSecret(fade) then return end
+        if not timerID or not validOptionalBoolean(fade) then return end
         if type(self.sink.ProviderTimerFaded) == "function" then
             self.sink:ProviderTimerFaded("DBM", timerID, fade == true)
         end

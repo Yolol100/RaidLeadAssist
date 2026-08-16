@@ -11,6 +11,17 @@ local PAUSED = timelineStates and timelineStates.Paused or 1
 local FINISHED = timelineStates and timelineStates.Finished or 2
 local CANCELED = timelineStates and timelineStates.Canceled or 3
 
+local function isFiniteNumber(value)
+    return type(value) == "number" and value == value and value > -math.huge and value < math.huge
+end
+
+local function normalizeEventID(value)
+    if Util.IsSecret(value) then return nil end
+    if type(value) == "string" then value = tonumber(value) end
+    if not isFiniteNumber(value) or value <= 0 or value ~= math.floor(value) then return nil end
+    return value
+end
+
 local function safeTimelineCall(methodName, ...)
     local api = C_EncounterTimeline and C_EncounterTimeline[methodName]
     if type(api) ~= "function" then return nil end
@@ -46,9 +57,10 @@ function BlizzardProvider:Stop()
 end
 
 function BlizzardProvider:GetSafeRemaining(eventID)
-    if Util.IsSecret(eventID) or eventID == nil then return nil end
+    eventID = normalizeEventID(eventID)
+    if not eventID then return nil end
     local remaining = safeTimelineCall("GetEventTimeRemaining", eventID)
-    if Util.IsSecret(remaining) or type(remaining) ~= "number" then return nil end
+    if Util.IsSecret(remaining) or not isFiniteNumber(remaining) then return nil end
     return math.max(0, remaining)
 end
 
@@ -58,12 +70,13 @@ function BlizzardProvider:SeedExistingEvents()
     local eventIDs = safeTimelineCall("GetEventList")
     if Util.IsSecret(eventIDs) or type(eventIDs) ~= "table" then return end
 
-    for _, eventID in ipairs(eventIDs) do
-        if not Util.IsSecret(eventID) then
+    for _, rawEventID in ipairs(eventIDs) do
+        local eventID = normalizeEventID(rawEventID)
+        if eventID then
             local state = safeTimelineCall("GetEventState", eventID)
             if not Util.IsSecret(state) and (state == ACTIVE or state == PAUSED) then
                 local info = safeTimelineCall("GetEventInfo", eventID)
-                if info then
+                if type(info) == "table" and not Util.IsSecret(info) then
                     self:AddEvent(info, eventID, self:GetSafeRemaining(eventID))
                     if state == PAUSED then
                         self.sink:ProviderTimerPaused("Blizzard", tostring(eventID), true)
@@ -75,15 +88,16 @@ function BlizzardProvider:SeedExistingEvents()
 end
 
 function BlizzardProvider:AddEvent(info, fallbackEventID, durationOverride)
-    if not info or Util.IsSecret(info.source) or info.source ~= 0 then return end
-    if Util.IsSecret(info.duration) or type(info.duration) ~= "number" then return end
+    if Util.IsSecret(info) or type(info) ~= "table" then return end
+    if Util.IsSecret(info.source) or info.source ~= 0 then return end
+    if Util.IsSecret(info.duration) or not isFiniteNumber(info.duration) then return end
 
-    local eventID = fallbackEventID or info.id
-    if Util.IsSecret(eventID) or eventID == nil then return end
+    local eventID = normalizeEventID(fallbackEventID or info.id)
+    if not eventID then return end
 
     local duration = durationOverride
-    if type(duration) ~= "number" or duration <= 0 then duration = info.duration end
-    if Util.IsSecret(duration) or type(duration) ~= "number" or duration <= 0 then return end
+    if not isFiniteNumber(duration) or duration <= 0 then duration = info.duration end
+    if Util.IsSecret(duration) or not isFiniteNumber(duration) or duration <= 0 then return end
 
     local key = not Util.IsSecret(info.spellID) and info.spellID or nil
     local name = not Util.IsSecret(info.spellName) and info.spellName or nil
@@ -102,8 +116,8 @@ end
 function BlizzardProvider:OnEvent(eventName, ...)
     if eventName == "ENCOUNTER_TIMELINE_EVENT_ADDED" then
         local info = ...
-        if not info then return end
-        local eventID = not Util.IsSecret(info.id) and info.id or nil
+        if Util.IsSecret(info) or type(info) ~= "table" then return end
+        local eventID = normalizeEventID(info.id)
         self:AddEvent(info, eventID)
         if eventID then
             local state = safeTimelineCall("GetEventState", eventID)
@@ -114,8 +128,8 @@ function BlizzardProvider:OnEvent(eventName, ...)
         return
     end
 
-    local eventID = ...
-    if Util.IsSecret(eventID) or eventID == nil then return end
+    local eventID = normalizeEventID((...))
+    if not eventID then return end
 
     if eventName == "ENCOUNTER_TIMELINE_EVENT_REMOVED" then
         self.sink:ProviderTimerStopped("Blizzard", tostring(eventID), "removed")
@@ -138,7 +152,7 @@ function BlizzardProvider:OnEvent(eventName, ...)
 end
 
 function BlizzardProvider:GetRemaining(timer)
-    local eventID = timer.nativeEventID
+    local eventID = normalizeEventID(timer and timer.nativeEventID)
     if not eventID then return nil end
 
     local remaining = self:GetSafeRemaining(eventID)
@@ -146,7 +160,8 @@ function BlizzardProvider:GetRemaining(timer)
 
     if type(C_EncounterTimeline.GetEventTimeElapsed) ~= "function" then return nil end
     local elapsed = safeTimelineCall("GetEventTimeElapsed", eventID)
-    if Util.IsSecret(elapsed) or type(elapsed) ~= "number" then return nil end
+    if Util.IsSecret(elapsed) or not isFiniteNumber(elapsed) then return nil end
+    if not timer or not isFiniteNumber(timer.duration) then return nil end
     return math.max(0, timer.duration - elapsed)
 end
 
