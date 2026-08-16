@@ -163,12 +163,12 @@ local ULATEK_EGG_NORMAL = section("eggs", "Doomscale Egg Handler", "Normal alrea
     slot("egg_handler", "Egg Handler"),
 })
 
-local ULATEK_COILS = section("coils", "Spectral Coil Rotation", "Heroic+: players who mitigate one Coil cannot mitigate the next, so alternate distinct groups.", 2, {
+local ULATEK_COILS = section("coils", "Spectral Coil Rotation", "Mythic: alternate distinct groups because Soul Constrictor blocks the next soak for affected players.", 2, {
     slot("coil_a", "Coil Group A", { callKey = "coils", callLabel = "GROUP A", rotation = "coils", required = true, exclusiveGroup = "coils" }),
     slot("coil_b", "Coil Group B", { callKey = "coils", callLabel = "GROUP B", rotation = "coils", required = true, exclusiveGroup = "coils" }),
 })
 
-local ULATEK_EGGS_HEROIC = section("eggs", "Doomscale Eggs", "Heroic: disturbing an egg also triggers Mass Gestation on that side. Give each side an owner.", 2, {
+local ULATEK_EGGS_HEROIC = section("eggs", "Doomscale Eggs", "Heroic: Doomscale Eggs still need controlled handling. Assign one owner to each side before the pull.", 2, {
     slot("egg_left", "Left Egg Owner", { required = true }),
     slot("egg_right", "Right Egg Owner", { required = true }),
 })
@@ -222,7 +222,7 @@ local LAYOUTS = {
     },
     ulatek = {
         normal = layout("Only optional egg ownership is useful as a fixed pre-pull responsibility on Normal.", { ULATEK_EGG_NORMAL }),
-        heroic = layout("Alternate Spectral Coil groups and assign an owner to each Doomscale Egg side.", { ULATEK_COILS, ULATEK_EGGS_HEROIC }),
+        heroic = layout("Assign one owner to each Doomscale Egg side; Heroic Coil and Fangs targets stay live and dynamic.", { ULATEK_EGGS_HEROIC }),
         mythic = layout("Coil rotation, egg-side carriers and a dedicated Toxic Incubation intercept rotation.", { ULATEK_COILS, ULATEK_EGGS_MYTHIC, ULATEK_INCUBATION }),
     },
 }
