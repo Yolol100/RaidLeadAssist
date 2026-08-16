@@ -12,9 +12,16 @@ _G.BigWigsLoader = {
     RegisterMessage = function(_, name, callback) bwMessages[name] = callback end,
     UnregisterMessage = function() end,
 }
+local dbmModule = {
+    id = "2888",
+    encounterId = 3470,
+}
 _G.DBM = {
     Options = { IgnoreBlizzAPI = false },
-    Mods = {},
+    Mods = { dbmModule },
+    GetModByName = function(_, id)
+        if tostring(id) == dbmModule.id then return dbmModule end
+    end,
     RegisterCallback = function(_, name, callback) dbmCallbacks[name] = callback end,
     UnregisterCallback = function() end,
 }
@@ -47,6 +54,8 @@ bwMessages.BigWigs_StartBar(nil, module, 123, "Counted", 10, 456, false, 10, nil
 bwMessages.BigWigs_Timer(nil, module, 123, 10, 10, "Counted", 3, 456, false, true)
 assert(#started == 1 and started[1].data.count == 3)
 assert(started[1].data.nativeEventID == 77)
+assert(started[1].data.encounterID == 3420,
+    "BigWigs direct timers must carry their public encounter identity")
 
 bwMessages.BigWigs_Timer(nil, module, 124, 10, 10, "Uncounted", 0, 456, false, true)
 assert(#started == 2 and started[2].data.count == nil)
@@ -61,9 +70,16 @@ assert(started[3].data.nativeEventID == nil,
 local DBMProvider = ns:GetModule("Services.Providers.DBM")
 assert(DBMProvider:Start(sink) == true)
 dbmCallbacks.DBM_TimerBegin(nil, "dbm-count", "Counted", 10, 456, "cd", 123,
-    nil, nil, nil, false, "Counted", nil, 5, nil, nil, false, nil, true)
+    nil, "2888", nil, false, "Counted", nil, 5, nil, nil, false, nil, true)
 assert(#started == 4 and started[4].provider == "DBM")
 assert(started[4].data.count == 5,
     "DBM timerCount must survive provider normalization")
+assert(started[4].data.encounterID == 3470,
+    "DBM mod IDs must resolve through DBM module metadata to the real encounter ID")
 
-print("ok - DBM and BigWigs occurrence metadata is consumed safely")
+dbmCallbacks.DBM_TimerBegin(nil, "dbm-unknown", "Unknown module", 10, 456, "cd", 123,
+    nil, "not-loaded", nil, false, "Unknown module", nil, 6, nil, nil, false, nil, true)
+assert(#started == 5 and started[5].data.encounterID == nil,
+    "unknown DBM module IDs must remain unscoped instead of being mistaken for encounter IDs")
+
+print("ok - DBM and BigWigs occurrence metadata and encounter identity are consumed safely")
