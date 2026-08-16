@@ -46,6 +46,13 @@ for index, name in ipairs(Constants.PROVIDER_PRIORITY) do
     providerRank[name] = index
 end
 
+local function validProviderName(providerName)
+    return not Util.IsSecret(providerName)
+        and type(providerName) == "string"
+        and providerName ~= ""
+        and providers[providerName] ~= nil
+end
+
 local function timerID(providerName, sourceID)
     return providerName .. "|" .. tostring(sourceID)
 end
@@ -56,7 +63,9 @@ local function isFiniteNumber(value)
 end
 
 local function validSourceID(sourceID)
-    return not Util.IsSecret(sourceID) and (type(sourceID) == "string" or type(sourceID) == "number")
+    if Util.IsSecret(sourceID) then return false end
+    if type(sourceID) == "string" then return sourceID:match("%S") ~= nil end
+    return isFiniteNumber(sourceID)
 end
 
 local function publicValue(value)
@@ -82,13 +91,19 @@ local function countsConflict(first, second)
 end
 
 local function normalizePrecision(value, providerName, bridge)
-    value = publicValue(value)
-    bridge = publicValue(bridge)
+    if Util.IsSecret(value) or Util.IsSecret(bridge) then
+        return Constants.TimerPrecision.APPROXIMATE
+    end
+
     if value == Constants.TimerPrecision.NATIVE
         or value == Constants.TimerPrecision.EXACT
         or value == Constants.TimerPrecision.APPROXIMATE then
         return value
     end
+
+    -- Missing metadata keeps the established provider default. Explicitly
+    -- unknown metadata is uncertainty and must never silently become exact.
+    if value ~= nil then return Constants.TimerPrecision.APPROXIMATE end
     if bridge == "Blizzard" or providerName == "Blizzard" then
         return Constants.TimerPrecision.NATIVE
     end
@@ -186,7 +201,8 @@ end
 
 function TimelineService:IsActionable(timer)
     return timer ~= nil
-        and timer.precision ~= Constants.TimerPrecision.APPROXIMATE
+        and (timer.precision == Constants.TimerPrecision.EXACT
+            or timer.precision == Constants.TimerPrecision.NATIVE)
         and timer.faded ~= true
 end
 
@@ -475,7 +491,7 @@ function TimelineService:ProviderTimerStarted(providerName, sourceID, data)
     timer.duration = data.duration
     timer.nativeEventID = publicValue(data.nativeEventID)
     timer.bridge = publicValue(data.bridge)
-    timer.precision = normalizePrecision(data.precision, providerName, timer.bridge)
+    timer.precision = normalizePrecision(data.precision, providerName, data.bridge)
     timer.faded = data.faded == true
     timer.startedAt = now
     timer.expiration = now + data.duration
@@ -553,12 +569,13 @@ function TimelineService:ProviderTimerPaused(providerName, sourceID, paused)
 end
 
 function TimelineService:ProviderTimerStopped(providerName, sourceID)
-    if not validSourceID(sourceID) then return end
+    if not validProviderName(providerName) or not validSourceID(sourceID) then return end
     self.timers[timerID(providerName, sourceID)] = nil
     EventBus:Emit("TIMELINE_CHANGED")
 end
 
 function TimelineService:ProviderReset(providerName)
+    if not validProviderName(providerName) then return end
     local prefix = providerName .. "|"
     local changed = false
 
