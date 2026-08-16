@@ -42,6 +42,15 @@ assert(RaidLeadAssistDB.schemaVersion == 99 and RaidLeadAssistDB.selectedBossKey
     "newer persisted settings must not be rewritten by an older addon")
 
 RaidLeadAssistDB = {
+    schemaVersion = 5,
+    position = { point = "CENTER", relativePoint = "CENTER", x = 0 / 0, y = math.huge },
+}
+Database:Initialize()
+data = Database:Get()
+assert(data.position.point == "CENTER" and data.position.x == 0 and data.position.y == 40,
+    "non-finite saved frame coordinates must fail closed to the default position")
+
+RaidLeadAssistDB = {
     schemaVersion = 2,
     selectedBossKey = "nekzali",
     customMessages = {
@@ -70,4 +79,4 @@ data = Database:Get()
 assert(data.schemaVersion == 5 and data.automaticTimingEnabled == false,
     "schema 4 must preserve an explicit timing preference while migrating to schema 5")
 
-print("ok - util/database secret, schema, difficulty, assignment, and timing migration guards")
+print("ok - util/database secret, schema, difficulty, assignment, timing, and finite-position guards")
