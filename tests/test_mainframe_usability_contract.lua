@@ -14,8 +14,10 @@ local function contains(text, needle)
 end
 
 -- Primary utility controls should not be smaller than the project's compact 24px-equivalent target.
-assert(contains(mainEnhancements, 'self.settingsButton:SetSize(62, 26)'),
+assert(contains(mainEnhancements, 'settingsButton:SetSize(62, 26)'),
     "Settings control should use an easier compact hit target")
+assert(contains(mainEnhancements, 'self.frame.settingsButton'),
+    "Main-frame enhancement must target the settings button where MainFrame actually owns it")
 
 -- The plan action is only valid before the pull; its label should say so before users click it.
 assert(contains(mainEnhancements, 'SetText("SEND PRE-PULL PLAN")'),
