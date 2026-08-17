@@ -45,7 +45,7 @@ local function applyStyle(button, hover)
     end
 end
 
-function ActionButton:Create(parent, options)
+function ActionButton.Create(_, parent, options)
     options = options or {}
     local button = CreateFrame("Button", nil, parent, "BackdropTemplate")
     button:SetSize(options.width or 100, options.height or 30)
