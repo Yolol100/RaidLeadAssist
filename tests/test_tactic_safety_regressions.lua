@@ -52,7 +52,7 @@ for _, difficulty in ipairs({ "normal", "heroic", "mythic" }) do
         "Twin Fangs needs a manual boss-health coordination call on every difficulty")
     assert(contains(profile.callsByKey.balance.warning, "KEEP BOTH EVEN"),
         "Twin Fangs boss-health button must give only the immediate balancing action")
-    assert(contains(text("twinfangs", difficulty), "FINISH TOGETHER"),
+    assert(contains(text("twinfangs", difficulty), "BOSSES TOGETHER"),
         "Twin Fangs briefing must explain the joint finish requirement")
 end
 
