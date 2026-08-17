@@ -1,11 +1,22 @@
 # Changelog
 
+## 0.9.0-beta.37 — 2026-08-17
+
+- Expand the permanent acceptance model from 58 to 160 checks covering product scope, repository structure, module/load-order integrity, Midnight combat boundaries, tactics, providers, reconciliation, assignments, UI/accessibility, data recovery, security, privacy, supply chain, release and live operations.
+- Add a blocking repository audit for path portability, UTF-8/LF hygiene, committed-secret signatures, module dependency order, approved App patch surface, forbidden combat-automation APIs, workflow trigger/injection risks, full-SHA action pinning and behavioral-test inventory.
+- Add `ARCHITECTURE.md`, `AUDIT_SOURCES.md`, `LIVE_TEST_MATRIX.md`, `PRIVACY.md` and `CONTRIBUTING.md` so every subsystem has documented ownership, lifecycle, purpose, evidence boundary and current source provenance.
+- Add `.editorconfig` and `.gitattributes` to keep future source encoding/line endings deterministic across platforms.
+- Remove the stale `Core/App.lua` Luacheck exception; keep only the documented BigWigs provider exception.
+- Recheck current stable bossmod releases: DBM remains `12.1.3` and BigWigs remains `v419.2` at this audit.
+- Keep the single `AssignmentIntegration` App extension explicit and machine-locked instead of allowing additional runtime monkey patches to appear silently.
+- Correct the beta.36 historical wording: there are no open pull requests, while owner/admin governance work is tracked in issue #14; no claim is made that the repository has zero open issues.
+
 ## 0.9.0-beta.36 — 2026-08-17
 
 - Correct release-governance wording: GitHub currently reports releases as mutable (`immutable: false`), so RLA no longer claims native GitHub release immutability.
 - Keep the stronger property that CI actually enforces: a version tag is locked to one validated main SHA, and reusing that version for a different SHA fails the release job.
 - Preserve verified ZIP/checksum release assets and provenance while keeping repository-admin release mutability explicit.
-- Confirm there are no open pull requests, no open issues, no repository rulesets, and no repository-wide TODO/FIXME/HACK/XXX markers at this release boundary.
+- Confirm there are no open pull requests at this release boundary; owner/admin follow-up is tracked separately and first-party runtime code remains free of TODO/FIXME/HACK/XXX development markers.
 
 ## 0.9.0-beta.35 — 2026-08-17
 
