@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.0-beta.38 — 2026-08-17
+
+- Make the distributable addon ZIP strictly runtime-only: `RaidLeadAssist.toc` plus the exact Lua files listed by the TOC.
+- Remove `README.md` from the shipped addon package; documentation, tests, audit scripts and GitHub maintenance files remain source-repository assets only.
+- Keep all current runtime modules because the TOC/module-order audit confirms they are part of the active load graph; no runtime file is deleted merely to reduce repository size.
+- Preserve the full CI/audit/test suite in source control so release cleanup does not weaken verification or future maintenance.
+
 ## 0.9.0-beta.37 — 2026-08-17
 
 - Expand the permanent acceptance model from 58 to 160 checks covering product scope, repository structure, module/load-order integrity, Midnight combat boundaries, tactics, providers, reconciliation, assignments, UI/accessibility, data recovery, security, privacy, supply chain, release and live operations.
