@@ -4,6 +4,7 @@ local ns = T.NewNamespace()
 local idleLabel = nil
 local timerShown = false
 local nextTimerCalls = 0
+local actionableTimerCalls = 0
 local automaticTimingEnabled = true
 local activeProfile = {
     calls = {
@@ -28,7 +29,10 @@ end
 function Registry:Get() return { strategyStatus = "test" } end
 
 local Timeline = { timers = {} }
-function Timeline:GetActionableTimerForCall() return nil end
+function Timeline:GetActionableTimerForCall()
+    actionableTimerCalls = actionableTimerCalls + 1
+    return nil
+end
 function Timeline:GetNextActionableTimer() return nil end
 function Timeline:GetNextTimer()
     nextTimerCalls = nextTimerCalls + 1
@@ -99,10 +103,12 @@ App.visualCalledUntil = {}
 App.manualLockUntil = {}
 App.audioStates = {}
 
--- A manual-only profile must advertise that state without consulting stale provider timers.
+-- A manual-only profile must advertise that state without consulting provider timers.
 App:UpdateTiming()
 assert(idleLabel == "MANUAL CALLS ONLY",
     "manual-only profile must override stale/provider timing presentation")
+assert(actionableTimerCalls == 0,
+    "manual-only profile must not query per-call actionable timers")
 assert(nextTimerCalls == 0,
     "manual-only profile should not query a provider timer it cannot act on")
 
@@ -115,17 +121,21 @@ activeProfile = {
 activeProfile.callsByKey = { automatic = activeProfile.calls[1] }
 idleLabel = nil
 timerShown = false
+actionableTimerCalls = 0
 App:UpdateTiming()
 assert(timerShown == true, "automatic profile must preserve normal timer presentation")
+assert(actionableTimerCalls == 1, "automatic profile must query its actionable timer")
 assert(nextTimerCalls == 1, "automatic profile must query the normal timer path")
 
 -- Explicit user disablement takes precedence over profile capability.
 App.db.automaticTimingEnabled = false
 idleLabel = nil
 timerShown = false
+actionableTimerCalls = 0
 App:UpdateTiming()
 assert(idleLabel == "AUTO TIMING OFF",
     "user-disabled automatic timing must remain explicit")
 assert(timerShown == false, "user-disabled timing must not leave a timer visible")
+assert(actionableTimerCalls == 0, "user-disabled timing must not query actionable timers")
 
-print("ok - canonical App timing status enforces manual-only and user-disabled states")
+print("ok - canonical App timing status isolates manual-only and user-disabled profiles from provider lookups")
