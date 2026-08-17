@@ -46,4 +46,5 @@ UI/AssignmentLaunchers.lua
 UI/SettingsFrame.lua
 UI/MainFrame.lua
 Core/App.lua
+Core/AssignmentIntegration.lua
 Core/ProviderRecoveryIntegration.lua

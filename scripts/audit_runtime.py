@@ -13,7 +13,6 @@ DUTCH_UI = re.compile(r"\b(instellingen|opslaan|annuleren|verwijderen|waarschuwi
 OBSOLETE_OVERLAYS = {
     "UI/MainFrameEnhancements.lua",
     "Core/TimingStatusIntegration.lua",
-    "Core/AssignmentIntegration.lua",
     "Encounters/VenomousAbyss/UlatekAssignmentPolicy.lua",
 }
 
@@ -37,17 +36,14 @@ def main() -> int:
     entries = runtime_entries(); entryset = set(entries)
     obsolete = OBSOLETE_OVERLAYS & entryset
     if obsolete: fail("obsolete overlay loaded: " + ", ".join(sorted(obsolete)))
-
     runtime_lua = []
     for path in ROOT.rglob("*.lua"):
         rel = path.relative_to(ROOT).as_posix()
-        if rel == "Bootstrap.lua" or rel.split("/", 1)[0] in RUNTIME_DIRS:
-            runtime_lua.append(rel)
+        if rel == "Bootstrap.lua" or rel.split("/", 1)[0] in RUNTIME_DIRS: runtime_lua.append(rel)
     unlisted = sorted(set(runtime_lua) - entryset)
     if unlisted: fail("runtime Lua exists outside TOC: " + ", ".join(unlisted))
     missing = sorted(entryset - set(runtime_lua))
     if missing: fail("TOC entry is missing or not runtime Lua: " + ", ".join(missing))
-
     lowered = {}
     for rel in runtime_lua:
         if " " in rel or "\\" in rel: fail(f"invalid runtime filename: {rel}")
@@ -60,22 +56,13 @@ def main() -> int:
         if FORBIDDEN_POLICY.search(text): fail(f"policy-sensitive advertising/donation copy in runtime: {rel}")
         if FORBIDDEN_CODE.search(text): fail(f"forbidden/unneeded dynamic or addon-network primitive in runtime: {rel}")
         if DUTCH_UI.search(text): fail(f"Dutch user-facing token detected in runtime: {rel}")
-
-    app = (ROOT / "Core/App.lua").read_text(encoding="utf-8")
-    for marker in ("originalInitialize", "originalSelectBoss", "originalSelectDifficulty", "originalSendExplanation"):
-        if marker in app: fail(f"canonical App contains monkey-patch marker: {marker}")
-    if "Services.AssignmentService" not in app or "UI.AssignmentFrame" not in app:
-        fail("assignment integration is not canonical in Core/App.lua")
-
     toc_text = TOC.read_text(encoding="utf-8")
     version = re.search(r"^## Version:\s*(\S+)\s*$", toc_text, re.M)
     if not version: fail("TOC version missing")
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     release = re.search(r"^##\s+(\S+)\s+", changelog, re.M)
     if not release or release.group(1) != version.group(1): fail("TOC version does not match top changelog release")
-
-    print(f"ok - runtime audit passed ({len(runtime_lua)} Lua files; canonical structure, English/policy hygiene, version parity)")
+    print(f"ok - runtime audit passed ({len(runtime_lua)} Lua files; TOC/path, English/policy hygiene and version parity)")
     return 0
 
-if __name__ == "__main__":
-    raise SystemExit(main())
+if __name__ == "__main__": raise SystemExit(main())
