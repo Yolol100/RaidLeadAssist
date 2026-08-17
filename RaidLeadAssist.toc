@@ -29,7 +29,7 @@ Services/RosterService.lua
 Services/AssignmentService.lua
 Services/Providers/BigWigsProvider.lua
 Services/Providers/DBMProvider.lua
-Services/BlizzardProvider.lua
+Services/Providers/BlizzardProvider.lua
 Services/TimelineService.lua
 Services/EncounterService.lua
 UI/Theme.lua
