@@ -11,7 +11,6 @@ from pathlib import Path, PurePosixPath
 
 ADDON_ROOT = "RaidLeadAssist"
 TOC_NAME = "RaidLeadAssist.toc"
-README_NAME = "README.md"
 FIXED_ZIP_TIME = (1980, 1, 1, 0, 0, 0)
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -53,10 +52,6 @@ def runtime_files() -> list[str]:
             fail(f"runtime entry is missing or not a regular file: {relative}")
         seen.add(relative)
         result.append(relative)
-
-    readme = ROOT / README_NAME
-    if readme.is_file() and not readme.is_symlink():
-        result.append(README_NAME)
     return result
 
 
