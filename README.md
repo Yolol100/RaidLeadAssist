@@ -1,92 +1,111 @@
 # Raid Lead Assist
 
-Raid Lead Assist is a raid-leader callout panel for The Venomous Abyss with separate Normal, Heroic, and Mythic strategy profiles.
+Raid Lead Assist (RLA) is a raid-leader callout panel for **The Venomous Abyss** with separate Normal, Heroic, and Mythic strategy profiles. It provides pre-pull plans, boss-specific assignments, manual Raid Warning buttons, optional PREPARE/PRESS timing state, and TTS/sound feedback.
 
-The main panel has three difficulty tabs. Each tab can define its own pre-pull raid plan, combat call buttons, Raid Warning text, timer identities, optional per-call PREPARE/PRESS windows, and boss-specific assignments. Outside combat the raid leader can switch freely. When a supported encounter starts, the panel automatically selects and locks to the actual Normal, Heroic, or Mythic difficulty so calls cannot accidentally come from the wrong profile. Manual difficulty and boss changes are blocked during the active encounter; automatic encounter selection remains allowed.
+The addon is intentionally fail-closed: uncertain encounter identity, unsupported difficulty, malformed or secret timing values, stale cross-encounter state, or incomplete provider data must disable automatic decisions rather than reuse an old profile.
 
-Active encounter calls fail closed. During a pull, Raid Lead Assist verifies that the detected boss, selected boss profile, live difficulty, and selected Normal/Heroic/Mythic profile all agree before a manual combat Raid Warning can be sent. If the encounter is unknown, the difficulty is unsupported, or the active boss/profile state is stale or mismatched, automatic timing is idled and manual raid-plan/combat-call controls are disabled instead of reusing a previous profile. The Boss Plan is pre-pull only and is disabled during every active encounter; verified combat-call buttons remain available during a supported pull.
+## Encounter and difficulty safety
 
-If `/reload` happens during a supported pull, RLA remains fail closed until the boss is re-verified. BigWigs `BigWigs_OnBossEngageMidEncounter` and DBM `DBM_Pull`/timer-recovery signals can provide the encounter-ID hint, but RLA only accepts it when WoW independently confirms that an encounter is currently active in The Venomous Abyss and that the live difficulty is Normal, Heroic, or Mythic. A bossmod hint by itself can never select or unlock a raid profile.
+RLA supports eight Venomous Abyss encounters and 24 Normal/Heroic/Mythic profiles. During a supported live encounter, the actual encounter and difficulty select and lock the active profile. Manual boss/difficulty changes are blocked until the encounter ends.
+
+Unknown encounters, unsupported difficulties, or stale/mismatched selected state idle automatic timing and disable combat-call controls. The pre-pull plan cannot be sent during an active encounter.
+
+A `/reload` during a pull remains fail-closed until WoW independently confirms that an encounter is active in The Venomous Abyss. DBM/BigWigs may provide a recovery hint, but a bossmod hint alone cannot select or unlock a profile.
 
 ## Boss assignments
 
-Assignments are configured before combat through the `ASSIGN` launcher on the main panel, the `ASSIGNMENTS` button in Settings, or `/rla assignments`. The editor is intentionally encounter-specific: each boss and difficulty shows only the blocks its tactic needs.
+Assignments are configured before combat through `ASSIGN`, Settings, or `/rla assignments`. Layouts are boss- and difficulty-specific and use typed fields:
 
-Assignment fields have tactic semantics instead of one generic input model:
+- **PLAYER/GROUP** — fixed players or teams, with current-roster selection.
+- **ROTATION** — ordered players/teams that advance only after the matching successful manual call.
+- **RULE** — pre-pull movement/position logic for mechanics with dynamic live targets.
+- **SEQUENCE** — tactic order that is not a roster selection.
 
-- **PLAYER/GROUP** selects fixed players or teams and exposes the current-roster picker.
-- **ROTATION** selects ordered players/teams and advances only when the matching manual call succeeds.
-- **RULE** stores a pre-pull movement/position rule for mechanics whose live target is dynamic.
-- **SEQUENCE** stores tactic order such as Vashnik's Blood/Shadow/Flame fountain combinations and does not expose a roster picker.
+Saved values are isolated per boss and difficulty. Roster fields reject duplicate names case-insensitively. Required simultaneous/rotating slots reject invalid overlap. Hard tactic constraints are validated before save/announce, including four-player Helical Toxin groups, 5+ Mutilate/Guillotine soak teams, and 3+ players per Ravenous Feast hit.
 
-The roster picker reads the current party or raid roster and lets the raid leader select individual names or quickly toggle a complete current raid subgroup with G1-G8. Saved values are isolated by boss and difficulty. Roster-like fields reject duplicate names case-insensitively, and mechanics that require distinct simultaneous or rotating coverage reject overlap between their configured slots. Hard group-size requirements are validated before saving: Helical Toxin groups require exactly four unique players, Mutilate and Guillotine soak teams require at least five, and every Ravenous Feast hit requires at least three.
-
-`CLEAR DRAFT` only clears the visible draft; nothing is deleted until the raid leader explicitly saves. Closing the editor or switching boss/difficulty with unsaved work uses the same Save / Discard / Cancel recovery pattern as Settings. `ANNOUNCE` remains disabled until required fields are complete and the whole draft passes size, duplicate, overlap, and tactic validation.
-
-`ANNOUNCE` sends the filled assignment plan as pre-pull Raid Warnings. During combat, manual call buttons remain raid-leader controlled; when a call has a configured fixed assignment or rotation, Raid Lead Assist appends the relevant player/group text only if the complete combined Raid Warning fits. If assignment detail would exceed the warning limit, RLA sends the complete base call instead of a misleading partial assignment and tells the raid leader to use the pre-pull announcement for the full plan. Rotation counters reset between pulls and when the selected boss or difficulty changes. Raid Lead Assist does not inspect protected combat state to choose a player or alter the pre-pull plan.
-
-Assignment editing is blocked during an active encounter and during combat. The assignment window scales down on smaller UI canvases while keeping its internal layout stable, Tab / Shift-Tab moves between assignment fields, invalid fields receive an error border, and RULE/SEQUENCE helper text is available as an input tooltip.
-
-Settings edits are bound to the currently selected difficulty. While Settings is open, manual difficulty changes are blocked so an in-progress Raid Warning draft cannot silently move between Normal, Heroic, and Mythic. Encounter-start difficulty selection is still allowed and closes/discards an open draft through the existing encounter safety path.
-
-Existing custom Raid Warning text from the previous Heroic-only schema migrates into the Heroic profile. Normal and Mythic customizations are stored separately. Schema 4 added isolated assignment storage; schema 5 adds a persistent automatic-timing master switch without changing existing message or assignment data.
+`CLEAR DRAFT` changes only the unsaved draft. `ANNOUNCE` stays disabled until the complete draft is valid. Combat-call assignment text is all-or-nothing: if the base call plus assignment would exceed the warning limit, RLA sends the intact base call instead of a misleading partial assignment.
 
 ## Timer sources
 
-Raid Lead Assist listens to DBM, BigWigs, and Blizzard's Encounter Timeline. Exact bossmod bars and native Blizzard events can drive PREPARE/PRESS states. When multiple equally precise direct representations describe the same occurrence, RLA prefers **DBM**, then BigWigs, then Blizzard. Provider activation follows that same deterministic DBM → BigWigs → Blizzard order during initial load and load-on-demand recovery. BigWigs bars explicitly marked approximate are retained as timeline previews but do not trigger exact button states or TTS prompts unless an exact/native timer source is also available for that occurrence.
+RLA can consume **DBM**, **BigWigs**, and Blizzard's Encounter Timeline. Among equally precise usable representations it prefers:
 
-BigWigs integration uses `BigWigs_Timer` for regular direct boss-module timers and `BigWigs_CastTimer` for boss cast bars. Direct timers are accepted only from real boss modules with a public encounter ID, and that encounter ID must match the currently selected verified RLA encounter. Recent direct timers with a different explicit encounter ID are discarded during preserved `/reload` remapping instead of being reinterpreted under another boss profile. BigWigs API/test bars, wipe/respawn bars, statistics bars and keystone-tool timers cannot become RLA boss calls. The nil-module `BigWigs_StartBar` shape remains supported separately for BigWigs' Blizzard Encounter Timeline bridge. For real boss bars, RLA also consumes BigWigs' immediately preceding public timeline event ID as one-shot metadata for the matching direct timer, improving native cross-provider occurrence matching without creating a duplicate StartBar timer. RLA respects BigWigs' `isApproximate` and `isBarEnabled` values instead of silently upgrading approximate or disabled bars into exact calls.
+1. DBM
+2. BigWigs
+3. Blizzard
 
-DBM integration consumes `DBM_TimerBegin`, update, stop, pause, resume and fade callbacks. DBM's public TimerBegin module ID is resolved through DBM's loaded module metadata to the real encounter ID before RLA stores a direct timer; a resolved explicit encounter ID must match the selected RLA encounter. Disabled and variable DBM timers are not accepted as RLA calls. A faded DBM timer is retained with its original expiration and occurrence identity but becomes temporarily non-actionable; if DBM unfades that same bar, RLA restores actionability without treating it as a new mechanic or replaying already-fired PREPARE/PRESS audio. If another exact/native representation exists while the DBM bar is faded, RLA may temporarily use that fallback and returns to DBM when the same bar becomes actionable again.
+Exact/native sources may drive PREPARE/PRESS/TTS. Approximate BigWigs bars remain previews and are not silently promoted to actionable exact timers.
 
-When DBM explicitly publishes `DBM_IgnoreBlizzAPI`, RLA removes and temporarily rejects native Blizzard timers and BigWigs' Blizzard-bridge representations while preserving direct DBM and direct BigWigs boss-module timers. DBM authority is conditional on DBM actually being able to emit its public boss-timer callbacks: if `HideDBMBars` or `DontShowBossTimers` disables that feed, RLA yields to Blizzard-derived timing. This authority is revalidated without a background polling loop: a native Blizzard timer rechecks DBM before it can be suppressed, and a new direct DBM timer rechecks authority before being accepted. `DBM_ResumeBlizzAPI` restores native Blizzard seeding. This follows DBM's own hardcoded-timer/fallback authority rather than hard-coding a boss or difficulty assumption inside RLA.
+Provider data is treated as untrusted runtime input. RLA rejects or downgrades secret/malformed durations, identities, metadata, precision and authority state. Explicit encounter identity from a direct bossmod source must match the verified active RLA encounter.
 
-Cross-provider timers for the same call are clustered by native event identity when possible and otherwise by a bounded end-time tolerance. DBM `timerCount` and BigWigs `counter` values are kept as occurrence metadata: conflicting explicit counts prevent an accidental merge, while a shared native Blizzard event ID remains the stronger identity. A manual call acknowledges the clustered occurrence and keeps a short acknowledgement memory so a late second provider cannot immediately re-arm the same mechanic. Provider timer updates keep the original occurrence identity, so DBM timer corrections cannot replay PREPARE/PRESS audio as if a new mechanic had appeared. A pause callback received only after an old timer has already reached zero is treated as stale cleanup rather than reviving that expired occurrence; reuse of the same bossmod timer ID can therefore start a fresh occurrence instead of inheriting an old acknowledgement.
+### DBM
 
-The active timeline label shows whether the selected representation currently comes from DBM, BigWigs, Blizzard, or the BigWigs/Blizzard bridge. Settings and `/rla provider` distinguish the bossmod core from the The Venomous Abyss/Midnight raid content pack, report whether DBM currently suppresses Blizzard-derived timers, flag a loaded DBM core whose public boss-timer feed is disabled, and summarize the currently active timer paths and how many of those timers match an RLA call. Timing readiness is based on usable sources rather than merely loaded provider cores: a direct bossmod source needs its target raid pack, DBM must be able to emit boss timers, and native Blizzard must not currently be suppressed. `/rla doctor` also prints the DBM 12.1.3 and BigWigs v419.2 callback-contract baselines used by this release so a version drift is visible next to the detected addon versions without hard-blocking newer bossmods.
+RLA consumes public DBM timer begin/update/stop/pause/resume/fade callbacks, resolves module identity to encounter identity, rejects disabled/variable timers, preserves occurrence identity through timer corrections, and respects DBM's explicit Blizzard-timeline authority handoff. A faded timer becomes non-actionable without becoming a new occurrence when it returns.
 
-The provider adapters and TimelineService fail closed on Midnight secret values and malformed provider metadata. Secret timer durations, update values, identities, metadata, encounter IDs, and control state are not retained or used for call decisions. Explicitly unknown or secret timer precision is downgraded to approximate/non-actionable instead of silently becoming exact. Timer IDs must be finite or nonblank, and explicit fade, pause, and provider-authority state must be real booleans rather than relying on Lua truthiness. Blizzard Encounter Timeline entries whose source is not the live encounter source are ignored, so Edit Mode/test timeline events are not treated as live raid mechanics.
+The release-contract baseline remains **DBM 12.1.3**. Upstream source fingerprints are separately tracked so post-release `master` changes are not mistaken for the tested release contract.
 
-Bossmod text is treated as presentation data, not strategy authority. RLA may use public spell IDs, encounter IDs, timer/event IDs and canonical mechanic names from DBM, BigWigs or Blizzard to identify the mechanic, but it does not copy localized bossmod warning strings into its strategy buttons. Button titles stay on canonical mechanic names and the action/warning text is independently authored as a short raid-leader instruction. This avoids duplicating per-player bossmod alerts and keeps localized wording drift from changing RLA strategy semantics.
+### BigWigs
 
-Ula'tek remains manual-timing only until its RLA call set has complete, stable and live-validated public timer coverage. The 2026-08-16 source review found useful current BigWigs next-raid mechanic/custom-timer hooks and partial DBM coverage, but not enough validated coverage to infer a complete exact call schedule. The difficulty plans therefore use current Encounter Journal/guide mechanics without pretending their timings are known. Heroic no longer inherits Mythic-only Soul Constrictor or Mass Gestation logic; Mythic keeps the alternating Spectral Coil groups and Mass Gestation handling. Grasping Fangs is called on Heroic/Mythic, with one-at-a-time breaks on Mythic because Blight Vein becomes raid-wide and stacks. Serpent's Bite is now a manual coordination call on all three difficulties, with Mythic additionally warning for the Caustic Waves created by Volatile Purge. These plans are still pre-release and do not claim live raid validation.
+RLA handles direct `BigWigs_Timer`/`BigWigs_CastTimer` boss bars separately from the nil-module Blizzard Timeline bridge. Test/statistics/keystone/non-boss timers cannot become encounter calls. Direct event/counter metadata is used only when its public shape is valid and encounter-scoped.
 
-The Coiled Altar is encounter-ID 3429. RLA also accepts the `The Bargained Crown` encounter-name alias used by BigWigs v419.2 as a fallback, while encounter-ID matching remains authoritative.
+The release-contract baseline remains **BigWigs v419.2**. Current `master` source is fingerprinted independently.
 
-### Operational controls
+### Cross-provider occurrence handling
 
-Automatic timing is independently controllable with the `AUTO ON/OFF` Settings button or `/rla timing on|off`. Turning automatic timing off idles timer-driven PREPARE/PRESS state and TTS while leaving the raid plan, manual call buttons, assignments, and Raid Warning text fully usable. The timeline explicitly says `AUTO TIMING OFF` when the user disables it and `MANUAL CALLS ONLY` for a profile such as Ula'tek that intentionally has no automatic call timings, so an intentional state cannot be mistaken for a broken integration. Encounter safety remains a separate gate: turning the user switch on can never override an unknown boss, unsupported difficulty, or other fail-closed encounter state.
+Representations are clustered by native event identity when possible and otherwise by bounded end-time tolerance. Explicit conflicting occurrence counts prevent accidental merges. A successful manual call acknowledges the clustered occurrence so a late second provider cannot immediately re-arm it. Updates preserve the original occurrence identity to prevent duplicate PREPARE/PRESS audio.
 
-The main panel keeps one linear raid-leader workflow: boss, difficulty, timeline, pre-pull plan, then combat calls. The visible plan action is labelled `SEND PRE-PULL PLAN`, the compact Settings target is 26 pixels high, and the draggable header exposes its `Shift-drag` interaction in a tooltip instead of hiding that behavior.
+## Ula'tek status
 
-`/rla doctor` is a read-only pre-pull readiness check. It reports SavedVariables schema compatibility, selected boss/difficulty, raid/encounter verification, Raid Warning permission, automatic-timing user/runtime state, TTS or sound-fallback readiness, bossmod/core-pack versions, the callback-contract baseline, currently active/matched timer paths, and the encounter strategy validation note. Its timing readiness check requires at least one currently usable source; a loaded but unusable bossmod core is not enough. `/rla provider` prints the provider diagnostics plus the active timer-path subset.
+Ula'tek is deliberately **manual-only** on every supported difficulty. All Ula'tek calls keep `timing=false` until public provider coverage is complete, stable, and observed in the live Retail encounter.
 
-## Encounter-data policy
+The source review was refreshed on **2026-08-17** after DBM added Ula'tek drycode. The current DBM module now contains timeline mappings and more mechanic coverage, but it still includes TODO/placeholder work and does not constitute a live-validated exact schedule. Current BigWigs source still uses Blizzard Timeline-backed backup bars for unmatched Ula'tek events. Neither change is sufficient to enable automatic RLA timing.
 
-Encounter strategy text is sourced from current Patch 12.1 PTR/Encounter Journal material and remains subject to live tuning. Raid Lead Assist avoids hard-coding volatile PTR tuning thresholds when current source surfaces disagree; assignments focus on stable mechanic contracts such as minimum soak counts, mutually exclusive repeat-debuff groups, interrupt ownership, and pre-pull positioning rules. Live Retail validation remains the final oracle after the raid opens.
+RLA also keeps provider timer identity separate from display spell identity. Current DBM drycode uses `1299757` as its Toxic Incubation timer/warning key; the RLA Toxic Incubation display spell identity remains `1299759`. Regression coverage prevents a provider-specific key from silently replacing the UI mechanic identity.
+
+The Ula'tek plans remain pre-release and do not claim live raid validation. Heroic does not inherit Mythic-only Soul Constrictor/Mass Gestation handling; Mythic retains its dedicated Coil/egg/incubation assignment logic pending live confirmation.
+
+## Operational controls
+
+- `/rla timing on|off` or Settings `AUTO ON/OFF` toggles automatic timing without disabling manual plans/calls/assignments.
+- `AUTO TIMING OFF` means the user disabled automatic timing.
+- `MANUAL CALLS ONLY` means the selected profile intentionally has no automatic call timing.
+- `/rla doctor` is a read-only readiness diagnostic for SavedVariables, encounter/difficulty state, Raid Warning permission, timing state, TTS fallback, provider/core-pack status and strategy evidence.
+- `/rla provider` shows provider diagnostics and active timer paths.
+
+## SavedVariables
+
+`RaidLeadAssistDB` currently uses schema 5. Existing Heroic-only custom messages migrate into the Heroic profile; Normal/Mythic remain isolated. Assignment data is stored separately per boss/difficulty. Invalid types and invalid frame positions are normalized defensively. A database claiming a newer schema is preserved rather than blindly downgraded.
 
 ## Release package
 
-Build the distribution ZIP with:
+Build locally with:
 
 ```bash
 python3 scripts/build_release.py
 ```
 
-This creates `dist/RaidLeadAssist.zip` with one `RaidLeadAssist/` root containing only the TOC, every runtime file referenced by the TOC, and this README. The builder immediately reopens the ZIP, rejects unsafe/duplicate/unexpected paths, compares every packaged file byte-for-byte with the tested source, and prints the final SHA-256. Tests, `.github`, scripts, caches, and other development-only files are not part of the package.
+The builder creates `dist/RaidLeadAssist.zip` with one `RaidLeadAssist/` root containing only the TOC, TOC runtime files and this README. It rejects unsafe/duplicate/unexpected paths, reopens the ZIP, compares packaged bytes to source and prints SHA-256.
 
-An existing package can be rechecked with:
+CI additionally builds the ZIP **twice** and requires byte-identical output. Successful `main` pushes retain the verified ZIP/checksum artifact for **90 days**. A separate least-privilege provenance job downloads that exact artifact and generates a signed GitHub/Sigstore build-provenance attestation for the ZIP.
 
-```bash
-python3 scripts/build_release.py --output dist/RaidLeadAssist.zip --verify-only
-```
+## Upstream drift control
 
-On successful pushes to `main`, GitHub Actions retains the byte-verified `RaidLeadAssist.zip` together with a `RaidLeadAssist.zip.sha256` checksum as an immutable workflow artifact for 14 days. This keeps the downloadable package tied to the exact commit that passed validation rather than requiring a separate unverified local build.
+`docs/UPSTREAM_BASELINES.json` records the reviewed DBM/BigWigs release commits plus fingerprints for callback-critical and Ula'tek source files. `scripts/check_upstream_drift.py` validates the schema in normal CI. The scheduled `Check upstream drift` workflow compares the recorded baselines against current upstream GitHub state and fails when a watched release or source file changes.
 
-## Validation
+A drift failure is a **review trigger**, not permission to copy new upstream IDs/timers into RLA automatically. Re-review the affected provider contract/encounter data, update regressions, then deliberately advance the baseline.
 
-GitHub Actions compile every Lua file with Lua 5.1, verify the active TOC inventory, and run focused behavioral regressions for saved-variable schema safety, difficulty-profile isolation, boss-specific typed assignment layouts, duplicate/overlap and hard group-size validation, all-or-nothing assignment call composition, assignment rotation reset, assignment-to-encounter call bindings, Settings difficulty locking, active-encounter boss/difficulty locking, fail-closed manual-call context, pre-pull Boss Plan lifecycle, verified mid-pull encounter recovery, confirmation-dialog cancellation, Midnight secret-value handling at both adapter and service boundaries, Blizzard Encounter Timeline invalid-event races, exact BigWigs v419.2 and DBM 12.1.3 callback shapes, direct bossmod encounter-ID propagation/isolation, deterministic provider startup, BigWigs direct event-ID enrichment and `BigWigs_CastTimer` coverage, non-boss BigWigs timer rejection, DBM fade/unfade lifecycle with occurrence/acknowledgement preservation, DBM-first provider selection with exact fallbacks, DBM Blizzard-authority self-reconciliation, loaded-versus-usable provider diagnostics, provider precision, stable timer occurrence identity across provider updates, multi-provider timer selection/deduplication, late-provider acknowledgement, per-call timing boundaries, the automatic-timing master switch, encounter-registry identity validation, raid-warning pre-pull cancellation, encounter-name aliases, all 24 Normal/Heroic/Mythic encounter plans, Ula'tek difficulty-source separation, and the main raid-leader usability-state contract.
+## Validation and release gate
 
-The validation suite also includes adversarial/state-machine evals rather than only isolated happy paths. A deterministic mixed-event run executes 50,000 timer-state transitions across DBM, BigWigs and Blizzard representations while repeatedly starting, updating, pausing, resuming, fading, stopping, acknowledging and switching encounters. Invariants continuously verify finite expirations, closed precision states, encounter isolation and actionable-selection safety. Separate malformed-input matrices probe secret/unknown precision, invalid durations and timer identities, non-boolean control data and invalid provider identities, while a targeted lifecycle regression verifies that an expired late pause cannot suppress a newly reused timer ID. CI then builds and byte-verifies the exact clean release ZIP inventory before retaining the verified main-branch artifact.
+Every push/PR runs:
 
-These automated checks are source and controlled-runtime evidence. They do not replace a live Retail raid-leader usability pass, keyboard/gamepad verification in the WoW client, or live combat tests with current Blizzard timelines, BigWigs, and DBM present.
+- baseline/tooling validation;
+- Lua 5.1 compile checks for every Lua file;
+- TOC source inventory validation;
+- every `tests/test_*.lua` behavioral/adversarial regression;
+- deterministic double-build release-ZIP verification;
+- SHA-256 generation.
+
+`main` pushes additionally upload the verified artifact and, after the validation job succeeds, create provenance using a separate job with only the permissions needed for attestation.
+
+The full audit is maintained in [`docs/TEN_OF_TEN_ACCEPTANCE.md`](docs/TEN_OF_TEN_ACCEPTANCE.md). It covers 58 platform, encounter-data, provider, state, chat/audio, SavedVariables, UI/accessibility, taint/performance, packaging, security and governance checks.
+
+Automated source/controlled-runtime evidence does **not** prove live WoW behavior. Final product acceptance still requires real Retail-client tests for raid pulls, provider combinations, `/reload` recovery, taint, CPU/frame-time, memory stability, UI scaling/accessibility and post-hotfix tactic/timer accuracy. Until those rows have matching live evidence, RLA must not claim a full live 10/10.

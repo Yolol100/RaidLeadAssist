@@ -1,0 +1,20 @@
+name: Check upstream drift
+
+on:
+  schedule:
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  upstream-drift:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Compare audited provider baselines
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/check_upstream_drift.py --online

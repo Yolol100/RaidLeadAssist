@@ -72,21 +72,25 @@ end
 assert(contains(mythic.callsByKey.bite.warning, "WAVES"),
     "Mythic Serpent's Bite should warn that Volatile Purge creates Caustic Waves")
 
--- Manual-call icons must identify the mechanic they label, not unrelated timeline events.
+-- Manual-call icons must identify the mechanic they label, not unrelated timeline events
+-- or a provider-specific timer/warning key.
 assert(mythic.callsByKey.eggs.iconSpellID == 1299650,
     "Hardened Eggs must use the Hardened spell identity")
 assert(mythic.callsByKey.incubation.iconSpellID == 1299759,
-    "Toxic Incubation must use the Toxic Incubation spell identity")
+    "Toxic Incubation must use the Toxic Incubation display spell identity")
 assert(mythic.callsByKey.eggs.iconSpellID ~= 1292188,
     "Hardened Eggs must not reuse the Caustic Waves spell identity")
 assert(mythic.callsByKey.incubation.iconSpellID ~= 1302982,
     "Toxic Incubation must not reuse the Virulent Spit spell identity")
+assert(mythic.callsByKey.incubation.iconSpellID ~= 1299757,
+    "Toxic Incubation display identity must not be replaced with DBM's current provider timer key")
 
--- Ula'tek stays deliberately manual-only until public bossmod timing is complete and stable.
+-- Ula'tek stays deliberately manual-only until public bossmod timing is complete, stable,
+-- and observed in the live Retail encounter.
 for _, difficultyKey in ipairs({ "normal", "heroic", "mythic" }) do
     for _, call in ipairs(Registry:GetProfile("ulatek", difficultyKey).calls) do
         assert(call.timing == false, difficultyKey .. " Ula'tek call unexpectedly enabled automatic timing")
     end
 end
 
-print("ok - Ula'tek pre-release plan contract keeps difficulty mechanics, icon identities and manual calls current")
+print("ok - Ula'tek pre-release plan keeps difficulty rules, display identities and manual-only timing guarded")

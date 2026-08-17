@@ -14,6 +14,12 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: sudo apt-get update && sudo apt-get install -y lua5.1
+      - name: Validate audit tooling and baselines
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/build_release.py scripts/check_upstream_drift.py
+          python3 scripts/check_upstream_drift.py --validate-only
       - name: Compile Lua files
         shell: bash
         run: |
@@ -42,11 +48,14 @@ jobs:
             fi
             printf '%s\n' "$output"
           done
-      - name: Build and verify release ZIP
+      - name: Build and verify reproducible release ZIP
         shell: bash
         run: |
           set -euo pipefail
           python3 scripts/build_release.py --output dist/RaidLeadAssist.zip
+          python3 scripts/build_release.py --output dist/RaidLeadAssist.repeat.zip
+          cmp dist/RaidLeadAssist.zip dist/RaidLeadAssist.repeat.zip
+          rm dist/RaidLeadAssist.repeat.zip
           sha256sum dist/RaidLeadAssist.zip > dist/RaidLeadAssist.zip.sha256
       - name: Upload verified release artifact
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -57,5 +66,26 @@ jobs:
             dist/RaidLeadAssist.zip
             dist/RaidLeadAssist.zip.sha256
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 90
           compression-level: 0
+
+  provenance:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+    steps:
+      - name: Download verified release artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: RaidLeadAssist-${{ github.sha }}
+          path: dist
+      - name: Attest verified release ZIP
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: dist/RaidLeadAssist.zip

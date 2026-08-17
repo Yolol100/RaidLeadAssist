@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-17",
+  "wowInterface": 120100,
+  "raidUnlock": {
+    "eu": "2026-08-19",
+    "scope": "Normal/Heroic/Mythic and Raid Finder Wing 1 open with the regional weekly reset; live RLA acceptance remains required"
+  },
+  "providers": [
+    {
+      "name": "DBM",
+      "repository": "DeadlyBossMods/DeadlyBossMods",
+      "releaseTag": "12.1.3",
+      "releaseCommit": "cfc88e9cec69d6891e4e033e156808d6826111bb",
+      "watchPaths": [
+        {
+          "ref": "master",
+          "path": "DBM-Core/modules/objects/Timer.lua",
+          "blobSha": "c8039ffb656fabcc2eb8a36c3a60643128487ba9",
+          "reason": "RLA consumes DBM timer callback contracts and authority state"
+        },
+        {
+          "ref": "master",
+          "path": "DBM-Raids-Midnight/TheVenomousAbyss/Ulatek.lua",
+          "blobSha": "12b7ef5eedff1cb590b77c3861fdbc86ac95948c",
+          "reason": "Ula'tek drycode/timeline coverage is still pre-live and must not silently enable automatic timing"
+        }
+      ]
+    },
+    {
+      "name": "BigWigs",
+      "repository": "BigWigsMods/BigWigs",
+      "releaseTag": "v419.2",
+      "releaseCommit": "e3e0d1e7df26c242e00dd7b30d5e1cc51b2bb9e5",
+      "watchPaths": [
+        {
+          "ref": "master",
+          "path": "Core/BossPrototype.lua",
+          "blobSha": "92b3d6158c875cf8fb6618956e2305a680aab2bc",
+          "reason": "RLA consumes BigWigs Timer/CastTimer/StartBar contracts"
+        },
+        {
+          "ref": "master",
+          "path": "TheVenomousAbyss/Ulatek.lua",
+          "blobSha": "cab4c11e2dc741742b9f51b15ed44c98e1a9ce63",
+          "reason": "Ula'tek currently relies on backup Blizzard timeline bars rather than a complete validated exact schedule"
+        }
+      ]
+    }
+  ]
+}

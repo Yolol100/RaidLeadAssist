@@ -17,6 +17,9 @@ local function calls(coilText, fangsText, includeSting, biteText, includeMythic)
     end
     if includeMythic then
         result[#result+1] = { key="eggs", ability="Hardened Eggs", action="Break shell > carriers spread 3+", warning="HARDENED EGGS > BREAK SHELL > CARRIERS SPREAD 3+ YARDS", voice="Eggs", timing=false, iconSpellID=1299650 }
+        -- Current DBM drycode keys its Toxic Incubation timer/warning with 1299757.
+        -- RLA deliberately keeps the mechanic's display spell identity separate from
+        -- provider timer keys; provider metadata must never silently rewrite UI identity.
         result[#result+1] = { key="incubation", ability="Toxic Incubation", action="Assigned intercepts rotate", warning="TOXIC INCUBATION > ASSIGNED INTERCEPTS ROTATE > DO NOT DOUBLE SOAK", voice="Intercept", timing=false, iconSpellID=1299759 }
     end
     return result
@@ -24,7 +27,7 @@ end
 
 Registry:Register({
     key="ulatek", name="Ula'tek", encounterID=3492,
-    strategyStatus="12.1 pre-release Journal + current DBM/BigWigs source review (2026-08-16); live validation pending; timing disabled",
+    strategyStatus="12.1 pre-release Journal + current DBM/BigWigs source review (2026-08-17; DBM Ula'tek drycode present); live validation pending; timing disabled",
     profiles={
         normal={
             explanation={
