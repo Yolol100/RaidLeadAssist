@@ -5,7 +5,7 @@ local ActionButton = ns:GetModule("UI.ActionButton")
 
 local AssignmentLaunchers = {}
 
-function AssignmentLaunchers:Attach(mainUI, settingsUI, onOpen)
+function AssignmentLaunchers.Attach(_, mainUI, settingsUI, onOpen)
     if mainUI and mainUI.frame and not mainUI.frame.assignmentButton then
         local button = CreateFrame("Button", nil, mainUI.frame)
         button:SetSize(68, 24)
