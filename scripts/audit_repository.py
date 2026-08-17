@@ -37,11 +37,13 @@ SECRET_PATTERNS = {
 }
 FORBIDDEN_RUNTIME_APIS = re.compile(
     r"\b(?:CombatLogGetCurrentEventInfo|COMBAT_LOG_EVENT_UNFILTERED|UnitAura|C_UnitAuras|"
-    r"UnitHealth|UnitHealthMax|UnitPower|UnitPowerMax|UnitCastingInfo|UnitChannelInfo|UnitPosition|"
+    r"UnitPower|UnitPowerMax|UnitCastingInfo|UnitChannelInfo|UnitPosition|"
     r"GetPlayerMapPosition|CastSpellByID|CastSpellByName|UseAction|TargetUnit|FocusUnit|"
     r"SetBinding|SetOverrideBinding|RegisterStateDriver|SecureActionButtonTemplate|SecureHandler|"
     r"SendAddonMessage|loadstring|RunScript)\b"
 )
+DISPLAY_ONLY_HEALTH_APIS = re.compile(r"\b(?:UnitHealth|UnitHealthMax)\b")
+APPROVED_SECRET_HEALTH_DISPLAY_FILES = {"UI/SentinelsPanel.lua"}
 APPROVED_APP_PATCHES = {
     "Core/AssignmentIntegration.lua": {"Initialize", "SelectBoss", "SelectDifficulty", "SendExplanation", "SendCall"},
 }
@@ -147,6 +149,22 @@ def validate_runtime_apis(entries: list[str]) -> None:
         match = FORBIDDEN_RUNTIME_APIS.search(source)
         if match:
             fail(f"forbidden combat automation/dynamic/network API in runtime {rel}: {match.group(0)}")
+
+        health_match = DISPLAY_ONLY_HEALTH_APIS.search(source)
+        if health_match and rel not in APPROVED_SECRET_HEALTH_DISPLAY_FILES:
+            fail(f"boss health API is display-only and not approved in runtime {rel}: {health_match.group(0)}")
+        if rel in APPROVED_SECRET_HEALTH_DISPLAY_FILES:
+            if not health_match:
+                fail(f"approved boss-health display file no longer uses its declared API: {rel}")
+            for marker in (
+                "issecretvalue", "canaccessvalue", "StatusBar", "SetMinMaxValues", "SetValue",
+                "valueIsSecret(health) or valueIsSecret(maximum)", "if secret then",
+            ):
+                if marker not in source:
+                    fail(f"secret-safe boss-health display guard missing in {rel}: {marker}")
+            for forbidden in ("SendChatMessage", "RaidWarning:Send", "TargetUnit", "FocusUnit"):
+                if forbidden in source:
+                    fail(f"boss-health display must not automate communication/targeting in {rel}: {forbidden}")
 
 
 def validate_workflows(files: list[str]) -> None:
