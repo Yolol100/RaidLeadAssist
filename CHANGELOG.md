@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.0-beta.44 — 2026-08-17
+
+- Rebuild Entombed Sentinels around the raid split: groups 1+2 on green/Breath and groups 3+4 on red/Blood, with difficulty-specific Normal, Heroic and Mythic briefing text.
+- Add a native two-column encounter panel with Breath and Blood health bars, side-specific action buttons, shared Stasis/side-swap/tank calls, and the existing timer-state styling.
+- Keep boss-health handling Midnight-safe: secret health values may feed StatusBars directly but are never compared in Lua; the automatic `STOP DPS` boss choice is enabled only when both percentages are accessible and otherwise fails closed to a neutral manual balance call.
+- Simplify Breath calls to `KILL ADD`, `RUN OVER GREEN DROPLETS` and Heroic+ `DODGE VENOM`; simplify Blood calls to `SOAK CIRCLE`, `DISPEL DOTS` and Heroic+ `GO TO CORNER`.
+- Add `MATCH TO EXACTLY 4` and `SWAP BOSS SIDES` shared calls, plus Mythic `PROTOVENOM > MARKED + MARKED`, and lock the UI/secret-health contract with permanent regressions.
+
 ## 0.9.0-beta.43 — 2026-08-17
 
 - Confirm from current Encounter Journal data that Cremation and persistent Amani corpses are Heroic/Mythic mechanics, not Normal mechanics.
