@@ -6,16 +6,24 @@ local function baseCalls(bloodAction, bloodWarning)
         {
             key = "balance",
             ability = "Boss Health",
-            action = "Keep both even before Stasis",
-            warning = "BOSS HEALTH > KEEP BOTH EVEN BEFORE STASIS",
+            action = "Keep health even",
+            warning = "BOSS HEALTH > KEEP EVEN",
             voice = "Balance",
+            timing = false,
+        },
+        {
+            key = "tankswap",
+            ability = "Tank Swap",
+            action = "Tanks swap",
+            warning = "TANKS > SWAP",
+            voice = "Tank swap",
             timing = false,
         },
         {
             key = "stasis",
             ability = "Vitriolic Stasis",
-            action = "4-player groups > clear at exactly 4",
-            warning = "STASIS > FIXED 4-PLAYER GROUPS > CLEAR TOXIN AT EXACTLY 4",
+            action = "Groups of 4 > clear at 4",
+            warning = "STASIS > GROUPS OF 4 > CLEAR AT 4",
             voice = "Stasis",
             spellIDs = { 1284588 },
             prepareSeconds = 8,
@@ -24,16 +32,16 @@ local function baseCalls(bloodAction, bloodWarning)
         {
             key = "coagulation",
             ability = "Venom Coagulation",
-            action = "Breath team > kill slime now",
-            warning = "COAGULATION > BREATH TEAM KILL SLIME NOW",
+            action = "Kill slime",
+            warning = "COAGULATION > KILL SLIME",
             voice = "Add",
             spellIDs = { 1284251 },
         },
         {
             key = "droplets",
             ability = "Toxic Droplets",
-            action = "Assigned players step on droplets",
-            warning = "TOXIC DROPLETS > ASSIGNED PLAYERS STEP ON THEM NOW",
+            action = "Assigned players soak droplets",
+            warning = "DROPLETS > ASSIGNED PLAYERS SOAK",
             voice = "Droplets",
             spellIDs = { 1284434 },
             prepareSeconds = 6,
@@ -42,8 +50,8 @@ local function baseCalls(bloodAction, bloodWarning)
         {
             key = "miasma",
             ability = "Unstable Miasma",
-            action = "Target stacks at Blood mark",
-            warning = "MIASMA TARGET > STACK AT BLOOD MARK",
+            action = "Target to Blood mark > raid soak",
+            warning = "MIASMA > TARGET TO BLOOD MARK > RAID SOAK",
             voice = "Miasma",
             spellIDs = { 1288232 },
         },
@@ -61,32 +69,32 @@ end
 local livingVenom = {
     key = "living",
     ability = "Living Venom",
-    action = "Clear return lane > dodge venom",
-    warning = "LIVING VENOM > CLEAR RETURN LANE > DODGE RETURNING VENOM",
+    action = "Clear return lane > dodge",
+    warning = "LIVING VENOM > CLEAR LANE > DODGE",
     voice = "Return lane",
     timing = false,
 }
 
 local normalCalls = baseCalls(
     "Dispel infected players",
-    "BLIGHTED BLOOD > DISPEL INFECTED PLAYERS"
+    "BLIGHTED BLOOD > DISPEL"
 )
 local heroicCalls = baseCalls(
-    "Targets edge > dispel > drop pools",
-    "BLIGHTED BLOOD > TARGETS EDGE > DISPEL > DROP POOLS THERE"
+    "Targets edge > dispel",
+    "BLIGHTED BLOOD > TARGETS EDGE > DISPEL"
 )
 heroicCalls[#heroicCalls + 1] = livingVenom
 
 local mythicCalls = baseCalls(
-    "Targets edge > dispel > drop pools",
-    "BLIGHTED BLOOD > TARGETS EDGE > DISPEL > DROP POOLS THERE"
+    "Targets edge > dispel",
+    "BLIGHTED BLOOD > TARGETS EDGE > DISPEL"
 )
 mythicCalls[#mythicCalls + 1] = livingVenom
 mythicCalls[#mythicCalls + 1] = {
     key = "protovenom",
     ability = "Shifting Protovenom",
-    action = "Marked players pair > avoid clean players",
-    warning = "PROTOVENOM > MARKED PLAYERS PAIR TOGETHER > AVOID CLEAN PLAYERS",
+    action = "Marked players pair",
+    warning = "PROTOVENOM > MARKED PLAYERS PAIR",
     voice = "Pair",
     spellIDs = { 1296878 },
     prepareSeconds = 7,
@@ -97,40 +105,30 @@ Registry:Register({
     key = "sentinels",
     name = "Entombed Sentinels",
     encounterID = 3445,
-    strategyStatus = "12.1 difficulty plans source-reviewed 2026-08-14; live validation pending",
+    strategyStatus = "12.1 Journal + current community strategy source-reviewed 2026-08-17; live validation pending",
     profiles = {
         normal = {
             explanation = {
-                "PLAN: TWO FIXED TEAMS. ANCHOR BOSSES 40+ YARDS APART TO AVOID CROSS-MARKS.",
-                "KEEP BOTH BOSS HEALTH BARS EVEN BEFORE EACH STASIS.",
-                "BREATH TEAM: KILL COAGULATION FAST; ASSIGNED PLAYERS STEP ON DROPLETS.",
-                "BLOOD TEAM: MIASMA STACKS AT MARK; DISPEL BLIGHTED BLOOD WHEN SAFE.",
-                "STASIS: FIXED 4-PLAYER GROUPS TOUCH UNTIL TOXIN IS EXACTLY 4.",
-                "WHEN YOUR TOXIN CLEARS, STOP TOUCHING PEOPLE. THEN RE-SPLIT FAST.",
+                "PLAN: SPLIT INTO BREATH AND BLOOD SIDES. KEEP BOSSES 40+ YARDS APART AND KEEP THEIR HEALTH EVEN BEFORE STASIS.",
+                "BREATH SIDE KILLS COAGULATION AND ASSIGNED PLAYERS SOAK DROPLETS. BLOOD SIDE STACKS MIASMA AT ITS MARK AND DISPELS BLOOD SAFELY.",
+                "STASIS: FIXED GROUPS REACH EXACTLY 4 TOXIN APPLICATIONS, THEN STOP TOUCHING. TANKS SWAP BEFORE REPEATED TANK HITS BECOME DANGEROUS.",
             },
             calls = normalCalls,
         },
         heroic = {
             explanation = {
-                "PLAN: TWO FIXED TEAMS. ANCHOR BOSSES 40+ YARDS APART; KEEP HEALTH EVEN.",
-                "BREATH TEAM: KILL COAGULATION; ASSIGNED PLAYERS STEP ON DROPLETS.",
-                "LIVING VENOM: CLEAR ITS RETURN LANE AFTER 4 SEC; DODGE IT BACK TO BREATH.",
-                "BLOOD TEAM: MIASMA AT MARK; BLOOD VENOM POOLS GO TO THE EDGE.",
-                "BLIGHTED BLOOD: DISPEL WHEN SAFE AND KEEP THE DROP AWAY FROM THE RAID.",
-                "STASIS: FIXED 4-PLAYER GROUPS. PAIR, JOIN PAIRS, CLEAR AT EXACTLY 4.",
-                "AFTER STASIS: RE-SPLIT IMMEDIATELY AND RETURN TO YOUR ORIGINAL SIDE.",
+                "PLAN: NORMAL SPLIT; BOSSES 40+ YARDS APART AND HEALTH EVEN. LIVING VENOM RETURNS TO BREATH AFTER 4 SEC, SO CLEAR ITS LANE.",
+                "BLOOD TARGETS MOVE EDGE BEFORE DISPEL SO POOLS STAY OUT. MIASMA TARGET GOES TO BLOOD MARK FOR THE RAID SOAK.",
+                "STASIS USES FIXED GROUPS OF 4. RE-SPLIT IMMEDIATELY AFTER CLEARING. TANKS SWAP BEFORE STACKING TANK DAMAGE GETS DANGEROUS.",
             },
             calls = heroicCalls,
         },
         mythic = {
             explanation = {
-                "PLAN: HEROIC SPLIT PLUS FIXED PROTOVENOM PAIRS.",
-                "KEEP BOSSES 40+ YARDS APART AND HEALTH EVEN BEFORE EVERY STASIS.",
-                "BREATH: KILL SLIME, STOMP DROPLETS, AND CLEAR LIVING VENOM RETURN LANES.",
-                "BLOOD: MIASMA AT MARK; BLOOD VENOM POOLS GO TO THE EDGE.",
-                "PROTOVENOM: MARKED PLAYERS PAIR TOGETHER; NEVER TOUCH CLEAN PLAYERS.",
-                "STASIS: FIXED 4-PLAYER GROUPS PAIR, JOIN PAIRS, CLEAR AT EXACTLY 4.",
-                "AFTER STASIS: RE-SPLIT FAST AND RETURN TO YOUR ORIGINAL SIDE.",
+                "PLAN: HEROIC SPLIT PLUS FIXED PROTOVENOM PAIRS. KEEP BOSSES 40+ YARDS APART AND HEALTH EVEN.",
+                "PROTOVENOM PLAYERS TOUCH THEIR ASSIGNED MARKED PARTNER ONLY; NEVER COLLIDE WITH CLEAN PLAYERS.",
+                "STASIS GROUPS CLEAR AT EXACTLY 4, THEN RE-SPLIT FAST. KEEP LIVING VENOM LANES CLEAR AND BLOOD POOLS AT THE EDGE.",
+                "TANKS SWAP BEFORE REPEATED TANK HITS BECOME DANGEROUS.",
             },
             calls = mythicCalls,
         },
