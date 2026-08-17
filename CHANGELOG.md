@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.0-beta.34 — 2026-08-17
+
+- Recheck the exact main SHA, green CI, attested artifact and packaged runtime after the beta.33 audit hardening.
+- Extend the permanent runtime audit to validate WoW-visible TOC metadata, including Interface, Title, Notes, SavedVariables and OptionalDeps.
+- Reject Dutch or advertising/donation copy in WoW-visible TOC metadata as well as runtime Lua.
+- Keep the release boundary explicit: source/CI may be technically green while live Retail raid, taint, accessibility and performance evidence remains manual.
+
 ## 0.9.0-beta.33 — 2026-08-17
 
 - Complete an end-to-end source, runtime, UI, provider, structure, naming, packaging and governance audit.
