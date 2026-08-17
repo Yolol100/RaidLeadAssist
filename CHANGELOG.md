@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.0-beta.41 — 2026-08-17
+
+- Re-audit all eight Venomous Abyss bosses across Normal, Heroic and Mythic against the current 12.1 Encounter Journal and current community/PTR strategy evidence.
+- Rewrite mechanic buttons to be action-first and concise while keeping the pre-pull Raid Warning briefing responsible for the full strategy, assignments and failure conditions.
+- Add Nek'zali Mythic Soulcoiler's Curse interrupt guidance, Entombed Sentinels tank-swap guidance, Sszorak opposite-gust Crosswinds pairing, and safer Twin Fangs Mythic Bulwark stop wording.
+- Add Vashnik Adaptive Infection responses for blood, fire and shadow infusions and keep Ula'tek explicitly journal-based/live-validation-required because the final boss was not publicly PTR-tested.
+- Add a regression contract that caps each briefing line at 250 bytes and keeps per-mechanic action/warning copy bounded.
+
 ## 0.9.0-beta.40 — 2026-08-17
 
 - Keep all release-ready source changes on `main` and remove leftover temporary implementation branches after the validated release is created.
