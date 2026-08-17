@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.0-beta.39 — 2026-08-17
+
+- Align the 160-point acceptance audit with the beta.38+ runtime-only distribution contract.
+- Define the release ZIP inventory as `RaidLeadAssist.toc` plus exactly the Lua runtime files listed by the TOC; repository-only README/docs/tests/audit scripts/maintenance files must stay out of the distributable addon package.
+- Preserve the existing source/CI/live evidence boundary: automated technical gates can pass before Retail-only raid, taint, performance, accessibility and provider validation is available.
+
 ## 0.9.0-beta.38 — 2026-08-17
 
 - Make the distributable addon ZIP strictly runtime-only: `RaidLeadAssist.toc` plus the exact Lua files listed by the TOC.
