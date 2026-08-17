@@ -29,7 +29,7 @@ Use exactly one of these states per audit item:
 1. TOC `Interface` matches the intended Retail build.
 2. TOC runtime paths exist, are unique, safe, and load in dependency order.
 3. Optional DBM/BigWigs absence never prevents addon load.
-4. Every runtime Lua file parses under Lua 5.1.
+4. Every runtime Lua file parses under Lua 5.1 and passes the repository's blocking `luacheck` policy.
 5. Login, `/reload`, logout/login, zoning, instance enter/leave and UI reload keep state valid.
 6. Unsupported raid/difficulty state fails closed instead of retaining a prior encounter.
 
@@ -100,7 +100,7 @@ Use exactly one of these states per audit item:
 ### Release, security and operations
 
 56. Release ZIP is deterministic across two clean builds, contains only intended runtime files, matches source byte-for-byte and has SHA-256 output.
-57. The exact main-branch artifact has GitHub build-provenance attestation and sufficient artifact retention; release rollback keeps the previous verified checksum/build available.
+57. The exact main-branch artifact has GitHub build-provenance attestation, a versioned prerelease/tag on the same SHA, durable ZIP/checksum release assets, and a previous verified release available for rollback.
 58. Repository/release governance is reviewed: CI permissions least-privilege, Actions pinned by full SHA, security-reporting policy present, CODEOWNERS present, upstream drift monitored, protected-branch/ruleset policy evaluated, and license choice explicitly owned by the repository owner.
 
 ## Per-boss live execution matrix
@@ -138,13 +138,16 @@ Do not enable Ula'tek automatic timing merely because an upstream module contain
 
 A release is `TECHNICALLY GREEN` only when the exact SHA has:
 
-- Lua compile PASS;
-- TOC inventory PASS;
+- Lua 5.1 compile PASS;
+- blocking `luacheck` PASS;
+- TOC inventory/metadata PASS;
 - all `tests/test_*.lua` PASS;
 - baseline schema PASS;
 - reproducible release ZIP PASS;
 - SHA-256 PASS;
 - GitHub build-provenance attestation PASS;
-- uploaded artifact PASS.
+- uploaded Actions artifact PASS;
+- matching versioned prerelease/tag PASS;
+- durable ZIP/checksum release assets PASS.
 
 A full product `10/10` additionally requires every relevant live-only item above to be `PASS-LIVE`. Unavailable live evidence is never converted into a source-only pass.
