@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.0-beta.35 — 2026-08-17
+
+- Add Luacheck static analysis to the main validation workflow using Ubuntu's `lua-check` package.
+- Keep WoW-provided globals outside static-global diagnostics while still checking runtime Lua for unused/redefined local code issues.
+- Document the static-analysis boundary: linting supports source quality but does not replace live Retail taint, performance, provider or encounter validation.
+- Recheck assignment integration placement and preserve `Core/AssignmentIntegration.lua` because `Core/App.lua` does not duplicate its assignment lifecycle/call-safety behavior.
+
 ## 0.9.0-beta.34 — 2026-08-17
 
 - Recheck the exact main SHA, green CI, attested artifact and packaged runtime after the beta.33 audit hardening.
