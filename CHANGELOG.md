@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.0-beta.40 — 2026-08-17
+
+- Keep all release-ready source changes on `main` and remove leftover temporary implementation branches after the validated release is created.
+- Extend the post-release cleanup to delete `release-fix-beta39-temp` and the accidental cleanup-sentinel branches created during repository verification.
+- Preserve the existing validation, provenance, version-lock and runtime-only packaging gates unchanged.
+
 ## 0.9.0-beta.39 — 2026-08-17
 
 - Align the 160-point acceptance audit with the beta.38+ runtime-only distribution contract.

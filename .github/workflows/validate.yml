@@ -137,12 +137,12 @@ jobs:
           else
             gh release create "$version" dist/RaidLeadAssist.zip dist/RaidLeadAssist.zip.sha256 --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "$version" --notes-file "$notes" --prerelease
           fi
-      - name: Remove audit-only temporary branches
+      - name: Remove temporary branches
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          for branch in audit-toc-meta-temp audit-toc-meta-temp-2 audit-toc-meta-temp-3 audit-toc-meta-temp-4; do
+          for branch in audit-toc-meta-temp audit-toc-meta-temp-2 audit-toc-meta-temp-3 audit-toc-meta-temp-4 release-fix-beta39-temp do-not-use-placeholder placeholder-cleanup-guard cleanup-sentinel-temp cleanup-sentinel-2-temp; do
             gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$branch" >/dev/null 2>&1 || true
           done
