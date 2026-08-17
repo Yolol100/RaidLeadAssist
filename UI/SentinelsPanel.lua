@@ -1,9 +1,9 @@
 local _, ns = ...
 
 local Constants = ns:GetModule("Core.Constants")
-local Registry = ns:GetModule("Encounters.Registry")
 local Theme = ns:GetModule("UI.Theme")
 local CallButton = ns:GetModule("UI.CallButton")
+local Messages = ns:GetModule("Services.MessageService")
 
 local SentinelsPanel = {}
 SentinelsPanel.__index = SentinelsPanel
@@ -73,8 +73,23 @@ local function createColumn(parent, title, color)
     column.title = createTitle(column, title, color)
     column.title:SetPoint("TOPLEFT", 0, 0)
     column.title:SetPoint("RIGHT", 0, 0)
-    column.buttons = {}
     return column
+end
+
+local function ensureButton(pool, index, parent)
+    local button = pool[index]
+    if not button then
+        button = CallButton:Create(parent)
+        pool[index] = button
+    end
+    button.frame:ClearAllPoints()
+    button.frame:SetPoint("LEFT", parent, "LEFT", 0, 0)
+    button.frame:SetPoint("RIGHT", parent, "RIGHT", 0, 0)
+    return button
+end
+
+local function hidePool(pool)
+    for _, button in ipairs(pool) do button.frame:Hide() end
 end
 
 function SentinelsPanel:Create(parent, mainUI)
@@ -87,9 +102,12 @@ function SentinelsPanel:Create(parent, mainUI)
     instance.units = {}
     instance.healthAccumulator = 0
     instance.currentBalanceKey = "balance"
+    instance.breathButtons = {}
+    instance.bloodButtons = {}
+    instance.sharedButtons = {}
 
-    instance.breathColumn = createColumn(instance.frame, "GREEN · BREATH OF ULA'TEK", Theme.colors.venomBright)
-    instance.bloodColumn = createColumn(instance.frame, "RED · BLOOD OF ULA'TEK", Theme.colors.error)
+    instance.breathColumn = createColumn(instance.frame, "GREEN - BREATH OF ULA'TEK - GROUPS 1+2", Theme.colors.venomBright)
+    instance.bloodColumn = createColumn(instance.frame, "RED - BLOOD OF ULA'TEK - GROUPS 3+4", Theme.colors.error)
 
     local columnGap = Theme.gap
     instance.breathColumn:SetPoint("TOPLEFT", 0, 0)
@@ -106,28 +124,21 @@ function SentinelsPanel:Create(parent, mainUI)
     instance.bloodHealth:SetPoint("RIGHT", instance.bloodColumn, "RIGHT", 0, 0)
 
     instance.sharedTitle = createTitle(instance.frame, "SHARED RAID CALLS", Theme.colors.text)
-    instance.sharedButtons = {}
-
     instance.balanceButton = CallButton:Create(instance.frame)
     instance.balanceButton.frame:Hide()
 
     return instance
 end
 
-function SentinelsPanel:CreateCallButton(call, column, previous)
-    local button = CallButton:Create(column)
-    button.frame:SetPoint("LEFT", column, "LEFT", 0, 0)
-    button.frame:SetPoint("RIGHT", column, "RIGHT", 0, 0)
+function SentinelsPanel:BindButton(button, call, parent, previous, healthCard)
     if previous then
         button.frame:SetPoint("TOP", previous.frame, "BOTTOM", 0, -Theme.gap)
     else
-        local health = column == self.breathColumn and self.breathHealth or self.bloodHealth
-        button.frame:SetPoint("TOP", health, "BOTTOM", 0, -Theme.gap)
+        button.frame:SetPoint("TOP", healthCard, "BOTTOM", 0, -Theme.gap)
     end
     button:SetCall(call, function(callKey)
         if self.mainUI.callbacks.onCall then self.mainUI.callbacks.onCall(callKey) end
     end, function(callKey)
-        local Messages = ns:GetModule("Services.MessageService")
         return Messages:GetCallWarning("sentinels", self.mainUI.currentDifficultyKey, callKey)
     end)
     self.callButtonsByKey[call.key] = button
@@ -135,63 +146,58 @@ function SentinelsPanel:CreateCallButton(call, column, previous)
 end
 
 function SentinelsPanel:Configure(profile)
-    for _, button in pairs(self.callButtonsByKey) do button.frame:Hide() end
-    for _, button in ipairs(self.sharedButtons) do button.frame:Hide() end
+    hidePool(self.breathButtons)
+    hidePool(self.bloodButtons)
+    hidePool(self.sharedButtons)
+    self.balanceButton.frame:Hide()
     self.callButtonsByKey = {}
-    self.sharedButtons = {}
     self.balanceCalls = {}
 
-    local breathPrevious
-    local bloodPrevious
-    local sharedCalls = {}
-
+    local breathCalls, bloodCalls, sharedCalls = {}, {}, {}
     for _, call in ipairs(profile.calls) do
         if call.key == "balance" or call.key == "balance_stop_breath" or call.key == "balance_stop_blood" or call.key == "balance_resume" then
             self.balanceCalls[call.key] = call
         elseif call.uiGroup == "breath" then
-            breathPrevious = self:CreateCallButton(call, self.breathColumn, breathPrevious)
+            breathCalls[#breathCalls + 1] = call
         elseif call.uiGroup == "blood" then
-            bloodPrevious = self:CreateCallButton(call, self.bloodColumn, bloodPrevious)
+            bloodCalls[#bloodCalls + 1] = call
         elseif call.uiGroup == "shared" then
             sharedCalls[#sharedCalls + 1] = call
         end
     end
 
-    local breathBottom = breathPrevious and breathPrevious.frame or self.breathHealth
-    local bloodBottom = bloodPrevious and bloodPrevious.frame or self.bloodHealth
-    local sideRows = math.max(#self.breathColumn.buttons, #self.bloodColumn.buttons)
-    if sideRows == 0 then
-        local breathCount, bloodCount = 0, 0
-        for _, call in ipairs(profile.calls) do
-            if call.uiGroup == "breath" then breathCount = breathCount + 1 end
-            if call.uiGroup == "blood" then bloodCount = bloodCount + 1 end
-        end
-        sideRows = math.max(breathCount, bloodCount)
+    local breathPrevious
+    for index, call in ipairs(breathCalls) do
+        local button = ensureButton(self.breathButtons, index, self.breathColumn)
+        breathPrevious = self:BindButton(button, call, self.breathColumn, breathPrevious, self.breathHealth)
     end
 
+    local bloodPrevious
+    for index, call in ipairs(bloodCalls) do
+        local button = ensureButton(self.bloodButtons, index, self.bloodColumn)
+        bloodPrevious = self:BindButton(button, call, self.bloodColumn, bloodPrevious, self.bloodHealth)
+    end
+
+    local sideRows = math.max(#breathCalls, #bloodCalls)
     self.sharedTitle:ClearAllPoints()
     self.sharedTitle:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 0, -(18 + 5 + 46 + Theme.gap + sideRows * Theme.callButtonHeight + math.max(0, sideRows - 1) * Theme.gap + 12))
     self.sharedTitle:SetPoint("RIGHT", self.frame, "RIGHT", 0, 0)
 
-    local previous
-    for _, call in ipairs(sharedCalls) do
-        local button = CallButton:Create(self.frame)
-        button.frame:SetPoint("LEFT", self.frame, "LEFT", 0, 0)
-        button.frame:SetPoint("RIGHT", self.frame, "RIGHT", 0, 0)
-        if previous then
-            button.frame:SetPoint("TOP", previous.frame, "BOTTOM", 0, -Theme.gap)
+    local sharedPrevious
+    for index, call in ipairs(sharedCalls) do
+        local button = ensureButton(self.sharedButtons, index, self.frame)
+        if sharedPrevious then
+            button.frame:SetPoint("TOP", sharedPrevious.frame, "BOTTOM", 0, -Theme.gap)
         else
             button.frame:SetPoint("TOP", self.sharedTitle, "BOTTOM", 0, -5)
         end
         button:SetCall(call, function(callKey)
             if self.mainUI.callbacks.onCall then self.mainUI.callbacks.onCall(callKey) end
         end, function(callKey)
-            local Messages = ns:GetModule("Services.MessageService")
             return Messages:GetCallWarning("sentinels", self.mainUI.currentDifficultyKey, callKey)
         end)
         self.callButtonsByKey[call.key] = button
-        self.sharedButtons[#self.sharedButtons + 1] = button
-        previous = button
+        sharedPrevious = button
     end
 
     local balanceCall = self.balanceCalls[self.currentBalanceKey] or self.balanceCalls.balance
@@ -199,8 +205,8 @@ function SentinelsPanel:Configure(profile)
         self.balanceButton.frame:ClearAllPoints()
         self.balanceButton.frame:SetPoint("LEFT", self.frame, "LEFT", 0, 0)
         self.balanceButton.frame:SetPoint("RIGHT", self.frame, "RIGHT", 0, 0)
-        if previous then
-            self.balanceButton.frame:SetPoint("TOP", previous.frame, "BOTTOM", 0, -Theme.gap)
+        if sharedPrevious then
+            self.balanceButton.frame:SetPoint("TOP", sharedPrevious.frame, "BOTTOM", 0, -Theme.gap)
         else
             self.balanceButton.frame:SetPoint("TOP", self.sharedTitle, "BOTTOM", 0, -5)
         end
@@ -225,7 +231,6 @@ function SentinelsPanel:SetBalanceCall(callKey)
     self.balanceButton:SetCall(call, function()
         if self.mainUI.callbacks.onCall then self.mainUI.callbacks.onCall(call.key) end
     end, function(key)
-        local Messages = ns:GetModule("Services.MessageService")
         return Messages:GetCallWarning("sentinels", self.mainUI.currentDifficultyKey, key)
     end)
 end
@@ -306,9 +311,7 @@ end
 function SentinelsPanel:SetCallState(callKey, state)
     local button = self.callButtonsByKey[callKey]
     if not button then return false end
-    if callKey == self.currentBalanceKey or not callKey:find("^balance") then
-        button:SetState(state)
-    end
+    if callKey == self.currentBalanceKey or not callKey:find("^balance") then button:SetState(state) end
     return true
 end
 
