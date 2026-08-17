@@ -1,13 +1,13 @@
 local _, ns = ...
 local Registry = ns:GetModule("Encounters.Registry")
 
-local function baseCalls(pyreAction)
+local function baseCalls(pyreAction, flameAction)
     return {
         {
             key = "adds",
             ability = "Restless Amani",
-            action = "Break shields > kill adds",
-            warning = "ADDS > BREAK SHIELDS > KILL",
+            action = "Kill ads",
+            warning = "KILL ADS",
             voice = "Adds",
             spellIDs = { 1295397, 1297630 },
             prepareSeconds = 7,
@@ -16,8 +16,8 @@ local function baseCalls(pyreAction)
         {
             key = "rend",
             ability = "Essence Rend",
-            action = "Move to edge",
-            warning = "ESSENCE REND > MOVE TO EDGE",
+            action = "Go to the edge",
+            warning = "GO TO THE EDGE",
             voice = "Rend",
             spellIDs = { 1287426 },
         },
@@ -57,10 +57,18 @@ local function baseCalls(pyreAction)
             pressSeconds = 5,
         },
         {
+            key = "flame",
+            ability = "Slithering Flame",
+            action = flameAction,
+            warning = flameAction,
+            voice = "Flame",
+            timing = false,
+        },
+        {
             key = "phase2",
             ability = "Phase 2",
-            action = "Lust > burn boss",
-            warning = "PHASE 2 > LUST > BURN BOSS",
+            action = "Bloodlust > burn boss",
+            warning = "PHASE 2 > BLOODLUST > BURN BOSS",
             voice = "Phase two",
             timing = false,
             iconSpellID = 1299673,
@@ -68,9 +76,9 @@ local function baseCalls(pyreAction)
     }
 end
 
-local normalCalls = baseCalls("SOAK TEAM > IN")
-local heroicCalls = baseCalls("SOAK TEAM > IN > FLAME TARGETS BURN CORPSES")
-local mythicCalls = baseCalls("SOAK TEAM > IN > FLAME TARGETS BURN CORPSES")
+local normalCalls = baseCalls("GROUP 1 + 2 SOAK", "GROUP 3 + 4 SPREAD OUT")
+local heroicCalls = baseCalls("GROUP 1 + 2 SOAK", "GROUP 3 + 4 BURN ADS")
+local mythicCalls = baseCalls("SOAK TEAM > IN", "FLAME TARGETS > BURN CORPSES")
 mythicCalls[#mythicCalls + 1] = {
     key = "grasping",
     ability = "Grasping Depths",
@@ -100,17 +108,19 @@ Registry:Register({
     profiles = {
         normal = {
             explanation = {
-                "PLAN: KEEP THE WELL EMPTY. BREAK AMANI SHIELDS AND KILL ADDS BEFORE THEY REACH IT.",
-                "ESSENCE REND GOES EDGE. BARRAGE TANK MOVES FAR; RAID CLEARS THE FRONT. DODGE IGNITION IMPACTS.",
-                "AT 50% KILL ECHOES FAST. PYRE USES THE ASSIGNED SOAK TEAM. PHASE 2: LUST AND BURN THE BOSS.",
+                "PLAN: KEEP THE WELL EMPTY. BREAK AMANI SHIELDS AND KILL ADS BEFORE THEY REACH IT.",
+                "ESSENCE REND GOES TO THE EDGE. BARRAGE TANK MOVES FAR; RAID CLEARS THE FRONT. DODGE IGNITION IMPACTS.",
+                "AT 50% KILL ECHOES FAST. GROUPS 1+2 SOAK HUNGERING PYRE; GROUPS 3+4 STAY OUT AND SPREAD FOR SLITHERING FLAME.",
+                "PHASE 2: USE BLOODLUST WHEN NEK'ZALI BECOMES ACTIVE, THEN BURN THE BOSS BEFORE FULL ENERGY.",
             },
             calls = normalCalls,
         },
         heroic = {
             explanation = {
-                "PLAN: NORMAL RULES PLUS RITUAL BURN. NEVER FEED THE WELL; KEEP AMANI CORPSES AVAILABLE FOR PYRE.",
-                "REND GOES EDGE. BARRAGE TANK FAR. AT 50% KILL ECHOES; ASSIGNED PLAYERS SOAK PYRE.",
-                "PYRE FLAME TARGETS BURN AMANI CORPSES WITH CREMATION. PHASE 2: LUST, DODGE, BURN.",
+                "PLAN: NORMAL RULES PLUS RITUAL BURN. NEVER FEED THE WELL; KILL AMANI BUT KEEP THEIR CORPSES AVAILABLE FOR CREMATION.",
+                "ESSENCE REND GOES TO THE EDGE. BARRAGE TANK FAR. AT 50% KILL ECHOES FAST.",
+                "GROUPS 1+2 SOAK HUNGERING PYRE. GROUPS 3+4 STAY OUT FOR SLITHERING FLAME, THEN BURN AMANI CORPSES WITH CREMATION.",
+                "PHASE 2: USE BLOODLUST WHEN NEK'ZALI BECOMES ACTIVE, THEN BURN THE BOSS BEFORE FULL ENERGY.",
             },
             calls = heroicCalls,
         },
@@ -119,7 +129,7 @@ Registry:Register({
                 "PLAN: HEROIC RULES PLUS ALTERNATING FRESH WELL TEAMS FOR GRASPING DEPTHS.",
                 "WELL TEAM ENTERS, INTERRUPTS SOULCOILER'S CURSE, KILLS THE DROWNED ECHO, THEN EXITS; SOUL EXHAUSTION BLOCKS REPEATS.",
                 "PYRE SOAKERS IN; FLAME TARGETS BURN AMANI CORPSES. INVOKE: STOP CASTING BEFORE THE INTERRUPT/SILENCE.",
-                "KEEP EVERY SOUL OUT OF THE WELL. PHASE 2: LUST AND BURN.",
+                "KEEP EVERY SOUL OUT OF THE WELL. PHASE 2: BLOODLUST AND BURN.",
             },
             calls = mythicCalls,
         },
