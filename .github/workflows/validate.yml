@@ -18,8 +18,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 -m py_compile scripts/build_release.py scripts/check_upstream_drift.py
+          python3 -m py_compile scripts/build_release.py scripts/check_upstream_drift.py scripts/audit_runtime.py
           python3 scripts/check_upstream_drift.py --validate-only
+          python3 scripts/audit_runtime.py
       - name: Compile Lua files
         shell: bash
         run: |

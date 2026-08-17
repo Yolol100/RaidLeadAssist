@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.0-beta.33 — 2026-08-17
+
+- Complete an end-to-end source, runtime, UI, provider, structure, naming, packaging and governance audit.
+- Canonicalize assignment lifecycle, call-context safety and assignment-aware Raid Warnings directly in `Core/App.lua`; remove the late `Core/AssignmentIntegration.lua` monkey-patch layer.
+- Add a permanent runtime hygiene gate that audits TOC completeness, canonical paths and filenames, case collisions, obsolete overlays, unfinished markers, English runtime copy, advertising/donation policy hygiene and version parity.
+- Add a canonical architecture regression so assignment behavior cannot drift back into a late overlay.
+- Remove an unused BigWigs provider helper discovered by the code audit.
+- Preserve Ula'tek manual-only timing until live Retail validation exists; source-only validation does not claim live-client proof.
+
 ## 0.9.0-beta.32 — 2026-08-17
 
 - Re-audit all boss-facing tactic copy and difficulty splits against current pre-release encounter data.
