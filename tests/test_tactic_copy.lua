@@ -137,7 +137,7 @@ for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
     local twin = Registry:GetProfile("twinfangs", difficultyKey)
     assert(twin.callsByKey.balance)
     assert(twin.callsByKey.balance.timing == false)
-    assert(contains(planText("twinfangs", difficultyKey), "FINISH TOGETHER"))
+    assert(contains(planText("twinfangs", difficultyKey), "BOSSES TOGETHER"))
     assert(twin.callsByKey.globules)
     assert(twin.callsByKey.stone)
     assert(contains(twin.callsByKey.feast.warning, "A > B > C"))
