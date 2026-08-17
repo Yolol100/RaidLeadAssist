@@ -1,66 +1,110 @@
 local _, ns = ...
 local Registry = ns:GetModule("Encounters.Registry")
 
-local function imbibeCall(text)
-    return { key="imbibe", ability="Imbibe", action=text, warning=text, voice="Imbibe", spellIDs={1283164}, prepareSeconds=8, pressSeconds=5 }
-end
-local function frothCall(text)
-    return { key="froth", ability="Plague Froth", action=text, warning=text, voice="Froth", spellIDs={1281907}, prepareSeconds=6, pressSeconds=3 }
-end
-local catalyst = { key="catalyst", ability="Malignant Catalyst", action="One player per Bile circle", warning="CATALYST > ONE PLAYER PER BILE CIRCLE", voice="Catalyst", spellIDs={1282525,1282509}, prepareSeconds=7, pressSeconds=4 }
-local siphon = { key="siphon", ability="Siphoning Infection", action="Targets spread > heal absorb", warning="SIPHONING > TARGETS SPREAD > HEAL ABSORB", voice="Siphoning", timing=false }
-local exploding = { key="exploding", ability="Exploding Infection", action="Targets far out", warning="EXPLODING > TARGETS FAR OUT", voice="Exploding", timing=false }
-local stygian = { key="stygian", ability="Stygian Infection", action="Targets spread > keep moving", warning="STYGIAN > TARGETS SPREAD > KEEP MOVING", voice="Stygian", timing=false }
-local tankswap = { key="tankswap", ability="Dripping Fangs", action="Tanks swap", warning="TANKS > SWAP", voice="Tank swap", timing=false }
-
-local function infectionCalls()
-    return { siphon, exploding, stygian, tankswap }
+local function timedCall(key, ability, warning, voice, spellIDs, prepareSeconds, pressSeconds)
+    return {
+        key = key,
+        ability = ability,
+        action = warning,
+        warning = warning,
+        voice = voice,
+        spellIDs = spellIDs,
+        prepareSeconds = prepareSeconds,
+        pressSeconds = pressSeconds,
+    }
 end
 
-local function append(target, additions)
-    for _, call in ipairs(additions) do target[#target + 1] = call end
-    return target
+local function manualCall(key, ability, warning, voice)
+    return {
+        key = key,
+        ability = ability,
+        action = warning,
+        warning = warning,
+        voice = voice,
+        timing = false,
+    }
+end
+
+local killAdds = timedCall("imbibe", "Imbibe", "KILL ADDS", "Kill adds", { 1283164 }, 8, 5)
+local fireStagger = manualCall("fire_stagger", "Burning Venoms", "SKULL FIRST > WAIT > X", "Stagger fire adds")
+local dodgeSwirlies = manualCall("shadow_dodge", "Shrouded Venoms", "DODGE SWIRLIES", "Dodge swirlies")
+local siphon = manualCall("siphon", "Siphoning Infection", "SIPHON > STACK TO HELP HEAL", "Stack for siphon")
+local exploding = manualCall("exploding", "Exploding Infection", "BIG CIRCLE > MOVE FAR OUT", "Move far out")
+local stygian = manualCall("stygian", "Stygian Infection", "SPREAD > KEEP MOVING", "Spread and move")
+local catalyst = timedCall("catalyst", "Malignant Catalyst", "SOAK BILE", "Soak bile", { 1282525, 1282509 }, 7, 4)
+
+local frothNormal = timedCall("froth", "Plague Froth", "FROTH > MOVE OUT > AIM AWAY", "Aim waves away", { 1281907 }, 6, 3)
+local frothMythic = timedCall("froth", "Plague Froth", "FROTH > AIM AT TUMORS", "Aim at tumors", { 1281907 }, 6, 3)
+local killTumors = manualCall("tumors", "Malignant Tumors", "KILL TUMORS", "Kill tumors")
+
+local function normalCalls()
+    return {
+        killAdds,
+        fireStagger,
+        dodgeSwirlies,
+        siphon,
+        frothNormal,
+        exploding,
+        stygian,
+    }
+end
+
+local function heroicCalls()
+    return {
+        killAdds,
+        fireStagger,
+        dodgeSwirlies,
+        siphon,
+        frothNormal,
+        catalyst,
+        exploding,
+        stygian,
+    }
+end
+
+local function mythicCalls()
+    return {
+        killAdds,
+        fireStagger,
+        dodgeSwirlies,
+        siphon,
+        frothMythic,
+        catalyst,
+        exploding,
+        stygian,
+        killTumors,
+    }
 end
 
 Registry:Register({
-    key="vashnik", name="Vashnik the Malignant", encounterID=3455,
-    strategyStatus="12.1 Journal + current community strategy source-reviewed 2026-08-17; live validation pending",
-    profiles={
-        normal={
-            explanation={
-                "PLAN: MOVE VASHNIK BETWEEN PLANNED FOUNTAIN PAIRS SO INFUSION STACKS STAY BALANCED. KILL LIVING VENOMS BEFORE THEY REACH CENTER.",
-                "ADAPTIVE INFECTION: BLOOD TARGETS SPREAD AND NEED HEALING; FIRE TARGETS GO FAR OUT; SHADOW TARGETS SPREAD AND MOVE FROM BURSTS.",
-                "FROTH TARGETS MOVE OUT, THEN EVERYONE DODGES THE FOUR WAVES. TANKS SWAP AS DRIPPING FANGS STACKS.",
+    key = "vashnik",
+    name = "Vashnik the Malignant",
+    encounterID = 3455,
+    strategyStatus = "12.1 Journal + current Wowhead/Raidstrats strategy source-reviewed 2026-08-17; live validation pending",
+    profiles = {
+        normal = {
+            explanation = {
+                "PLAN: FLAME > SHADOW > SHADOW > BLOOD > BLOOD > FLAME. EACH IMBIBE USES THE TWO NEAREST FOUNTAINS. KILL ADDS BEFORE CENTER.",
+                "FIRE: KILL SKULL, WAIT, THEN X. SHADOW: DODGE SWIRLIES. BLOOD: STACK WITH SIPHON TARGET TO HELP CLEAR THE HEAL ABSORB.",
+                "FROTH: MOVE OUT AND AIM WAVES AWAY. BIG CIRCLE: MOVE FAR OUT. SHADOW INFECTION: SPREAD AND KEEP MOVING.",
             },
-            calls=append({
-                imbibeCall("IMBIBE > KILL VENOMS"),
-                frothCall("FROTH > TARGETS OUT > DODGE WAVES"),
-            }, infectionCalls()),
+            calls = normalCalls(),
         },
-        heroic={
-            explanation={
-                "PLAN: ROTATE FOUNTAIN PAIRS; DO NOT OVERSTACK ONE INFUSION. KILL LIVING VENOMS BEFORE CENTER AND PLAN HEALING CDS FOR LATER IMBIBES.",
-                "CATALYST: PREASSIGN MOBILE SOAKERS SO EVERY BILE CIRCLE HAS A PLAYER. ADAPTIVE INFECTIONS FOLLOW BLOOD/FIRE/SHADOW RULES.",
-                "FROTH TARGETS OUT, THEN DODGE FOUR WAVES. TANKS SWAP AS DRIPPING FANGS STACKS.",
+        heroic = {
+            explanation = {
+                "PLAN: FLAME > SHADOW > SHADOW > BLOOD > BLOOD > FLAME. EACH IMBIBE USES THE TWO NEAREST FOUNTAINS. KILL ADDS BEFORE CENTER.",
+                "FIRE: KILL SKULL, WAIT, THEN X SO BOTH FIRE ADDS DO NOT DIE TOGETHER. SHADOW: DODGE SWIRLIES. BLOOD: STACK FOR SIPHON.",
+                "FROTH: MOVE OUT AND AIM WAVES AWAY. SOAK EVERY BILE. BIG CIRCLE: MOVE FAR OUT. SHADOW INFECTION: SPREAD AND KEEP MOVING.",
             },
-            calls=append({
-                imbibeCall("IMBIBE > KILL VENOMS"),
-                catalyst,
-                frothCall("FROTH > TARGETS OUT > DODGE WAVES"),
-            }, infectionCalls()),
+            calls = heroicCalls(),
         },
-        mythic={
-            explanation={
-                "PLAN: HEROIC FOUNTAIN ROTATION PLUS TUMOR CONTROL. MARK TUMOR LANES BEFORE EACH FROTH AND KEEP INFUSION STACKS BALANCED.",
-                "FROTH TARGETS AIM A WAVE THROUGH TUMORS TO REMOVE HARDENED DEFENSE, THEN RAID KILLS ANY TUMOR STILL ALIVE. CATALYST CIRCLES ALL GET SOAKERS.",
-                "ADAPTIVE INFECTIONS: BLOOD SPREAD/HEAL, FIRE FAR OUT AND DISPEL SAFELY, SHADOW SPREAD/MOVE. TANKS SWAP ON FANGS.",
+        mythic = {
+            explanation = {
+                "PLAN: USE THE HEROIC ROUTE AND RULES. KILL ADDS BEFORE CENTER; FIRE STAYS STAGGERED; SOAK EVERY BILE.",
+                "FROTH TARGETS AIM A WAVE THROUGH TUMORS TO REMOVE THEIR DEFENSE, THEN KILL TUMORS. BLOOD SIPHON TARGETS STACK WITH HELPERS.",
+                "BIG CIRCLE: MOVE FAR OUT. SHADOW INFECTION: SPREAD AND KEEP MOVING. MYTHIC SIPHON HITS MAKE REPEATED HELPERS MORE DANGEROUS.",
             },
-            calls=append({
-                imbibeCall("IMBIBE > CONTROL VENOMS > MARK TUMORS"),
-                { key="totems", ability="Malignant Tumors", action="Aim Froth waves through Tumors", warning="TUMORS > AIM FROTH WAVES THROUGH THEM", voice="Tumors", timing=false, iconSpellID=1283164 },
-                catalyst,
-                frothCall("FROTH > AIM THROUGH TUMORS > DODGE"),
-            }, infectionCalls()),
+            calls = mythicCalls(),
         },
     },
 })

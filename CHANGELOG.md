@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.0-beta.45 — 2026-08-17
+
+- Rebuild Vashnik around the raid-lead essentials: `KILL ADDS`, staggered Fire add deaths, Shadow swirlies, Siphon stacking, Froth positioning and difficulty-specific Bile/Tumor handling.
+- Remove all Vashnik tank calls and keep the pre-pull plan focused on player actions.
+- Lock the requested `FLAME > SHADOW > SHADOW > BLOOD > BLOOD > FLAME` route while stating that every Imbibe actually draws from the two nearest fountains.
+- Correct the source boundary for Exploding Infection: `BIG CIRCLE > MOVE FAR OUT` remains present on Normal, Heroic and Mythic; `SOAK BILE` remains Heroic/Mythic-only.
+- Preserve DBM/BigWigs/Blizzard timing for Imbibe, Plague Froth and Malignant Catalyst; fountain/add-state calls without a reliable timer identity remain manual-only.
+- On Mythic, replace the generic Froth call with `FROTH > AIM AT TUMORS` and add `KILL TUMORS` after Plague Waves remove their protection.
+
 ## 0.9.0-beta.44 — 2026-08-17
 
 - Rebuild Entombed Sentinels around the raid split: groups 1+2 on green/Breath and groups 3+4 on red/Blood, with difficulty-specific Normal, Heroic and Mythic briefing text.
