@@ -98,8 +98,8 @@ local VASHNIK_BILE = section("bile", "Catalytic Bile Coverage", "Heroic+: choose
     slot("bile_team", "Bile Soak Team", { callKey = "catalyst", callLabel = "SOAK TEAM", required = true }),
 })
 
-local VASHNIK_FOUNTAINS = section("fountains", "Fountain Sequence", "Plan the two-fountain combinations around Blood, Shadow and Flame. This is a tactic sequence, not a roster assignment.", 1, {
-    slot("fountain_order", "Fountain Order", { kind = "sequence", helper = "Example: Blood+Shadow > Shadow+Flame > Flame+Blood" }),
+local VASHNIK_FOUNTAINS = section("fountains", "Fountain Sequence", "Store the planned raid route. Each Imbibe still activates the two nearest fountains; this is tactic text, not a roster assignment.", 1, {
+    slot("fountain_order", "Fountain Order", { kind = "sequence", helper = "FLAME > SHADOW > SHADOW > BLOOD > BLOOD > FLAME" }),
 })
 
 local VASHNIK_TUMOR = section("tumors", "Mythic Tumor Rules", "Plague Froth targets are random. Save lane rules so selected players know where to aim their waves.", 2, {

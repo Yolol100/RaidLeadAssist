@@ -6,7 +6,7 @@ local function baseCalls(pyreAction, flameAction)
         {
             key = "adds",
             ability = "Restless Amani",
-            action = "Kill ads",
+            action = "Kill adds",
             warning = "KILL ADS",
             voice = "Adds",
             spellIDs = { 1295397, 1297630 },

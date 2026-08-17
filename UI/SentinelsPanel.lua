@@ -227,6 +227,7 @@ end
 function SentinelsPanel:SetBalanceCall(callKey)
     local call = self.balanceCalls[callKey] or self.balanceCalls.balance
     if not call then return end
+    if self.currentBalanceKey == call.key and self.balanceButton.call == call then return end
     self.currentBalanceKey = call.key
     self.balanceButton:SetCall(call, function()
         if self.mainUI.callbacks.onCall then self.mainUI.callbacks.onCall(call.key) end
@@ -236,6 +237,8 @@ function SentinelsPanel:SetBalanceCall(callKey)
 end
 
 function SentinelsPanel:RefreshUnitMap()
+    self.units.breath = nil
+    self.units.blood = nil
     for _, token in ipairs(BOSS_TOKENS) do
         if UnitExists(token) then
             local name = UnitName(token)

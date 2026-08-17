@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.0-beta.46 — 2026-08-18
+
+- Audit the existing Nek'zali, Entombed Sentinels and Vashnik implementations for purpose, audience, tactic/button consistency, UI behavior, assignments, timer behavior and release safety without adding new encounter features.
+- Normalize Nek'zali's existing add action label to `Kill adds` while preserving the established `KILL ADS` raid warning and all difficulty tactics.
+- Keep the Entombed Sentinels balance button stable when the calculated recommendation has not changed, so a manual `CALLED` state is not reset by the 10 Hz health refresh; also clear stale boss-token mappings before each rescan.
+- Align Vashnik's existing Fountain Sequence assignment helper with the active `FLAME > SHADOW > SHADOW > BLOOD > BLOOD > FLAME` raid plan and lock that agreement with regressions.
+- Preserve all existing Normal/Heroic/Mythic mechanics, layouts, assignments, secret-value boundaries and DBM/BigWigs/Blizzard timer behavior outside these targeted consistency fixes.
+
 ## 0.9.0-beta.45 — 2026-08-17
 
 - Rebuild Vashnik around the raid-lead essentials: `KILL ADDS`, staggered Fire add deaths, Shadow swirlies, Siphon stacking, Froth positioning and difficulty-specific Bile/Tumor handling.
