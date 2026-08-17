@@ -334,10 +334,12 @@ function App:UpdateTiming()
     local profile = Registry:GetProfile(self.activeBossKey, self.activeDifficultyKey)
     if not profile then return end
 
+    local now = GetTime()
+
     if not self:IsAutomaticTimingEnabled() then
         for index = 1, #profile.calls do
             local call = profile.calls[index]
-            local state = (self.visualCalledUntil[call.key] or 0) > GetTime()
+            local state = (self.visualCalledUntil[call.key] or 0) > now
                 and Constants.CallState.CALLED
                 or Constants.CallState.IDLE
             UI:SetCallState(call.key, state)
@@ -346,25 +348,31 @@ function App:UpdateTiming()
         return
     end
 
+    if not profileUsesAutomaticTiming(profile) then
+        for index = 1, #profile.calls do
+            local call = profile.calls[index]
+            local called = (self.visualCalledUntil[call.key] or 0) > now
+                or (self.manualLockUntil[call.key] or 0) > now
+            UI:SetCallState(call.key, called and Constants.CallState.CALLED or Constants.CallState.IDLE)
+        end
+        UI.timeline:SetIdle("MANUAL CALLS ONLY")
+        return
+    end
+
     for index = 1, #profile.calls do
         local call = profile.calls[index]
         local _, remaining = Timeline:GetActionableTimerForCall(call.key)
         local state = Constants.CallState.IDLE
 
-        if (self.visualCalledUntil[call.key] or 0) > GetTime() then
+        if (self.visualCalledUntil[call.key] or 0) > now then
             state = Constants.CallState.CALLED
         elseif remaining then
             state = Constants.GetCallState(call, remaining, true)
-        elseif (self.manualLockUntil[call.key] or 0) > GetTime() then
+        elseif (self.manualLockUntil[call.key] or 0) > now then
             state = Constants.CallState.CALLED
         end
 
         UI:SetCallState(call.key, state)
-    end
-
-    if not profileUsesAutomaticTiming(profile) then
-        UI.timeline:SetIdle("MANUAL CALLS ONLY")
-        return
     end
 
     local timer, remaining = Timeline:GetNextActionableTimer()
