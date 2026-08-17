@@ -111,7 +111,7 @@ jobs:
         with:
           name: RaidLeadAssist-${{ github.sha }}
           path: dist
-      - name: Create or verify immutable prerelease
+      - name: Create or verify version-locked prerelease
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}

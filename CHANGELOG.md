@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.0-beta.36 — 2026-08-17
+
+- Correct release-governance wording: GitHub currently reports releases as mutable (`immutable: false`), so RLA no longer claims native GitHub release immutability.
+- Keep the stronger property that CI actually enforces: a version tag is locked to one validated main SHA, and reusing that version for a different SHA fails the release job.
+- Preserve verified ZIP/checksum release assets and provenance while keeping repository-admin release mutability explicit.
+- Confirm there are no open pull requests, no open issues, no repository rulesets, and no repository-wide TODO/FIXME/HACK/XXX markers at this release boundary.
+
 ## 0.9.0-beta.35 — 2026-08-17
 
 - Add blocking `luacheck` static analysis for every TOC runtime Lua file using Ubuntu Noble's maintained `lua-check` package.

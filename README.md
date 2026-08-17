@@ -85,7 +85,7 @@ python3 scripts/build_release.py
 
 The builder creates `dist/RaidLeadAssist.zip` with one `RaidLeadAssist/` root containing only the TOC, TOC runtime files and this README. It rejects unsafe/duplicate/unexpected paths, reopens the ZIP, compares packaged bytes to source and prints SHA-256.
 
-CI builds the ZIP **twice** and requires byte-identical output. Every TOC runtime Lua file also passes Lua 5.1 compilation and blocking `luacheck` static analysis. Successful `main` pushes retain the verified ZIP/checksum artifact for **90 days**, generate a signed GitHub/Sigstore build-provenance attestation, and then create one immutable GitHub prerelease/tag for the exact validated SHA. The verified ZIP and SHA-256 file are attached to that release as durable rollback assets. Reusing the same version for a different `main` SHA is rejected by the release gate.
+CI builds the ZIP **twice** and requires byte-identical output. Every TOC runtime Lua file also passes Lua 5.1 compilation and blocking `luacheck` static analysis. Successful `main` pushes retain the verified ZIP/checksum artifact for **90 days**, generate a signed GitHub/Sigstore build-provenance attestation, and then create one version-locked GitHub prerelease/tag for the exact validated SHA. The verified ZIP and SHA-256 file are attached to that release as durable rollback assets. Reusing the same version for a different `main` SHA is rejected by the release gate. GitHub release objects themselves remain repository-admin mutable unless GitHub-side immutable-release controls are explicitly enabled; RLA does not claim otherwise.
 
 ## Upstream drift control
 
