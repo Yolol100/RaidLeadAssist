@@ -52,7 +52,7 @@ Registry:Register({
             explanation={
                 "PLAN: HEROIC FEAST/GLOBULE/STONE ROTATIONS PLUS BLOOD FOUNT AND BROODLING COVERAGE. KEEP BOTH BOSSES EVEN AND FINISH TOGETHER.",
                 "BLOOD TORRENT: HEAL THE TANK ABSORB AND STOP BARBED BULWARK CASTS. TAINTED BLOOD GROUPS ENTER FOUNTS AND GET HEALED OUT BEFORE EXPIRY.",
-                "ROUSE THE BROOD: EACH BROODLING GETS A SEPARATE STOP OWNER. KILL EMERGENCE ADDS; KEEP ETERNAL VENOM UNDER CONTROL.",
+                "ROUSE THE BROOD: EACH BROODLING GETS A SEPARATE INTERRUPT OWNER. KILL EMERGENCE ADDS; KEEP ETERNAL VENOM UNDER CONTROL.",
             },
             calls={
                 balance,
@@ -61,7 +61,7 @@ Registry:Register({
                 stone,
                 adds,
                 { key="blood", ability="Blood Torrent", action="Heal absorb > stop Bulwarks", warning="BLOOD TORRENT > HEAL ABSORB > STOP BULWARKS", voice="Blood", spellIDs={1303230}, prepareSeconds=7, pressSeconds=4 },
-                { key="brood", ability="Rouse the Brood", action="Stop every Broodling", warning="ROUSE THE BROOD > STOP EVERY BROODLING", voice="Stop", spellIDs={1308356}, prepareSeconds=4, pressSeconds=1 },
+                { key="brood", ability="Rouse the Brood", action="Interrupt every Broodling", warning="ROUSE THE BROOD > INTERRUPT EVERY BROODLING", voice="Interrupt", spellIDs={1308356}, prepareSeconds=4, pressSeconds=1 },
                 { key="tainted", ability="Tainted Blood", action="Groups in founts > heal out", warning="TAINTED BLOOD > GROUPS IN FOUNTS > HEAL OUT", voice="Heal founts", timing=false },
             },
         },
