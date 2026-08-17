@@ -143,7 +143,8 @@ assert(ulatekMythic.callsByKey.fangs)
 assert(ulatekNormal.callsByKey.bite)
 assert(ulatekHeroic.callsByKey.bite)
 assert(ulatekMythic.callsByKey.bite)
-assert(contains(Registry:Get("ulatek").strategyStatus, "2026-08-16"))
+assert(contains(Registry:Get("ulatek").strategyStatus, "2026-08-17"))
+assert(contains(Registry:Get("ulatek").strategyStatus, "DBM Ula'tek drycode present"))
 assert(contains(Registry:Get("ulatek").strategyStatus, "live validation pending"))
 for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
     for _, call in ipairs(Registry:GetProfile("ulatek", difficultyKey).calls) do
