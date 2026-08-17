@@ -33,7 +33,7 @@ assert(#Registry:GetLayout("vashnik", "normal").sections == 1, "Normal Vashnik s
 
 local vashnikNormal = Registry:GetDefinitions("vashnik", "normal")
 assert(vashnikNormal[1].key == "fountain_order" and vashnikNormal[1].kind == "sequence", "Vashnik Normal must use one sequence field")
-assert(vashnikNormal[1].helper:find("Blood+Shadow", 1, true), "Vashnik sequence help must use the three real fountain types")
+assert(vashnikNormal[1].helper == "FLAME > SHADOW > SHADOW > BLOOD > BLOOD > FLAME", "Vashnik assignment helper must match the active raid route exactly")
 
 local nekHeroic = Registry:GetDefinitions("nekzali", "heroic")
 local cremationRules = 0
@@ -144,7 +144,7 @@ assert(#missing == 0, "filled required Sszorak slots should be complete")
 
 ok = Assignments:ApplyBossDraft("vashnik", "mythic", {
     bile_team = "Alpha, Bravo",
-    fountain_order = "Blood+Shadow > Shadow+Flame > Flame+Blood",
+    fountain_order = "FLAME > SHADOW > SHADOW > BLOOD > BLOOD > FLAME",
     tumor_left = "Left Froth -> left lane",
     tumor_right = "Right Froth -> right lane",
 })
