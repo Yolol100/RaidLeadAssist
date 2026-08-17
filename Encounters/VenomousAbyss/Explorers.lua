@@ -3,61 +3,47 @@ local Registry = ns:GetModule("Encounters.Registry")
 
 local function calls(crateAction, crateWarning)
     return {
-        { key="balance", ability="Boss Health", action="Balance all 3 > finish together", warning="BOSS HEALTH > BALANCE ALL 3 > FINISH TOGETHER", voice="Balance", timing=false },
+        { key="balance", ability="Boss Health", action="Keep all 3 even", warning="BOSS HEALTH > KEEP ALL 3 EVEN", voice="Balance", timing=false },
         { key="crates", ability="Throw Junk", action=crateAction, warning=crateWarning, voice="Crates", timing=false },
-        { key="fish", ability="Final Ascension", action="Feed fish to an unused controlled tortollan", warning="FINAL ASCENSION > FEED FISH TO AN UNUSED CONTROLLED TORTOLLAN NOW", voice="Fish", timing=false, iconSpellID=1292779 },
-        { key="thud", ability="Mighty Thud", action="3 targets > each target to soak group", warning="MIGHTY THUD > 3 TARGETS > EACH TARGET TO A SOAK GROUP", voice="Soak", spellIDs={1296092}, prepareSeconds=7, pressSeconds=4 },
-        { key="blink", ability="Blink Nova", action="Target edge > raid move away", warning="BLINK NOVA > TARGET EDGE > RAID MOVE AWAY", voice="Move away", spellIDs={1290711} },
-        { key="icebound", ability="Icebound Flames", action="Interrupt now", warning="ICEBOUND FLAMES > INTERRUPT NOW", voice="Interrupt", spellIDs={1286921}, prepareSeconds=4, pressSeconds=1 },
+        { key="fish", ability="Final Ascension", action="Feed fish to unused tortollan", warning="FINAL ASCENSION > FEED UNUSED TORTOLLAN", voice="Fish", timing=false, iconSpellID=1292779 },
+        { key="thud", ability="Mighty Thud", action="Targets to soak points", warning="MIGHTY THUD > TARGETS TO SOAK POINTS", voice="Soak", spellIDs={1296092}, prepareSeconds=7, pressSeconds=4 },
+        { key="blink", ability="Blink Nova", action="Target edge > raid away", warning="BLINK NOVA > TARGET EDGE > RAID AWAY", voice="Move away", spellIDs={1290711} },
+        { key="icebound", ability="Icebound Flames", action="Interrupt", warning="ICEBOUND FLAMES > INTERRUPT", voice="Interrupt", spellIDs={1286921}, prepareSeconds=4, pressSeconds=1 },
     }
 end
 
 Registry:Register({
     key="explorers", name="The Lost Explorers", encounterID=3497,
-    strategyStatus="12.1 difficulty plans source-reviewed 2026-08-17; live validation pending",
+    strategyStatus="12.1 Journal + current community strategy source-reviewed 2026-08-17; live validation pending",
     profiles={
         normal={
             explanation={
-                "PLAN: STACK BOSSES WHEN SAFE FOR CLEAVE, BALANCE ALL 3 HEALTH POOLS, AND FINISH TOGETHER.",
-                "ASSIGNED CRATE BREAKERS OPEN BOXES BEFORE RELIC RUPTURE AND SAVE THE FISH.",
-                "EACH TORTOLLAN CAN ONLY TAKE ONE FISH; TRACK WHICH TARGET IS STILL UNUSED.",
-                "FINAL ASCENSION: FEED AN UNUSED CONTROLLED TORTOLLAN BEFORE THE CAST ENDS.",
-                "MIGHTY THUD: 3 TARGETS EACH GO TO THEIR SOAK GROUP, THEN MOVE OUT.",
-                "BLINK NOVA TARGET GOES EDGE; EVERYONE ELSE MOVES FAR AWAY.",
-                "ICEBOUND FLAMES: INTERRUPT. FIRE CLEARS FROST; FROST CLEARS FIRE.",
+                "PLAN: KEEP BOSSES TOGETHER WHEN SAFE, BALANCE ALL THREE HEALTH BARS, AND FINISH THEM TOGETHER.",
+                "ASSIGNED BREAKER OPENS CRATES BEFORE RELIC RUPTURE; SAVE FISH AND FEED AN UNUSED CONTROLLED TORTOLLAN DURING FINAL ASCENSION.",
+                "THUD TARGETS GO TO SEPARATE SOAK POINTS. BLINK TARGET GOES EDGE; RAID MOVES AWAY. INTERRUPT ICEBOUND FLAMES.",
             }, calls=calls(
-                "Assigned breaker > open crate > get fish",
-                "CRATES > ASSIGNED BREAKER > OPEN BEFORE RUPTURE > GET FISH"
+                "Assigned breaker opens crate",
+                "CRATES > ASSIGNED BREAKER OPEN"
             ),
         },
         heroic={
             explanation={
-                "PLAN: KEEP UNITED DEFENSE BROKEN; TWO BOSSES MAY STACK, BUT DO NOT HOLD ALL 3 TOGETHER.",
-                "BALANCE ALL 3 HEALTH POOLS AND SWAP DPS AS NEEDED SO THEY DIE TOGETHER.",
-                "ROTATE ASSIGNED CRATE BREAKERS SO SPLINTERS DO NOT STACK TOO HIGH.",
-                "OPEN CRATES BEFORE RELIC RUPTURE; EACH TORTOLLAN CAN ONLY TAKE ONE FISH.",
-                "FINAL ASCENSION: FEED AN UNUSED CONTROLLED TORTOLLAN BEFORE THE CAST ENDS.",
-                "MIGHTY THUD: 3 TARGETS EACH GO TO A SOAK GROUP, THEN MOVE OUT.",
-                "BLINK TARGET EDGE; RAID FAR AWAY. INTERRUPT ICEBOUND FLAMES.",
-                "TANKS SWAP BEFORE STEADY STRIKES OR SHREDDING SHARDS BECOME DANGEROUS.",
+                "PLAN: KEEP UNITED DEFENSE BROKEN: TWO BOSSES MAY STACK, NEVER ALL THREE. BALANCE HEALTH AND FINISH TOGETHER.",
+                "ROTATE CRATE BREAKERS TO CONTROL SPLINTERS; OPEN BEFORE RUPTURE. SAVE FISH FOR UNUSED TORTOLLANS DURING FINAL ASCENSION.",
+                "THUD TARGETS TO SOAK POINTS; BLINK TARGET EDGE; INTERRUPT ICEBOUND. TANKS SWAP BEFORE REPEATED TANK HITS BECOME DANGEROUS.",
             }, calls=calls(
-                "Next breaker only > control Splinters > get fish",
-                "CRATES > NEXT ASSIGNED BREAKER ONLY > CONTROL SPLINTERS > GET FISH"
+                "Next breaker opens crate",
+                "CRATES > NEXT BREAKER OPEN"
             ),
         },
         mythic={
             explanation={
-                "PLAN: KEEP UNITED DEFENSE BROKEN; TWO BOSSES MAY STACK, BUT DO NOT HOLD ALL 3 TOGETHER.",
-                "BALANCE ALL 3 HEALTH POOLS AND SWAP DPS AS NEEDED SO THEY DIE TOGETHER.",
-                "BREAK ONE CRATE AT A TIME; MYTHIC SPLINTERS HITS THE RAID AND STACKS.",
-                "SPACE CRATE BREAKS, OPEN BEFORE RUPTURE, AND SAVE THE FISH.",
-                "EACH TORTOLLAN GETS ONE FISH; FINAL ASCENSION ALWAYS USES AN UNUSED TARGET.",
-                "MIGHTY THUD: 3 FIXED SOAK GROUPS. EACH MARK GOES TO ITS GROUP.",
-                "BLINK TARGET EDGE; RAID FAR. INTERRUPT ICEBOUND FLAMES EVERY TIME.",
-                "TANKS SWAP BEFORE STEADY STRIKES OR SHREDDING SHARDS BECOME DANGEROUS.",
+                "PLAN: HEROIC POSITIONING; BALANCE ALL THREE AND FINISH TOGETHER. BREAK ONE CRATE AT A TIME BECAUSE SPLINTERS DAMAGE AND STACK ON THE RAID.",
+                "SPACE CRATE BREAKS, OPEN BEFORE RUPTURE, SAVE FISH, AND ALWAYS FEED AN UNUSED TORTOLLAN DURING FINAL ASCENSION.",
+                "USE THREE FIXED THUD SOAK POINTS. BLINK TARGET EDGE; INTERRUPT ICEBOUND EVERY TIME; TANKS MANAGE STACKING TANK HITS.",
             }, calls=calls(
-                "One break at a time > space raid bleed > get fish",
-                "CRATES > ONE BREAK AT A TIME > SPACE RAID BLEEDS > GET FISH"
+                "Break one crate at a time",
+                "CRATES > ONE AT A TIME"
             ),
         },
     },
