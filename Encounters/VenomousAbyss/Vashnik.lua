@@ -7,54 +7,60 @@ end
 local function frothCall(text)
     return { key="froth", ability="Plague Froth", action=text, warning=text, voice="Froth", spellIDs={1281907}, prepareSeconds=6, pressSeconds=3 }
 end
-local catalyst = { key="catalyst", ability="Malignant Catalyst", action="1 player in every Bile circle", warning="CATALYST > 1 PLAYER IN EVERY BILE CIRCLE", voice="Catalyst", spellIDs={1282525,1282509}, prepareSeconds=7, pressSeconds=4 }
+local catalyst = { key="catalyst", ability="Malignant Catalyst", action="One player per Bile circle", warning="CATALYST > ONE PLAYER PER BILE CIRCLE", voice="Catalyst", spellIDs={1282525,1282509}, prepareSeconds=7, pressSeconds=4 }
+local siphon = { key="siphon", ability="Siphoning Infection", action="Targets spread > heal absorb", warning="SIPHONING > TARGETS SPREAD > HEAL ABSORB", voice="Siphoning", timing=false }
+local exploding = { key="exploding", ability="Exploding Infection", action="Targets far out", warning="EXPLODING > TARGETS FAR OUT", voice="Exploding", timing=false }
+local stygian = { key="stygian", ability="Stygian Infection", action="Targets spread > keep moving", warning="STYGIAN > TARGETS SPREAD > KEEP MOVING", voice="Stygian", timing=false }
+local tankswap = { key="tankswap", ability="Dripping Fangs", action="Tanks swap", warning="TANKS > SWAP", voice="Tank swap", timing=false }
+
+local function infectionCalls()
+    return { siphon, exploding, stygian, tankswap }
+end
+
+local function append(target, additions)
+    for _, call in ipairs(additions) do target[#target + 1] = call end
+    return target
+end
 
 Registry:Register({
     key="vashnik", name="Vashnik the Malignant", encounterID=3455,
-    strategyStatus="12.1 difficulty plans source-reviewed 2026-08-14; live validation pending",
+    strategyStatus="12.1 Journal + current community strategy source-reviewed 2026-08-17; live validation pending",
     profiles={
         normal={
             explanation={
-                "PLAN: MOVE THE BOSS TO THE NEXT PLANNED FOUNTAIN PAIR BEFORE EACH IMBIBE.",
-                "ROTATE PAIRS SO ONE FOUNTAIN DOES NOT KEEP GETTING EXTRA INFUSION STACKS.",
-                "IMBIBE: HARD SWAP TO LIVING VENOMS AND KILL THEM BEFORE THE CENTER.",
-                "FROTH TARGETS MOVE OUT. WHEN IT ENDS, EVERYONE DODGES THE 4 WAVES.",
-                "TANKS SWAP AS DRIPPING FANGS BECOMES DANGEROUS.",
+                "PLAN: MOVE VASHNIK BETWEEN PLANNED FOUNTAIN PAIRS SO INFUSION STACKS STAY BALANCED. KILL LIVING VENOMS BEFORE THEY REACH CENTER.",
+                "ADAPTIVE INFECTION: BLOOD TARGETS SPREAD AND NEED HEALING; FIRE TARGETS GO FAR OUT; SHADOW TARGETS SPREAD AND MOVE FROM BURSTS.",
+                "FROTH TARGETS MOVE OUT, THEN EVERYONE DODGES THE FOUR WAVES. TANKS SWAP AS DRIPPING FANGS STACKS.",
             },
-            calls={
-                imbibeCall("IMBIBE > BOSS TO PLANNED PAIR > KILL VENOMS BEFORE CENTER"),
-                frothCall("PLAGUE FROTH > TARGETS MOVE OUT > DODGE 4 WAVES"),
-            },
+            calls=append({
+                imbibeCall("IMBIBE > KILL VENOMS"),
+                frothCall("FROTH > TARGETS OUT > DODGE WAVES"),
+            }, infectionCalls()),
         },
         heroic={
             explanation={
-                "PLAN: ROTATE FOUNTAIN PAIRS; DO NOT KEEP EMPOWERING THE SAME FOUNTAIN.",
-                "IMBIBE: HARD SWAP TO LIVING VENOMS AND KILL THEM BEFORE THE CENTER.",
-                "CATALYST: PREASSIGN SOAKERS; EVERY BILE CIRCLE MUST HAVE 1+ PLAYER.",
-                "FROTH TARGETS MOVE OUT. WHEN IT ENDS, DODGE ALL 4 WAVES.",
-                "USE HEALING CDS FOR LATER IMBIBES AS TOXIC VAPOR BUILDS.",
+                "PLAN: ROTATE FOUNTAIN PAIRS; DO NOT OVERSTACK ONE INFUSION. KILL LIVING VENOMS BEFORE CENTER AND PLAN HEALING CDS FOR LATER IMBIBES.",
+                "CATALYST: PREASSIGN MOBILE SOAKERS SO EVERY BILE CIRCLE HAS A PLAYER. ADAPTIVE INFECTIONS FOLLOW BLOOD/FIRE/SHADOW RULES.",
+                "FROTH TARGETS OUT, THEN DODGE FOUR WAVES. TANKS SWAP AS DRIPPING FANGS STACKS.",
             },
-            calls={
-                imbibeCall("IMBIBE > BOSS TO PLANNED PAIR > KILL VENOMS BEFORE CENTER"),
+            calls=append({
+                imbibeCall("IMBIBE > KILL VENOMS"),
                 catalyst,
-                frothCall("PLAGUE FROTH > TARGETS MOVE OUT > DODGE 4 WAVES"),
-            },
+                frothCall("FROTH > TARGETS OUT > DODGE WAVES"),
+            }, infectionCalls()),
         },
         mythic={
             explanation={
-                "PLAN: HEROIC FOUNTAIN ROTATION PLUS MALIGNANT TUMORS ON EACH IMBIBE.",
-                "IMBIBE: CONTROL LIVING VENOMS AND MARK TUMORS FOR THE NEXT PLAGUE FROTH.",
-                "FROTH TARGETS: AIM A PLAGUE WAVE THROUGH TUMORS TO CLEAR THEIR HARDENED DEFENSE.",
-                "AFTER THE WAVE: HARD SWAP ANY TUMOR STILL ALIVE, THEN FINISH LIVING VENOMS.",
-                "CATALYST: EVERY BILE CIRCLE GETS A PREASSIGNED SOAKER.",
-                "KEEP FOUNTAIN STACKS BALANCED AND USE HEALING CDS AS TOXIC VAPOR RAMPS.",
+                "PLAN: HEROIC FOUNTAIN ROTATION PLUS TUMOR CONTROL. MARK TUMOR LANES BEFORE EACH FROTH AND KEEP INFUSION STACKS BALANCED.",
+                "FROTH TARGETS AIM A WAVE THROUGH TUMORS TO REMOVE HARDENED DEFENSE, THEN RAID KILLS ANY TUMOR STILL ALIVE. CATALYST CIRCLES ALL GET SOAKERS.",
+                "ADAPTIVE INFECTIONS: BLOOD SPREAD/HEAL, FIRE FAR OUT AND DISPEL SAFELY, SHADOW SPREAD/MOVE. TANKS SWAP ON FANGS.",
             },
-            calls={
-                imbibeCall("IMBIBE > CONTROL VENOMS > MARK TUMORS FOR PLAGUE FROTH"),
-                { key="totems", ability="Malignant Tumors", action="Line Plague Waves through Tumors", warning="MALIGNANT TUMORS > FROTH TARGETS LINE PLAGUE WAVES THROUGH THEM", voice="Tumors", timing=false, iconSpellID=1283164 },
+            calls=append({
+                imbibeCall("IMBIBE > CONTROL VENOMS > MARK TUMORS"),
+                { key="totems", ability="Malignant Tumors", action="Aim Froth waves through Tumors", warning="TUMORS > AIM FROTH WAVES THROUGH THEM", voice="Tumors", timing=false, iconSpellID=1283164 },
                 catalyst,
-                frothCall("PLAGUE FROTH > AIM WAVES THROUGH TUMORS > THEN DODGE"),
-            },
+                frothCall("FROTH > AIM THROUGH TUMORS > DODGE"),
+            }, infectionCalls()),
         },
     },
 })
