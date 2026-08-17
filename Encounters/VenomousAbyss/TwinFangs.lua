@@ -1,6 +1,7 @@
 local _, ns = ...
 local Registry = ns:GetModule("Encounters.Registry")
 
+local balance = { key="balance", ability="Boss Health", action="Keep both health bars close > finish together", warning="BOSS HEALTH > KEEP BOTH HEALTH BARS CLOSE > FINISH TOGETHER", voice="Balance", timing=false }
 local adds = { key="adds", ability="Venomous Emergence", action="Kill spawns now", warning="VENOMOUS EMERGENCE > KILL SPAWNS NOW", voice="Adds", spellIDs={1291404}, prepareSeconds=6, pressSeconds=3 }
 local globules = {
     key="globules",
@@ -29,11 +30,12 @@ end
 
 Registry:Register({
     key="twinfangs", name="The Twin Fangs", encounterID=3421,
-    strategyStatus="12.1 Journal source-reviewed 2026-08-15; volatile PTR tuning thresholds are not hard-coded; live validation pending",
+    strategyStatus="12.1 Journal source-reviewed 2026-08-17; volatile tuning thresholds are not hard-coded; live validation pending",
     profiles={
         normal={
             explanation={
-                "PLAN: KEEP BOTH BOSSES TOGETHER FOR CLEAVE AND WATCH YOUR ETERNAL VENOM.",
+                "PLAN: KEEP BOTH BOSSES TOGETHER FOR CLEAVE AND KEEP THEIR HEALTH CLOSE.",
+                "UNCOILED WRATH: FINISH BOTH BOSSES TOGETHER; DO NOT LEAVE ONE SERPENT ALIVE.",
                 "CAUSTIC GLOBULES: ASSIGN PLAYERS TO TOUCH EACH GLOBULE BEFORE IT RUPTURES.",
                 "HIGH VENOM PLAYERS JOIN RAVENOUS FEAST TO REMOVE STACKS BEFORE THEY BECOME LETHAL.",
                 "FEAST HITS 3 TIMES: 3+ PLAYERS PER HIT, ROTATE A > B > C, AND NEVER REPEAT FEASTED PLAYERS.",
@@ -42,6 +44,7 @@ Registry:Register({
                 "AT 100 ENERGY: DODGE VILE FLOOD AND SANGUINE STORM.",
             },
             calls={
+                balance,
                 feast(),
                 globules,
                 stone,
@@ -50,16 +53,17 @@ Registry:Register({
         },
         heroic={
             explanation={
-                "PLAN: KEEP BOTH BOSSES TOGETHER AND USE 3 DISTINCT FEAST GROUPS.",
+                "PLAN: KEEP BOTH BOSSES TOGETHER, KEEP HEALTH CLOSE, AND USE 3 DISTINCT FEAST GROUPS.",
                 "ETERNAL VENOM: KEEP STACKS LOW; USE FEAST TO REMOVE STACKS BEFORE THEY BECOME LETHAL.",
                 "CAUSTIC GLOBULES: ASSIGNED PLAYERS TOUCH EACH GLOBULE BEFORE IT RUPTURES.",
                 "RAVENOUS FEAST HITS 3 TIMES: 3+ PLAYERS PER HIT; FEASTED PLAYERS DO NOT REPEAT.",
                 "STONE BREAKER: ASSIGNED PLAYERS ROTATE INTO SLAMS; NEVER LEAVE A SLAM EMPTY.",
                 "VENOMOUS EMERGENCE: HARD SWAP AND KILL SPAWNS FAST.",
                 "AT 100 ENERGY: DODGE VILE FLOOD AND SANGUINE STORM.",
-                "IF YOUR VENOM IS HIGH, MOVE INTO YOUR NEXT ASSIGNED FEAST GROUP.",
+                "UNCOILED WRATH: FINISH BOTH BOSSES TOGETHER; DO NOT LEAVE ONE SERPENT ALIVE.",
             },
             calls={
+                balance,
                 feast(),
                 globules,
                 stone,
@@ -68,16 +72,17 @@ Registry:Register({
         },
         mythic={
             explanation={
-                "PLAN: HEROIC FEAST ROTATION PLUS MYTHIC GLOBULE, BLOOD, AND BROOD CONTROL.",
+                "PLAN: HEROIC FEAST ROTATION PLUS MYTHIC GLOBULE, BLOOD, AND BROOD CONTROL; KEEP HEALTH CLOSE.",
                 "GLOBULES: ASSIGN SOAKERS; DURING BLOOD TORRENT BREAK BULWARKS BEFORE TOUCHING.",
                 "FEAST: 3+ PLAYERS PER HIT, ROTATE A > B > C, AND NEVER SEND FEASTED PLAYERS BACK IN EARLY.",
                 "TAINTED BLOOD: DISTINCT ASSIGNED GROUPS STAND IN FOUNTS AND HEAL THEM OUT BEFORE EXPIRY.",
                 "ROUSE THE BROOD: EACH BROODLING GETS A SEPARATE INTERRUPT OWNER; A KICK MAKES IT RETREAT.",
                 "STONE BREAKER: ROTATE DISTINCT ASSIGNED PLAYERS INTO SLAMS; NEVER LEAVE ONE EMPTY.",
                 "VENOMOUS EMERGENCE ADDS DIE FAST. AVOID EXTRA DEATHS WITH ETERNAL VENOM.",
-                "AT 100 ENERGY: DODGE VILE FLOOD AND SANGUINE STORM.",
+                "AT 100 ENERGY: DODGE VILE FLOOD/STORM. UNCOILED WRATH: FINISH BOTH BOSSES TOGETHER.",
             },
             calls={
+                balance,
                 feast(),
                 globules,
                 stone,

@@ -15,6 +15,10 @@ assert(heroic)
 local text = table.concat(heroic.explanation, "\n")
 assert(string.find(text, "KEEP STACKS LOW", 1, true), "Heroic strategy must retain actionable Eternal Venom guidance")
 assert(string.find(text, "3+ PLAYERS PER HIT", 1, true), "Heroic strategy must state the stable Ravenous Feast minimum")
+assert(string.find(text, "UNCOILED WRATH", 1, true), "Heroic strategy must explain the survivor-ramp finish condition")
+assert(string.find(text, "FINISH BOTH BOSSES TOGETHER", 1, true), "Heroic strategy must coordinate the joint finish")
+assert(heroic.callsByKey.balance and heroic.callsByKey.balance.timing == false,
+    "Boss-health coordination is a manual raid-leader call, not an automatic timer")
 assert(not string.find(text, "KILLS YOU AT 8 STACKS", 1, true), "volatile PTR death thresholds must not be hard-coded")
 
-print("ok - Twin Fangs uses stable venom and Feast invariants")
+print("ok - Twin Fangs uses stable venom, Feast, and joint-finish invariants")

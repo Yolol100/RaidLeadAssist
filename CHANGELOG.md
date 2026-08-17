@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.0-beta.32 — 2026-08-17
+
+- Re-audit all boss-facing tactic copy and difficulty splits against current pre-release encounter data.
+- Replace The Lost Explorers' fixed Nama > Iku > Gebbo kill order with boss-health balancing and a synchronized finish on every difficulty.
+- Replace the rigid Heroic/Mythic all-three 35+ yard split with explicit United Defense management and flexible two-boss stacking.
+- Add a manual Boss Health call to The Twin Fangs and make the Uncoiled Wrath joint-finish requirement explicit on Normal, Heroic, and Mythic.
+- Add tactic regressions that reject the obsolete Lost Explorers kill order/split and protect the Twin Fangs finish call.
+- Keep all front-end tactic copy in English and leave Ula'tek manual-only until live Retail validation is available.
+
 ## 0.9.0-beta.31 — 2026-08-17
 
 - Re-audit current DBM/BigWigs upstream state after DBM added Ula'tek drycode on 2026-08-17.

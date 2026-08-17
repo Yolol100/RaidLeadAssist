@@ -6,7 +6,9 @@ _G.issecretvalue = function() return false end
 T.Load("Core/Constants.lua", ns)
 T.Load("Core/Util.lua", ns)
 T.Load("Encounters/Registry.lua", ns)
+T.Load("Encounters/VenomousAbyss/Explorers.lua", ns)
 T.Load("Encounters/VenomousAbyss/Sszorak.lua", ns)
+T.Load("Encounters/VenomousAbyss/TwinFangs.lua", ns)
 T.Load("Encounters/VenomousAbyss/CoiledAltar.lua", ns)
 T.Load("Encounters/VenomousAbyss/Ulatek.lua", ns)
 
@@ -18,6 +20,38 @@ end
 
 local function contains(value, needle)
     return string.find(value, needle, 1, true) ~= nil
+end
+
+for _, difficulty in ipairs({ "normal", "heroic", "mythic" }) do
+    local profile = Registry:GetProfile("explorers", difficulty)
+    local plan = text("explorers", difficulty)
+    assert(profile.callsByKey.balance and profile.callsByKey.balance.timing == false,
+        "Lost Explorers needs a manual boss-health coordination call on every difficulty")
+    assert(contains(profile.callsByKey.balance.warning, "FINISH TOGETHER"),
+        "Lost Explorers health call must coordinate a synchronized finish")
+    assert(profile.callsByKey.killorder == nil,
+        "Lost Explorers must not retain the obsolete fixed Nama > Iku > Gebbo kill-order call")
+    assert(not contains(plan, "NAMA FIRST") and not contains(plan, "NAMA > IKU > GEBBO"),
+        "Lost Explorers plan must not instruct an early Nama kill")
+end
+for _, difficulty in ipairs({ "heroic", "mythic" }) do
+    local plan = text("explorers", difficulty)
+    assert(contains(plan, "UNITED DEFENSE"),
+        "Heroic/Mythic Lost Explorers must explicitly manage United Defense")
+    assert(contains(plan, "DIE TOGETHER"),
+        "Heroic/Mythic Lost Explorers must coordinate the three health pools")
+    assert(not contains(plan, "35+ YARDS APART"),
+        "Heroic/Mythic Lost Explorers must not hard-code the obsolete all-three 35+ yard split")
+end
+
+for _, difficulty in ipairs({ "normal", "heroic", "mythic" }) do
+    local profile = Registry:GetProfile("twinfangs", difficulty)
+    assert(profile.callsByKey.balance and profile.callsByKey.balance.timing == false,
+        "Twin Fangs needs a manual boss-health coordination call on every difficulty")
+    assert(contains(profile.callsByKey.balance.warning, "FINISH TOGETHER"),
+        "Twin Fangs boss-health call must coordinate the joint finish")
+    assert(contains(text("twinfangs", difficulty), "FINISH BOTH BOSSES TOGETHER"),
+        "Twin Fangs plan must explain the Uncoiled Wrath finish requirement")
 end
 
 for _, difficulty in ipairs({ "normal", "heroic", "mythic" }) do

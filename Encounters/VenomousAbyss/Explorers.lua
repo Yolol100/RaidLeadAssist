@@ -3,7 +3,7 @@ local Registry = ns:GetModule("Encounters.Registry")
 
 local function calls(crateAction, crateWarning)
     return {
-        { key="killorder", ability="Kill Order", action="Nama > Iku > Gebbo", warning="KILL ORDER > NAMA FIRST > IKU SECOND > GEBBO LAST", voice="Kill order", timing=false },
+        { key="balance", ability="Boss Health", action="Balance all 3 > finish together", warning="BOSS HEALTH > BALANCE ALL 3 > FINISH TOGETHER", voice="Balance", timing=false },
         { key="crates", ability="Throw Junk", action=crateAction, warning=crateWarning, voice="Crates", timing=false },
         { key="fish", ability="Final Ascension", action="Feed fish to an unused controlled tortollan", warning="FINAL ASCENSION > FEED FISH TO AN UNUSED CONTROLLED TORTOLLAN NOW", voice="Fish", timing=false, iconSpellID=1292779 },
         { key="thud", ability="Mighty Thud", action="3 targets > each target to soak group", warning="MIGHTY THUD > 3 TARGETS > EACH TARGET TO A SOAK GROUP", voice="Soak", spellIDs={1296092}, prepareSeconds=7, pressSeconds=4 },
@@ -14,11 +14,11 @@ end
 
 Registry:Register({
     key="explorers", name="The Lost Explorers", encounterID=3497,
-    strategyStatus="12.1 difficulty plans source-reviewed 2026-08-14; live validation pending",
+    strategyStatus="12.1 difficulty plans source-reviewed 2026-08-17; live validation pending",
     profiles={
         normal={
             explanation={
-                "PLAN: STACK ALL 3 BOSSES FOR CLEAVE AND KILL NAMA > IKU > GEBBO.",
+                "PLAN: STACK BOSSES WHEN SAFE FOR CLEAVE, BALANCE ALL 3 HEALTH POOLS, AND FINISH TOGETHER.",
                 "ASSIGNED CRATE BREAKERS OPEN BOXES BEFORE RELIC RUPTURE AND SAVE THE FISH.",
                 "EACH TORTOLLAN CAN ONLY TAKE ONE FISH; TRACK WHICH TARGET IS STILL UNUSED.",
                 "FINAL ASCENSION: FEED AN UNUSED CONTROLLED TORTOLLAN BEFORE THE CAST ENDS.",
@@ -32,8 +32,8 @@ Registry:Register({
         },
         heroic={
             explanation={
-                "PLAN: 3 STATIONS. KEEP ALL 3 BOSSES 35+ YARDS APART UNTIL NAMA DIES.",
-                "KILL NAMA FIRST. AFTER NAMA DIES, STACK IKU + GEBBO AND KILL IKU NEXT.",
+                "PLAN: KEEP UNITED DEFENSE BROKEN; TWO BOSSES MAY STACK, BUT DO NOT HOLD ALL 3 TOGETHER.",
+                "BALANCE ALL 3 HEALTH POOLS AND SWAP DPS AS NEEDED SO THEY DIE TOGETHER.",
                 "ROTATE ASSIGNED CRATE BREAKERS SO SPLINTERS DO NOT STACK TOO HIGH.",
                 "OPEN CRATES BEFORE RELIC RUPTURE; EACH TORTOLLAN CAN ONLY TAKE ONE FISH.",
                 "FINAL ASCENSION: FEED AN UNUSED CONTROLLED TORTOLLAN BEFORE THE CAST ENDS.",
@@ -47,14 +47,14 @@ Registry:Register({
         },
         mythic={
             explanation={
-                "PLAN: 3 FIXED STATIONS. KEEP ALL 3 BOSSES 35+ YARDS APART UNTIL NAMA DIES.",
-                "KILL NAMA FIRST; THEN STACK IKU + GEBBO, KILL IKU, FINISH GEBBO.",
+                "PLAN: KEEP UNITED DEFENSE BROKEN; TWO BOSSES MAY STACK, BUT DO NOT HOLD ALL 3 TOGETHER.",
+                "BALANCE ALL 3 HEALTH POOLS AND SWAP DPS AS NEEDED SO THEY DIE TOGETHER.",
                 "BREAK ONE CRATE AT A TIME; MYTHIC SPLINTERS HITS THE RAID AND STACKS.",
                 "SPACE CRATE BREAKS, OPEN BEFORE RUPTURE, AND SAVE THE FISH.",
                 "EACH TORTOLLAN GETS ONE FISH; FINAL ASCENSION ALWAYS USES AN UNUSED TARGET.",
                 "MIGHTY THUD: 3 FIXED SOAK GROUPS. EACH MARK GOES TO ITS GROUP.",
                 "BLINK TARGET EDGE; RAID FAR. INTERRUPT ICEBOUND FLAMES EVERY TIME.",
-                "USE DEFENSIVES AFTER EACH DEATH AS THE REMAINING BOSS PRESSURE RISES.",
+                "TANKS SWAP BEFORE STEADY STRIKES OR SHREDDING SHARDS BECOME DANGEROUS.",
             }, calls=calls(
                 "One break at a time > space raid bleed > get fish",
                 "CRATES > ONE BREAK AT A TIME > SPACE RAID BLEEDS > GET FISH"
