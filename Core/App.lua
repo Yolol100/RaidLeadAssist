@@ -6,11 +6,14 @@ local EventBus = ns:GetModule("Core.EventBus")
 local Registry = ns:GetModule("Encounters.Registry")
 local RaidWarning = ns:GetModule("Services.RaidWarningService")
 local Messages = ns:GetModule("Services.MessageService")
+local Assignments = ns:GetModule("Services.AssignmentService")
 local Audio = ns:GetModule("Services.AudioService")
 local Timeline = ns:GetModule("Services.TimelineService")
 local Encounter = ns:GetModule("Services.EncounterService")
 local UI = ns:GetModule("UI.MainFrame")
 local SettingsUI = ns:GetModule("UI.SettingsFrame")
+local AssignmentUI = ns:GetModule("UI.AssignmentFrame")
+local Launchers = ns:GetModule("UI.AssignmentLaunchers")
 
 local App = {
     activeBossKey = nil,
@@ -35,6 +38,64 @@ local function settingsAvailability()
         return false, "Settings were created by a newer Raid Lead Assist version. Update the addon before editing them."
     end
     return true
+end
+
+local function canEditAssignments()
+    if Encounter:IsActive() then return false, "Assignments are available outside active encounters." end
+    if type(InCombatLockdown) == "function" and InCombatLockdown() then
+        return false, "Assignments are pre-pull only. Leave combat before editing the plan."
+    end
+    if Database:HasNewerSchema() then
+        return false, "Assignments were created by a newer Raid Lead Assist version. Update the addon before editing them."
+    end
+    return true
+end
+
+local function callContextSafety(owner)
+    if not Encounter:IsActive() then return true end
+    if not Encounter:HasKnownEncounter() then
+        return false, "Active encounter is not verified; Raid Warning plans and calls are disabled until a supported pull is identified."
+    end
+
+    local liveEncounter = Encounter.currentEncounter
+    if type(liveEncounter) ~= "table" or liveEncounter.key ~= owner.activeBossKey then
+        return false, "Active boss does not match the selected Raid Lead Assist profile; Raid Warning plans and calls are disabled."
+    end
+
+    local liveDifficulty = Encounter:GetDifficultyKey()
+    if not liveDifficulty or liveDifficulty ~= owner.activeDifficultyKey then
+        return false, "Active encounter difficulty is not a verified Normal, Heroic, or Mythic profile; Raid Warning plans and calls are disabled."
+    end
+
+    if not Registry:GetProfile(owner.activeBossKey, liveDifficulty) then
+        return false, "The active encounter has no matching Raid Lead Assist profile; Raid Warning plans and calls are disabled."
+    end
+    return true
+end
+
+local function refreshCallAvailability(owner)
+    local callsEnabled, reason = callContextSafety(owner)
+    local planEnabled = callsEnabled and not Encounter:IsActive()
+
+    local explanationFrame = UI.explanationButton and UI.explanationButton.frame
+    if explanationFrame and type(explanationFrame.SetEnabled) == "function" then explanationFrame:SetEnabled(planEnabled) end
+    for index = 1, #(UI.callButtons or {}) do
+        local frame = UI.callButtons[index] and UI.callButtons[index].frame
+        if frame and type(frame.SetEnabled) == "function" then frame:SetEnabled(callsEnabled) end
+    end
+
+    UI.callsDisabledReason = callsEnabled and nil or reason
+    UI.planDisabledReason = planEnabled and nil or (Encounter:IsActive() and "Boss Plan is pre-pull only." or reason)
+    return callsEnabled, reason
+end
+
+local function announceAssignments(bossKey, difficultyKey)
+    local lines = Assignments:GetPlanLines(bossKey, difficultyKey)
+    if #lines == 0 then
+        ns:Print("No assignments are filled in for this boss and difficulty.")
+        return false
+    end
+    return RaidWarning:SendBriefing(lines)
 end
 
 local function settingsAreOpen()
@@ -178,6 +239,15 @@ function App:Initialize()
         getProviderSummary = function() return Timeline:GetProviderDiagnostics() end,
         canOpen = settingsAvailability,
     })
+    Assignments:Initialize(self.db)
+    AssignmentUI:Initialize(self.db, {
+        canOpen = canEditAssignments,
+        onAnnounce = announceAssignments,
+    })
+    Launchers:Attach(UI, SettingsUI, function()
+        AssignmentUI:Open(self.activeBossKey, self.activeDifficultyKey)
+    end)
+    refreshCallAvailability(self)
     local settingsEnabled, settingsReason = settingsAvailability()
     UI:SetSettingsEnabled(settingsEnabled, settingsReason)
 
@@ -205,6 +275,10 @@ function App:Initialize()
         UI:SetDifficultyLocked(true)
         UI:SetSettingsEnabled(false, "Settings are available outside active encounters.")
         SettingsUI:CloseForEncounter()
+        Assignments:ResetRuntime()
+        AssignmentUI:CloseForEncounter()
+        local enabled, reason = refreshCallAvailability(owner)
+        if not enabled then ns:Print(reason) end
     end)
     EventBus:On("ENCOUNTER_RECOVERED", self, function(owner, _, difficultyID, providerName)
         local difficultyKey = Constants.DIFFICULTY_KEY_BY_ID[difficultyID]
@@ -218,6 +292,10 @@ function App:Initialize()
         UI:SetSettingsEnabled(false, "Settings are available outside active encounters.")
         SettingsUI:CloseForEncounter()
         UI:ResetCallStates()
+        Assignments:ResetRuntime()
+        AssignmentUI:CloseForEncounter()
+        local enabled, reason = refreshCallAvailability(owner)
+        if not enabled then ns:Print(reason) end
         ns:Print(("Recovered active %s encounter after reload using a verified %s encounter hint; timing restored."):format(
             tostring(owner.activeBossKey or "boss"),
             tostring(providerName or "bossmod")
@@ -232,6 +310,8 @@ function App:Initialize()
         UI:SetSettingsEnabled(settingsEnabled, settingsReason)
         Timeline:Reset()
         UI:ResetCallStates()
+        Assignments:ResetRuntime()
+        refreshCallAvailability(owner)
     end)
     EventBus:On("ZONE_STATUS_CHANGED", self, function(owner, inRaid)
         if owner.db.forceShown or inRaid then UI:Show() else UI:Hide() end
@@ -284,6 +364,8 @@ function App:SelectDifficulty(key, automatic)
     Timeline:SetEncounter(self.activeBossKey, automatic == true)
     UI:SetDifficulty(key)
     UI:ResetCallStates()
+    Assignments:ResetRuntime()
+    refreshCallAvailability(self)
     return true
 end
 
@@ -304,30 +386,58 @@ function App:SelectBoss(key, automatic)
     Timeline:SetEncounter(key, automatic)
     UI:SetEncounter(key)
     UI:ResetCallStates()
+    Assignments:ResetRuntime()
+    refreshCallAvailability(self)
 
     if automatic then UI:Show() end
     return true
 end
 
 function App:SendExplanation()
+    if Encounter:IsActive() then
+        ns:Print("Boss Plan is pre-pull only.")
+        return false
+    end
+    local safe, reason = callContextSafety(self)
+    if not safe then
+        ns:Print(reason)
+        return false
+    end
     local profile = Registry:GetProfile(self.activeBossKey, self.activeDifficultyKey)
-    if profile then RaidWarning:SendBriefing(Messages:GetExplanation(self.activeBossKey, self.activeDifficultyKey)) end
+    if not profile then return false end
+    return RaidWarning:SendBriefing(Messages:GetExplanation(self.activeBossKey, self.activeDifficultyKey))
 end
 
 function App:SendCall(callKey)
+    local safe, reason = callContextSafety(self)
+    if not safe then
+        ns:Print(reason)
+        return false
+    end
+
     local profile = Registry:GetProfile(self.activeBossKey, self.activeDifficultyKey)
     local call = profile and profile.callsByKey[callKey]
-    if not call then return end
+    if not call then return false end
 
     local now = GetTime()
-    if (self.manualLockUntil[callKey] or 0) > now then return end
+    if (self.manualLockUntil[callKey] or 0) > now then return false end
 
-    if RaidWarning:Send(Messages:GetCallWarning(self.activeBossKey, self.activeDifficultyKey, callKey)) then
+    local baseWarning = Messages:GetCallWarning(self.activeBossKey, self.activeDifficultyKey, callKey)
+    local warning, assignmentComplete = Assignments:BuildCallWarning(
+        baseWarning, self.activeBossKey, self.activeDifficultyKey, callKey
+    )
+    if RaidWarning:Send(warning) then
+        if assignmentComplete == false then
+            ns:Print("Assignment detail exceeded the Raid Warning limit; the base call was sent without partial assignment text. Use pre-pull ANNOUNCE for the full plan.")
+        end
         self.manualLockUntil[callKey] = now + Constants.MANUAL_CLICK_LOCK_SECONDS
         Timeline:AcknowledgeCall(callKey)
         self.visualCalledUntil[callKey] = now + Constants.CALLED_FEEDBACK_SECONDS
         UI:SetCallState(callKey, Constants.CallState.CALLED)
+        Assignments:AdvanceCall(self.activeBossKey, self.activeDifficultyKey, callKey)
+        return true
     end
+    return false
 end
 
 function App:UpdateTiming()
@@ -435,6 +545,8 @@ function App:RegisterSlashCommands()
             end
         elseif command == "settings" then
             SettingsUI:Open(self.activeBossKey)
+        elseif command == "assign" or command == "assignments" then
+            AssignmentUI:Open(self.activeBossKey, self.activeDifficultyKey)
         elseif command == "provider" then
             local summary = Timeline:GetProviderDiagnostics()
             ns:Print("Timer sources: " .. (summary ~= "" and summary or "none"))
@@ -456,7 +568,7 @@ function App:RegisterSlashCommands()
                 tostring(self.db.schemaVersion or "unknown")
             ))
         else
-            ns:Print("/rla show | hide | toggle | settings | difficulty normal|heroic|mythic | resetpos | audio on|off | timing on|off | provider | doctor | status")
+            ns:Print("/rla show | hide | toggle | settings | assignments | difficulty normal|heroic|mythic | resetpos | audio on|off | timing on|off | provider | doctor | status")
         end
     end
 end
