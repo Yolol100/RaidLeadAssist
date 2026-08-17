@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.0-beta.43 — 2026-08-17
+
+- Confirm from current Encounter Journal data that Cremation and persistent Amani corpses are Heroic/Mythic mechanics, not Normal mechanics.
+- Replace fixed Normal/Heroic group numbers with role-based Nek'zali calls: `MELEE SOAK`, `RANGED SPREAD OUT` on Normal and `RANGED BURN ADS` on Heroic.
+- Keep Mythic group-based Pyre/Cremation assignments and Mythic-only Grasping Depths/Invoke calls unchanged.
+- Add regressions that prevent Normal from claiming Cremation and require Heroic to retain the corpse-burn plan.
+
 ## 0.9.0-beta.42 — 2026-08-17
 
 - Recheck Nek'zali Normal, Heroic and Mythic against the current 12.1 Encounter Journal and current raid strategy evidence.
