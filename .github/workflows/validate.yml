@@ -96,3 +96,51 @@ jobs:
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-path: dist/RaidLeadAssist.zip
+
+  release:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [validation, provenance]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Download verified release artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: RaidLeadAssist-${{ github.sha }}
+          path: dist
+      - name: Create or verify immutable prerelease
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          version="$(sed -n 's/^## Version:[[:space:]]*//p' RaidLeadAssist.toc | head -n1)"
+          test -n "$version"
+          notes="$(mktemp)"
+          awk -v prefix="## ${version} " '
+            index($0, prefix) == 1 { active=1; next }
+            active && /^## / { exit }
+            active { print }
+          ' CHANGELOG.md > "$notes"
+          test -s "$notes"
+          if gh release view "$version" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            existing_sha="$(gh api "repos/$GITHUB_REPOSITORY/commits/$version" --jq .sha)"
+            if [ "$existing_sha" != "$GITHUB_SHA" ]; then
+              echo "Release $version already points to $existing_sha, not $GITHUB_SHA. Bump the version before another main release." >&2
+              exit 1
+            fi
+          else
+            gh release create "$version" dist/RaidLeadAssist.zip dist/RaidLeadAssist.zip.sha256 --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "$version" --notes-file "$notes" --prerelease
+          fi
+      - name: Remove audit-only temporary branches
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          for branch in audit-toc-meta-temp audit-toc-meta-temp-2 audit-toc-meta-temp-3 audit-toc-meta-temp-4; do
+            gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$branch" >/dev/null 2>&1 || true
+          done

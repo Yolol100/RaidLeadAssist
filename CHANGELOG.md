@@ -2,10 +2,13 @@
 
 ## 0.9.0-beta.35 — 2026-08-17
 
-- Add Luacheck static analysis to the main validation workflow using Ubuntu's `lua-check` package.
-- Keep WoW-provided globals outside static-global diagnostics while still checking runtime Lua for unused/redefined local code issues.
-- Document the static-analysis boundary: linting supports source quality but does not replace live Retail taint, performance, provider or encounter validation.
-- Recheck assignment integration placement and preserve `Core/AssignmentIntegration.lua` because `Core/App.lua` does not duplicate its assignment lifecycle/call-safety behavior.
+- Add blocking `luacheck` static analysis for every TOC runtime Lua file using Ubuntu Noble's maintained `lua-check` package.
+- Resolve static-analysis shadowing findings and keep only two explicit, documented intentional Luacheck exceptions.
+- Add a post-provenance release gate that creates one GitHub prerelease/tag for the exact validated main SHA and refuses same-version release drift.
+- Publish the verified ZIP and SHA-256 file as durable GitHub Release assets in addition to the 90-day Actions artifact.
+- Remove the audit-only temporary branches created during the beta.34 metadata verification.
+- Recheck current DBM and BigWigs stable release baselines; they remain DBM 12.1.3 and BigWigs v419.2 on 2026-08-17.
+- Keep branch/ruleset protection and license selection explicit owner/admin boundaries rather than silently making a legal or repository-administration choice.
 
 ## 0.9.0-beta.34 — 2026-08-17
 
@@ -35,7 +38,7 @@
 - Re-audit current DBM/BigWigs upstream state after DBM added Ula'tek drycode on 2026-08-17.
 - Keep all Ula'tek calls manual-only; distinguish the Toxic Incubation display spell identity from DBM's current timer key.
 - Add machine-readable DBM/BigWigs source baselines and a scheduled upstream-drift workflow.
-- Expand release acceptance into a 58-point master audit covering platform, data, providers, state, UI, taint, performance, packaging and governance.
+- Expand release acceptance into a 58-point master audit covering platform, data, providers, state, UI, taint/performance, packaging, security and governance.
 - Make CI prove release-ZIP reproducibility with a second clean build.
 - Add signed GitHub build-provenance attestation for main-branch release ZIPs.
 - Increase verified artifact retention from 14 to 90 days.
