@@ -176,7 +176,7 @@ Evidence states: `PASS-CI`, `PASS-LIVE`, `MANUAL TEST NEEDED`, `DRIFT REVIEW`, `
 144. Dependabot monitors GitHub Actions dependency updates.
 145. Upstream DBM/BigWigs release/file drift is machine-monitored.
 146. Release ZIP is built twice and must be byte-identical.
-147. Release ZIP inventory is limited to intended runtime + README and matches source bytes.
+147. Release ZIP inventory is limited to `RaidLeadAssist.toc` plus exactly the Lua runtime files listed by the TOC, with no repository-only documentation, tests, audit scripts or maintenance files, and every packaged byte matches the tested source.
 148. Release ZIP has SHA-256 output and a retained Actions artifact.
 149. Exact release ZIP receives GitHub/Sigstore build-provenance attestation.
 150. Versioned prerelease/tag must target the exact validated main SHA.
