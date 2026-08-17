@@ -85,7 +85,7 @@ python3 scripts/build_release.py
 
 The builder creates `dist/RaidLeadAssist.zip` with one `RaidLeadAssist/` root containing only the TOC, TOC runtime files and this README. It rejects unsafe/duplicate/unexpected paths, reopens the ZIP, compares packaged bytes to source and prints SHA-256.
 
-CI additionally builds the ZIP **twice** and requires byte-identical output. Successful `main` pushes retain the verified ZIP/checksum artifact for **90 days**. A separate least-privilege provenance job downloads that exact artifact and generates a signed GitHub/Sigstore build-provenance attestation for the ZIP.
+CI builds the ZIP **twice** and requires byte-identical output. Every TOC runtime Lua file also passes Lua 5.1 compilation and blocking `luacheck` static analysis. Successful `main` pushes retain the verified ZIP/checksum artifact for **90 days**, generate a signed GitHub/Sigstore build-provenance attestation, and then create one immutable GitHub prerelease/tag for the exact validated SHA. The verified ZIP and SHA-256 file are attached to that release as durable rollback assets. Reusing the same version for a different `main` SHA is rejected by the release gate.
 
 ## Upstream drift control
 
@@ -97,14 +97,15 @@ A drift failure is a **review trigger**, not permission to copy new upstream IDs
 
 Every push/PR runs:
 
-- baseline/tooling validation;
+- baseline/tooling and runtime-hygiene validation;
 - Lua 5.1 compile checks for every Lua file;
-- TOC source inventory validation;
+- blocking static `luacheck` analysis for every TOC runtime Lua file;
+- TOC source inventory and WoW-visible metadata validation;
 - every `tests/test_*.lua` behavioral/adversarial regression;
 - deterministic double-build release-ZIP verification;
 - SHA-256 generation.
 
-`main` pushes additionally upload the verified artifact and, after the validation job succeeds, create provenance using a separate job with only the permissions needed for attestation.
+`main` pushes additionally upload the verified artifact, create provenance in a separate least-privilege job, and only after those gates pass publish or verify the versioned prerelease/tag for the same SHA.
 
 The full audit is maintained in [`docs/TEN_OF_TEN_ACCEPTANCE.md`](docs/TEN_OF_TEN_ACCEPTANCE.md). It covers 58 platform, encounter-data, provider, state, chat/audio, SavedVariables, UI/accessibility, taint/performance, packaging, security and governance checks.
 
