@@ -6,7 +6,7 @@ local function baseCalls()
         { key="venom", ability="Venomous Surge", action="Green arrows to markers", warning="VENOM > GREEN ARROWS TO MARKERS", voice="Venom", spellIDs={1305959}, prepareSeconds=6, pressSeconds=3 },
         { key="crosswinds", ability="Raging Crosswinds", action="Pair opposites > collide", warning="CROSSWINDS > PAIR OPPOSITES > COLLIDE", voice="Crosswinds", spellIDs={1285425}, prepareSeconds=7, pressSeconds=4 },
         { key="maelstrom", ability="Howling Maelstrom", action="Use cyst knockback > stay in", warning="MAELSTROM > USE CYST KNOCKBACK > STAY IN", voice="Maelstrom", spellIDs={1285732}, prepareSeconds=8, pressSeconds=5 },
-        { key="apex", ability="Apex Predator", action="Next 5+ soak team in", warning="MUTILATE > NEXT 5+ SOAK TEAM IN", voice="Soak", spellIDs={1277025,1285430}, prepareSeconds=7, pressSeconds=4 },
+        { key="apex", ability="Apex Predator", action="Next 5+ team ready for green Mutilate", warning="GREEN MUTILATE > NEXT 5+ SOAK TEAM", voice="Soak", spellIDs={1277025,1285430}, prepareSeconds=7, pressSeconds=4 },
     }
 end
 
@@ -17,22 +17,22 @@ Registry:Register({
         normal={
             explanation={
                 "PLAN: 1 PHASE. BLOODLUST ON PULL. PLACE 3 WORLD MARKERS OPPOSITE THE 3 TORNADO CLUSTERS. VENOM TARGETS TAKE GREEN ARROWS TO THE MARKERS AND DROP CYSTS THERE; KEEP CENTER OPEN.",
-                "CROSSWINDS: PAIR WITH THE OPPOSITE DIRECTION AND LINE UP SO THE LAUNCHES COLLIDE. MUTILATE: NEXT DISTINCT 5+ SOAK TEAM IN.",
+                "CROSSWINDS: PAIR WITH THE OPPOSITE DIRECTION AND LINE UP SO THE LAUNCHES COLLIDE. APEX: WHITE RAVAGE IS DBM-ONLY; GREEN MUTILATE GETS THE NEXT DISTINCT 5+ SOAK TEAM.",
                 "MAELSTROM/DIG IN: LET THE WIND PUSH THE RAID INTO A SAFE CYST SO ITS KNOCKBACK SENDS EVERYONE BACK IN. BOSS TAKES 30% MORE DAMAGE FOR 25 SEC; SAVE DPS COOLDOWNS FOR THIS WINDOW.",
             }, calls=baseCalls(),
         },
         heroic={
             explanation={
                 "PLAN: 1 PHASE. BLOODLUST ON PULL. PLACE 3 WORLD MARKERS OPPOSITE THE 3 TORNADO CLUSTERS. VENOM TARGETS DROP CYSTS ON THE MARKERS; KEEP CYSTS AND CAUSTIC PUDDLES OUTSIDE, CENTER OPEN.",
-                "CROSSWINDS: PAIR OPPOSITE DIRECTIONS AND COLLIDE AFTER THE LAUNCH. MUTILATE: ROTATE DISTINCT 5+ SOAK TEAMS; REPEAT SOAK DAMAGE IS HEAVILY INCREASED.",
+                "CROSSWINDS: PAIR OPPOSITE DIRECTIONS AND COLLIDE AFTER THE LAUNCH. APEX: WHITE RAVAGE IS DBM-ONLY; GREEN MUTILATE ROTATES DISTINCT 5+ SOAK TEAMS BECAUSE REPEAT DAMAGE IS HEAVILY INCREASED.",
                 "MAELSTROM/DIG IN: LET THE WIND PUSH THE RAID INTO A SAFE CYST SO ITS KNOCKBACK SENDS EVERYONE BACK IN. BOSS TAKES 30% MORE DAMAGE FOR 25 SEC; SAVE DPS COOLDOWNS FOR THIS WINDOW.",
             }, calls=baseCalls(),
         },
         mythic={
             explanation={
-                "PLAN: BLOODLUST ON PULL. USE THE HEROIC MARKER, CYST, CROSSWIND AND MUTILATE RULES. KEEP CENTER OPEN; SAVE DPS COOLDOWNS FOR EACH DIG IN 30% DAMAGE WINDOW.",
+                "PLAN: BLOODLUST ON PULL. USE THE HEROIC MARKER, CYST AND CROSSWIND RULES. APEX: WHITE RAVAGE IS DBM-ONLY; GREEN MUTILATE ROTATES DISTINCT 5+ SOAK TEAMS.",
                 "SERPENT'S FURY: 14+ PLAYERS STACK WITHIN 8 YARDS OF THE MARK BEFORE 100 RAGE. AFTER THE CHARGE, VIRULENCE TARGETS SPREAD AND DROP RESIDUE CLEAR OF THE RAID.",
-                "MAELSTROM: LET THE WIND PUSH THE RAID INTO A SAFE CYST SO ITS KNOCKBACK SENDS EVERYONE BACK IN. ROTATE DISTINCT 5+ MUTILATE SOAK TEAMS.",
+                "MAELSTROM: LET THE WIND PUSH THE RAID INTO A SAFE CYST SO ITS KNOCKBACK SENDS EVERYONE BACK IN. SAVE DPS COOLDOWNS FOR EACH DIG IN 30% DAMAGE WINDOW.",
             },
             calls={
                 baseCalls()[1], baseCalls()[2], baseCalls()[3], baseCalls()[4],
