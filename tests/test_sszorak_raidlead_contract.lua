@@ -32,7 +32,7 @@ for _, difficulty in ipairs({ "normal", "heroic", "mythic" }) do
     assert(profile.callsByKey.maelstrom.spellIDs[1] == 1285732)
     assert(profile.callsByKey.maelstrom.prepareSeconds == 8 and profile.callsByKey.maelstrom.pressSeconds == 5)
 
-    assert(profile.callsByKey.apex.warning == "GREEN MUTILATE > SOAK")
+    assert(profile.callsByKey.apex.warning == "GREEN MUTILATE > 5+ SOAK GROUP")
     assert(profile.callsByKey.apex.prepareSeconds == 7 and profile.callsByKey.apex.pressSeconds == 4)
 
     assert(contains(plan(difficulty), "30%"))
