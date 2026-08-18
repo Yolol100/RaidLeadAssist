@@ -90,7 +90,13 @@ end
 
 local function appendFragment(base, fragment, maxLength)
     if type(fragment) ~= "string" or fragment == "" then return base, true end
-    local candidate = base == "" and fragment or (base .. " > " .. fragment)
+    local candidate
+    if base == "" then
+        candidate = fragment
+    else
+        local separator = base:match("[%.!?]$") and " " or ". "
+        candidate = base .. separator .. fragment
+    end
     if #candidate <= maxLength then return candidate, true end
     return base, false
 end
@@ -307,7 +313,7 @@ function AssignmentService:GetCallFragments(bossKey, difficultyKey, callKey)
                 end
                 bucket[#bucket + 1] = { definition = definition, value = value }
             else
-                fragments[#fragments + 1] = (definition.callLabel or definition.label) .. ": " .. value
+                fragments[#fragments + 1] = (definition.callLabel or definition.label) .. ": " .. value .. "."
             end
         end
     end
@@ -322,7 +328,7 @@ function AssignmentService:GetCallFragments(bossKey, difficultyKey, callKey)
             local count = self.runtimeCounters[counterKey(bossKey, difficultyKey, rotation)] or 0
             local selected = bucket[(count % #bucket) + 1]
             local definition = selected.definition
-            fragments[#fragments + 1] = (definition.callLabel or definition.label) .. ": " .. selected.value
+            fragments[#fragments + 1] = (definition.callLabel or definition.label) .. ": " .. selected.value .. "."
         end
     end
 
