@@ -35,10 +35,10 @@ local mythic = Registry:GetProfile("ulatek", "mythic")
 -- Ula'tek was not publicly PTR-tested. Current guide/wiki consensus places
 -- Soul Constrictor and Mass Gestation on Mythic, so Heroic stays conservative
 -- until live Retail evidence resolves the conflicting Journal/NPC presentation.
-assert(normal.callsByKey.coils.warning == "COILS > STACK AT SOAK MARK")
-assert(heroic.callsByKey.coils.warning == "COILS > STACK AT SOAK MARK",
+assert(normal.callsByKey.coils.warning == "Spectral Coils: stack at Square.")
+assert(heroic.callsByKey.coils.warning == "Spectral Coils: stack at Square.",
     "Heroic must keep the full-raid Coils instruction until live evidence proves a rotation")
-assert(contains(mythic.callsByKey.coils.warning, "NEXT SOAK GROUP"),
+assert(contains(mythic.callsByKey.coils.warning, "called group"),
     "Mythic Spectral Coils uses the assigned alternating group rotation")
 assert(not hasDefinition("heroic", "coil_a") and not hasDefinition("heroic", "coil_b"),
     "Heroic must not invent Mythic Coil rotation assignments")
@@ -65,6 +65,7 @@ assert(not contains(planText("heroic"), "Coil group"),
 
 -- Mythic adds Incubation, hardened egg handling and Coil/egg-side coordination.
 assert(mythic.callsByKey.incubation, "Mythic must keep the Toxic Incubation call")
+assert(mythic.callsByKey.incubation.warning == "Toxic Incubation: each interceptor takes one hit.")
 assert(hasDefinition("mythic", "incubation_team"), "Mythic needs the 4+ Incubation team")
 assert(contains(planText("mythic"), "Toxic Incubation"))
 assert(contains(planText("mythic"), "Hardened egg"))
@@ -87,4 +88,4 @@ for _, difficultyKey in ipairs({ "normal", "heroic", "mythic" }) do
     end
 end
 
-print("ok - Ula'tek conservative difficulty split, assignments, identities and manual timing guarded")
+print("ok - Ula'tek conservative difficulty split, concise callouts, identities and manual timing guarded")
