@@ -22,10 +22,11 @@ for _, difficulty in ipairs({ "normal", "heroic", "mythic" }) do
     local profile = Registry:GetProfile("explorers", difficulty)
     assert(contains(plan(difficulty), "BLOODLUST ON PULL"))
     assert(contains(plan(difficulty), "NAMA > IKU > GEBBO"))
+    assert(contains(plan(difficulty), "MUSHROOM"))
     assert(not contains(plan(difficulty), "ICEBOUND FLAMES"))
     assert(profile.callsByKey.icebound == nil)
 
-    assert(profile.callsByKey.bomb.warning == "BOMB > EDGE > MUSHROOM OVER WAVE")
+    assert(profile.callsByKey.bomb.warning == "BOMB > MOVE OUT")
     assert(profile.callsByKey.bomb.spellIDs[1] == 1296249)
     assert(profile.callsByKey.bomb.prepareSeconds == 6 and profile.callsByKey.bomb.pressSeconds == 3)
 
