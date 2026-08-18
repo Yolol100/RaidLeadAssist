@@ -62,11 +62,11 @@ for _, difficulty in ipairs({ "normal", "heroic", "mythic" }) do
     local plan = text("sszorak", difficulty)
     local warning = Registry:GetProfile("sszorak", difficulty).callsByKey.apex.warning
     assert(contains(plan, "DISTINCT 5+"),
-        "Sszorak Mutilate briefing must match the distinct-team assignment rotation")
-    assert(contains(warning, "NEXT 5+ SOAK TEAM"),
-        "Sszorak combat call must request the next soak team concisely")
-    assert(not contains(plan, "FIXED 5+ SOAK TEAM"),
-        "Sszorak must not imply the same fixed Mutilate team repeats")
+        "Sszorak Mutilate briefing must match the distinct-group assignment rotation")
+    assert(contains(warning, "NEXT 5+ SOAK GROUP"),
+        "Sszorak combat call must request the next soak group concisely")
+    assert(not contains(plan, "FIXED 5+ SOAK GROUP"),
+        "Sszorak must not imply the same fixed Mutilate group repeats")
 end
 
 local altarNormal = Registry:GetProfile("altar", "normal")

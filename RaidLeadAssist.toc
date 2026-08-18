@@ -14,6 +14,7 @@ Core/EventBus.lua
 Core/Database.lua
 Encounters/Registry.lua
 Encounters/AssignmentRegistry.lua
+Encounters/SszorakAssignmentOverride.lua
 Encounters/VenomousAbyss/Nekzali.lua
 Encounters/VenomousAbyss/Sentinels.lua
 Encounters/VenomousAbyss/Explorers.lua
