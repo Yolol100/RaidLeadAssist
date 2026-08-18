@@ -62,20 +62,23 @@ assert(Registry:MatchCall("nekzali", "mythic", 1299673, nil) == nil)
 for _, difficulty in ipairs(difficulties) do
     local sent = Registry:GetProfile("sentinels", difficulty)
     local sentPlan = plan("sentinels", difficulty)
-    assert(sent.callsByKey.coagulation and sent.callsByKey.coagulation.warning == "GREEN TEAM > KILL ADD")
+    assert(sent.callsByKey.coagulation and sent.callsByKey.coagulation.warning == "BREATH SIDE > KILL ADD")
     assert(sent.callsByKey.coagulation.timing == false,
         "Coagulation must stay manual because BigWigs publishes both the parent bar and a same-key add-spawn follow-up")
     assert(sent.callsByKey.droplets == nil,
         "Toxic Droplets already has a bossmod help-soak warning; RLA should teach it in the plan without duplicating the live call")
-    assert(sent.callsByKey.miasma and sent.callsByKey.miasma.warning == "RED TEAM > SOAK TARGET")
+    assert(sent.callsByKey.miasma and sent.callsByKey.miasma.warning == "BLOOD SIDE > SOAK TARGET")
     assert(sent.callsByKey.miasma.prepareSeconds == 5 and sent.callsByKey.miasma.pressSeconds == 1)
     assert(sent.callsByKey.stasis and sent.callsByKey.stasis.warning == "MATCH TO 4 > 1+3 OR 2+2")
     assert(sent.callsByKey.stasis.prepareSeconds == 6 and sent.callsByKey.stasis.pressSeconds == 2)
-    assert(sent.callsByKey.side_swap and sent.callsByKey.side_swap.timing == false)
+    assert(sent.callsByKey.side_swap and sent.callsByKey.side_swap.warning == "TEAMS > SWAP BOSS SIDES")
+    assert(sent.callsByKey.side_swap.timing == false)
     assert(sent.callsByKey.balance and sent.callsByKey.balance.warning == "KEEP HP EVEN > STOP LOWER HP BOSS")
 
-    assert(contains(sentPlan, "GREEN TEAM/BREATH") and contains(sentPlan, "RED TEAM/BLOOD"),
-        "Sentinels plan must use roster-scalable team identities")
+    assert(contains(sentPlan, "TEAM A STARTS BREATH/GREEN") and contains(sentPlan, "TEAM B STARTS BLOOD/RED"),
+        "Sentinels plan must define a roster-scalable starting split")
+    assert(contains(sentPlan, "SWAP BOSS SIDES"),
+        "Sentinels plan must make the post-Stasis ownership swap explicit")
     assert(not contains(sentPlan, "GROUPS 1+2 GO GREEN") and not contains(sentPlan, "GROUPS 3+4 GO RED"),
         "Sentinels flex plan must not hard-code a 20-player raid split")
     assert(sent.callsByKey.living == nil, "Returning venom is a personal dodge and must stay bossmod-owned")
@@ -98,4 +101,4 @@ assert(Registry:MatchCall("sentinels", "normal", 1284588, nil).key == "stasis")
 assert(Registry:MatchCall("sentinels", "normal", 1284483, nil) == nil)
 assert(Registry:MatchCall("sentinels", "mythic", 1296878, nil).key == "protovenom")
 
-print("ok - boss 1/2 use raidleader-only calls with source-backed timers and flex-safe Sentinels teams")
+print("ok - boss 1/2 use raidleader-only calls with source-backed timers and rotation-safe Sentinels teams")
