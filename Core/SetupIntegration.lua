@@ -11,6 +11,7 @@ local App = ns:GetModule("Core.App")
 local Integration = {
     card = nil,
     extraHeight = 72,
+    heightApplied = false,
 }
 
 local function hasSetup()
@@ -20,11 +21,12 @@ end
 function Integration:Refresh()
     if not UI.frame or not UI.timeline or not UI.explanationTitle then return end
 
-    if not self.card then
-        self.card = SetupCard:Create(UI.frame)
-        self.card.frame:SetPoint("LEFT", UI.timeline.frame, "LEFT", 0, 0)
-        self.card.frame:SetPoint("RIGHT", UI.timeline.frame, "RIGHT", 0, 0)
+    if self.heightApplied then
+        UI.frame:SetHeight(math.max(1, UI.frame:GetHeight() - self.extraHeight))
+        self.heightApplied = false
     end
+
+    if not self.card then self.card = SetupCard:Create(UI.frame) end
 
     UI.explanationTitle:ClearAllPoints()
 
@@ -52,6 +54,7 @@ function Integration:Refresh()
 
     UI.explanationTitle:SetPoint("TOPLEFT", self.card.frame, "BOTTOMLEFT", 0, -16)
     UI.frame:SetHeight(UI.frame:GetHeight() + self.extraHeight)
+    self.heightApplied = true
 end
 
 local originalInitialize = App.Initialize
