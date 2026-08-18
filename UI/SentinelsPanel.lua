@@ -106,8 +106,8 @@ function SentinelsPanel:Create(parent, mainUI)
     instance.bloodButtons = {}
     instance.sharedButtons = {}
 
-    instance.breathColumn = createColumn(instance.frame, "GREEN - BREATH OF ULA'TEK - GROUPS 1+2", Theme.colors.venomBright)
-    instance.bloodColumn = createColumn(instance.frame, "RED - BLOOD OF ULA'TEK - GROUPS 3+4", Theme.colors.error)
+    instance.breathColumn = createColumn(instance.frame, "GREEN TEAM - BREATH OF ULA'TEK", Theme.colors.venomBright)
+    instance.bloodColumn = createColumn(instance.frame, "RED TEAM - BLOOD OF ULA'TEK", Theme.colors.error)
 
     local columnGap = Theme.gap
     instance.breathColumn:SetPoint("TOPLEFT", 0, 0)
