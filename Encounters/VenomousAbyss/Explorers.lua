@@ -1,8 +1,6 @@
 local _, ns = ...
 local Registry = ns:GetModule("Encounters.Registry")
 
-local BOSSMOD_RULE = "CALL PRIORITY: FOLLOW DBM OR BIGWIGS FOR YOUR PERSONAL DEBUFFS, DODGES, ROLE WARNINGS AND TIMERS. FOLLOW RLA/RAID-LEADER CALLS FOR GROUPS, MARKERS, SOAKS, TARGET PRIORITY AND SHARED RAID MOVEMENT."
-
 local function calls(crateAction, crateWarning)
     return {
         {
@@ -42,15 +40,18 @@ Registry:Register({
     key = "explorers",
     name = "The Lost Explorers",
     encounterID = 3497,
-    strategyStatus = "12.1 Journal + current Wowhead/Raidstrats + Ready Check Pull recap + DBM/BigWigs source-reviewed 2026-08-18; raidlead-only call scope; live validation pending",
+    strategyStatus = "12.1 Journal + current Wowhead/Raidstrats + Ready Check Pull recap + DBM/BigWigs source-reviewed 2026-08-19; player briefing split from raidleader prep; live validation pending",
     profiles = {
         normal = {
             explanation = {
-                "PLAN: BLOODLUST ON PULL. STACK IKU + NAMA + GEBBO. KEEP ALL THREE HEALTH BARS EVEN AND FINISH TOGETHER.",
-                "OPEN GEBBO CRATES UNTIL YOU FIND FISH. FISH ORDER: NAMA > IKU > GEBBO; FEED THE NEXT UNUSED CONTROLLED BOSS BEFORE FINAL ASCENSION.",
-                "MIGHTY THUD: THREE TARGETS GO TO THREE SEPARATE SOAK POINTS, THEN LEAVE THE PATCHES. INTERRUPT ICEBOUND FLAMES.",
-                "DODGE SHELLS. BLINK TARGET GOES EDGE; RAID MOVES AWAY. FROST/FIRE PAIR AND CLEAR WITH OPPOSITE. BOMB EDGE, THEN MUSHROOM OVER WAVE.",
-                BOSSMOD_RULE,
+                "Keep all three bosses even and finish them together.",
+                "Crates appear: assigned breaker opens them until fish appears.",
+                "Fish appears: feed the next planned boss before Final Ascension.",
+                "Three players marked: each goes to a different soak marker.",
+                "Assigned soakers stack with their marked player before impact.",
+                "Fire clears with Frost; Frost clears with Fire.",
+                "Bomb appears: move away, then use a mushroom for the fire wave.",
+                "Icebound Flames starts: interrupt it immediately.",
             },
             calls = calls(
                 "Assigned breaker opens crate",
@@ -59,11 +60,8 @@ Registry:Register({
         },
         heroic = {
             explanation = {
-                "PLAN: BLOODLUST ON PULL. STACK IKU + GEBBO; KEEP NAMA 30+ YARDS AWAY. KEEP ALL THREE HP EVEN AND FINISH TOGETHER.",
-                "ROTATE CRATE BREAKERS FOR SPLINTERS. FISH ORDER: NAMA > IKU > GEBBO; FEED THE NEXT UNUSED CONTROLLED BOSS BEFORE FINAL ASCENSION.",
-                "MIGHTY THUD: THREE TARGETS USE THREE SOAK POINTS. INTERRUPT ICEBOUND FLAMES. DODGE SHELLS; BLINK TARGET EDGE, RAID AWAY.",
-                "FROST/FIRE PAIR AND CLEAR WITH OPPOSITE. BOMB EDGE, THEN MUSHROOM OVER WAVE. HANDLE SPREADING FLAMES.",
-                BOSSMOD_RULE,
+                "Keep Nama away; stack Iku and Gebbo together.",
+                "Spreading fire appears: keep it away from usable space.",
             },
             calls = calls(
                 "Next breaker opens crate",
@@ -72,11 +70,7 @@ Registry:Register({
         },
         mythic = {
             explanation = {
-                "PLAN: BLOODLUST ON PULL. STACK IKU + GEBBO; KEEP NAMA 30+ YARDS AWAY. KEEP ALL THREE HP EVEN AND FINISH TOGETHER.",
-                "ROTATE CRATE BREAKERS FOR SPLINTERS. BEFORE A CRATE BREAK, RAID CLEARS 15+ YARDS. FISH ORDER: NAMA > IKU > GEBBO.",
-                "FEED THE NEXT UNUSED CONTROLLED BOSS BEFORE FINAL ASCENSION. THUD: THREE TARGETS USE THREE SOAK POINTS. INTERRUPT ICEBOUND FLAMES.",
-                "DODGE SHELLS; BLINK TARGET EDGE, RAID AWAY. FROST/FIRE CLEAR WITH OPPOSITE. BOMB EDGE, THEN MUSHROOM OVER WAVE.",
-                BOSSMOD_RULE,
+                "Before a crate is broken, everyone else moves 15+ yards away.",
             },
             calls = calls(
                 "Next breaker opens crate > raid clear 15 yards",
