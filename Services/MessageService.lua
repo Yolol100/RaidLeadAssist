@@ -27,6 +27,24 @@ local function resolveDifficulty(service, difficultyKey)
     return (service.database and service.database.selectedDifficultyKey) or Registry:GetActiveDifficulty() or "heroic"
 end
 
+local function defaultFingerprint(defaults)
+    if type(defaults) ~= "table" then return nil end
+    local parts = {}
+    for index = 1, #(defaults.explanation or {}) do
+        parts[#parts + 1] = "E:" .. tostring(defaults.explanation[index])
+    end
+    for index = 1, #(defaults.calls or {}) do
+        local call = defaults.calls[index]
+        parts[#parts + 1] = "C:" .. tostring(call.key) .. "=" .. tostring(call.warning)
+    end
+    local text = table.concat(parts, "\n")
+    local hash = 5381
+    for index = 1, #text do
+        hash = (hash * 33 + text:byte(index)) % 4294967296
+    end
+    return string.format("%08x", hash)
+end
+
 local function getStoredProfile(database, bossKey, difficultyKey, create)
     if type(database.customMessages) ~= "table" then database.customMessages = {} end
     local bossProfiles = database.customMessages[bossKey]
@@ -56,6 +74,10 @@ end
 local function removeEmptyBoss(database, bossKey)
     local bossProfiles = database.customMessages and database.customMessages[bossKey]
     if type(bossProfiles) == "table" and next(bossProfiles) == nil then database.customMessages[bossKey] = nil end
+end
+
+local function stampCurrentDefault(profile, defaults)
+    if profile then profile.defaultFingerprint = defaultFingerprint(defaults) end
 end
 
 function MessageService:Initialize(database)
@@ -123,7 +145,11 @@ function MessageService:NormalizeStoredProfiles()
                     end
 
                     if cleanExplanation or next(cleanCalls) then
-                        cleanDifficulties[difficultyKey] = { explanation = cleanExplanation, calls = cleanCalls }
+                        cleanDifficulties[difficultyKey] = {
+                            explanation = cleanExplanation,
+                            calls = cleanCalls,
+                            defaultFingerprint = type(profile.defaultFingerprint) == "string" and profile.defaultFingerprint or nil,
+                        }
                     end
                 end
             end
@@ -180,6 +206,7 @@ function MessageService:ApplyBossDraft(bossKey, difficultyKey, explanationText, 
         local profile = getStoredProfile(self.database, bossKey, difficultyKey, true)
         profile.explanation = customExplanation
         profile.calls = customCalls
+        stampCurrentDefault(profile, defaults)
     else
         local bossProfiles = self.database.customMessages[bossKey]
         if type(bossProfiles) == "table" then bossProfiles[difficultyKey] = nil end
@@ -187,6 +214,17 @@ function MessageService:ApplyBossDraft(bossKey, difficultyKey, explanationText, 
     end
     EventBus:Emit("MESSAGES_CHANGED", bossKey, difficultyKey)
     return true, draft
+end
+
+function MessageService:GetCustomCurrentness(bossKey, difficultyKey)
+    difficultyKey = resolveDifficulty(self, difficultyKey)
+    local defaults = Registry:GetProfile(bossKey, difficultyKey)
+    if not defaults then return "unknown" end
+    local profile = getStoredProfile(self.database, bossKey, difficultyKey, false)
+    if not profile or (not profile.explanation and (type(profile.calls) ~= "table" or next(profile.calls) == nil)) then
+        return "default"
+    end
+    return profile.defaultFingerprint == defaultFingerprint(defaults) and "current" or "review"
 end
 
 function MessageService:GetCallWarning(bossKey, difficultyKey, callKey)
@@ -222,6 +260,7 @@ function MessageService:SetCallWarning(bossKey, difficultyKey, callKey, text)
     if not ok then return false, normalized end
     local profile = getStoredProfile(self.database, bossKey, difficultyKey, true)
     profile.calls[callKey] = normalized ~= defaults.callsByKey[callKey].warning and normalized or nil
+    if profile.calls[callKey] or profile.explanation then stampCurrentDefault(profile, defaults) end
     EventBus:Emit("MESSAGES_CHANGED", bossKey, difficultyKey, callKey)
     return true
 end
@@ -235,6 +274,7 @@ function MessageService:SetExplanationText(bossKey, difficultyKey, text)
     if not lines then return false, err end
     local profile = getStoredProfile(self.database, bossKey, difficultyKey, true)
     profile.explanation = table.concat(lines, "\n") ~= table.concat(defaults.explanation, "\n") and lines or nil
+    if profile.explanation or next(profile.calls or {}) then stampCurrentDefault(profile, defaults) end
     EventBus:Emit("MESSAGES_CHANGED", bossKey, difficultyKey, "explanation")
     return true
 end
@@ -244,6 +284,8 @@ function MessageService:ResetCallWarning(bossKey, difficultyKey, callKey)
     difficultyKey = resolveDifficulty(self, difficultyKey)
     local profile = getStoredProfile(self.database, bossKey, difficultyKey, false)
     if profile and profile.calls then profile.calls[callKey] = nil end
+    local defaults = Registry:GetProfile(bossKey, difficultyKey)
+    if profile and (profile.explanation or next(profile.calls or {})) then stampCurrentDefault(profile, defaults) end
     EventBus:Emit("MESSAGES_CHANGED", bossKey, difficultyKey, callKey)
 end
 
@@ -251,6 +293,8 @@ function MessageService:ResetExplanation(bossKey, difficultyKey)
     difficultyKey = resolveDifficulty(self, difficultyKey)
     local profile = getStoredProfile(self.database, bossKey, difficultyKey, false)
     if profile then profile.explanation = nil end
+    local defaults = Registry:GetProfile(bossKey, difficultyKey)
+    if profile and next(profile.calls or {}) then stampCurrentDefault(profile, defaults) end
     EventBus:Emit("MESSAGES_CHANGED", bossKey, difficultyKey, "explanation")
 end
 
