@@ -1,13 +1,13 @@
 local _, ns = ...
 local Registry = ns:GetModule("Encounters.Registry")
 
-local function baseCalls(pyreAction, flameAction)
+local function baseCalls(pyreAction, pyreWarning, flameAction, flameWarning)
     local calls = {
         {
             key = "adds",
             ability = "Restless Amani",
-            action = "Kill adds",
-            warning = "KILL ADS",
+            action = "Kill the Amani before the Well",
+            warning = "Amani adds: kill them before the Well.",
             voice = "Adds",
             spellIDs = { 1295397, 1297630 },
             prepareSeconds = 7,
@@ -16,8 +16,8 @@ local function baseCalls(pyreAction, flameAction)
         {
             key = "echoes",
             ability = "Echoes of Jawae",
-            action = "Kill each Echo as it awakens",
-            warning = "KILL ECHOES",
+            action = "Kill each Echo as it wakes",
+            warning = "Echoes: kill each one as it wakes.",
             voice = "Echoes",
             timing = false,
             iconSpellID = 1289696,
@@ -26,7 +26,7 @@ local function baseCalls(pyreAction, flameAction)
             key = "pyre",
             ability = "Hungering Pyre",
             action = pyreAction,
-            warning = pyreAction,
+            warning = pyreWarning,
             voice = "Pyre",
             spellIDs = { 1305421, 1290679 },
             prepareSeconds = 8,
@@ -38,7 +38,7 @@ local function baseCalls(pyreAction, flameAction)
             key = "flame",
             ability = "Slithering Flame",
             action = flameAction,
-            warning = flameAction,
+            warning = flameWarning,
             voice = "Flame",
             timing = false,
         }
@@ -46,8 +46,8 @@ local function baseCalls(pyreAction, flameAction)
     calls[#calls + 1] = {
         key = "phase2",
         ability = "Phase 2",
-        action = "Bloodlust > burn boss",
-        warning = "PHASE 2 > BLOODLUST > BURN BOSS",
+        action = "Bloodlust and burn the boss",
+        warning = "Phase 2: Bloodlust and burn the boss.",
         voice = "Phase two",
         timing = false,
         iconSpellID = 1299673,
@@ -55,14 +55,27 @@ local function baseCalls(pyreAction, flameAction)
     return calls
 end
 
-local normalCalls = baseCalls("MELEE SOAK", nil)
-local heroicCalls = baseCalls("ASSIGNED SOAK GROUP IN", "FIRE CIRCLE > BURN AMANI CORPSE")
-local mythicCalls = baseCalls("GROUPS 1+2 SOAK", "GROUPS 3+4 BURN CORPSES")
+local normalCalls = baseCalls(
+    "Melee soak together",
+    "Hungering Pyre: melee soak together."
+)
+local heroicCalls = baseCalls(
+    "Called soak group stacks in",
+    "Hungering Pyre: called soak group stack in.",
+    "Take fire circles to dead Amani",
+    "Fire circles: take them to dead Amani corpses."
+)
+local mythicCalls = baseCalls(
+    "Called soak group stacks in",
+    "Hungering Pyre: called soak group stack in.",
+    "Take fire circles to dead Amani",
+    "Fire circles: take them to dead Amani corpses."
+)
 table.insert(mythicCalls, 2, {
     key = "grasping",
     ability = "Grasping Depths",
-    action = "Next fresh well group in > kick > kill Echo > out",
-    warning = "GRASPING > NEXT WELL GROUP IN > KICK > KILL ECHO > OUT",
+    action = "Enter, interrupt, kill the Echo, then exit",
+    warning = "Grasping Depths: called well group enter, interrupt, kill the Echo, then exit.",
     voice = "Well group",
     spellIDs = { 1293212 },
     prepareSeconds = 8,
