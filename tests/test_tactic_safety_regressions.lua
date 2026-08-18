@@ -25,16 +25,18 @@ end
 for _, difficulty in ipairs({ "normal", "heroic", "mythic" }) do
     local profile = Registry:GetProfile("explorers", difficulty)
     local plan = text("explorers", difficulty)
-    assert(profile.callsByKey.balance and profile.callsByKey.balance.timing == false,
-        "Lost Explorers needs a manual boss-health coordination call on every difficulty")
-    assert(contains(profile.callsByKey.balance.warning, "KEEP ALL 3 EVEN"),
-        "Lost Explorers health button must give only the immediate health-balancing action")
+    assert(profile.callsByKey.balance == nil,
+        "Lost Explorers health balancing must stay in the raidplan, not as a duplicate button")
+    assert(profile.callsByKey.icebound == nil,
+        "Lost Explorers Icebound interrupt is DBM/BigWigs-owned and must not duplicate as a RaidLeadAssist button")
     assert(contains(plan, "FINISH TOGETHER"),
         "Lost Explorers briefing must coordinate a synchronized finish")
     assert(profile.callsByKey.killorder == nil,
         "Lost Explorers must not retain the obsolete fixed Nama > Iku > Gebbo kill-order call")
     assert(not contains(plan, "NAMA FIRST") and not contains(plan, "NAMA > IKU > GEBBO"),
         "Lost Explorers plan must not instruct an early Nama kill")
+    assert(profile.callsByKey.shell and profile.callsByKey.blink and profile.callsByKey.volley and profile.callsByKey.bomb,
+        "Lost Explorers must retain Shell Spin, Blink Nova, Frostfire Volley and Explosive Surprise raidlead buttons")
 end
 for _, difficulty in ipairs({ "heroic", "mythic" }) do
     local plan = text("explorers", difficulty)
