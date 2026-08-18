@@ -11,6 +11,7 @@ for _, file in ipairs({"CoiledAltar.lua","Explorers.lua","Nekzali.lua","Sentinel
 end
 T.Load("Encounters/AssignmentRegistry.lua", ns)
 T.Load("Encounters/Boss12AssignmentOverride.lua", ns)
+T.Load("Encounters/Boss34AssignmentOverride.lua", ns)
 T.Load("Encounters/TwinFangsAssignmentOverride.lua", ns)
 
 local Registry = ns:GetModule("Encounters.Registry")
