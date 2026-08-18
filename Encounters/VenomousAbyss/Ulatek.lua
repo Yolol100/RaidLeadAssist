@@ -13,25 +13,74 @@ local function manualCall(key, ability, action, warning, voice, iconSpellID)
     }
 end
 
-local function calls(coilText, eggText, includeFangs, includeMythic)
+local function calls(coilAction, coilWarning, eggAction, eggWarning, includeFangs, includeMythic)
     local result = {
-        manualCall("coils", "Spectral Coils", coilText, coilText, "Coils", 1300530),
-        manualCall("warden", "Doomscale Warden", "Kill Warden > no egg touch until dead", "WARDEN > KILL > NO EGG TOUCH UNTIL DEAD", "Warden", 1298559),
-        manualCall("eggs", "Doomscale Eggs", eggText, eggText, "Eggs", 1299650),
-        manualCall("serpents", "Call of the Serpent", "Kill serpent adds", "CALL OF SERPENT > KILL ADDS", "Adds", 1300751),
-        manualCall("heart", "Rage of the Shackled", "Burn exposed Venomous Heart", "RAGE > BURN VENOMOUS HEART", "Heart", 1286860),
+        manualCall("coils", "Spectral Coils", coilAction, coilWarning, "Coils", 1300530),
+        manualCall(
+            "warden",
+            "Doomscale Warden",
+            "Kill Warden before touching eggs",
+            "Warden first: kill it before touching eggs.",
+            "Warden",
+            1298559
+        ),
+        manualCall("eggs", "Doomscale Eggs", eggAction, eggWarning, "Eggs", 1299650),
+        manualCall(
+            "serpents",
+            "Call of the Serpent",
+            "Kill serpent adds fast",
+            "Serpent adds: kill them fast.",
+            "Adds",
+            1300751
+        ),
+        manualCall(
+            "heart",
+            "Rage of the Shackled",
+            "Switch and burn the exposed Heart",
+            "Heart exposed: switch and burn it.",
+            "Heart",
+            1286860
+        ),
     }
 
     if includeFangs then
-        result[#result + 1] = manualCall("fangs", "Grasping Fangs", "Break one at a time", "FANGS > BREAK ONE AT A TIME", "Fangs", 1311611)
+        result[#result + 1] = manualCall(
+            "fangs",
+            "Grasping Fangs",
+            "Break one player free at a time",
+            "Fangs: break one player free at a time.",
+            "Fangs",
+            1311611
+        )
     end
 
     if includeMythic then
-        result[#result + 1] = manualCall("incubation", "Toxic Incubation", "Four interceptors > one hit each", "INCUBATION > 4 INTERCEPTORS > ONE HIT EACH", "Intercept", 1299759)
+        result[#result + 1] = manualCall(
+            "incubation",
+            "Toxic Incubation",
+            "Each interceptor takes one hit",
+            "Toxic Incubation: each interceptor takes one hit.",
+            "Intercept",
+            1299759
+        )
     end
 
-    result[#result + 1] = manualCall("phase3", "Ula'tek's Ascension", "Bloodlust > preserve safe space", "PHASE 3 > BLOODLUST > PRESERVE SAFE SPACE", "Bloodlust", 1286905)
-    result[#result + 1] = manualCall("demolish", "Demolish", "Move raid to next safe space", "DEMOLISH > MOVE TO NEXT SAFE SPACE", "Move", 1301510)
+    result[#result + 1] = manualCall(
+        "phase3",
+        "Ula'tek's Ascension",
+        "Bloodlust; move together",
+        "Phase 3: Bloodlust and move together.",
+        "Bloodlust",
+        1286905
+    )
+    result[#result + 1] = manualCall(
+        "demolish",
+        "Demolish",
+        "Move together to the next safe area",
+        "Demolish: move together to the next safe area.",
+        "Move",
+        1301510
+    )
     return result
 end
 
@@ -52,8 +101,10 @@ Registry:Register({
                 "Phase 3: Bloodlust and move together as Demolish removes safe space.",
             },
             calls = calls(
-                "COILS > STACK AT SOAK MARK",
-                "EGG > ASSIGNED HANDLER AFTER WARDEN",
+                "Stack at Square",
+                "Spectral Coils: stack at Square.",
+                "Handler uses the planned egg after Warden",
+                "Warden dead: handler use the planned egg.",
                 false,
                 false
             ),
@@ -65,8 +116,10 @@ Registry:Register({
                 "Birthlings stack Poisonous Bite: kill them quickly before stacks build.",
             },
             calls = calls(
-                "COILS > STACK AT SOAK MARK",
-                "EGG > ASSIGNED HANDLER AFTER WARDEN",
+                "Stack at Square",
+                "Spectral Coils: stack at Square.",
+                "Handler uses the planned egg after Warden",
+                "Warden dead: handler use the planned egg.",
                 true,
                 false
             ),
@@ -81,8 +134,10 @@ Registry:Register({
                 "Fang breaks now hit the whole raid: never break multiple together.",
             },
             calls = calls(
-                "COILS > NEXT SOAK GROUP IN",
-                "EGGS > PLANNED SIDE ONLY > CARRIERS 3+ YARDS",
+                "Called group stacks at Square",
+                "Spectral Coils: called group stack at Square.",
+                "Use planned side; carriers stay 3+ yards apart",
+                "Eggs: use the planned side; carriers stay 3+ yards apart.",
                 true,
                 true
             ),
