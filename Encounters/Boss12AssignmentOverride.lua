@@ -51,31 +51,31 @@ local NEKZALI_MYTHIC = {
 }
 
 local SENTINELS_SPLIT = {
-    summary = "Define the Green/Breath and Red/Blood team selectors for this roster. The split stays valid from flex raids through fixed-size Mythic.",
+    summary = "Define Team A and Team B for the starting split. A starts Breath/green and B starts Blood/red; both swap boss sides after every Stasis.",
     sections = {
         {
             key = "split",
-            title = "Raid Split",
-            description = "Use group selectors or short team rules instead of fixed raid-group numbers. Examples: Group 1 / Group 2 in a 10-player raid, or Groups 1+2 / Groups 3+4 in a 20-player raid.",
+            title = "Starting Raid Split",
+            description = "Use group selectors or short team rules instead of fixed raid-group numbers. The start labels stay stable while the teams swap which boss they handle after Stasis.",
             columns = 2,
             slots = {
                 {
-                    key = "green_team",
-                    label = "Green Team Selector",
+                    key = "team_a",
+                    label = "Team A · Breath Start",
                     kind = "rule",
-                    callKey = "coagulation",
-                    callLabel = "GREEN",
+                    callKey = "side_swap",
+                    callLabel = "TEAM A",
                     required = true,
-                    helper = "Enter the group selector or short rule for the Breath/green side, for example Group 1 or Groups 1+2.",
+                    helper = "Example: Group 1 in a 10-player raid or Groups 1+2 in a 20-player raid. Team A starts on Breath/green.",
                 },
                 {
-                    key = "red_team",
-                    label = "Red Team Selector",
+                    key = "team_b",
+                    label = "Team B · Blood Start",
                     kind = "rule",
-                    callKey = "miasma",
-                    callLabel = "RED",
+                    callKey = "side_swap",
+                    callLabel = "TEAM B",
                     required = true,
-                    helper = "Enter the group selector or short rule for the Blood/red side, for example Group 2 or Groups 3+4.",
+                    helper = "Example: Group 2 in a 10-player raid or Groups 3+4 in a 20-player raid. Team B starts on Blood/red.",
                 },
             },
         },
