@@ -7,7 +7,7 @@ local function sharedCalls()
             key = "stasis",
             ability = "Vitriolic Stasis",
             action = "Match to exactly 4",
-            warning = "MATCH TO EXACTLY 4",
+            warning = "MATCH TO 4 > 1+3 OR 2+2",
             voice = "Match to four",
             spellIDs = { 1284588 },
             prepareSeconds = 8,
@@ -119,15 +119,6 @@ local function bloodCalls(includePool)
             spellIDs = { 1288232 },
             uiGroup = "blood",
         },
-        {
-            key = "blood",
-            ability = "Blighted Blood",
-            action = "Dispel dots",
-            warning = "DISPEL DOTS",
-            voice = "Dispel dots",
-            spellIDs = { 1284483 },
-            uiGroup = "blood",
-        },
     }
     if includePool then
         calls[#calls + 1] = {
@@ -140,6 +131,15 @@ local function bloodCalls(includePool)
             uiGroup = "blood",
         }
     end
+    calls[#calls + 1] = {
+        key = "blood",
+        ability = "Blighted Blood",
+        action = "Dispel dots",
+        warning = "DISPEL DOTS",
+        voice = "Dispel dots",
+        spellIDs = { 1284483 },
+        uiGroup = "blood",
+    }
     return calls
 end
 
@@ -171,13 +171,13 @@ Registry:Register({
     key = "sentinels",
     name = "Entombed Sentinels",
     encounterID = 3445,
-    strategyStatus = "12.1 Journal + current community/PTR strategy source-reviewed 2026-08-17; split layout and secret-safe HP display; live validation pending",
+    strategyStatus = "12.1 Journal + current community/PTR strategy source-reviewed 2026-08-18; split layout and secret-safe HP display; live validation pending",
     profiles = {
         normal = {
             explanation = {
                 "PLAN: GROUPS 1+2 GO GREEN/BREATH. GROUPS 3+4 GO RED/BLOOD. KEEP BOSSES 40+ YARDS APART AND KEEP HP EVEN.",
                 "GREEN: KILL THE ADD AND RUN OVER GREEN DROPLETS. RED: SOAK THE CIRCLE TOGETHER AND HEALERS DISPEL THE DOTS.",
-                "AT STASIS: FIND PLAYERS THAT MAKE EXACTLY 4 TOXIN STACKS, CLEAR IT, THEN GROUPS 1+2 AND 3+4 SWAP BOSS SIDES.",
+                "AT STASIS: MATCH TO EXACTLY 4 TOXIN STACKS (1+3 OR 2+2), CLEAR IT, THEN GROUPS 1+2 AND 3+4 SWAP BOSS SIDES.",
                 "TANKS SWAP BEFORE REPEATED SLAM/INJECTION HITS GET TOO STRONG.",
             },
             calls = normalCalls,
@@ -185,8 +185,8 @@ Registry:Register({
         heroic = {
             explanation = {
                 "PLAN: GROUPS 1+2 GO GREEN/BREATH. GROUPS 3+4 GO RED/BLOOD. KEEP BOSSES 40+ YARDS APART AND KEEP HP EVEN.",
-                "GREEN: KILL ADD, RUN OVER GREEN DROPLETS, DODGE RETURNING VENOM. RED: SOAK CIRCLE, DISPEL DOTS, DROP BLOOD VENOM AT THE EDGE.",
-                "AT STASIS: MAKE EXACTLY 4 TOXIN STACKS, CLEAR IT, THEN SWAP BOSS SIDES. DO NOT LET ONE BOSS FALL FAR BEHIND.",
+                "GREEN: KILL ADD, RUN OVER GREEN DROPLETS, DODGE RETURNING VENOM. RED: SOAK CIRCLE; DOT TARGETS MOVE OUT, THEN DISPEL.",
+                "AT STASIS: MATCH TO EXACTLY 4 TOXIN STACKS (1+3 OR 2+2), CLEAR IT, THEN SWAP BOSS SIDES. KEEP HP EVEN.",
                 "TANKS SWAP BEFORE REPEATED SLAM/INJECTION HITS GET TOO STRONG.",
             },
             calls = heroicCalls,
@@ -195,8 +195,8 @@ Registry:Register({
             explanation = {
                 "PLAN: GROUPS 1+2 GO GREEN/BREATH. GROUPS 3+4 GO RED/BLOOD. KEEP BOSSES 40+ YARDS APART AND KEEP HP EVEN.",
                 "DO HEROIC RULES. PROTOVENOM: MARKED PLAYERS TOUCH ANOTHER MARKED PLAYER ONLY; NEVER TOUCH A CLEAN PLAYER.",
-                "AT STASIS: MATCH TO EXACTLY 4 TOXIN STACKS, CLEAR IT, THEN SWAP BOSS SIDES AND RESET THE SPLIT FAST.",
-                "TANKS SWAP BEFORE REPEATED HITS GET TOO STRONG. WATCH OVERLAPS: ADD, DROPLETS AND MIASMA CAN HAPPEN CLOSE TOGETHER.",
+                "AT STASIS: MATCH TO EXACTLY 4 TOXIN STACKS (1+3 OR 2+2), CLEAR IT, THEN SWAP SIDES AND RESET THE SPLIT FAST.",
+                "TANKS SWAP BEFORE REPEATED HITS GET TOO STRONG. WATCH ADD + DROPLET + MIASMA OVERLAPS.",
             },
             calls = mythicCalls,
         },
