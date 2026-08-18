@@ -61,20 +61,29 @@ local originalInitialize = App.Initialize
 function App:Initialize(...)
     originalInitialize(self, ...)
     Setup:Initialize()
+    Integration.heightApplied = false
     Integration:Refresh()
 end
 
 local originalSelectBoss = App.SelectBoss
 function App:SelectBoss(key, automatic)
     local changed = originalSelectBoss(self, key, automatic)
-    if changed then Integration:Refresh() end
+    if changed then
+        -- MainFrame:SetEncounter recalculates the native height before this wrapper returns.
+        Integration.heightApplied = false
+        Integration:Refresh()
+    end
     return changed
 end
 
 local originalSelectDifficulty = App.SelectDifficulty
 function App:SelectDifficulty(key, automatic)
     local changed = originalSelectDifficulty(self, key, automatic)
-    if changed then Integration:Refresh() end
+    if changed then
+        -- MainFrame:SetEncounter recalculates the native height before this wrapper returns.
+        Integration.heightApplied = false
+        Integration:Refresh()
+    end
     return changed
 end
 
