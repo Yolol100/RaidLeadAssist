@@ -10,7 +10,7 @@ local function plan(d) return table.concat(Registry:GetProfile("vashnik", d).exp
 local function has(text, needle) return text:find(needle,1,true) ~= nil end
 
 for _, d in ipairs({"normal","heroic","mythic"}) do
-    assert(Registry:GetProfile("vashnik",d).callsByKey.imbibe.warning == "IMBIBE > KILL ADDS")
+    assert(Registry:GetProfile("vashnik",d).callsByKey.imbibe.warning == "Fountain adds: kill them before center.")
 end
 local normal = plan("normal")
 assert(has(normal, "Fountain adds spawn"))
@@ -27,13 +27,13 @@ assert(has(heroic, "Green circles appear"))
 assert(not has(heroic, "Fountain adds spawn"), "Heroic should contain only changes from Normal")
 for _, d in ipairs({"heroic","mythic"}) do
     local catalyst = Registry:GetProfile("vashnik",d).callsByKey.catalyst
-    assert(catalyst.warning == "BILE > SOAK EVERY GREEN CIRCLE")
+    assert(catalyst.warning == "Green circles: soak every one.")
 end
 
 local mythic = plan("mythic")
 assert(has(mythic, "aim one wave through the Tumor"))
 assert(has(mythic, "switch and kill it immediately"))
 assert(not has(mythic, "Skull"), "Mythic should contain only changes from Heroic")
-assert(Registry:GetProfile("vashnik","mythic").callsByKey.froth.warning == "FROTH > AIM WAVES THROUGH TUMORS")
+assert(Registry:GetProfile("vashnik","mythic").callsByKey.froth.warning == "Froth: aim one wave through a Tumor.")
 
-print("ok - Vashnik uses cue/action Normal plan plus concise Heroic/Mythic deltas")
+print("ok - Vashnik uses cue/action Normal plan plus concise Heroic/Mythic callouts")
