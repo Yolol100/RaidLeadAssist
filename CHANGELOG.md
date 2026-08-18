@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.0-beta.51 — 2026-08-18
+
+- Add a first-class, difficulty-aware pre-pull setup registry for world markers, target markers and raidleader checks without turning marker placement into combat automation.
+- Add a compact `PRE-PULL SETUP` card between the timeline and Boss Plan that uses the existing Raid Lead Assist theme, shows CHECK/READY state and exposes exact marker purposes in its tooltip.
+- Add fixed setup plans for Entombed Sentinels, The Lost Explorers, Heroic/Mythic Vashnik, Sszorak, The Coiled Altar and Ula'tek while explicitly leaving Nek'zali, Twin Fangs and Normal Vashnik without invented fixed markers.
+- Keep setup confirmation session-scoped and pre-pull-only so `/rla doctor` cannot report stale marker readiness after a reload; add `CHECK SETUP` plus marker/check counts and regression coverage.
+
 ## 0.9.0-beta.50 — 2026-08-18
 
 - Harden Entombed Sentinels so boss health is display-only, boss identity is resolved from locale-independent NPC GUIDs, and raid leaders get three explicit manual balance calls instead of an automatic STOP/RESUME recommendation.
