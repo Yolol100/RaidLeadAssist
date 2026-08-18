@@ -50,9 +50,36 @@ local NEKZALI_MYTHIC = {
     },
 }
 
-local SENTINELS_FIXED = {
-    summary = "No editable assignment is needed: Groups 1+2 start Breath/green, Groups 3+4 start Blood/red, and Helical Toxin matching is fixed at 1+3 or 2+2.",
-    sections = {},
+local SENTINELS_SPLIT = {
+    summary = "Define the Green/Breath and Red/Blood team selectors for this roster. The split stays valid from flex raids through fixed-size Mythic.",
+    sections = {
+        {
+            key = "split",
+            title = "Raid Split",
+            description = "Use group selectors or short team rules instead of fixed raid-group numbers. Examples: Group 1 / Group 2 in a 10-player raid, or Groups 1+2 / Groups 3+4 in a 20-player raid.",
+            columns = 2,
+            slots = {
+                {
+                    key = "green_team",
+                    label = "Green Team Selector",
+                    kind = "rule",
+                    callKey = "coagulation",
+                    callLabel = "GREEN",
+                    required = true,
+                    helper = "Enter the group selector or short rule for the Breath/green side, for example Group 1 or Groups 1+2.",
+                },
+                {
+                    key = "red_team",
+                    label = "Red Team Selector",
+                    kind = "rule",
+                    callKey = "miasma",
+                    callLabel = "RED",
+                    required = true,
+                    helper = "Enter the group selector or short rule for the Blood/red side, for example Group 2 or Groups 3+4.",
+                },
+            },
+        },
+    },
 }
 
 function AssignmentRegistry:GetLayout(bossKey, difficultyKey)
@@ -61,7 +88,7 @@ function AssignmentRegistry:GetLayout(bossKey, difficultyKey)
         if difficultyKey == "heroic" then return NEKZALI_HEROIC end
         if difficultyKey == "mythic" then return NEKZALI_MYTHIC end
     elseif bossKey == "sentinels" and (difficultyKey == "normal" or difficultyKey == "heroic" or difficultyKey == "mythic") then
-        return SENTINELS_FIXED
+        return SENTINELS_SPLIT
     end
     return originalGetLayout(self, bossKey, difficultyKey)
 end
