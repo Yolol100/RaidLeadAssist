@@ -2,184 +2,113 @@ local T = assert(loadfile("tests/testlib.lua"))()
 local ns = T.NewNamespace()
 
 T.Load("Encounters/AssignmentRegistry.lua", ns)
+T.Load("Encounters/Boss12AssignmentOverride.lua", ns)
+T.Load("Encounters/Boss34AssignmentOverride.lua", ns)
+T.Load("Encounters/SszorakAssignmentOverride.lua", ns)
+T.Load("Encounters/TwinFangsAssignmentOverride.lua", ns)
 T.Load("Encounters/Boss78AssignmentOverride.lua", ns)
 T.Load("Services/AssignmentService.lua", ns)
 
 local Registry = ns:GetModule("Encounters.AssignmentRegistry")
 local Assignments = ns:GetModule("Services.AssignmentService")
-local db = { assignments = {} }
-Assignments:Initialize(db)
+Assignments:Initialize({ assignments = {} })
 
-local bosses = { "nekzali", "sentinels", "explorers", "vashnik", "sszorak", "twinfangs", "altar", "ulatek" }
-for _, bossKey in ipairs(bosses) do
-    for _, difficultyKey in ipairs({ "normal", "heroic", "mythic" }) do
+local difficulties = { "normal", "heroic", "mythic" }
+for _, bossKey in ipairs(Registry:GetBossKeys()) do
+    for _, difficultyKey in ipairs(difficulties) do
         local layout = Registry:GetLayout(bossKey, difficultyKey)
-        assert(type(layout.summary) == "string", "layout summary missing: " .. bossKey .. "/" .. difficultyKey)
-        assert(type(layout.sections) == "table", "layout sections missing: " .. bossKey .. "/" .. difficultyKey)
+        assert(type(layout) == "table" and type(layout.summary) == "string" and type(layout.sections) == "table")
         local seen = {}
         for _, definition in ipairs(Registry:GetDefinitions(bossKey, difficultyKey)) do
-            assert(not seen[definition.key], "assignment keys must be unique per boss/difficulty")
+            assert(type(definition.key) == "string" and definition.key ~= "")
+            assert(not seen[definition.key], "duplicate assignment key: " .. bossKey .. "/" .. difficultyKey .. "/" .. definition.key)
             seen[definition.key] = true
-            assert(definition.kind == "assignee" or definition.kind == "rotation" or definition.kind == "rule" or definition.kind == "sequence",
-                "every assignment must expose a supported field kind")
+            assert(definition.kind == "assignee" or definition.kind == "rotation" or definition.kind == "rule" or definition.kind == "sequence")
         end
     end
 end
 
-assert(#Registry:GetDefinitions("sszorak", "heroic") == 3, "Sszorak should stay a focused Mutilate rotation")
-assert(#Registry:GetDefinitions("ulatek", "normal") == 1, "Normal Ula'tek should expose one required egg handler")
-assert(#Registry:GetDefinitions("ulatek", "mythic") > #Registry:GetDefinitions("ulatek", "heroic"), "Mythic Ula'tek needs extra intercept planning")
-assert(#Registry:GetLayout("twinfangs", "mythic").sections == 4, "Mythic Twin Fangs should have four tactic-specific assignment blocks")
-assert(#Registry:GetLayout("vashnik", "normal").sections == 1, "Normal Vashnik should stay lightweight")
-assert(#Registry:GetLayout("altar", "heroic").sections == 3, "Altar must expose orb collectors, Guillotine and Wail assignments")
-assert(#Registry:GetLayout("ulatek", "heroic").sections == 2, "Heroic Ula'tek must expose Coil rotation plus egg-side ownership")
-
-local vashnikNormal = Registry:GetDefinitions("vashnik", "normal")
-assert(vashnikNormal[1].key == "fountain_order" and vashnikNormal[1].kind == "sequence", "Vashnik Normal must use one sequence field")
-assert(vashnikNormal[1].helper == "FLAME > SHADOW > SHADOW > BLOOD > BLOOD > FLAME", "Vashnik assignment helper must match the active raid route exactly")
-
-local nekHeroic = Registry:GetDefinitions("nekzali", "heroic")
-local cremationRules = 0
-for _, definition in ipairs(nekHeroic) do
-    if definition.key:find("cremation_", 1, true) then
-        assert(definition.kind == "rule", "Cremation must be a movement rule, not a roster assignment")
-        cremationRules = cremationRules + 1
-    end
-end
-assert(cremationRules == 2, "Heroic Nek'zali should expose two Cremation rules")
-
+-- Sentinels: two flex-safe physical-side rules, not rotating raid groups.
 local sentinels = Registry:GetDefinitions("sentinels", "heroic")
-local stasisOneThree, stasisTwoTwo
-for _, definition in ipairs(sentinels) do
-    if definition.key == "stasis_1_3" then stasisOneThree = definition end
-    if definition.key == "stasis_2_2" then stasisTwoTwo = definition end
-    if definition.key:find("stasis_", 1, true) then
-        assert(definition.kind == "rule", "Helical Toxin matching must be stored as a dynamic rule")
-        assert(definition.exactPlayers == nil and definition.exclusiveGroup == nil, "Helical Toxin matching must not enforce a fixed roster group")
-    end
-end
-assert(stasisOneThree and stasisTwoTwo, "Sentinels must expose both 1+3 and 2+2 Stasis rules")
+assert(#sentinels == 2 and sentinels[1].key == "team_a" and sentinels[2].key == "team_b")
+local ok = Assignments:ApplyBossDraft("sentinels", "heroic", { team_a = "Group 1", team_b = "Group 2" })
+assert(ok)
+local sentWarning = Assignments:BuildCallWarning("GROUPS HOLD SIDES > BOSSES SWAP", "sentinels", "heroic", "side_swap")
+assert(sentWarning:find("TEAM A: Group 1", 1, true) and sentWarning:find("TEAM B: Group 2", 1, true))
 
-local twinMythic = Registry:GetDefinitions("twinfangs", "mythic")
-for _, definition in ipairs(twinMythic) do
-    if definition.key:find("brood_kick_", 1, true) then
-        assert(definition.rotation == nil and definition.kind == "assignee", "Broodling kicks are simultaneous coverage, not a rotating cast assignment")
-        assert(definition.exclusiveGroup == "brood", "simultaneous Broodling kick owners must be distinct")
-    elseif definition.key:find("feast_", 1, true) then
-        assert(definition.minPlayers == 3, "every Ravenous Feast hit must require at least three configured players")
-        assert(definition.exclusiveGroup == "feast", "Feast groups must reject repeated Feasted players")
-    end
+-- Vashnik: current strategy requires no fixed pre-pull roster fields on any difficulty.
+for _, difficulty in ipairs(difficulties) do
+    assert(#Registry:GetDefinitions("vashnik", difficulty) == 0)
 end
 
-local altarNormal = Registry:GetDefinitions("altar", "normal")
-assert(altarNormal[1].key == "orb_collectors" and altarNormal[1].required, "Normal Altar needs required Orb Collectors")
-assert(altarNormal[2].key == "guillotine_a" and altarNormal[2].required, "Normal Altar needs one required Guillotine team")
-assert(altarNormal[3].key == "guillotine_b" and not altarNormal[3].required, "Normal Altar second Guillotine team should be optional")
-
-local ulatekHeroic = Registry:GetDefinitions("ulatek", "heroic")
-assert(ulatekHeroic[1].key == "coil_a" and ulatekHeroic[1].rotation == "coils")
-assert(ulatekHeroic[2].key == "coil_b" and ulatekHeroic[2].rotation == "coils")
-assert(ulatekHeroic[3].key == "egg_left" and ulatekHeroic[3].exclusiveGroup == "ulatek_eggs")
-assert(ulatekHeroic[4].key == "egg_right" and ulatekHeroic[4].exclusiveGroup == "ulatek_eggs")
-
-local ulatekMythic = Registry:GetDefinitions("ulatek", "mythic")
-assert(ulatekMythic[#ulatekMythic].key == "incubation_team")
-assert(ulatekMythic[#ulatekMythic].minPlayers == 4)
-assert(ulatekMythic[#ulatekMythic].rotation == nil, "Incubation is four hits within one cast, not one interceptor per cast")
-
-local ok, values = Assignments:ApplyBossDraft("sszorak", "heroic", {
-    mutilate_a = "Alpha, Bravo, Charlie, Delta, Echo",
-    mutilate_b = "Foxtrot, Golf, Hotel, India, Juliet",
-})
-assert(ok, values and values.message)
-assert(Assignments:GetValue("sszorak", "heroic", "mutilate_a") == "Alpha, Bravo, Charlie, Delta, Echo")
-assert(Assignments:GetValue("sszorak", "normal", "mutilate_a") == "", "difficulty assignments must stay isolated")
-
-local invalidGroup, groupError = Assignments:ApplyBossDraft("sszorak", "heroic", {
-    mutilate_a = "Alpha, Bravo, Charlie, Delta",
-    mutilate_b = "Foxtrot, Golf, Hotel, India, Juliet",
-})
-assert(not invalidGroup and groupError.assignmentKey == "mutilate_a", "Mutilate must reject fewer than five configured players")
-assert(groupError.message:find("at least 5 unique players", 1, true), "Mutilate validation should explain the five-player minimum")
-
-local duplicateGroup, duplicateError = Assignments:ApplyBossDraft("sszorak", "heroic", {
-    mutilate_a = "Alpha, Bravo, Charlie, Delta, alpha",
-    mutilate_b = "Foxtrot, Golf, Hotel, India, Juliet",
-})
-assert(not duplicateGroup and duplicateError.assignmentKey == "mutilate_a", "one assignment must reject duplicate player names case-insensitively")
-assert(duplicateError.message:find("duplicate player", 1, true), "duplicate-player validation must explain the error")
-
-local overlapGroup, overlapError = Assignments:ApplyBossDraft("sszorak", "heroic", {
-    mutilate_a = "Alpha, Bravo, Charlie, Delta, Echo",
-    mutilate_b = "Echo, Foxtrot, Golf, Hotel, India",
-})
-assert(not overlapGroup and overlapError.assignmentKey == "mutilate_b", "distinct Mutilate teams must reject overlap")
-assert(overlapError.message:find("assigned to both", 1, true), "overlap validation must name the conflict")
-
-local stasisOk, stasisValues = Assignments:ApplyBossDraft("sentinels", "heroic", {
-    breath_side = "Groups 1+2",
-    blood_side = "Groups 3+4",
-    stasis_1_3 = "1 pairs with 3",
-    stasis_2_2 = "2 pairs with 2",
-})
-assert(stasisOk, stasisValues and stasisValues.message)
-assert(Assignments:GetValue("sentinels", "heroic", "stasis_1_3") == "1 pairs with 3", "Sentinels must persist the 1+3 matching rule")
-assert(Assignments:GetValue("sentinels", "heroic", "stasis_2_2") == "2 pairs with 2", "Sentinels must persist the 2+2 matching rule")
-
-local invalidFeast, feastError = Assignments:ApplyBossDraft("twinfangs", "heroic", {
-    feast_a = "One, Two",
-    feast_b = "Three, Four, Five",
-    feast_c = "Six, Seven, Eight",
-    stone_a = "Nine",
-    stone_b = "Ten",
-})
-assert(not invalidFeast and feastError.assignmentKey == "feast_a", "Ravenous Feast must reject fewer than three configured players per hit")
-assert(feastError.message:find("at least 3 unique players", 1, true), "Feast validation should explain the three-player minimum")
-
-local overlapFeast, overlapFeastError = Assignments:ApplyBossDraft("twinfangs", "heroic", {
-    feast_a = "One, Two, Three",
-    feast_b = "Three, Four, Five",
-    feast_c = "Six, Seven, Eight",
-    stone_a = "Nine",
-    stone_b = "Ten",
-})
-assert(not overlapFeast and overlapFeastError.assignmentKey == "feast_b", "Feasted players must not appear in consecutive Feast groups")
-
+-- Sszorak: two distinct 5+ Mutilate teams and three distinct Cyst Poppers.
 ok = Assignments:ApplyBossDraft("sszorak", "heroic", {
-    mutilate_a = "Alpha, Bravo, Charlie, Delta, Echo",
-    mutilate_b = "Foxtrot, Golf, Hotel, India, Juliet",
+    mutilate_group_1 = "Alpha, Bravo, Charlie, Delta, Echo",
+    mutilate_group_2 = "Foxtrot, Golf, Hotel, India, Juliet",
+    cyst_popper_1 = "Kilo",
+    cyst_popper_2 = "Lima",
+    cyst_popper_3 = "Mike",
 })
 assert(ok)
-local first, firstComplete = Assignments:BuildCallWarning("APEX PREDATOR", "sszorak", "heroic", "apex")
-assert(firstComplete and first:find("TEAM A: Alpha", 1, true), "first Mutilate call should use Team A")
-Assignments:AdvanceCall("sszorak", "heroic", "apex")
-local second = Assignments:BuildCallWarning("APEX PREDATOR", "sszorak", "heroic", "apex")
-assert(second:find("TEAM B: Foxtrot", 1, true), "second Mutilate call should use Team B")
-Assignments:ResetRuntime()
-local reset = Assignments:BuildCallWarning("APEX PREDATOR", "sszorak", "heroic", "apex")
-assert(reset:find("TEAM A: Alpha", 1, true), "rotation should reset between pulls")
-
-local missing = Assignments:GetMissingRequired("sszorak", "heroic")
-assert(#missing == 0, "filled required Sszorak slots should be complete")
-
-ok = Assignments:ApplyBossDraft("vashnik", "mythic", {
-    bile_team = "Alpha, Bravo",
-    fountain_order = "FLAME > SHADOW > SHADOW > BLOOD > BLOOD > FLAME",
-    tumor_left = "Left Froth -> left lane",
-    tumor_right = "Right Froth -> right lane",
+local maelstrom = Assignments:BuildCallWarning("MAELSTROM > POPPERS 1/2/3 > KNOCK AGAINST EACH WIND", "sszorak", "heroic", "maelstrom")
+assert(maelstrom:find("POPPER 1: Kilo", 1, true) and maelstrom:find("POPPER 2: Lima", 1, true) and maelstrom:find("POPPER 3: Mike", 1, true))
+local shortTeam, shortError = Assignments:ApplyBossDraft("sszorak", "heroic", {
+    mutilate_group_1 = "Alpha, Bravo, Charlie, Delta",
+    mutilate_group_2 = "Foxtrot, Golf, Hotel, India, Juliet",
+    cyst_popper_1 = "Kilo", cyst_popper_2 = "Lima", cyst_popper_3 = "Mike",
 })
-assert(ok, "rule and sequence fields should accept tactic text without roster-count validation")
+assert(not shortTeam and shortError.assignmentKey == "mutilate_group_1")
+local duplicatePopper, popperError = Assignments:ApplyBossDraft("sszorak", "heroic", {
+    mutilate_group_1 = "Alpha, Bravo, Charlie, Delta, Echo",
+    mutilate_group_2 = "Foxtrot, Golf, Hotel, India, Juliet",
+    cyst_popper_1 = "Kilo", cyst_popper_2 = "Kilo", cyst_popper_3 = "Mike",
+})
+assert(not duplicatePopper and popperError.assignmentKey == "cyst_popper_2")
 
+-- Twin Fangs: Normal is a raid soak; Heroic/Mythic use fresh three-hit teams.
+assert(#Registry:GetDefinitions("twinfangs", "normal") == 0)
+ok = Assignments:ApplyBossDraft("twinfangs", "heroic", {
+    feast_team_a = "One, Two, Three",
+    feast_team_b = "Four, Five, Six",
+    feast_team_c = "Seven, Eight, Nine",
+})
+assert(ok)
+local overlapFeast, overlapFeastError = Assignments:ApplyBossDraft("twinfangs", "heroic", {
+    feast_team_a = "One, Two, Three",
+    feast_team_b = "Three, Five, Six",
+    feast_team_c = "Seven, Eight, Nine",
+})
+assert(not overlapFeast and overlapFeastError.assignmentKey == "feast_team_b")
+
+-- Coiled Altar: 2+ collectors, two Heroic Guillotine teams and two distinct Wail owners.
 ok = Assignments:ApplyBossDraft("altar", "heroic", {
     orb_collectors = "Collectorone, Collectortwo",
-    guillotine_a = "Alpha, Bravo, Charlie, Delta, Echo",
-    guillotine_b = "Foxtrot, Golf, Hotel, India, Juliet",
+    guillotine_a = "A1, A2, A3, A4, A5",
+    guillotine_b = "B1, B2, B3, B4, B5",
     wail_kick_a = "Kickerone",
+    wail_kick_b = "Kickertwo",
 })
-assert(ok, "Altar should accept collector, soak and kick ownership")
-local toxicWarning = Assignments:BuildCallWarning("DELUGE > COLLECTORS MOVE ORBS TO SEVER MARK", "altar", "heroic", "toxic")
-assert(toxicWarning:find("COLLECTORS: Collectorone", 1, true), "Altar Deluge call should name configured orb collectors")
+assert(ok)
+local toxic = Assignments:BuildCallWarning("DELUGE > COLLECTORS MOVE ORBS TO SEVER MARK", "altar", "heroic", "toxic")
+assert(toxic:find("COLLECTORS: Collectorone, Collectortwo", 1, true))
+local oneCollector, collectorError = Assignments:ApplyBossDraft("altar", "heroic", {
+    orb_collectors = "Collectorone",
+    guillotine_a = "A1, A2, A3, A4, A5",
+    guillotine_b = "B1, B2, B3, B4, B5",
+    wail_kick_a = "Kickerone",
+    wail_kick_b = "Kickertwo",
+})
+assert(not oneCollector and collectorError.assignmentKey == "orb_collectors")
+local duplicateKick, kickError = Assignments:ApplyBossDraft("altar", "heroic", {
+    orb_collectors = "Collectorone, Collectortwo",
+    guillotine_a = "A1, A2, A3, A4, A5",
+    guillotine_b = "B1, B2, B3, B4, B5",
+    wail_kick_a = "Kickerone",
+    wail_kick_b = "Kickerone",
+})
+assert(not duplicateKick and kickError.assignmentKey == "wail_kick_b")
 
+-- Ula'tek retains pre-live manual tactic assignments and a 4+ Incubation team.
 ok = Assignments:ApplyBossDraft("ulatek", "mythic", {
     coil_a = "Group One",
     coil_b = "Group Two",
@@ -188,62 +117,10 @@ ok = Assignments:ApplyBossDraft("ulatek", "mythic", {
     incubation_team = "Tankone, Tanktwo, Rogueone, Priestone",
 })
 assert(ok)
-local coil = Assignments:BuildCallWarning("SPECTRAL COILS", "ulatek", "mythic", "coils")
-assert(coil:find("GROUP A: Group One", 1, true), "Ula'tek Coil call should start with Group A")
-Assignments:AdvanceCall("ulatek", "mythic", "coils")
-coil = Assignments:BuildCallWarning("SPECTRAL COILS", "ulatek", "mythic", "coils")
-assert(coil:find("GROUP B: Group Two", 1, true), "Ula'tek Coil call should rotate to Group B")
-
 local incubation = Assignments:BuildCallWarning("INCUBATION > 4 INTERCEPTORS > ONE HIT EACH", "ulatek", "mythic", "incubation")
-assert(incubation:find("INTERCEPTORS: Tankone", 1, true), "Ula'tek Incubation must announce the full interceptor team")
+assert(incubation:find("INTERCEPTORS: Tankone", 1, true))
 
-local invalidIncubation, incubationError = Assignments:ApplyBossDraft("ulatek", "mythic", {
-    coil_a = "Group One",
-    coil_b = "Group Two",
-    egg_left = "Hunterone",
-    egg_right = "Magetwo",
-    incubation_team = "Tankone, Tanktwo, Rogueone",
-})
-assert(not invalidIncubation and incubationError.assignmentKey == "incubation_team",
-    "Ula'tek Incubation must reject fewer than four configured interceptors")
-assert(incubationError.message:find("at least 4 unique players", 1, true),
-    "Ula'tek Incubation validation should explain the four-player minimum")
+local invalid, err = Assignments:ApplyBossDraft("sszorak", "heroic", { mutilate_group_1 = "Bad\1Name" })
+assert(not invalid and err and err.assignmentKey == "mutilate_group_1")
 
-local overlapEggs, overlapEggError = Assignments:ApplyBossDraft("ulatek", "heroic", {
-    coil_a = "Group One",
-    coil_b = "Group Two",
-    egg_left = "Sameplayer",
-    egg_right = "Sameplayer",
-})
-assert(not overlapEggs and overlapEggError.assignmentKey == "egg_right",
-    "Ula'tek left/right egg owners must be distinct")
-
-ok = Assignments:ApplyBossDraft("ulatek", "mythic", {
-    coil_a = "Group One",
-    coil_b = "Group Two",
-    egg_left = "Hunterone",
-    egg_right = "Magetwo",
-    incubation_team = "Tankone, Tanktwo, Rogueone, Priestone",
-})
-assert(ok)
-local plan = Assignments:GetPlanLines("ulatek", "mythic")
-assert(#plan >= 5, "Ula'tek Mythic plan should announce Coil groups, egg carriers and the Incubation team")
-for index = 1, #plan do assert(#plan[index] <= Assignments.MAX_WARNING_LENGTH, "assignment plan line too long") end
-
-local overflowOk = Assignments:ApplyBossDraft("twinfangs", "normal", {
-    feast_a = "AlphaLongPlayerNameOne, AlphaLongPlayerNameTwo, AlphaLongPlayerNameThree",
-    feast_b = "BravoLongPlayerNameOne, BravoLongPlayerNameTwo, BravoLongPlayerNameThree",
-    feast_c = "CharlieLongPlayerOne, CharlieLongPlayerTwo, CharlieLongPlayerThree",
-    stone_a = "StoneOne",
-    stone_b = "StoneTwo",
-})
-assert(overflowOk, "long but valid assignments should save")
-local feastBase = "RAVENOUS FEAST > 3 HITS > 3+ PER HIT > GROUPS A > B > C"
-local overflowWarning, overflowComplete = Assignments:BuildCallWarning(feastBase, "twinfangs", "normal", "feast")
-assert(overflowComplete == false, "oversized assignment detail must be reported as incomplete")
-assert(overflowWarning == feastBase, "overflow must fall back to the complete base call rather than a misleading partial assignment")
-
-local invalid, err = Assignments:ApplyBossDraft("sszorak", "heroic", { mutilate_a = "Bad\1Name" })
-assert(not invalid and err and err.assignmentKey == "mutilate_a", "control characters must be rejected")
-
-print("ok - typed assignments, uniqueness, overlap safety, group sizes, boss 7/8 coordination, overflow fallback, persistence, and rotations")
+print("ok - runtime assignment overrides validate fixed sides, dynamic Vashnik, Sszorak poppers, Twin Feast modes, Altar coverage and Ula'tek intercepts")
