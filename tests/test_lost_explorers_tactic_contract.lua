@@ -33,7 +33,7 @@ for _, profile in ipairs({ normal, heroic, mythic }) do
     assert(profile.callsByKey.tankswap == nil and profile.callsByKey.tank == nil)
 end
 
-assert(mythic.callsByKey.crates.warning == "CRATE > NEXT BREAKER > RAID 15+ YARDS CLEAR")
+assert(mythic.callsByKey.crates.warning == "Crate: raid clear 15+ yards, then break it.")
 assert(plan(mythic):find("15+ yards away", 1, true))
 
 local normalDefs = Assignments:GetDefinitions("explorers", "normal")
@@ -51,4 +51,4 @@ for _, difficulty in ipairs({ "heroic", "mythic" }) do
     end
 end
 
-print("ok - Lost Explorers base plan, difficulty deltas and raidleader assignments stay separated")
+print("ok - Lost Explorers base plan, difficulty deltas and concise raidleader calls stay separated")
