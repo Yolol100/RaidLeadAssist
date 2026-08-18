@@ -25,8 +25,8 @@ local SSZORAK_GROUP_LAYOUT = {
             description = "Use actual roster teams instead of hardcoded raid-group numbers. RLA alternates Team A then Team B.",
             columns = 2,
             slots = {
-                teamSlot("mutilate_group_1", "Soak Team A", "TEAM A", "Select at least 5 unique players for the first green Mutilate soak."),
-                teamSlot("mutilate_group_2", "Soak Team B", "TEAM B", "Select at least 5 different players for the second green Mutilate soak."),
+                teamSlot("mutilate_group_1", "Soak Team A", "Team A", "Select at least 5 unique players for the first green Mutilate soak."),
+                teamSlot("mutilate_group_2", "Soak Team B", "Team B", "Select at least 5 different players for the second green Mutilate soak."),
             },
         },
         {
@@ -35,9 +35,9 @@ local SSZORAK_GROUP_LAYOUT = {
             description = "Assign one distinct player per wind. Each popper triggers the prepared Cyst as that wind begins so its knockback counters the gale.",
             columns = 3,
             slots = {
-                popperSlot("cyst_popper_1", "Wind 1 Popper", "POPPER 1", "Triggers the prepared Cyst when the first wind begins."),
-                popperSlot("cyst_popper_2", "Wind 2 Popper", "POPPER 2", "Triggers the prepared Cyst when the second wind begins."),
-                popperSlot("cyst_popper_3", "Wind 3 Popper", "POPPER 3", "Triggers the prepared Cyst when the third wind begins."),
+                popperSlot("cyst_popper_1", "Wind 1 Popper", "Popper 1", "Triggers the prepared Cyst when the first wind begins."),
+                popperSlot("cyst_popper_2", "Wind 2 Popper", "Popper 2", "Triggers the prepared Cyst when the second wind begins."),
+                popperSlot("cyst_popper_3", "Wind 3 Popper", "Popper 3", "Triggers the prepared Cyst when the third wind begins."),
             },
         },
     },
