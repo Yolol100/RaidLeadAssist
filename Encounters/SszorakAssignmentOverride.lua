@@ -8,7 +8,7 @@ local function groupSlot(key, label, callLabel)
     return {
         key = key,
         label = label,
-        kind = "rotation",
+        kind = "rule",
         callKey = "apex",
         callLabel = callLabel,
         rotation = "mutilate_groups",
