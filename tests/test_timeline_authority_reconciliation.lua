@@ -83,8 +83,17 @@ canSupply = true
 Timeline:RefreshProviderAuthorities()
 assert(Timeline:IsBlizzardSuppressed() == true,
     "restoring the direct DBM feed must restore DBM authority")
-assert(Timeline.timers["Blizzard|native-1"] == nil,
-    "restored DBM authority must remove stale native representations")
+assert(Timeline.timers["Blizzard|native-1"] ~= nil,
+    "global DBM authority must retain a required RLA fallback until a direct timer covers that call")
 assert(Timeline:GetProviderSummary() == "DBM")
 
-print("ok - DBM/Blizzard authority self-reconciles at timer boundaries and readiness reports usable sources")
+Timeline:ProviderTimerStarted("DBM", "dbm-1", {
+    key = 123,
+    duration = 10,
+    precision = "exact",
+})
+local selected = Timeline:GetTimerForCall("mechanic")
+assert(selected and selected.providerName == "DBM",
+    "once DBM publishes the call directly, the direct timer must outrank the retained native fallback")
+
+print("ok - DBM/Blizzard authority reconciles globally while preserving only call-scoped timing gaps")
