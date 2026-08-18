@@ -1,13 +1,13 @@
 local _, ns = ...
 local Registry = ns:GetModule("Encounters.Registry")
 
-local function baseCalls(pyreAction, pyreWarning, flameAction, flameWarning)
+local function baseCalls(pyreAction, pyreWarning)
     local calls = {
         {
             key = "adds",
             ability = "Restless Amani",
             action = "Kill the Amani before the Well",
-            warning = "Amani adds: kill them before the Well.",
+            warning = "Amani adds: kill them before they reach the Well.",
             voice = "Adds",
             spellIDs = { 1295397, 1297630 },
             prepareSeconds = 7,
@@ -33,16 +33,6 @@ local function baseCalls(pyreAction, pyreWarning, flameAction, flameWarning)
             pressSeconds = 5,
         },
     }
-    if flameAction then
-        calls[#calls + 1] = {
-            key = "flame",
-            ability = "Slithering Flame",
-            action = flameAction,
-            warning = flameWarning,
-            voice = "Flame",
-            timing = false,
-        }
-    end
     calls[#calls + 1] = {
         key = "phase2",
         ability = "Phase 2",
@@ -61,15 +51,11 @@ local normalCalls = baseCalls(
 )
 local heroicCalls = baseCalls(
     "Called soak group stacks in",
-    "Hungering Pyre: called soak group stack in.",
-    "Take fire circles to dead Amani",
-    "Fire circles: take them to dead Amani corpses."
+    "Hungering Pyre: called soak group stack in."
 )
 local mythicCalls = baseCalls(
     "Called soak group stacks in",
-    "Hungering Pyre: called soak group stack in.",
-    "Take fire circles to dead Amani",
-    "Fire circles: take them to dead Amani corpses."
+    "Hungering Pyre: called soak group stack in."
 )
 table.insert(mythicCalls, 2, {
     key = "grasping",
