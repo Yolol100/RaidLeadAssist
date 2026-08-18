@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-08-17",
+  "reviewedAt": "2026-08-18",
   "wowInterface": 120100,
   "raidUnlock": {
     "eu": "2026-08-19",
@@ -36,8 +36,8 @@
         {
           "ref": "master",
           "path": "Core/BossPrototype.lua",
-          "blobSha": "92b3d6158c875cf8fb6618956e2305a680aab2bc",
-          "reason": "RLA consumes BigWigs Timer/CastTimer/StartBar contracts"
+          "blobSha": "045c7866961068338cd583925286220f5011d980",
+          "reason": "RLA consumes BigWigs Timer/CastTimer/StartBar contracts; current 2026-08-18 master signatures were re-verified after upstream drift"
         },
         {
           "ref": "master",
