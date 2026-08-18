@@ -6,7 +6,7 @@ local function baseCalls()
         { key="venom", ability="Venomous Surge", action="Debuff to markers > drop cysts", warning="VENOM > DEBUFF TO MARKERS > DROP CYSTS", voice="Venom", spellIDs={1305959}, prepareSeconds=6, pressSeconds=3 },
         { key="crosswinds", ability="Raging Crosswinds", action="Pair opposites > collide", warning="CROSSWINDS > PAIR OPPOSITES > COLLIDE", voice="Crosswinds", spellIDs={1285425}, prepareSeconds=7, pressSeconds=4 },
         { key="maelstrom", ability="Howling Maelstrom", action="Use cyst knockback > stay in", warning="MAELSTROM > USE CYST KNOCKBACK > STAY IN", voice="Maelstrom", spellIDs={1285732}, prepareSeconds=8, pressSeconds=5 },
-        { key="apex", ability="Apex Predator", action="Next assigned group soaks green Mutilate", warning="GREEN MUTILATE > SOAK", voice="Soak", spellIDs={1277025,1285430}, prepareSeconds=7, pressSeconds=4 },
+        { key="apex", ability="Apex Predator", action="Next assigned group soaks green Mutilate", warning="GREEN MUTILATE > 5+ SOAK GROUP", voice="Soak", spellIDs={1277025,1285430}, prepareSeconds=7, pressSeconds=4 },
     }
 end
 
