@@ -57,7 +57,6 @@ UI/SetupCard.lua
 UI/MainFrame.lua
 Core/App.lua
 Core/AssignmentIntegration.lua
-Core/SetupIntegration.lua
 Core/ReadinessIntegration.lua
 Core/ProviderRecoveryIntegration.lua
 Core/SentinelsIntegration.lua
