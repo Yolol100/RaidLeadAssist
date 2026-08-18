@@ -25,7 +25,7 @@ local ok, values = Assignments:ApplyBossDraft("sszorak", "heroic", {
 })
 assert(ok, values and values.message)
 
-local base = "GREEN MUTILATE > 5+ SOAK GROUP"
+local base = "GREEN MUTILATE > NEXT 5+ SOAK GROUP"
 local first = Assignments:BuildCallWarning(base, "sszorak", "heroic", "apex")
 assert(first:find("GROUP 1: Groups 1+2", 1, true), "first Mutilate call must use configured Soak Group 1")
 Assignments:AdvanceCall("sszorak", "heroic", "apex")
