@@ -1,8 +1,6 @@
 local _, ns = ...
 local Registry = ns:GetModule("Encounters.Registry")
 
-local BOSSMOD_RULE = "CALL PRIORITY: FOLLOW DBM OR BIGWIGS FOR YOUR PERSONAL DEBUFFS, DODGES, ROLE WARNINGS AND TIMERS. FOLLOW RLA/RAID-LEADER CALLS FOR GROUPS, MARKERS, SOAKS, TARGET PRIORITY AND SHARED RAID MOVEMENT."
-
 local function baseCalls()
     return {
         { key="venom", ability="Venomous Surge", action="Debuff to markers > drop cysts", warning="VENOM > DEBUFF TO MARKERS > DROP CYSTS", voice="Venom", spellIDs={1305959}, prepareSeconds=6, pressSeconds=3 },
@@ -14,33 +12,30 @@ end
 
 Registry:Register({
     key="sszorak", name="Sszorak", encounterID=3420,
-    strategyStatus="12.1 Journal + current Wowhead + DBM/BigWigs source-reviewed 2026-08-18; explicit three-Cyst-Popper Maelstrom ownership; live validation pending",
+    strategyStatus="12.1 Journal + current Wowhead + DBM/BigWigs source-reviewed 2026-08-19; player briefing split from marker/poppers prep; live validation pending",
     profiles={
         normal={
             explanation={
-                "PLAN: 1 PHASE. BLOODLUST ON PULL. PLACE 3 WORLD MARKERS OPPOSITE THE 3 TORNADO CLUSTERS. VENOM TARGETS DROP ONE CYST AT EACH MARK; KEEP CENTER OPEN.",
-                "ASSIGN THREE CYST POPPERS. DURING MAELSTROM, POPPER 1/2/3 TRIGGERS THE PREPARED CYST AS EACH WIND STARTS SO THE KNOCKBACK PUSHES THE RAID AGAINST THE GALE.",
-                "CROSSWINDS PAIR OPPOSITES AND COLLIDE. GREEN MUTILATE ALTERNATES TWO DISTINCT 5+ SOAK TEAMS: TEAM A THEN TEAM B. WHITE RAVAGE STAYS BOSSMOD/ROLE-OWNED.",
-                "BOSS TAKES 30% MORE DAMAGE FOR 25 SEC DURING DIG IN; SAVE DPS COOLDOWNS FOR THAT WINDOW.",
-                BOSSMOD_RULE,
+                "Venom debuff on you: run to your assigned outer marker.",
+                "Let it expire there and leave the Cyst for later.",
+                "Wind arrow on you: find the player with the opposite direction.",
+                "Position so both knockbacks send you toward each other.",
+                "Maelstrom starts: only assigned Cyst Poppers touch saved Cysts.",
+                "Mutilate frontal: assigned soak team enters; everyone else stays out.",
+                "When Sszorak digs in, use major damage cooldowns.",
             }, calls=baseCalls(),
         },
         heroic={
             explanation={
-                "PLAN: BLOODLUST ON PULL. PLACE 3 WORLD MARKERS OPPOSITE THE TORNADO CLUSTERS. VENOM TARGETS DROP ONE CYST AT EACH MARK; KEEP CYSTS/PUDDLES OUTSIDE.",
-                "ASSIGN THREE CYST POPPERS. POPPER 1/2/3 TRIGGERS THE PREPARED CYST AS EACH MAELSTROM WIND STARTS SO THE KNOCKBACK COUNTERS THE GALE.",
-                "CROSSWINDS PAIR OPPOSITE DIRECTIONS AND COLLIDE. GREEN MUTILATE ALTERNATES DISTINCT 5+ TEAM A THEN B; REPEAT DAMAGE IS HEAVILY INCREASED.",
-                "SAVE DPS COOLDOWNS FOR THE 30% DIG IN WINDOW. WHITE RAVAGE AND PERSONAL WIND DIRECTION STAY BOSSMOD/ROLE-OWNED.",
-                BOSSMOD_RULE,
+                "Keep new poison pools at the arena edge.",
+                "Use the other Mutilate soak team on every new cast.",
             }, calls=baseCalls(),
         },
         mythic={
             explanation={
-                "PLAN: BLOODLUST ON PULL. USE THE HEROIC MARKER/CYST/CROSSWIND RULES AND THREE DISTINCT CYST POPPERS FOR THE THREE MAELSTROM WINDS.",
-                "GREEN MUTILATE ALTERNATES TWO DISTINCT 5+ TEAMS: A THEN B. SERPENT'S FURY: 14+ PLAYERS STACK WITHIN 8 YARDS OF THE MARK BEFORE 100 RAGE.",
-                "AFTER SERPENT'S FURY, VIRULENCE TARGETS SPREAD AND DROP RESIDUE CLEAR OF THE RAID. SAVE DPS COOLDOWNS FOR EACH 30% DIG IN WINDOW.",
-                "WHITE RAVAGE AND PERSONAL WIND/VIRULENCE EXECUTION STAY BOSSMOD/ROLE-OWNED.",
-                BOSSMOD_RULE,
+                "Serpent's Fury marks a player: 14+ players stack on them.",
+                "After the charge, Virulence players spread from everyone.",
+                "Drop Virulence residue away from the raid.",
             },
             calls={
                 baseCalls()[1], baseCalls()[2], baseCalls()[3], baseCalls()[4],
