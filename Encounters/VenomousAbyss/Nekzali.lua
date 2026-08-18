@@ -2,7 +2,7 @@ local _, ns = ...
 local Registry = ns:GetModule("Encounters.Registry")
 
 local function baseCalls(pyreAction, flameAction)
-    return {
+    local calls = {
         {
             key = "adds",
             ability = "Restless Amani",
@@ -32,27 +32,30 @@ local function baseCalls(pyreAction, flameAction)
             prepareSeconds = 8,
             pressSeconds = 5,
         },
-        {
+    }
+    if flameAction then
+        calls[#calls + 1] = {
             key = "flame",
             ability = "Slithering Flame",
             action = flameAction,
             warning = flameAction,
             voice = "Flame",
             timing = false,
-        },
-        {
-            key = "phase2",
-            ability = "Phase 2",
-            action = "Bloodlust > burn boss",
-            warning = "PHASE 2 > BLOODLUST > BURN BOSS",
-            voice = "Phase two",
-            timing = false,
-            iconSpellID = 1299673,
-        },
+        }
+    end
+    calls[#calls + 1] = {
+        key = "phase2",
+        ability = "Phase 2",
+        action = "Bloodlust > burn boss",
+        warning = "PHASE 2 > BLOODLUST > BURN BOSS",
+        voice = "Phase two",
+        timing = false,
+        iconSpellID = 1299673,
     }
+    return calls
 end
 
-local normalCalls = baseCalls("MELEE SOAK", "RANGED SPREAD OUT")
+local normalCalls = baseCalls("MELEE SOAK", nil)
 local heroicCalls = baseCalls("MELEE SOAK", "RANGED BURN CORPSES")
 local mythicCalls = baseCalls("GROUPS 1+2 SOAK", "GROUPS 3+4 BURN CORPSES")
 table.insert(mythicCalls, 2, {
