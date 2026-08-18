@@ -26,7 +26,7 @@ local ALTAR_ORBS = {
     slots = {
         slot("orb_collectors", "Orb Collectors", {
             callKey = "toxic",
-            callLabel = "COLLECTORS",
+            callLabel = "Collectors",
             required = true,
             minPlayers = 2,
             helper = "Select 2-3 mobile players responsible for moving new Coalesced Venom to the assigned Sever mark.",
@@ -40,8 +40,8 @@ local ALTAR_GUILLOTINE_NORMAL = {
     description = "Normal: every axe needs at least five players. A second team is optional because Normal does not require a Heroic-style fresh-team split.",
     columns = 2,
     slots = {
-        slot("guillotine_a", "Team A", { callKey = "guillotine", callLabel = "TEAM A", rotation = "guillotine", required = true, minPlayers = 5 }),
-        slot("guillotine_b", "Team B", { callKey = "guillotine", callLabel = "TEAM B", rotation = "guillotine", minPlayers = 5 }),
+        slot("guillotine_a", "Team A", { callKey = "guillotine", callLabel = "Team A", rotation = "guillotine", required = true, minPlayers = 5 }),
+        slot("guillotine_b", "Team B", { callKey = "guillotine", callLabel = "Team B", rotation = "guillotine", minPlayers = 5 }),
     },
 }
 
@@ -51,8 +51,8 @@ local ALTAR_GUILLOTINE_HEROIC = {
     description = "Heroic: alternate two distinct 5+ teams because Guillotined makes repeating the same players unsafe.",
     columns = 2,
     slots = {
-        slot("guillotine_a", "Team A", { callKey = "guillotine", callLabel = "TEAM A", rotation = "guillotine", required = true, minPlayers = 5, exclusiveGroup = "guillotine" }),
-        slot("guillotine_b", "Team B", { callKey = "guillotine", callLabel = "TEAM B", rotation = "guillotine", required = true, minPlayers = 5, exclusiveGroup = "guillotine" }),
+        slot("guillotine_a", "Team A", { callKey = "guillotine", callLabel = "Team A", rotation = "guillotine", required = true, minPlayers = 5, exclusiveGroup = "guillotine" }),
+        slot("guillotine_b", "Team B", { callKey = "guillotine", callLabel = "Team B", rotation = "guillotine", required = true, minPlayers = 5, exclusiveGroup = "guillotine" }),
     },
 }
 
@@ -62,10 +62,10 @@ local ALTAR_GUILLOTINE_MYTHIC = {
     description = "Mythic Guillotined is permanent, so plan fresh 5+ player teams for later axes.",
     columns = 4,
     slots = {
-        slot("guillotine_a", "Team A", { callKey = "guillotine", callLabel = "TEAM A", rotation = "guillotine", required = true, minPlayers = 5, exclusiveGroup = "guillotine" }),
-        slot("guillotine_b", "Team B", { callKey = "guillotine", callLabel = "TEAM B", rotation = "guillotine", required = true, minPlayers = 5, exclusiveGroup = "guillotine" }),
-        slot("guillotine_c", "Team C", { callKey = "guillotine", callLabel = "TEAM C", rotation = "guillotine", required = true, minPlayers = 5, exclusiveGroup = "guillotine" }),
-        slot("guillotine_d", "Team D", { callKey = "guillotine", callLabel = "TEAM D", rotation = "guillotine", minPlayers = 5, exclusiveGroup = "guillotine" }),
+        slot("guillotine_a", "Team A", { callKey = "guillotine", callLabel = "Team A", rotation = "guillotine", required = true, minPlayers = 5, exclusiveGroup = "guillotine" }),
+        slot("guillotine_b", "Team B", { callKey = "guillotine", callLabel = "Team B", rotation = "guillotine", required = true, minPlayers = 5, exclusiveGroup = "guillotine" }),
+        slot("guillotine_c", "Team C", { callKey = "guillotine", callLabel = "Team C", rotation = "guillotine", required = true, minPlayers = 5, exclusiveGroup = "guillotine" }),
+        slot("guillotine_d", "Team D", { callKey = "guillotine", callLabel = "Team D", rotation = "guillotine", minPlayers = 5, exclusiveGroup = "guillotine" }),
     },
 }
 
@@ -75,9 +75,9 @@ local ALTAR_WAIL_NORMAL = {
     description = "Normal: preassign a primary Wail of Terror kick; additional backups are optional.",
     columns = 3,
     slots = {
-        slot("wail_kick_a", "Wail Kick A", { callKey = "spiritcackle", callLabel = "WAIL A", rotation = "wail", required = true, exclusiveGroup = "altar_wail" }),
-        slot("wail_kick_b", "Wail Kick B", { callKey = "spiritcackle", callLabel = "WAIL B", rotation = "wail", exclusiveGroup = "altar_wail" }),
-        slot("wail_kick_c", "Wail Kick C", { callKey = "spiritcackle", callLabel = "WAIL C", rotation = "wail", exclusiveGroup = "altar_wail" }),
+        slot("wail_kick_a", "Wail Kick A", { callKey = "spiritcackle", callLabel = "Wail A", rotation = "wail", required = true, exclusiveGroup = "altar_wail" }),
+        slot("wail_kick_b", "Wail Kick B", { callKey = "spiritcackle", callLabel = "Wail B", rotation = "wail", exclusiveGroup = "altar_wail" }),
+        slot("wail_kick_c", "Wail Kick C", { callKey = "spiritcackle", callLabel = "Wail C", rotation = "wail", exclusiveGroup = "altar_wail" }),
     },
 }
 
@@ -87,9 +87,9 @@ local ALTAR_WAIL_HARD = {
     description = "Heroic/Mythic: assign 2-3 distinct Wail of Terror interrupts. On Mythic each successful interrupt also briefly reveals hidden Manifestations of Dread.",
     columns = 3,
     slots = {
-        slot("wail_kick_a", "Wail Kick A", { callKey = "spiritcackle", callLabel = "WAIL A", rotation = "wail", required = true, exclusiveGroup = "altar_wail" }),
-        slot("wail_kick_b", "Wail Kick B", { callKey = "spiritcackle", callLabel = "WAIL B", rotation = "wail", required = true, exclusiveGroup = "altar_wail" }),
-        slot("wail_kick_c", "Wail Kick C", { callKey = "spiritcackle", callLabel = "WAIL C", rotation = "wail", exclusiveGroup = "altar_wail" }),
+        slot("wail_kick_a", "Wail Kick A", { callKey = "spiritcackle", callLabel = "Wail A", rotation = "wail", required = true, exclusiveGroup = "altar_wail" }),
+        slot("wail_kick_b", "Wail Kick B", { callKey = "spiritcackle", callLabel = "Wail B", rotation = "wail", required = true, exclusiveGroup = "altar_wail" }),
+        slot("wail_kick_c", "Wail Kick C", { callKey = "spiritcackle", callLabel = "Wail C", rotation = "wail", exclusiveGroup = "altar_wail" }),
     },
 }
 
@@ -116,7 +116,7 @@ local ULATEK_EGG_HANDLER = {
     slots = {
         slot("egg_handler", "Egg Handler", {
             callKey = "eggs",
-            callLabel = "HANDLER",
+            callLabel = "Handler",
             required = true,
         }),
     },
@@ -130,14 +130,14 @@ local ULATEK_COILS_MYTHIC = {
     slots = {
         slot("coil_a", "Coil Group A", {
             callKey = "coils",
-            callLabel = "GROUP A",
+            callLabel = "Group A",
             rotation = "coils",
             required = true,
             exclusiveGroup = "coils",
         }),
         slot("coil_b", "Coil Group B", {
             callKey = "coils",
-            callLabel = "GROUP B",
+            callLabel = "Group B",
             rotation = "coils",
             required = true,
             exclusiveGroup = "coils",
@@ -153,13 +153,13 @@ local ULATEK_EGGS_MYTHIC = {
     slots = {
         slot("egg_left", "Left Egg Carrier", {
             callKey = "eggs",
-            callLabel = "LEFT",
+            callLabel = "Left",
             required = true,
             exclusiveGroup = "ulatek_eggs",
         }),
         slot("egg_right", "Right Egg Carrier", {
             callKey = "eggs",
-            callLabel = "RIGHT",
+            callLabel = "Right",
             required = true,
             exclusiveGroup = "ulatek_eggs",
         }),
@@ -174,7 +174,7 @@ local ULATEK_INCUBATION = {
     slots = {
         slot("incubation_team", "Incubation Team", {
             callKey = "incubation",
-            callLabel = "INTERCEPTORS",
+            callLabel = "Interceptors",
             required = true,
             minPlayers = 4,
         }),
