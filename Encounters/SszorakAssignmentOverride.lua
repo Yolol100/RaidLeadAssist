@@ -4,39 +4,41 @@ local AssignmentRegistry = ns:GetModule("Encounters.AssignmentRegistry")
 
 local originalGetLayout = AssignmentRegistry.GetLayout
 
-local function groupSlot(key, label, callLabel, helper)
+local function teamSlot(key, label, callLabel, helper)
     return {
         key = key,
         label = label,
-        kind = "rule",
+        kind = "rotation",
         callKey = "apex",
         callLabel = callLabel,
-        rotation = "mutilate_groups",
+        rotation = "mutilate_teams",
         required = true,
+        minPlayers = 5,
+        exclusiveGroup = "mutilate",
         helper = helper,
     }
 end
 
 local SSZORAK_GROUP_LAYOUT = {
-    summary = "Use raid Groups 1+2 for the first green Mutilate soak and Groups 3+4 for the second. White Ravage stays DBM-owned.",
+    summary = "Build two distinct 5+ player teams for alternating green Mutilate soaks. White Ravage stays bossmod/role-owned.",
     sections = {
         {
             key = "mutilate",
             title = "Green Mutilate Soak Rotation",
-            description = "Left column is Soak Groups 1+2. Right column is Soak Groups 3+4. RLA alternates Groups 1+2 then Groups 3+4 on successful Mutilate calls.",
+            description = "Use actual roster teams instead of hardcoded raid-group numbers so the plan remains valid at every supported raid size. RLA alternates Team A then Team B.",
             columns = 2,
             slots = {
-                groupSlot(
+                teamSlot(
                     "mutilate_group_1",
-                    "Soak Groups 1+2",
-                    "GROUPS 1+2",
-                    "Use this column for raid Groups 1+2. Do not enter individual player names."
+                    "Soak Team A",
+                    "TEAM A",
+                    "Select at least 5 unique players for the first green Mutilate soak."
                 ),
-                groupSlot(
+                teamSlot(
                     "mutilate_group_2",
-                    "Soak Groups 3+4",
-                    "GROUPS 3+4",
-                    "Use this column for raid Groups 3+4. Do not enter individual player names."
+                    "Soak Team B",
+                    "TEAM B",
+                    "Select at least 5 different players for the second green Mutilate soak."
                 ),
             },
         },

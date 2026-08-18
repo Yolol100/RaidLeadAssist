@@ -3,17 +3,7 @@ local _, ns = ...
 local AssignmentRegistry = ns:GetModule("Encounters.AssignmentRegistry")
 local originalGetLayout = AssignmentRegistry.GetLayout
 
-local function ruleSlot(key, label, helper)
-    return {
-        key = key,
-        label = label,
-        kind = "rule",
-        required = false,
-        helper = helper,
-    }
-end
-
-local function assigneeSlot(key, label, callKey, callLabel, required, exclusiveGroup)
+local function assigneeSlot(key, label, callKey, callLabel, required, exclusiveGroup, minPlayers, helper)
     return {
         key = key,
         label = label,
@@ -22,30 +12,20 @@ local function assigneeSlot(key, label, callKey, callLabel, required, exclusiveG
         callLabel = callLabel,
         required = required == true,
         exclusiveGroup = exclusiveGroup,
+        minPlayers = minPlayers,
+        helper = helper,
     }
 end
 
-local FEAST_NORMAL_HEROIC = {
+local FEAST_TEAMS = {
     key = "feast",
     title = "Ravenous Feast Soak Order",
-    description = "Use raid groups, not player lists: first Groups 1+2, then Groups 3+4, then Groups 5+6. These columns document the fixed raid plan; no individual names are required.",
+    description = "Build three fresh teams of at least 3 players. Use actual roster assignments instead of fixed raid-group numbers so Normal/Heroic flex sizes and Mythic all use the same safe plan.",
     columns = 3,
     slots = {
-        ruleSlot("feast_groups_12", "Hit 1 · Groups 1+2", "Fixed first Feast soak group."),
-        ruleSlot("feast_groups_34", "Hit 2 · Groups 3+4", "Fixed second Feast soak group."),
-        ruleSlot("feast_groups_56", "Hit 3 · Groups 5+6", "Fixed third Feast soak group."),
-    },
-}
-
-local FEAST_MYTHIC = {
-    key = "feast",
-    title = "Ravenous Feast Soak Order",
-    description = "Mythic is fixed at 20 players, so Groups 5+6 do not exist. Use Group 1, then Group 2, then Groups 3+4 so all three Feast hits have fresh players.",
-    columns = 3,
-    slots = {
-        ruleSlot("feast_group_1", "Hit 1 · Group 1", "Fixed first Mythic Feast soak group."),
-        ruleSlot("feast_group_2", "Hit 2 · Group 2", "Fixed second Mythic Feast soak group."),
-        ruleSlot("feast_groups_34", "Hit 3 · Groups 3+4", "Fixed third Mythic Feast soak group."),
+        assigneeSlot("feast_team_a", "Hit 1 · Team A", "feast", "TEAM A", true, "feast", 3, "Select at least 3 unique players for the first Feast hit."),
+        assigneeSlot("feast_team_b", "Hit 2 · Team B", "feast", "TEAM B", true, "feast", 3, "Select at least 3 different players for the second Feast hit."),
+        assigneeSlot("feast_team_c", "Hit 3 · Team C", "feast", "TEAM C", true, "feast", 3, "Select at least 3 different players for the third Feast hit."),
     },
 }
 
@@ -74,16 +54,16 @@ local MYTHIC_FOUNTS = {
 
 local LAYOUTS = {
     normal = {
-        summary = "Ravenous Feast uses fixed raid-group columns. Stone Breaker is DBM-owned and has no RaidLeadAssist assignment.",
-        sections = { FEAST_NORMAL_HEROIC },
+        summary = "Assign three fresh 3+ Feast teams. Stone Breaker remains bossmod/role-owned; the raid plan still states its no-empty-impact rule.",
+        sections = { FEAST_TEAMS },
     },
     heroic = {
-        summary = "Ravenous Feast uses Groups 1+2 > 3+4 > 5+6. Stone Breaker stays DBM-owned.",
-        sections = { FEAST_NORMAL_HEROIC },
+        summary = "Assign three fresh 3+ Feast teams so Feasted players never repeat within the same cast. Stone Breaker remains bossmod/role-owned.",
+        sections = { FEAST_TEAMS },
     },
     mythic = {
-        summary = "20-player Mythic uses Group 1 > Group 2 > Groups 3+4 for Feast, plus Broodling kick and optional Tainted Blood coverage.",
-        sections = { FEAST_MYTHIC, MYTHIC_BROOD, MYTHIC_FOUNTS },
+        summary = "Assign three fresh 3+ Feast teams plus Broodling kick coverage and optional Tainted Blood fount coverage. Stone Breaker remains bossmod/role-owned.",
+        sections = { FEAST_TEAMS, MYTHIC_BROOD, MYTHIC_FOUNTS },
     },
 }
 

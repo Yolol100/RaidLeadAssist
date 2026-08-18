@@ -55,6 +55,18 @@ for _, encounter in ipairs(encounters) do
 end
 assert(profileCount == 24)
 
+-- Bosses 1-6 share one explicit responsibility contract in every difficulty:
+-- bossmods own personal execution; RLA/raid leader owns shared coordination.
+for _, bossKey in ipairs({ "nekzali", "sentinels", "explorers", "vashnik", "sszorak", "twinfangs" }) do
+    for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
+        local plan = planText(bossKey, difficultyKey)
+        assert(contains(plan, "FOLLOW DBM OR BIGWIGS"), bossKey .. "/" .. difficultyKey .. " must direct personal execution to a bossmod")
+        assert(contains(plan, "FOLLOW RLA/RAID-LEADER CALLS"), bossKey .. "/" .. difficultyKey .. " must preserve raidleader coordination ownership")
+        assert(contains(plan, "GROUPS, MARKERS, SOAKS, TARGET PRIORITY AND SHARED RAID MOVEMENT"),
+            bossKey .. "/" .. difficultyKey .. " must define the shared call scope")
+    end
+end
+
 -- Boss 1: only raidleader coordination should remain live.
 local nekNormal = Registry:GetProfile("nekzali", "normal")
 local nekHeroic = Registry:GetProfile("nekzali", "heroic")
@@ -151,19 +163,26 @@ for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
     assert(contains(planText("vashnik", difficultyKey), "BLOODLUST ON PULL"))
 end
 
+-- Boss 5: strategic marker, movement and soak-team calls remain.
 local sszorakMythic = Registry:GetProfile("sszorak", "mythic")
 assert(sszorakMythic.callsByKey.serpent)
 for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
-    assert(Registry:GetProfile("sszorak", difficultyKey).callsByKey.crosswinds)
+    local sszorak = Registry:GetProfile("sszorak", difficultyKey)
+    assert(sszorak.callsByKey.crosswinds)
+    assert(sszorak.callsByKey.apex.warning == "GREEN MUTILATE > NEXT 5+ SOAK TEAM")
+    assert(contains(planText("sszorak", difficultyKey), "TEAM A THEN TEAM B"))
 end
 assert(contains(sszorakMythic.callsByKey.serpent.warning, "14+"))
 
+-- Boss 6: shared Feast/orb/add/energy calls stay live while Stone Breaker remains role-owned.
 for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
     local twin = Registry:GetProfile("twinfangs", difficultyKey)
     assert(twin.callsByKey.balance == nil and twin.callsByKey.stone == nil)
     assert(twin.callsByKey.globules.warning == "GREEN ORBS > SOAK BEFORE RUPTURE")
     assert(twin.callsByKey.adds.warning == "KILL ADDS")
-    assert(twin.callsByKey.energy.warning == "100 ENERGY > MOVE TO ITHRAZ")
+    assert(twin.callsByKey.feast.warning == "FEAST > TEAM A > TEAM B > TEAM C")
+    assert(twin.callsByKey.energy.warning == "100 ENERGY > MOVE TO ITHRAZ > DODGE FLOOD/STORM")
+    assert(#twin.callsByKey.energy.spellIDs == 1 and twin.callsByKey.energy.spellIDs[1] == 1306872)
 end
 local twinMythic = Registry:GetProfile("twinfangs", "mythic")
 assert(twinMythic.callsByKey.bulwark and twinMythic.callsByKey.brood and twinMythic.callsByKey.tainted)
@@ -191,4 +210,4 @@ assert(Registry:SetActiveDifficulty("mythic"))
 assert(Registry:Get("vashnik").callsByKey.tumors)
 assert(Registry:SetActiveDifficulty("heroic"))
 
-print("ok - difficulty profiles, concise actions, raidleader scope and Season 2 tactic alignment")
+print("ok - difficulty profiles, bossmod ownership, raidleader calls and Season 2 tactic alignment")
