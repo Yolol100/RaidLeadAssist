@@ -4,7 +4,7 @@ local AssignmentRegistry = ns:GetModule("Encounters.AssignmentRegistry")
 
 local originalGetLayout = AssignmentRegistry.GetLayout
 
-local function groupSlot(key, label, callLabel)
+local function groupSlot(key, label, callLabel, helper)
     return {
         key = key,
         label = label,
@@ -13,21 +13,31 @@ local function groupSlot(key, label, callLabel)
         callLabel = callLabel,
         rotation = "mutilate_groups",
         required = true,
-        helper = "Enter the raid group assignment, for example Groups 1+2 or Groups 3+4. Do not enter individual player names.",
+        helper = helper,
     }
 end
 
 local SSZORAK_GROUP_LAYOUT = {
-    summary = "Assign two raid groups for the green Mutilate soak. White Ravage stays DBM-owned.",
+    summary = "Use raid Groups 1+2 for the first green Mutilate soak and Groups 3+4 for the second. White Ravage stays DBM-owned.",
     sections = {
         {
             key = "mutilate",
             title = "Green Mutilate Soak Rotation",
-            description = "Alternate two raid groups for the green Mutilate hit. Configure group labels/numbers only; RLA rotates Group 1 then Group 2 on each successful Mutilate call.",
+            description = "Left column is Soak Groups 1+2. Right column is Soak Groups 3+4. RLA alternates Groups 1+2 then Groups 3+4 on successful Mutilate calls.",
             columns = 2,
             slots = {
-                groupSlot("mutilate_group_1", "Soak Group 1", "GROUP 1"),
-                groupSlot("mutilate_group_2", "Soak Group 2", "GROUP 2"),
+                groupSlot(
+                    "mutilate_group_1",
+                    "Soak Groups 1+2",
+                    "GROUPS 1+2",
+                    "Use this column for raid Groups 1+2. Do not enter individual player names."
+                ),
+                groupSlot(
+                    "mutilate_group_2",
+                    "Soak Groups 3+4",
+                    "GROUPS 3+4",
+                    "Use this column for raid Groups 3+4. Do not enter individual player names."
+                ),
             },
         },
     },

@@ -16,6 +16,8 @@ for _, difficulty in ipairs({ "normal", "heroic", "mythic" }) do
     assert(definitions[1].key == "mutilate_group_1" and definitions[1].rotation == "mutilate_groups")
     assert(definitions[2].key == "mutilate_group_2" and definitions[2].rotation == "mutilate_groups")
     assert(definitions[1].kind == "rule" and definitions[2].kind == "rule", "Sszorak soak settings must be group-text fields, not player pickers")
+    assert(definitions[1].label == "Soak Groups 1+2" and definitions[1].callLabel == "GROUPS 1+2")
+    assert(definitions[2].label == "Soak Groups 3+4" and definitions[2].callLabel == "GROUPS 3+4")
     assert(definitions[1].minPlayers == nil and definitions[2].minPlayers == nil, "group settings must not require individual player names")
 end
 
@@ -27,18 +29,18 @@ assert(ok, values and values.message)
 
 local base = "GREEN MUTILATE > NEXT 5+ SOAK GROUP"
 local first = Assignments:BuildCallWarning(base, "sszorak", "heroic", "apex")
-assert(first:find("GROUP 1: Groups 1+2", 1, true), "first Mutilate call must use configured Soak Group 1")
+assert(first:find("GROUPS 1+2: Groups 1+2", 1, true), "first Mutilate call must use raid Groups 1+2")
 Assignments:AdvanceCall("sszorak", "heroic", "apex")
 
 local second = Assignments:BuildCallWarning(base, "sszorak", "heroic", "apex")
-assert(second:find("GROUP 2: Groups 3+4", 1, true), "second Mutilate call must use configured Soak Group 2")
+assert(second:find("GROUPS 3+4: Groups 3+4", 1, true), "second Mutilate call must use raid Groups 3+4")
 Assignments:AdvanceCall("sszorak", "heroic", "apex")
 
 local third = Assignments:BuildCallWarning(base, "sszorak", "heroic", "apex")
-assert(third:find("GROUP 1: Groups 1+2", 1, true), "Mutilate group rotation must loop back to Group 1")
+assert(third:find("GROUPS 1+2: Groups 1+2", 1, true), "Mutilate group rotation must loop back to Groups 1+2")
 
 Assignments:ResetRuntime()
 local reset = Assignments:BuildCallWarning(base, "sszorak", "heroic", "apex")
-assert(reset:find("GROUP 1: Groups 1+2", 1, true), "Mutilate rotation must reset to Group 1 between pulls")
+assert(reset:find("GROUPS 1+2: Groups 1+2", 1, true), "Mutilate rotation must reset to Groups 1+2 between pulls")
 
-print("ok - Sszorak Mutilate uses two group-level text assignments and rotates Group 1 > Group 2")
+print("ok - Sszorak Mutilate rotates fixed raid Groups 1+2 > Groups 3+4")
