@@ -12,6 +12,11 @@ T.Load("Services/AssignmentService.lua", ns)
 local Assignments = ns:GetModule("Services.AssignmentService")
 local db = {
     assignments = {
+        legacyboss = {
+            heroic = {
+                obsolete = "Should disappear",
+            },
+        },
         sszorak = {
             heroic = {
                 mutilate_group_1 = "Alpha, Bravo, Charlie, Delta, alpha",
@@ -44,6 +49,8 @@ local db = {
 
 Assignments:Initialize(db)
 
+assert(db.assignments.legacyboss == nil,
+    "unknown persisted bosses must fail closed instead of reaching the assignment registry")
 assert(Assignments:GetValue("sszorak", "heroic", "mutilate_group_1") == "",
     "persisted duplicate players must be removed during initialization")
 assert(Assignments:GetValue("sszorak", "heroic", "mutilate_group_2") == "Foxtrot, Golf, Hotel, India, Juliet",
@@ -67,4 +74,4 @@ assert(Assignments:GetValue("twinfangs", "heroic", "feast_team_c") == "Six, Seve
 assert(Assignments:GetValue("vashnik", "heroic", "bile_team") == "",
     "retired Vashnik fixed-roster fields must be removed from persisted data")
 
-print("ok - persisted assignments are revalidated against the actual runtime override layouts and stale fields fail closed")
+print("ok - persisted assignments use runtime overrides; unknown, stale and unsafe fields fail closed")
