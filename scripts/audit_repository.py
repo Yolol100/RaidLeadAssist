@@ -44,8 +44,13 @@ FORBIDDEN_RUNTIME_APIS = re.compile(
 )
 DISPLAY_ONLY_HEALTH_APIS = re.compile(r"\b(?:UnitHealth|UnitHealthMax)\b")
 APPROVED_SECRET_HEALTH_DISPLAY_FILES = {"UI/SentinelsPanel.lua"}
-APPROVED_APP_PATCHES = {
-    "Core/AssignmentIntegration.lua": {"Initialize", "SelectBoss", "SelectDifficulty", "SendExplanation", "SendCall"},
+APPROVED_RUNTIME_PATCHES = {
+    "Core/AssignmentIntegration.lua": {
+        "Core.App": {"Initialize", "SelectBoss", "SelectDifficulty", "SendExplanation", "SendCall"},
+    },
+    "Core/SentinelsIntegration.lua": {
+        "UI.MainFrame": {"Initialize", "SetEncounter", "SetCallState", "ResetCallStates"},
+    },
 }
 
 
@@ -114,21 +119,33 @@ def toc_entries() -> list[str]:
     return entries
 
 
+def runtime_patch_surface(entries: list[str]) -> dict[str, dict[str, set[str]]]:
+    surface: dict[str, dict[str, set[str]]] = {}
+    alias_re = re.compile(r'local\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*ns:GetModule\("([^"]+)"\)')
+    for rel in entries:
+        source = read_text(rel)
+        aliases = dict(alias_re.findall(source))
+        file_surface: dict[str, set[str]] = {}
+        for alias, module_name in aliases.items():
+            methods = set(re.findall(rf"^function\s+{re.escape(alias)}:([A-Za-z_][A-Za-z0-9_]*)\s*\(", source, re.M))
+            methods.update(re.findall(rf"^{re.escape(alias)}\.([A-Za-z_][A-Za-z0-9_]*)\s*=\s*function\b", source, re.M))
+            if methods:
+                file_surface[module_name] = methods
+        if file_surface:
+            surface[rel] = file_surface
+    return surface
+
+
 def validate_modules(entries: list[str]) -> None:
     register_re = re.compile(r'ns:RegisterModule\("([^"]+)"')
     get_re = re.compile(r'ns:GetModule\("([^"]+)"')
     providers: dict[str, tuple[int, str]] = {}
-    app_patches: dict[str, set[str]] = {}
     for index, rel in enumerate(entries):
         source = read_text(rel)
         for name in register_re.findall(source):
             if name in providers:
                 fail(f"duplicate module registration {name}: {providers[name][1]} / {rel}")
             providers[name] = (index, rel)
-        if rel != "Core/App.lua":
-            methods = set(re.findall(r"^function\s+App:([A-Za-z_][A-Za-z0-9_]*)\s*\(", source, re.M))
-            if methods:
-                app_patches[rel] = methods
     for index, rel in enumerate(entries):
         source = read_text(rel)
         for name in get_re.findall(source):
@@ -137,10 +154,14 @@ def validate_modules(entries: list[str]) -> None:
             provider_index, provider_path = providers[name]
             if provider_index >= index:
                 fail(f"module load-order violation: {rel} gets {name} before {provider_path} is loaded")
-    if app_patches != APPROVED_APP_PATCHES:
-        fail(f"App runtime patch surface drifted: expected {APPROVED_APP_PATCHES}, got {app_patches}")
+
+    patches = runtime_patch_surface(entries)
+    if patches != APPROVED_RUNTIME_PATCHES:
+        fail(f"runtime extension surface drifted: expected {APPROVED_RUNTIME_PATCHES}, got {patches}")
     if entries.index("Core/App.lua") >= entries.index("Core/AssignmentIntegration.lua"):
         fail("AssignmentIntegration must load after Core/App.lua")
+    if entries.index("UI/MainFrame.lua") >= entries.index("Core/SentinelsIntegration.lua"):
+        fail("SentinelsIntegration must load after UI/MainFrame.lua")
 
 
 def validate_runtime_apis(entries: list[str]) -> None:
@@ -158,13 +179,18 @@ def validate_runtime_apis(entries: list[str]) -> None:
                 fail(f"approved boss-health display file no longer uses its declared API: {rel}")
             for marker in (
                 "issecretvalue", "canaccessvalue", "StatusBar", "SetMinMaxValues", "SetValue",
-                "valueIsSecret(health) or valueIsSecret(maximum)", "if secret then",
+                "valueIsSecret(health) or valueIsSecret(maximum)", "if secret then", "UnitGUID(token)",
             ):
                 if marker not in source:
                     fail(f"secret-safe boss-health display guard missing in {rel}: {marker}")
-            for forbidden in ("SendChatMessage", "RaidWarning:Send", "TargetUnit", "FocusUnit"):
+            for forbidden in (
+                "SendChatMessage", "RaidWarning:Send", "TargetUnit", "FocusUnit",
+                "BALANCE_THRESHOLD_PERCENT", "UpdateBalance", "SetBalanceCall", "return percent",
+            ):
                 if forbidden in source:
-                    fail(f"boss-health display must not automate communication/targeting in {rel}: {forbidden}")
+                    fail(f"boss-health display must not derive or automate a combat recommendation in {rel}: {forbidden}")
+            if "UnitName(token)" in source:
+                fail(f"boss-health mapping must not depend on localized UnitName strings in {rel}")
 
 
 def validate_workflows(files: list[str]) -> None:
@@ -192,11 +218,11 @@ def validate_workflows(files: list[str]) -> None:
             if not re.fullmatch(r"[0-9a-f]{40}", ref):
                 fail(f"workflow action must be pinned to a full commit SHA: {rel}: {uses}")
     validate = read_text(".github/workflows/validate.yml")
-    for job in ("validation:", "provenance:", "release:"):
+    for job in ("validation:", "reproducibility:", "reproducibility-check:", "provenance:", "release:"):
         if job not in validate:
             fail(f"validation workflow missing required job: {job[:-1]}")
-    if "needs: [validation, provenance]" not in validate:
-        fail("release job must depend on validation and provenance")
+    if "gh attestation verify" not in validate:
+        fail("release workflow must verify provenance before publishing")
     if "github.ref == 'refs/heads/main'" not in validate:
         fail("privileged main release jobs must be scoped to refs/heads/main")
 
@@ -243,7 +269,7 @@ def main() -> int:
     validate_secrets(files)
     print(
         f"ok - repository audit passed ({len(files)} tracked files; {len(entries)} runtime files; "
-        "paths/encoding/secrets/module-order/combat-API/workflow/test/release governance)"
+        "paths/encoding/secrets/module-order/extensions/combat-API/workflow/test/release governance)"
     )
     return 0
 
