@@ -1,8 +1,6 @@
 local _, ns = ...
 local Registry = ns:GetModule("Encounters.Registry")
 
-local BOSSMOD_RULE = "CALL PRIORITY: FOLLOW DBM OR BIGWIGS FOR YOUR PERSONAL DEBUFFS, DODGES, ROLE WARNINGS AND TIMERS. FOLLOW RLA/RAID-LEADER CALLS FOR GROUPS, MARKERS, SOAKS, TARGET PRIORITY AND SHARED RAID MOVEMENT."
-
 local dread = {
     key = "dreadmarch",
     ability = "Dreadmarch",
@@ -99,18 +97,18 @@ Registry:Register({
     name = "The Coiled Altar",
     encounterID = 3429,
     encounterAliases = { "The Bargained Crown" },
-    strategyStatus = "12.1 Journal + current Wowhead + Ready Check Pull recap screenshot + DBM/BigWigs source-reviewed 2026-08-18; RCP intermission-Bloodlust tactic selected; live Retail validation pending",
+    strategyStatus = "12.1 Journal + current Wowhead/Raidstrats + Ready Check Pull + DBM/BigWigs source-reviewed 2026-08-19; player briefing split from raidleader prep; live validation pending",
     profiles = {
         normal = {
             explanation = {
-                "DAMAGE PLAN: P1 + P2 SINGLE TARGET. PREPULL: PLACE SEVER / SOUL SEVER WORLD MARKS AT BOTH PLATFORM ENDS AND ASSIGN 2-3 MOBILE ORB COLLECTORS.",
-                "P1: COLLECT GREEN ORBS AT THE ACTIVE SEVER MARK; TANK SEVER CLEARS A FEW AT A TIME. MINIMIZE LEFTOVER ORBS BEFORE ZUL'JAN DIES; USE HEALER CDS FOR THE RUPTURES.",
-                "GUILLOTINE: 5+ ASSIGNED SOAKERS STACK NEAR THE EDGE, THEN THE RAID MOVES 40+ YARDS FROM THE AXE. VENOMFANG DISPELS AND TANK SWAPS STAY BOSSMOD/ROLE-OWNED.",
-                "P2: BREAK DREADMARCH SHIELDS BEFORE PLAYERS REACH THE EDGE. FIXATE TARGETS GUIDE GHOSTS TO THE SOUL SEVER MARK; LOOK AT A GHOST TO STOP IT, LOOK AWAY TO MOVE IT.",
-                "RECLAIM SOUL FRAGMENTS AFTER SOUL SEVER OR GLOOMBOMB. BREAK NIGHTFALL'S SHIELD, INTERRUPT IT, AND KILL SOULCOILERS WHILE KICKING WAIL.",
-                "INTERMISSION: BLOODLUST AND BURN ZUL'JAN AT DOUBLE DAMAGE. STOMP MALACRASS FRAGMENTS ONE AT A TIME SO THEY DO NOT HEAL HIM AND RAID DAMAGE DOES NOT CHAIN.",
-                "P3: REUSE THE ORB/GHOST MARKS FOR FRONTALS, HEAL THROUGH DEFILEMENT'S RAID-WIDE ABSORB, KEEP BOTH BOSSES EVEN, AND KILL THEM TOGETHER.",
-                BOSSMOD_RULE,
+                "Green poison orb on you: carry it to the Triangle orb marker.",
+                "Huge axe marks a player: assigned soakers stack, then everyone runs 40+ yards away.",
+                "Possessed player walks toward the edge: break their absorb immediately.",
+                "Ghost fixates you: face it to stop; look away to move it to the Cross marker.",
+                "Nightfall shield appears: break the shield, then interrupt the boss.",
+                "Soulcoilers spawn: kill them quickly and interrupt Wail of Terror.",
+                "Intermission: Bloodlust; stop fragments one at a time before they reach Zul'jan.",
+                "Final phase: keep both bosses even and kill them together.",
             },
             calls = {
                 toxic("DELUGE > COLLECTORS MOVE ORBS TO SEVER MARK"),
@@ -124,14 +122,10 @@ Registry:Register({
         },
         heroic = {
             explanation = {
-                "DAMAGE PLAN: P1 + P2 SINGLE TARGET. PREPULL: MARK BOTH PLATFORM ENDS, ASSIGN 2-3 MOBILE ORB COLLECTORS, TWO GUILLOTINE TEAMS, AND 2-3 WAIL INTERRUPTS.",
-                "P1: STACK ORBS AT THE ACTIVE SEVER MARK AND CLEAR A FEW PER SEVER. EACH DESTROYED ORB ADDS STACKING VENOM RUPTURE; MINIMIZE LEFTOVERS BEFORE ZUL'JAN DIES.",
-                "GUILLOTINE TEAMS A/B ALTERNATE 5+ SOAKS NEAR AN EDGE; AFTER EACH AXE THE RAID MOVES 40+ YARDS. VENOMFANG DISPELS AND TANK SWAPS STAY BOSSMOD/ROLE-OWNED.",
-                "P2: BREAK DREADMARCH BEFORE THE EDGE; GUIDE FIXATE GHOSTS TO SOUL SEVER. LOOK AT A GHOST TO STOP IT, LOOK AWAY TO MOVE IT; RECLAIM EVERY SOUL FRAGMENT.",
-                "BREAK NIGHTFALL'S SHIELD AND INTERRUPT. KILL SOULCOILERS AND KICK WAIL. GLOOMBOMBS GO 15+ YARDS OUT, THEN TARGETS RECLAIM THEIR FRAGMENTS.",
-                "INTERMISSION: BLOODLUST AND BURN ZUL'JAN AT DOUBLE DAMAGE. STOMP FRAGMENTS ONE AT A TIME SO THEY DO NOT HEAL HIM AND SPIRIT ERASURE DAMAGE DOES NOT CHAIN.",
-                "P3: REUSE THE ORB/GHOST MARKS, HEAL THROUGH DEFILEMENT, KEEP BOTH EVEN, AND KILL TOGETHER. GUILLOTINE FORCES THE RAID BACK AND FORTH BETWEEN ENDS.",
-                BOSSMOD_RULE,
+                "Destroyed green orbs now stack raid damage: clear only the planned orbs.",
+                "Guillotine gives a repeat-hit debuff: soak only with your assigned team.",
+                "A ghost reaching you re-possesses you: keep it controlled until the frontal clears it.",
+                "Purple Gloombomb on you: move 15+ yards out, then collect your Soul Fragments.",
             },
             calls = {
                 toxic("DELUGE > COLLECTORS MOVE ORBS TO SEVER MARK"),
@@ -145,14 +139,10 @@ Registry:Register({
         },
         mythic = {
             explanation = {
-                "DAMAGE PLAN: P1 + P2 SINGLE TARGET. PREPULL: MARK BOTH PLATFORM ENDS, ASSIGN 2-3 ORB COLLECTORS, FRESH GUILLOTINE TEAMS, AND 2-3 WAIL INTERRUPTS.",
-                "P1: COLLECT ORBS AT SEVER AND CLEAR VIRULENT MUTATIONS BEFORE THE NEXT DELUGE. GUILLOTINED IS PERMANENT, SO NEVER REUSE A FRESH 5+ TEAM.",
-                "P2: BREAK DREADMARCH, GUIDE GHOSTS TO SOUL SEVER, AND RECLAIM ALL FRAGMENTS. WAIL INTERRUPTS BRIEFLY REVEAL HIDDEN GHOSTS; KEEP KICK COVERAGE CLEAN.",
-                "SPITEFUL SOULCOILERS TAKE 99% LESS DAMAGE UNTIL GLOOMBOMBS STRIP SPIRIT SHIELD. AIM BOMBS INTO ADDS, THEN SPREAD AND RECLAIM FRAGMENTS.",
-                "BREAK NIGHTFALL'S SHIELD AND INTERRUPT. PERSONAL FIXATE ORIENTATION, VENOMFANG DISPELS AND TANK FRONTALS/SWAPS STAY BOSSMOD/ROLE-OWNED.",
-                "INTERMISSION: BLOODLUST AND BURN ZUL'JAN AT DOUBLE DAMAGE; STOMP FRAGMENTS ONE AT A TIME. P3: REUSE MARKS AND HEAL THROUGH DEFILEMENT.",
-                "P3: HANDLE BOTH KITS, KEEP BOTH BOSSES EVEN, AND KILL TOGETHER. GRIM GUILLOTINE STILL REQUIRES FRESH 5+ SOAKERS AND SAFE RANGE AFTER THE HIT.",
-                BOSSMOD_RULE,
+                "Guillotined is permanent: soak only when a fresh team is called.",
+                "Mutated green venom: only assigned collectors touch it; everyone else stays clear.",
+                "Your fixating ghost is only visible to you: bring it to Cross without touching other ghosts.",
+                "Shielded Soulcoilers: aim Gloombombs into them, then kill them after the shield breaks.",
             },
             calls = {
                 toxic("DELUGE > CLEAR MUTATIONS > ORBS TO SEVER MARK"),
