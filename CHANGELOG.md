@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.0-beta.47 — 2026-08-18
+
+- Re-audit bosses 1-6 against current Patch 12.1 encounter strategy evidence and current DBM/BigWigs source contracts, including raid-size scaling, failure conditions, provider gaps, duplicate timer arming, assignments and UI/plan consistency.
+- Merge the completed boss 5/6 raidleader audit into `main`, including flex-safe Sszorak 5+ Mutilate teams, flex-safe Twin Fangs 3+ Feast teams and the single Sanguine Storm anchor for the shared 100-energy movement call.
+- Make Entombed Sentinels flex-safe by replacing fixed 20-player `Groups 1+2` / `Groups 3+4` assumptions with required Green/Red team selectors used consistently by the raid plan, live warnings and the special two-column UI.
+- Preserve bossmod ownership for personal debuffs, dodges, role warnings and personal timers while keeping RLA responsible for shared teams, markers, soaks, target priority and coordinated raid movement across bosses 1-6.
+- Add call-scoped Blizzard timeline fallback under DBM authority so a required RLA mechanic with no direct bossmod timer, notably Lost Explorers `Final Ascension`, remains available without reopening unrelated native events or aliasing the separate `Fling Fish` timer.
+- Re-verify current BigWigs master `Timer`, `CastTimer` and `StartBar` callback shapes after upstream fingerprint drift and refresh the exact reviewed provider baseline.
+- Expand regressions for Sentinels flex selectors, live assignment fragments, provider authority gaps and the Lost Explorers Final Ascension/Fling Fish separation.
+
 ## 0.9.0-beta.46 — 2026-08-18
 
 - Audit the existing Nek'zali, Entombed Sentinels and Vashnik implementations for purpose, audience, tactic/button consistency, UI behavior, assignments, timer behavior and release safety without adding new encounter features.
