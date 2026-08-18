@@ -1,7 +1,6 @@
 local _, ns = ...
 
 local AssignmentRegistry = ns:GetModule("Encounters.AssignmentRegistry")
-local originalGetLayout = AssignmentRegistry.GetLayout
 
 local function assigneeSlot(key, label, callKey, callLabel, required, exclusiveGroup, minPlayers, helper)
     return {
@@ -67,9 +66,4 @@ local LAYOUTS = {
     },
 }
 
-function AssignmentRegistry:GetLayout(bossKey, difficultyKey)
-    if bossKey == "twinfangs" and LAYOUTS[difficultyKey] then
-        return LAYOUTS[difficultyKey]
-    end
-    return originalGetLayout(self, bossKey, difficultyKey)
-end
+AssignmentRegistry:RegisterLayouts("twinfangs", LAYOUTS)
