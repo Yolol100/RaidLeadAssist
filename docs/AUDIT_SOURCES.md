@@ -1,6 +1,6 @@
 # Audit source register
 
-Review date: 2026-08-17. Changing platform/provider facts must be rechecked before a release claim.
+Review date: 2026-08-18. Changing platform/provider facts must be rechecked before a release claim.
 
 ## Blizzard / WoW
 
@@ -28,6 +28,8 @@ Audit implications: least-privilege workflow permissions, actions pinned to full
 - BigWigs repository/releases: https://github.com/BigWigsMods/BigWigs
 
 The machine-readable exact reviewed commits/file fingerprints live in `UPSTREAM_BASELINES.json`; current stable releases at this review are DBM `12.1.3` and BigWigs `v419.2`.
+
+On 2026-08-18 the tracked BigWigs `Core/BossPrototype.lua` master fingerprint changed. RLA re-verified the current `BigWigs_Timer`, `BigWigs_CastTimer` and `BigWigs_StartBar` argument shapes, including the final timeline event-ID slot used as one-shot metadata. The provider contract remains compatible; the new reviewed fingerprint is recorded in `UPSTREAM_BASELINES.json`.
 
 ## Encounter strategy
 
