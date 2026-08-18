@@ -46,12 +46,16 @@ end
 assert(cremationRules == 2, "Heroic Nek'zali should expose two Cremation rules")
 
 local sentinels = Registry:GetDefinitions("sentinels", "heroic")
+local stasisOneThree, stasisTwoTwo
 for _, definition in ipairs(sentinels) do
+    if definition.key == "stasis_1_3" then stasisOneThree = definition end
+    if definition.key == "stasis_2_2" then stasisTwoTwo = definition end
     if definition.key:find("stasis_", 1, true) then
-        assert(definition.exactPlayers == 4, "Helical Toxin groups must encode exact four-player validation")
-        assert(definition.exclusiveGroup == "stasis", "Helical Toxin groups must reject cross-group overlap")
+        assert(definition.kind == "rule", "Helical Toxin matching must be stored as a dynamic rule")
+        assert(definition.exactPlayers == nil and definition.exclusiveGroup == nil, "Helical Toxin matching must not enforce a fixed roster group")
     end
 end
+assert(stasisOneThree and stasisTwoTwo, "Sentinels must expose both 1+3 and 2+2 Stasis rules")
 
 local twinMythic = Registry:GetDefinitions("twinfangs", "mythic")
 for _, definition in ipairs(twinMythic) do
@@ -97,14 +101,15 @@ local overlapGroup, overlapError = Assignments:ApplyBossDraft("sszorak", "heroic
 assert(not overlapGroup and overlapError.assignmentKey == "mutilate_b", "distinct Mutilate teams must reject overlap")
 assert(overlapError.message:find("assigned to both", 1, true), "overlap validation must name the conflict")
 
-local invalidStasis, stasisError = Assignments:ApplyBossDraft("sentinels", "heroic", {
-    breath_side = "Alpha",
-    blood_side = "Bravo",
-    stasis_a = "One, Two, Three",
-    stasis_b = "Four, Five, Six, Seven",
+local stasisOk, stasisValues = Assignments:ApplyBossDraft("sentinels", "heroic", {
+    breath_side = "Groups 1+2",
+    blood_side = "Groups 3+4",
+    stasis_1_3 = "1 pairs with 3",
+    stasis_2_2 = "2 pairs with 2",
 })
-assert(not invalidStasis and stasisError.assignmentKey == "stasis_a", "Stasis must reject non-four-player groups")
-assert(stasisError.message:find("exactly 4 unique players", 1, true), "Stasis validation should explain the exact group size")
+assert(stasisOk, stasisValues and stasisValues.message)
+assert(Assignments:GetValue("sentinels", "heroic", "stasis_1_3") == "1 pairs with 3", "Sentinels must persist the 1+3 matching rule")
+assert(Assignments:GetValue("sentinels", "heroic", "stasis_2_2") == "2 pairs with 2", "Sentinels must persist the 2+2 matching rule")
 
 local invalidFeast, feastError = Assignments:ApplyBossDraft("twinfangs", "heroic", {
     feast_a = "One, Two",

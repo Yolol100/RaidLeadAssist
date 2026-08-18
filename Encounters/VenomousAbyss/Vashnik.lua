@@ -26,9 +26,11 @@ local function manualCall(key, ability, warning, voice)
 end
 
 local killAdds = timedCall("imbibe", "Imbibe", "KILL ADDS", "Kill adds", { 1283164 }, 8, 5)
+local fireNormal = manualCall("fire_stagger", "Burning Venoms", "KILL FIRE ADDS", "Kill fire adds")
 local fireStagger = manualCall("fire_stagger", "Burning Venoms", "SKULL FIRST > WAIT > X", "Stagger fire adds")
 local dodgeSwirlies = manualCall("shadow_dodge", "Shrouded Venoms", "DODGE SWIRLIES", "Dodge swirlies")
-local siphon = manualCall("siphon", "Siphoning Infection", "SIPHON > STACK TO HELP HEAL", "Stack for siphon")
+local adaptive = timedCall("infection", "Adaptive Infection", "INFECTION > CHECK TYPE", "Check infection", { 1282114, 1282117 }, 6, 3)
+local siphon = manualCall("siphon", "Siphoning Infection", "SIPHON > STACK HELPERS ON TARGET", "Stack for siphon")
 local exploding = manualCall("exploding", "Exploding Infection", "BIG CIRCLE > MOVE FAR OUT", "Move far out")
 local stygian = manualCall("stygian", "Stygian Infection", "SPREAD > KEEP MOVING", "Spread and move")
 local catalyst = timedCall("catalyst", "Malignant Catalyst", "SOAK BILE", "Soak bile", { 1282525, 1282509 }, 7, 4)
@@ -40,8 +42,9 @@ local killTumors = manualCall("tumors", "Malignant Tumors", "KILL TUMORS", "Kill
 local function normalCalls()
     return {
         killAdds,
-        fireStagger,
+        fireNormal,
         dodgeSwirlies,
+        adaptive,
         siphon,
         frothNormal,
         exploding,
@@ -54,6 +57,7 @@ local function heroicCalls()
         killAdds,
         fireStagger,
         dodgeSwirlies,
+        adaptive,
         siphon,
         frothNormal,
         catalyst,
@@ -67,6 +71,7 @@ local function mythicCalls()
         killAdds,
         fireStagger,
         dodgeSwirlies,
+        adaptive,
         siphon,
         frothMythic,
         catalyst,
@@ -80,12 +85,12 @@ Registry:Register({
     key = "vashnik",
     name = "Vashnik the Malignant",
     encounterID = 3455,
-    strategyStatus = "12.1 Journal + current Wowhead/Raidstrats strategy source-reviewed 2026-08-17; live validation pending",
+    strategyStatus = "12.1 Journal + current Wowhead/Raidstrats + DBM/BigWigs source-reviewed 2026-08-18; live validation pending",
     profiles = {
         normal = {
             explanation = {
                 "PLAN: FLAME > SHADOW > SHADOW > BLOOD > BLOOD > FLAME. EACH IMBIBE USES THE TWO NEAREST FOUNTAINS. KILL ADDS BEFORE CENTER.",
-                "FIRE: KILL SKULL, WAIT, THEN X. SHADOW: DODGE SWIRLIES. BLOOD: STACK WITH SIPHON TARGET TO HELP CLEAR THE HEAL ABSORB.",
+                "FIRE: KILL ADDS. SHADOW: DODGE SWIRLIES. BLOOD: STACK HELPERS ON THE SIPHON TARGET TO CLEAR THE HEAL ABSORB.",
                 "FROTH: MOVE OUT AND AIM WAVES AWAY. BIG CIRCLE: MOVE FAR OUT. SHADOW INFECTION: SPREAD AND KEEP MOVING.",
             },
             calls = normalCalls(),
@@ -93,7 +98,7 @@ Registry:Register({
         heroic = {
             explanation = {
                 "PLAN: FLAME > SHADOW > SHADOW > BLOOD > BLOOD > FLAME. EACH IMBIBE USES THE TWO NEAREST FOUNTAINS. KILL ADDS BEFORE CENTER.",
-                "FIRE: KILL SKULL, WAIT, THEN X SO BOTH FIRE ADDS DO NOT DIE TOGETHER. SHADOW: DODGE SWIRLIES. BLOOD: STACK FOR SIPHON.",
+                "FIRE: KILL SKULL, WAIT, THEN X SO CAUSTIC SURGE STACKS DO NOT OVERLAP. SHADOW: DODGE SWIRLIES. BLOOD: STACK HELPERS FOR SIPHON.",
                 "FROTH: MOVE OUT AND AIM WAVES AWAY. SOAK EVERY BILE. BIG CIRCLE: MOVE FAR OUT. SHADOW INFECTION: SPREAD AND KEEP MOVING.",
             },
             calls = heroicCalls(),
@@ -101,8 +106,9 @@ Registry:Register({
         mythic = {
             explanation = {
                 "PLAN: USE THE HEROIC ROUTE AND RULES. KILL ADDS BEFORE CENTER; FIRE STAYS STAGGERED; SOAK EVERY BILE.",
-                "FROTH TARGETS AIM A WAVE THROUGH TUMORS TO REMOVE THEIR DEFENSE, THEN KILL TUMORS. BLOOD SIPHON TARGETS STACK WITH HELPERS.",
-                "BIG CIRCLE: MOVE FAR OUT. SHADOW INFECTION: SPREAD AND KEEP MOVING. MYTHIC SIPHON HITS MAKE REPEATED HELPERS MORE DANGEROUS.",
+                "FROTH TARGETS AIM A WAVE THROUGH TUMORS TO REMOVE HARDENED TUMOR, THEN KILL THE EXPOSED TUMORS.",
+                "BLOOD: STACK HELPERS ON SIPHON TARGETS. BIG CIRCLE: MOVE FAR OUT. SHADOW INFECTION: SPREAD AND KEEP MOVING.",
+                "MYTHIC MALIGNANCE MAKES REPEATED INFECTION MISTAKES MORE DANGEROUS.",
             },
             calls = mythicCalls(),
         },

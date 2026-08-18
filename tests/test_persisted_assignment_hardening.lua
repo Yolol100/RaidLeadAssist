@@ -17,8 +17,8 @@ local db = {
             heroic = {
                 breath_side = "Valid Breath",
                 blood_side = "Valid Blood",
-                stasis_a = "One, Two, Three",
-                stasis_b = "Four, Five, Six, Seven",
+                stasis_1_3 = "1 pairs with 3",
+                stasis_2_2 = "2 pairs with 2",
             },
         },
         twinfangs = {
@@ -40,10 +40,10 @@ assert(Assignments:GetValue("sszorak", "heroic", "mutilate_a") == "",
 assert(Assignments:GetValue("sszorak", "heroic", "mutilate_b") == "Foxtrot, Golf, Hotel, India, Juliet",
     "valid persisted assignments must survive neighboring corruption")
 
-assert(Assignments:GetValue("sentinels", "heroic", "stasis_a") == "",
-    "persisted exact-size violations must be removed during initialization")
-assert(Assignments:GetValue("sentinels", "heroic", "stasis_b") == "Four, Five, Six, Seven",
-    "valid exact-size assignments must survive neighboring corruption")
+assert(Assignments:GetValue("sentinels", "heroic", "stasis_1_3") == "1 pairs with 3",
+    "valid persisted 1+3 Stasis rule must survive initialization")
+assert(Assignments:GetValue("sentinels", "heroic", "stasis_2_2") == "2 pairs with 2",
+    "valid persisted 2+2 Stasis rule must survive initialization")
 assert(Assignments:GetValue("sentinels", "heroic", "breath_side") == "Valid Breath",
     "unrelated valid assignments must be preserved")
 
