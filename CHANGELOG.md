@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.9.0-beta.47 — 2026-08-18
+
+- Re-audit Nek'zali and Entombed Sentinels across Normal, Heroic and Mythic for raidplan accuracy, raidleader call scope, DBM/BigWigs/Blizzard timer ownership, settings and UI consistency.
+- Refocus Nek'zali on actual raid coordination: keep add priority, Echo kills, Pyre/Cremation roles, Phase 2 Bloodlust and Mythic Grasping well-group rotation; leave Essence Rend, Possession Barrage, Soulcoil Ignition and Invoke personal/tank/reactive warnings to bossmods.
+- Refocus Entombed Sentinels on actual raid coordination: keep add priority, green droplets, red-side Miasma group soak, Stasis matching, side swap, HP balance and Mythic Protovenom; leave returning venom, Blood Venom pool placement and Blighted Blood dispels to bossmods/roles.
+- Make Sentinels Venom Coagulation manual because current BigWigs publishes a second same-key add-spawn bar after the parent timer; this avoids a false second PREPARE/PRESS cycle while retaining the important KILL ADD call.
+- Tighten source-backed Sentinels timing windows for Miasma and Stasis while preserving the DBM > BigWigs > Blizzard authority chain and exact/native-only PREPARE/PRESS behavior.
+- Fix the Sentinels HP-balance decision direction: when one boss is lower, the stop-DPS call now targets that lower-HP boss so the higher-HP boss can catch down.
+- Simplify boss 1/2 settings: Nek'zali Normal/Heroic and all Sentinels profiles expose no redundant editable strategy facts; Mythic Nek'zali keeps only two alternating fresh Grasping well-group fields.
+- Add dedicated boss 1/2 raidlead, timer, assignment and Sentinels UI regression contracts while retaining all existing release gates.
+
 ## 0.9.0-beta.46 — 2026-08-18
 
 - Audit the existing Nek'zali, Entombed Sentinels and Vashnik implementations for purpose, audience, tactic/button consistency, UI behavior, assignments, timer behavior and release safety without adding new encounter features.
@@ -59,6 +70,7 @@
 - Align the 160-point acceptance audit with the beta.38+ runtime-only distribution contract.
 - Define the release ZIP inventory as `RaidLeadAssist.toc` plus exactly the Lua runtime files listed by the TOC; repository-only README/docs/tests/audit scripts/maintenance files must stay out of the distributable addon package.
 - Preserve the existing source/CI/live evidence boundary: automated technical gates can pass before Retail-only raid, taint, performance, accessibility and provider validation is available.
+- Preserve the full CI/audit/test suite in source control so release cleanup does not weaken verification or future maintenance.
 
 ## 0.9.0-beta.38 — 2026-08-17
 
@@ -77,3 +89,7 @@
 - Recheck current stable bossmod releases: DBM remains `12.1.3` and BigWigs remains `v419.2` at this audit.
 - Keep the single `AssignmentIntegration` App extension explicit and machine-locked instead of allowing additional runtime monkey patches to appear silently.
 - Correct the beta.36 historical wording: there are no open pull requests, while owner/admin governance work is tracked in issue #14; no claim is made that the repository has zero open issues.
+
+## 0.9.0-beta.36 — 2026-08-17
+
+- Add a reusable readiness harness and source evidence docs for release auditing.
