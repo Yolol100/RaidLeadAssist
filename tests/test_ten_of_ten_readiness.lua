@@ -7,6 +7,11 @@ T.Load("Core/Constants.lua", ns)
 T.Load("Core/Util.lua", ns)
 T.Load("Encounters/Registry.lua", ns)
 T.Load("Encounters/AssignmentRegistry.lua", ns)
+T.Load("Encounters/Boss12AssignmentOverride.lua", ns)
+T.Load("Encounters/Boss34AssignmentOverride.lua", ns)
+T.Load("Encounters/SszorakAssignmentOverride.lua", ns)
+T.Load("Encounters/TwinFangsAssignmentOverride.lua", ns)
+T.Load("Encounters/Boss78AssignmentOverride.lua", ns)
 T.Load("Encounters/VenomousAbyss/Nekzali.lua", ns)
 T.Load("Encounters/VenomousAbyss/Sentinels.lua", ns)
 T.Load("Encounters/VenomousAbyss/Explorers.lua", ns)
@@ -57,13 +62,15 @@ for _, encounter in ipairs(encounters) do
         end
 
         local assignmentLayout = Assignments:GetLayout(encounter.key, difficultyKey)
-        assert(type(assignmentLayout) == "table", encounter.key .. "/" .. difficultyKey .. " assignment layout missing")
+        Assignments:ValidateLayout(encounter.key, difficultyKey, assignmentLayout)
         assert(type(assignmentLayout.summary) == "string" and assignmentLayout.summary ~= "",
             encounter.key .. "/" .. difficultyKey .. " assignment summary missing")
         assert(type(assignmentLayout.sections) == "table", encounter.key .. "/" .. difficultyKey .. " assignment sections missing")
+        assert(not assignmentLayout.summary:find("Assignment override unavailable", 1, true),
+            encounter.key .. "/" .. difficultyKey .. " must use the runtime encounter override, not the fail-closed base fallback")
     end
 end
 
 assert(profileCount == 24, "ten-of-ten readiness requires all 24 boss/difficulty profiles")
 
-print("ok - ten-of-ten readiness contract covers 8 encounters, 24 profiles, calls, assignments and Ula'tek fail-closed timing")
+print("ok - ten-of-ten readiness covers 8 encounters, 24 profiles and the actual runtime assignment override stack")
