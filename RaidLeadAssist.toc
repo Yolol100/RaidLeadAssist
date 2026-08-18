@@ -2,7 +2,7 @@
 ## Title: Raid Lead Assist
 ## Notes: Manual raid-leader tactical callouts with bossmod and Blizzard timeline support.
 ## Author: RaidLeadAssist Contributors
-## Version: 0.9.0-beta.46
+## Version: 0.9.0-beta.47
 ## SavedVariables: RaidLeadAssistDB
 ## OptionalDeps: DBM-Core, BigWigs
 ## X-Category: Raid
@@ -15,6 +15,7 @@ Core/Database.lua
 Encounters/Registry.lua
 Encounters/AssignmentRegistry.lua
 Encounters/Boss12AssignmentOverride.lua
+Encounters/Boss34AssignmentOverride.lua
 Encounters/SszorakAssignmentOverride.lua
 Encounters/TwinFangsAssignmentOverride.lua
 Encounters/VenomousAbyss/Nekzali.lua
