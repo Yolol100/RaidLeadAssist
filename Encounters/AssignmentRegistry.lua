@@ -54,17 +54,14 @@ local WELL = section("well", "Grasping Depths", "Mythic: alternate fresh teams i
     slot("well_b", "Well Team B", { callKey = "grasping", callLabel = "WELL B", rotation = "well", required = true, exclusiveGroup = "well" }),
 })
 
-local SENTINEL_SPLIT = section("split", "Raid Split", "Build two stable sides before the pull so marks and boss mechanics stay separated.", 2, {
-    slot("breath_side", "Breath Side", { required = true, exclusiveGroup = "sentinel_side" }),
-    slot("blood_side", "Blood Side", { required = true, exclusiveGroup = "sentinel_side" }),
+local SENTINEL_SPLIT = section("split", "Raid Split", "Start Groups 1+2 on Breath/green and Groups 3+4 on Blood/red. After Stasis, use the existing side-swap call to exchange bosses.", 2, {
+    slot("breath_side", "Groups 1+2 > Breath Start", { required = true, exclusiveGroup = "sentinel_side" }),
+    slot("blood_side", "Groups 3+4 > Blood Start", { required = true, exclusiveGroup = "sentinel_side" }),
 })
 
-local SENTINEL_STASIS = section("stasis", "Helical Toxin Groups", "Players clear Helical Toxins at exactly four applications. Put exactly four unique names in each configured group.", 2, {
-    slot("stasis_a", "Group A", { callKey = "stasis", callLabel = "GROUP A", required = true, exactPlayers = 4, exclusiveGroup = "stasis" }),
-    slot("stasis_b", "Group B", { callKey = "stasis", callLabel = "GROUP B", required = true, exactPlayers = 4, exclusiveGroup = "stasis" }),
-    slot("stasis_c", "Group C", { callKey = "stasis", callLabel = "GROUP C", exactPlayers = 4, exclusiveGroup = "stasis" }),
-    slot("stasis_d", "Group D", { callKey = "stasis", callLabel = "GROUP D", exactPlayers = 4, exclusiveGroup = "stasis" }),
-    slot("stasis_e", "Group E", { callKey = "stasis", callLabel = "GROUP E", exactPlayers = 4, exclusiveGroup = "stasis" }),
+local SENTINEL_STASIS = section("stasis", "Helical Toxin Matching", "Helical Toxin stack values are dynamic. Match values to exactly four; do not preassign fixed four-player groups.", 2, {
+    slot("stasis_1_3", "1 + 3 Rule", { kind = "rule", helper = "Players showing 1 match a player showing 3, then stop moving once the toxin clears." }),
+    slot("stasis_2_2", "2 + 2 Rule", { kind = "rule", helper = "Players showing 2 match another player showing 2, then stop moving once the toxin clears." }),
 })
 
 local SENTINEL_HEAL = section("healers", "Blood-side Healer Jobs", "Optional names for predictable dispel ownership; actual debuff targets remain dynamic.", 2, {
@@ -191,9 +188,9 @@ local LAYOUTS = {
         mythic = layout("Fixed Groups 1+2 Pyre soak, alternating Well teams and static Cremation movement rules.", { PYRE, WELL, CREMATION }),
     },
     sentinels = {
-        normal = layout("Split the raid first, then build exact four-player Stasis groups.", { SENTINEL_SPLIT, SENTINEL_STASIS, SENTINEL_HEAL }),
-        heroic = layout("Stable boss sides, Stasis fours and optional Blood dispel ownership.", { SENTINEL_SPLIT, SENTINEL_STASIS, SENTINEL_HEAL }),
-        mythic = layout("Stable sides and complete four-player Stasis planning; Protovenom remains a dynamic matching rule.", { SENTINEL_SPLIT, SENTINEL_STASIS, SENTINEL_HEAL }),
+        normal = layout("Start Groups 1+2 on Breath and 3+4 on Blood; configure dynamic 1+3 / 2+2 Stasis matching rules.", { SENTINEL_SPLIT, SENTINEL_STASIS, SENTINEL_HEAL }),
+        heroic = layout("Keep the same starting split; Stasis uses dynamic 1+3 / 2+2 matching and Blood dispel ownership stays optional.", { SENTINEL_SPLIT, SENTINEL_STASIS, SENTINEL_HEAL }),
+        mythic = layout("Keep the same starting split and dynamic Stasis matching; Protovenom remains a live marked-with-marked mechanic.", { SENTINEL_SPLIT, SENTINEL_STASIS, SENTINEL_HEAL }),
     },
     explorers = {
         normal = layout("One clear crate/fish owner plus three soak-point groups for random Thud targets.", { EXPLORER_CRATES_NORMAL, EXPLORER_THUD }),
