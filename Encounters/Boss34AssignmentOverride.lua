@@ -2,8 +2,6 @@ local _, ns = ...
 
 local AssignmentRegistry = ns:GetModule("Encounters.AssignmentRegistry")
 
-local originalGetLayout = AssignmentRegistry.GetLayout
-
 local EXPLORERS_NORMAL = {
     summary = "Only crate and fish ownership are editable. Mighty Thud uses the fixed three-soak-point raid plan; personal mechanics stay bossmod-owned.",
     sections = {
@@ -57,13 +55,13 @@ local VASHNIK_NONE = {
     sections = {},
 }
 
-function AssignmentRegistry:GetLayout(bossKey, difficultyKey)
-    if bossKey == "explorers" then
-        if difficultyKey == "normal" then return EXPLORERS_NORMAL end
-        if difficultyKey == "heroic" then return EXPLORERS_HEROIC end
-        if difficultyKey == "mythic" then return EXPLORERS_MYTHIC end
-    elseif bossKey == "vashnik" and (difficultyKey == "normal" or difficultyKey == "heroic" or difficultyKey == "mythic") then
-        return VASHNIK_NONE
-    end
-    return originalGetLayout(self, bossKey, difficultyKey)
-end
+AssignmentRegistry:RegisterLayouts("explorers", {
+    normal = EXPLORERS_NORMAL,
+    heroic = EXPLORERS_HEROIC,
+    mythic = EXPLORERS_MYTHIC,
+})
+AssignmentRegistry:RegisterLayouts("vashnik", {
+    normal = VASHNIK_NONE,
+    heroic = VASHNIK_NONE,
+    mythic = VASHNIK_NONE,
+})

@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.9.0-beta.50 — 2026-08-18
+
+- Harden Entombed Sentinels so boss health is display-only, boss identity is resolved from locale-independent NPC GUIDs, and raid leaders get three explicit manual balance calls instead of an automatic STOP/RESUME recommendation.
+- Refresh and expand provider-drift baselines to boss-specific DBM and BigWigs modules for all eight Venomous Abyss encounters, including the reviewed Coiled Altar BigWigs baseline.
+- Replace chained assignment-layout monkey patches with a canonical registry API and add roster-aware pre-pull assignment warnings without blocking future-roster planning.
+- Track custom Raid Warning text against deterministic default fingerprints so preserved customizations can be marked for review when upstream defaults change.
+- Expand `/rla doctor` readiness reporting with assignment, roster, custom-text and provider-coverage states, including READY TIMED and READY MANUAL outcomes.
+- Compact adjacent assignment Raid Warning lines within the chat-size limit to reduce worst-case pre-pull message bursts without dropping assignment content.
+- Generalize the repository extension-surface audit, strengthen release reproducibility with independent jobs, and verify the exact release ZIP attestation before publishing.
+- Align the documented release artifact boundary with the runtime-only build contract and add regression coverage for the complete audit-hardening set.
+
 ## 0.9.0-beta.49 — 2026-08-18
 
 - Integrate the user-provided Ready Check Pull recap sheets for The Twin Fangs and The Coiled Altar and cross-check both against the current Patch 12.1 strategy/Journal evidence plus current DBM/BigWigs encounter modules.

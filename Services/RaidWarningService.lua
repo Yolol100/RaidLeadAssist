@@ -9,12 +9,36 @@ local RaidWarningService = {
     briefingGeneration = 0,
 }
 
+local MAX_CHAT_LENGTH = 200
+
 local function encounterInProgress()
     if not C_InstanceEncounter or type(C_InstanceEncounter.IsEncounterInProgress) ~= "function" then
         return false
     end
     local ok, active = pcall(C_InstanceEncounter.IsEncounterInProgress)
     return ok and active == true
+end
+
+local function compactAssignmentLines(lines)
+    if type(lines) ~= "table" or #lines < 2 then return lines end
+    for index = 1, #lines do
+        if type(lines[index]) ~= "string" or not lines[index]:find("^ASSIGN > ") then return lines end
+    end
+
+    local result = {}
+    local current = ""
+    for index = 1, #lines do
+        local fragment = lines[index]:gsub("^ASSIGN > ", "")
+        local candidate = current == "" and ("ASSIGN > " .. fragment) or (current .. " | " .. fragment)
+        if #candidate <= MAX_CHAT_LENGTH then
+            current = candidate
+        else
+            result[#result + 1] = current
+            current = "ASSIGN > " .. fragment
+        end
+    end
+    if current ~= "" then result[#result + 1] = current end
+    return result
 end
 
 function RaidWarningService:CanSend()
@@ -60,8 +84,9 @@ function RaidWarningService:SendBriefing(lines)
     if type(lines) ~= "table" or #lines == 0 then return false end
     if self.briefingLockUntil > GetTime() then return false end
 
+    lines = compactAssignmentLines(lines)
     for index = 1, #lines do
-        if type(lines[index]) ~= "string" or lines[index] == "" then
+        if type(lines[index]) ~= "string" or lines[index] == "" or #lines[index] > MAX_CHAT_LENGTH then
             ns:Print("Boss Explanation contains invalid text.")
             return false
         end

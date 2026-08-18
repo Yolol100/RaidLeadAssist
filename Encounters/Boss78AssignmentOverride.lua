@@ -1,7 +1,6 @@
 local _, ns = ...
 
 local AssignmentRegistry = ns:GetModule("Encounters.AssignmentRegistry")
-local originalGetLayout = AssignmentRegistry.GetLayout
 
 local function slot(key, label, options)
     options = options or {}
@@ -218,14 +217,5 @@ local ULATEK_LAYOUTS = {
     },
 }
 
-function AssignmentRegistry:GetLayout(bossKey, difficultyKey)
-    if bossKey == "altar" and ALTAR_LAYOUTS[difficultyKey] then
-        return ALTAR_LAYOUTS[difficultyKey]
-    end
-
-    if bossKey == "ulatek" and ULATEK_LAYOUTS[difficultyKey] then
-        return ULATEK_LAYOUTS[difficultyKey]
-    end
-
-    return originalGetLayout(self, bossKey, difficultyKey)
-end
+AssignmentRegistry:RegisterLayouts("altar", ALTAR_LAYOUTS)
+AssignmentRegistry:RegisterLayouts("ulatek", ULATEK_LAYOUTS)
