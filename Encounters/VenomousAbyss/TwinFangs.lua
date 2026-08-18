@@ -1,8 +1,6 @@
 local _, ns = ...
 local Registry = ns:GetModule("Encounters.Registry")
 
-local BOSSMOD_RULE = "CALL PRIORITY: FOLLOW DBM OR BIGWIGS FOR YOUR PERSONAL DEBUFFS, DODGES, ROLE WARNINGS AND TIMERS. FOLLOW RLA/RAID-LEADER CALLS FOR GROUPS, MARKERS, SOAKS, TARGET PRIORITY AND SHARED RAID MOVEMENT."
-
 local adds = {
     key="adds",
     ability="Venomous Emergence",
@@ -24,17 +22,6 @@ local globules = {
     timerNames={"Caustic Deluge","Caustic Globules"},
     prepareSeconds=7,
     pressSeconds=4,
-}
-
-local feastNormal = {
-    key="feast",
-    ability="Ravenous Feast",
-    action="Raid soaks all three hits",
-    warning="FEAST > RAID SOAK ALL 3 HITS",
-    voice="Feast",
-    spellIDs={1290516},
-    prepareSeconds=8,
-    pressSeconds=5,
 }
 
 local feastFresh = {
@@ -67,39 +54,31 @@ Registry:Register({
     key="twinfangs",
     name="The Twin Fangs",
     encounterID=3421,
-    strategyStatus="12.1 Journal + current Wowhead + Ready Check Pull recap screenshots + DBM/BigWigs source-reviewed 2026-08-18; volatile Venom thresholds not hard-coded; live validation pending",
+    strategyStatus="12.1 Journal + current Wowhead + DBM/BigWigs source-reviewed 2026-08-19; Normal Feast corrected to fresh 3+ groups; player briefing split from raidleader prep; live validation pending",
     profiles={
         normal={
             explanation={
-                "DAMAGE PLAN: BLOODLUST ON PULL. TWO-TARGET CLEAVE, KEEP BOTH BOSSES CLOSE IN HP, AND FINISH TOGETHER BEFORE UNCOILED WRATH RAMPS.",
-                "KEEP ETERNAL VENOM LOW. GREEN ORBS: SOAK BEFORE RUPTURE. KILL EMERGENCE ADDS; SPIT TARGETS AIM LINES AWAY. RED CIRCLES EXPIRE AT THE EDGE.",
-                "RAVENOUS FEAST: RAID SOAKS ALL THREE HITS TOGETHER TO REMOVE VENOM. NORMAL DOES NOT NEED THE HEROIC THREE-GROUP SPLIT.",
-                "STONE BREAKER: AT LEAST ONE PLAYER MUST BE HIT BY EACH SLAM. TANK SOAKS ALL THREE MARKED IMPACTS IN SHOWN ORDER, THEN TANKS SWAP AFTER THE SET.",
-                "AT 100 ENERGY MOVE TOWARD ITHRAZ, DODGE VEXHUL'S ROTATING FLOOD AND SANGUINE STORM, THEN REGROUP WHEN THE BOSSES RETURN.",
-                BOSSMOD_RULE,
+                "Keep both bosses at similar health and kill them together.",
+                "Green globule appears: assigned player soaks it before it bursts.",
+                "Feast starts: Team A, then Team B, then Team C soak.",
+                "Already soaked this Feast: stay out of the remaining hits.",
+                "Stone Breaker circles: assigned players soak every impact.",
+                "Adds spawn: kill them quickly and face targeted spit away.",
+                "At 100 energy: regroup and dodge the incoming waves.",
             },
-            calls={ globules, adds, feastNormal, energy },
+            calls={ globules, adds, feastFresh, energy },
         },
         heroic={
             explanation={
-                "DAMAGE PLAN: BLOODLUST ON PULL. TWO-TARGET CLEAVE, KEEP BOTH BOSSES CLOSE IN HP, AND FINISH TOGETHER BEFORE UNCOILED WRATH RAMPS.",
-                "KEEP ETERNAL VENOM LOW. SOAK GREEN ORBS, KILL EMERGENCE ADDS, AIM SPIT LINES AWAY, AND DROP RED CIRCLES/CONGEALED GORE AT THE EDGE.",
-                "RAVENOUS FEAST: THREE FRESH 3+ TEAMS SOAK IN ORDER TEAM A > TEAM B > TEAM C. FEASTED PLAYERS DO NOT REPEAT WITHIN THE SAME CAST.",
-                "STONE BREAKER: AT LEAST ONE PLAYER MUST BE HIT BY EACH SLAM. TANK SOAKS ALL THREE MARKED IMPACTS IN SHOWN ORDER, THEN TANKS SWAP AFTER THE SET.",
-                "AT 100 ENERGY MOVE TOWARD ITHRAZ, DODGE VEXHUL'S ROTATING FLOOD AND SANGUINE STORM, THEN REGROUP WHEN THE BOSSES RETURN.",
-                BOSSMOD_RULE,
+                "Storm leaves blood pools: keep them outside movement paths.",
             },
             calls={ globules, adds, feastFresh, energy },
         },
         mythic={
             explanation={
-                "DAMAGE PLAN: BLOODLUST ON PULL. MYTHIC IS FIXED AT 20 PLAYERS: TWO-TARGET CLEAVE, KEEP HP CLOSE, FINISH TOGETHER, AND KEEP ETERNAL VENOM LOW.",
-                "SOAK GREEN ORBS BEFORE RUPTURE. DYING WITH ETERNAL VENOM CREATES EXTRA GLOBULES. KILL EMERGENCE ADDS; SPIT TARGETS AIM LINES AWAY.",
-                "RAVENOUS FEAST: THREE FRESH 3+ TEAMS SOAK A > B > C. TAINTED BLOOD FOUNTS MUST BE HEALED OUT BEFORE THEY BURST.",
-                "BLOOD TORRENT CREATES BARBED BULWARKS AROUND GLOBULES: INTERRUPT THEM. ROUSE THE BROOD: INTERRUPT EVERY BROODLING.",
-                "STONE BREAKER: AT LEAST ONE PLAYER MUST BE HIT BY EACH SLAM. TANK SOAKS ALL THREE MARKED IMPACTS IN SHOWN ORDER, THEN TANKS SWAP AFTER THE SET.",
-                "AT 100 ENERGY MOVE TOWARD ITHRAZ, DODGE THE ROTATING FLOOD AND SANGUINE STORM, THEN REGROUP WHEN THE BOSSES RETURN.",
-                BOSSMOD_RULE,
+                "Blood founts appear after Feast: heal every fount completely.",
+                "Shielded globules: interrupt Protected Gestation immediately.",
+                "Broodlings spawn: interrupt every Visceral Burst.",
             },
             calls={
                 globules,
