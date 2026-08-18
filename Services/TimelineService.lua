@@ -215,6 +215,25 @@ function TimelineService:IsBlizzardSuppressed()
     return next(self.blizzardSuppressionSources) ~= nil
 end
 
+function TimelineService:HasDirectBossmodTimerForCall(call)
+    if type(call) ~= "table" or type(call.key) ~= "string" or call.key == "" then return false end
+    local now = GetTime()
+    for _, timer in pairs(self.timers) do
+        if timer.call and timer.call.key == call.key
+            and not isBlizzardRepresentation(timer.providerName, timer)
+            and (timer.paused == true or (isFiniteNumber(timer.expiration) and timer.expiration > now)) then
+            return true
+        end
+    end
+    return false
+end
+
+function TimelineService:CanUseSuppressedBlizzardFallback(data)
+    if not self.encounterKey or type(data) ~= "table" then return false end
+    local call = Registry:MatchCall(self.encounterKey, publicValue(data.key), publicValue(data.name))
+    return call ~= nil and not self:HasDirectBossmodTimerForCall(call)
+end
+
 function TimelineService:SetBlizzardSuppressedByProvider(sourceName, suppressed)
     if type(sourceName) ~= "string" or sourceName == ""
         or Util.IsSecret(suppressed) or type(suppressed) ~= "boolean" then
@@ -236,7 +255,8 @@ function TimelineService:SetBlizzardSuppressedByProvider(sourceName, suppressed)
 
     if nowSuppressed then
         for id, timer in pairs(self.timers) do
-            if isBlizzardRepresentation(timer.providerName, timer) then
+            if isBlizzardRepresentation(timer.providerName, timer)
+                and (not timer.call or self:HasDirectBossmodTimerForCall(timer.call)) then
                 self.timers[id] = nil
                 changedTimers = true
             end
@@ -327,8 +347,7 @@ function TimelineService:RefreshProviders()
             if ok and started == true then
                 self.activeProviders[name] = provider
                 self.providerFailures[name] = nil
-                if type(provider.SeedExistingEvents) == "function"
-                    and not (name == "Blizzard" and self:IsBlizzardSuppressed()) then
+                if type(provider.SeedExistingEvents) == "function" then
                     pcall(provider.SeedExistingEvents, provider)
                 end
                 changed = true
@@ -365,7 +384,7 @@ function TimelineService:SetEncounter(encounterKey, preserveRecentTimers)
     end
 
     local blizzard = self.activeProviders.Blizzard
-    if not self:IsBlizzardSuppressed() and blizzard and type(blizzard.SeedExistingEvents) == "function" then
+    if blizzard and type(blizzard.SeedExistingEvents) == "function" then
         pcall(blizzard.SeedExistingEvents, blizzard)
     end
 end
@@ -458,10 +477,14 @@ function TimelineService:ProviderTimerStarted(providerName, sourceID, data)
     -- bars while DBM itself still has IgnoreBlizzAPI set. A native Blizzard
     -- event is the execution boundary where stale suppression must be reconciled
     -- before that fallback event is accepted or rejected.
-    if isBlizzardRepresentation(providerName, data) then
+    local blizzardRepresentation = isBlizzardRepresentation(providerName, data)
+    if blizzardRepresentation then
         self:RefreshProviderAuthority("DBM")
     end
-    if self:IsBlizzardSuppressed() and isBlizzardRepresentation(providerName, data) then return end
+    if self:IsBlizzardSuppressed() and blizzardRepresentation
+        and not self:CanUseSuppressedBlizzardFallback(data) then
+        return
+    end
     if not validOptionalBoolean(data.faded)
         or not isFiniteNumber(data.duration) or data.duration <= 0 then
         return
