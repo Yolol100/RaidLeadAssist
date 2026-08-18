@@ -138,7 +138,6 @@ for _, profile in ipairs({ vashnikNormal, vashnikHeroic, vashnikMythic }) do
     assert(profile.callsByKey.exploding == nil)
     assert(profile.callsByKey.stygian == nil)
     assert(profile.callsByKey.tankswap == nil)
-    assert(contains(planText("vashnik", profile.activeDifficultyKey or "normal"), "") or true)
 end
 assert(vashnikNormal.callsByKey.fire_stagger == nil and vashnikNormal.callsByKey.catalyst == nil and vashnikNormal.callsByKey.froth == nil)
 assert(vashnikHeroic.callsByKey.fire_stagger.warning == "SKULL FIRST > WAIT > X")
