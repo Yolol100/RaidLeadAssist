@@ -15,8 +15,11 @@ for _, difficulty in ipairs({"normal","heroic","mythic"}) do
 end
 local ok = Assignments:ApplyBossDraft("sentinels", "heroic", { team_a="Group 1", team_b="Group 2" })
 assert(ok)
-local warning = Assignments:BuildCallWarning("GROUPS HOLD SIDES > BOSSES SWAP", "sentinels", "heroic", "side_swap")
-assert(warning:find("TEAM A: Group 1",1,true) and warning:find("TEAM B: Group 2",1,true))
-local breath = Assignments:BuildCallWarning("BREATH SIDE > KILL ADD", "sentinels", "heroic", "coagulation")
-assert(breath == "BREATH SIDE > KILL ADD")
-print("ok - Sentinels assignments describe fixed physical sides and post-Stasis boss swaps")
+local warning = Assignments:BuildCallWarning(
+    "After Stasis: hold your side while tanks swap the bosses.",
+    "sentinels", "heroic", "side_swap"
+)
+assert(warning == "After Stasis: hold your side while tanks swap the bosses. Team A: Group 1. Team B: Group 2.")
+local breath = Assignments:BuildCallWarning("Green side: kill the slime.", "sentinels", "heroic", "coagulation")
+assert(breath == "Green side: kill the slime.")
+print("ok - Sentinels assignments append readable team context to shared calls")
