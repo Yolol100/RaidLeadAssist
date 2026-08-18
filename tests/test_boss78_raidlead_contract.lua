@@ -24,4 +24,15 @@ local h = AR:GetDefinitions("altar","heroic")
 local requiredWail=0
 for _,def in ipairs(h) do if def.key:find("wail_kick_",1,true) and def.required then requiredWail=requiredWail+1 end end
 assert(requiredWail == 2)
-print("ok - Coiled Altar uses intermission Bloodlust, orb collectors and Heroic Wail coverage; Ulatek remains manual")
+
+local uh = AR:GetDefinitions("ulatek","heroic")
+assert(#uh == 1 and uh[1].key == "egg_handler", "Heroic Ula'tek keeps only the Normal egg-handler assignment")
+local um = AR:GetDefinitions("ulatek","mythic")
+local found = {}
+for _,def in ipairs(um) do found[def.key] = true end
+assert(found.coil_a and found.coil_b and found.egg_left and found.egg_right and found.incubation_team,
+    "Mythic Ula'tek adds Coil rotation, egg carriers and Incubation team")
+assert(Registry:GetProfile("ulatek","normal").callsByKey.demolish,
+    "Ula'tek phase-3 shared movement uses the corrected Demolish identity")
+
+print("ok - Coiled Altar prep remains complete and Ula'tek assignments follow the conservative difficulty split")
