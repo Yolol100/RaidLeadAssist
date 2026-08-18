@@ -19,8 +19,8 @@ local function calls(coilAction, coilWarning, eggAction, eggWarning, includeFang
         manualCall(
             "warden",
             "Doomscale Warden",
-            "Kill Warden before touching eggs",
-            "Warden first: kill it before touching eggs.",
+            "Kill Warden first; eggs after it dies",
+            "Warden first: kill it; eggs only after it dies.",
             "Warden",
             1298559
         ),
