@@ -56,26 +56,30 @@ end
 
 for _, difficulty in ipairs({ "normal", "heroic", "mythic" }) do
     local profile = Registry:GetProfile("twinfangs", difficulty)
+    local plan = text("twinfangs", difficulty)
     assert(profile.callsByKey.balance == nil,
         "Twin Fangs health balancing belongs in the raidplan, not as a duplicate button")
     assert(profile.callsByKey.stone == nil,
-        "Twin Fangs Stone Breaker is DBM-owned and must not duplicate as a RaidLeadAssist call")
-    assert(contains(text("twinfangs", difficulty), "FINISH TOGETHER"),
+        "Twin Fangs Stone Breaker live execution is bossmod/role-owned and must not duplicate as a RaidLeadAssist call")
+    assert(contains(plan, "FINISH TOGETHER"),
         "Twin Fangs briefing must explain the joint finish requirement")
+    assert(contains(plan, "AT LEAST ONE PLAYER MUST BE HIT BY EACH SLAM"),
+        "Twin Fangs briefing must retain the Stone Breaker raid-failure condition")
     assert(profile.callsByKey.globules and profile.callsByKey.adds and profile.callsByKey.feast and profile.callsByKey.energy,
         "Twin Fangs must retain the four core raidlead calls")
+    assert(profile.callsByKey.feast.warning == "FEAST > TEAM A > TEAM B > TEAM C",
+        "Twin Fangs Feast must use flex-safe fresh teams")
+    assert(not contains(plan, "GROUPS 5+6"),
+        "Twin Fangs flex plan must not depend on raid Groups 5+6 existing")
 end
-assert(contains(Registry:GetProfile("twinfangs", "normal").callsByKey.feast.warning, "GROUPS 1+2 > 3+4 > 5+6"))
-assert(contains(Registry:GetProfile("twinfangs", "heroic").callsByKey.feast.warning, "GROUPS 1+2 > 3+4 > 5+6"))
-assert(contains(Registry:GetProfile("twinfangs", "mythic").callsByKey.feast.warning, "GROUP 1 > GROUP 2 > GROUPS 3+4"))
 
 for _, difficulty in ipairs({ "normal", "heroic", "mythic" }) do
     local plan = text("sszorak", difficulty)
     local warning = Registry:GetProfile("sszorak", difficulty).callsByKey.apex.warning
     assert(contains(plan, "DISTINCT 5+"),
-        "Sszorak Mutilate briefing must match the distinct-group assignment rotation")
-    assert(contains(warning, "NEXT 5+ SOAK GROUP"),
-        "Sszorak combat call must request the next soak group concisely")
+        "Sszorak Mutilate briefing must match the distinct-team assignment rotation")
+    assert(contains(warning, "NEXT 5+ SOAK TEAM"),
+        "Sszorak combat call must request the next soak team concisely")
     assert(not contains(plan, "FIXED 5+ SOAK GROUP"),
         "Sszorak must not imply the same fixed Mutilate group repeats")
 end
