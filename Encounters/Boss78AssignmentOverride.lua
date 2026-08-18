@@ -22,15 +22,90 @@ end
 local ALTAR_ORBS = {
     key = "orbs",
     title = "Coalesced Venom Collectors",
-    description = "Assign the players who move Coalesced Venom to the raid's Sever mark. RLA calls the collector team; the tank-facing Sever remains bossmod/role-owned.",
+    description = "Assign 2-3 mobile players who move Coalesced Venom to the active Sever mark. RLA calls the collectors; tank-facing Sever remains bossmod/role-owned.",
     columns = 1,
     slots = {
         slot("orb_collectors", "Orb Collectors", {
             callKey = "toxic",
             callLabel = "COLLECTORS",
             required = true,
-            helper = "Select the players responsible for moving new Coalesced Venom to the assigned Sever mark.",
+            minPlayers = 2,
+            helper = "Select 2-3 mobile players responsible for moving new Coalesced Venom to the assigned Sever mark.",
         }),
+    },
+}
+
+local ALTAR_GUILLOTINE_NORMAL = {
+    key = "guillotine",
+    title = "Guillotine Soak Coverage",
+    description = "Normal: every axe needs at least five players. A second team is optional because Normal does not require a Heroic-style fresh-team split.",
+    columns = 2,
+    slots = {
+        slot("guillotine_a", "Team A", { callKey = "guillotine", callLabel = "TEAM A", rotation = "guillotine", required = true, minPlayers = 5 }),
+        slot("guillotine_b", "Team B", { callKey = "guillotine", callLabel = "TEAM B", rotation = "guillotine", minPlayers = 5 }),
+    },
+}
+
+local ALTAR_GUILLOTINE_HEROIC = {
+    key = "guillotine",
+    title = "Guillotine Soak Rotation",
+    description = "Heroic: alternate two distinct 5+ teams because Guillotined makes repeating the same players unsafe.",
+    columns = 2,
+    slots = {
+        slot("guillotine_a", "Team A", { callKey = "guillotine", callLabel = "TEAM A", rotation = "guillotine", required = true, minPlayers = 5, exclusiveGroup = "guillotine" }),
+        slot("guillotine_b", "Team B", { callKey = "guillotine", callLabel = "TEAM B", rotation = "guillotine", required = true, minPlayers = 5, exclusiveGroup = "guillotine" }),
+    },
+}
+
+local ALTAR_GUILLOTINE_MYTHIC = {
+    key = "guillotine",
+    title = "Guillotine Soak Rotation",
+    description = "Mythic Guillotined is permanent, so plan fresh 5+ player teams for later axes.",
+    columns = 4,
+    slots = {
+        slot("guillotine_a", "Team A", { callKey = "guillotine", callLabel = "TEAM A", rotation = "guillotine", required = true, minPlayers = 5, exclusiveGroup = "guillotine" }),
+        slot("guillotine_b", "Team B", { callKey = "guillotine", callLabel = "TEAM B", rotation = "guillotine", required = true, minPlayers = 5, exclusiveGroup = "guillotine" }),
+        slot("guillotine_c", "Team C", { callKey = "guillotine", callLabel = "TEAM C", rotation = "guillotine", required = true, minPlayers = 5, exclusiveGroup = "guillotine" }),
+        slot("guillotine_d", "Team D", { callKey = "guillotine", callLabel = "TEAM D", rotation = "guillotine", minPlayers = 5, exclusiveGroup = "guillotine" }),
+    },
+}
+
+local ALTAR_WAIL_NORMAL = {
+    key = "kicks",
+    title = "Soulcoiler Interrupts",
+    description = "Normal: preassign a primary Wail of Terror kick; additional backups are optional.",
+    columns = 3,
+    slots = {
+        slot("wail_kick_a", "Wail Kick A", { callKey = "spiritcackle", callLabel = "WAIL A", rotation = "wail", required = true, exclusiveGroup = "altar_wail" }),
+        slot("wail_kick_b", "Wail Kick B", { callKey = "spiritcackle", callLabel = "WAIL B", rotation = "wail", exclusiveGroup = "altar_wail" }),
+        slot("wail_kick_c", "Wail Kick C", { callKey = "spiritcackle", callLabel = "WAIL C", rotation = "wail", exclusiveGroup = "altar_wail" }),
+    },
+}
+
+local ALTAR_WAIL_HARD = {
+    key = "kicks",
+    title = "Soulcoiler Interrupts",
+    description = "Heroic/Mythic: assign 2-3 distinct Wail of Terror interrupts. On Mythic each successful interrupt also briefly reveals hidden Manifestations of Dread.",
+    columns = 3,
+    slots = {
+        slot("wail_kick_a", "Wail Kick A", { callKey = "spiritcackle", callLabel = "WAIL A", rotation = "wail", required = true, exclusiveGroup = "altar_wail" }),
+        slot("wail_kick_b", "Wail Kick B", { callKey = "spiritcackle", callLabel = "WAIL B", rotation = "wail", required = true, exclusiveGroup = "altar_wail" }),
+        slot("wail_kick_c", "Wail Kick C", { callKey = "spiritcackle", callLabel = "WAIL C", rotation = "wail", exclusiveGroup = "altar_wail" }),
+    },
+}
+
+local ALTAR_LAYOUTS = {
+    normal = {
+        summary = "Assign 2-3 Orb Collectors, one required 5+ Guillotine team plus optional backup coverage, and Wail interrupt ownership.",
+        sections = { ALTAR_ORBS, ALTAR_GUILLOTINE_NORMAL, ALTAR_WAIL_NORMAL },
+    },
+    heroic = {
+        summary = "Assign 2-3 Orb Collectors, two distinct 5+ Guillotine teams, and at least two distinct Wail interrupt owners.",
+        sections = { ALTAR_ORBS, ALTAR_GUILLOTINE_HEROIC, ALTAR_WAIL_HARD },
+    },
+    mythic = {
+        summary = "Assign 2-3 Orb Collectors, fresh 5+ Guillotine teams, and 2-3 Wail interrupt owners; Wail also reveals hidden Dreads.",
+        sections = { ALTAR_ORBS, ALTAR_GUILLOTINE_MYTHIC, ALTAR_WAIL_HARD },
     },
 }
 
@@ -144,19 +219,8 @@ local ULATEK_LAYOUTS = {
 }
 
 function AssignmentRegistry:GetLayout(bossKey, difficultyKey)
-    if bossKey == "altar" then
-        local base = originalGetLayout(self, bossKey, difficultyKey)
-        local sections = { ALTAR_ORBS }
-        for index = 1, #base.sections do sections[#sections + 1] = base.sections[index] end
-        local summary
-        if difficultyKey == "normal" then
-            summary = "Assign Orb Collectors, one required 5+ Guillotine team plus optional backup coverage, and Wail interrupts."
-        elseif difficultyKey == "heroic" then
-            summary = "Assign Orb Collectors, two distinct 5+ Guillotine teams and Wail interrupt coverage."
-        else
-            summary = "Assign Orb Collectors, fresh 5+ Guillotine teams and a dedicated Wail interrupt rotation."
-        end
-        return { summary = summary, sections = sections }
+    if bossKey == "altar" and ALTAR_LAYOUTS[difficultyKey] then
+        return ALTAR_LAYOUTS[difficultyKey]
     end
 
     if bossKey == "ulatek" and ULATEK_LAYOUTS[difficultyKey] then

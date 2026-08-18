@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.0-beta.49 — 2026-08-18
+
+- Integrate the user-provided Ready Check Pull recap sheets for The Twin Fangs and The Coiled Altar and cross-check both against the current Patch 12.1 strategy/Journal evidence plus current DBM/BigWigs encounter modules.
+- Correct Twin Fangs by difficulty: Normal Ravenous Feast is a full-raid three-hit soak with no forced three-team roster, while Heroic/Mythic retain three fresh 3+ teams; document the three-hit Stone Breaker tank set, Ithraz regroup movement and keep the volatile Eternal Venom lethal threshold qualitative.
+- Expand The Coiled Altar pre-pull and phase plan with both-end world markers, required 2+ Orb Collectors, Heroic/Mythic Wail coverage, controlled Guillotine movement, ghost/Soul Fragment handling, the selected Ready Check Pull intermission Bloodlust tactic and the synchronized Phase 3 kill.
+- Correct Entombed Sentinels so raid groups hold their physical sides after Stasis while tanks taunt-swap the bosses; RLA now calls `GROUPS HOLD SIDES > BOSSES SWAP` instead of telling raid groups to cross the arena.
+- Remove Vashnik's fixed Bile roster because the current strategy lists no key assignments; keep Malignant Catalyst as the shared `SOAK EVERY GREEN CIRCLE` call and leave dynamic impacts/personal infection execution to bossmods.
+- Add Sszorak's source-backed three Cyst Popper assignment and include all three owners in the Howling Maelstrom call while preserving the two distinct 5+ Mutilate teams.
+- Refresh the BigWigs provider fingerprint after another compatible upstream drift, add boss-specific DBM/BigWigs watches for Twin Fangs and Coiled Altar, and expand regression coverage for every corrected assignment/call boundary.
+
 ## 0.9.0-beta.48 — 2026-08-18
 
 - Re-audit The Coiled Altar and Ula'tek across Normal, Heroic and Mythic against the current Patch 12.1 Encounter Journal/strategy evidence and current DBM/BigWigs source contracts, using the same raidleader-only ownership model as bosses 1-6.
