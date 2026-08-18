@@ -16,8 +16,8 @@ local function calls(crateAction, crateWarning)
         {
             key = "fish",
             ability = "Final Ascension",
-            action = "Feed next unused controlled boss",
-            warning = "FISH > FEED NEXT UNUSED CONTROLLED BOSS",
+            action = "Take fish to the next planned boss",
+            warning = "Fish: take it to the next planned boss.",
             voice = "Fish",
             spellIDs = { 1292779 },
             prepareSeconds = 8,
@@ -26,8 +26,8 @@ local function calls(crateAction, crateWarning)
         {
             key = "thud",
             ability = "Mighty Thud",
-            action = "Three targets > three soak points",
-            warning = "MIGHTY THUD > 3 TARGETS > 3 SOAK POINTS",
+            action = "Targets to separate markers; soakers stack in",
+            warning = "Mighty Thud: targets to separate markers; soakers stack in.",
             voice = "Three soak points",
             spellIDs = { 1296092 },
             prepareSeconds = 7,
@@ -54,8 +54,8 @@ Registry:Register({
                 "Icebound Flames starts: interrupt it immediately.",
             },
             calls = calls(
-                "Assigned breaker opens crate",
-                "CRATE > ASSIGNED BREAKER READY"
+                "Open the next crate",
+                "Crate: open the next one."
             ),
         },
         heroic = {
@@ -64,8 +64,8 @@ Registry:Register({
                 "Spreading fire appears: keep it away from usable space.",
             },
             calls = calls(
-                "Next breaker opens crate",
-                "CRATE > NEXT BREAKER READY"
+                "Open the next crate",
+                "Crate: open the next one."
             ),
         },
         mythic = {
@@ -73,8 +73,8 @@ Registry:Register({
                 "Before a crate is broken, everyone else moves 15+ yards away.",
             },
             calls = calls(
-                "Next breaker opens crate > raid clear 15 yards",
-                "CRATE > NEXT BREAKER > RAID 15+ YARDS CLEAR"
+                "Raid clear 15+ yards, then break",
+                "Crate: raid clear 15+ yards, then break it."
             ),
         },
     },
