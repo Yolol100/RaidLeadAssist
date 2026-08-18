@@ -24,8 +24,8 @@ local function baseCalls(pyreAction, flameAction)
         {
             key = "barrage",
             ability = "Possession Barrage",
-            action = "Tank far > raid clear front",
-            warning = "BARRAGE > TANK FAR > RAID CLEAR FRONT",
+            action = "Raid clear front",
+            warning = "BARRAGE > RAID CLEAR FRONT",
             voice = "Barrage",
             spellIDs = { 1292036, 1284103 },
         },
@@ -109,7 +109,7 @@ Registry:Register({
         normal = {
             explanation = {
                 "PLAN: KEEP THE WELL EMPTY. BREAK AMANI SHIELDS AND KILL ADS BEFORE THEY REACH IT.",
-                "ESSENCE REND GOES TO THE EDGE. BARRAGE TANK MOVES FAR; RAID CLEARS THE FRONT. DODGE IGNITION IMPACTS.",
+                "ESSENCE REND GOES TO THE EDGE. BARRAGE: RAID CLEARS THE FRONT. DODGE IGNITION IMPACTS.",
                 "AT 50% KILL ECHOES FAST. MELEE SOAK HUNGERING PYRE; RANGED STAY OUT AND SPREAD FOR SLITHERING FLAME.",
                 "PHASE 2: BLOODLUST WHEN NEK'ZALI BECOMES ACTIVE, THEN BURN BEFORE FULL ENERGY.",
             },
@@ -118,7 +118,7 @@ Registry:Register({
         heroic = {
             explanation = {
                 "PLAN: NORMAL RULES PLUS CREMATION. NEVER FEED THE WELL; KILL AMANI BUT KEEP THEIR CORPSES AVAILABLE FOR THE INTERMISSION BURN.",
-                "ESSENCE REND GOES TO THE EDGE. BARRAGE TANK FAR. AT 50% KILL ECHOES FAST.",
+                "ESSENCE REND GOES TO THE EDGE. BARRAGE: RAID CLEARS THE FRONT. AT 50% KILL ECHOES FAST.",
                 "MELEE SOAK HUNGERING PYRE. RANGED STAY OUT FOR SLITHERING FLAME, THEN USE CREMATION TO BURN AMANI CORPSES.",
                 "PHASE 2: BLOODLUST WHEN NEK'ZALI BECOMES ACTIVE, THEN BURN BEFORE FULL ENERGY.",
             },
