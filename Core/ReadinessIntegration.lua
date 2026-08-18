@@ -1,8 +1,10 @@
 local _, ns = ...
 
 local Registry = ns:GetModule("Encounters.Registry")
+local SetupRegistry = ns:GetModule("Encounters.SetupRegistry")
 local Messages = ns:GetModule("Services.MessageService")
 local Assignments = ns:GetModule("Services.AssignmentService")
+local Setup = ns:GetModule("Services.SetupService")
 local Roster = ns:GetModule("Services.RosterService")
 local Timeline = ns:GetModule("Services.TimelineService")
 local App = ns:GetModule("Core.App")
@@ -81,10 +83,14 @@ function App:PrintDoctor()
     local rosterMissing = assignedPlayersNotInRoster(self.activeBossKey, self.activeDifficultyKey)
     local customCurrentness = Messages:GetCustomCurrentness(self.activeBossKey, self.activeDifficultyKey)
     local covered, timed = timedProviderCoverage(profile)
+    local setupRequired = SetupRegistry:HasSetup(self.activeBossKey, self.activeDifficultyKey)
+    local setupReady = Setup:IsReady(self.activeBossKey, self.activeDifficultyKey)
+    local worldMarkers, targetMarkers, setupChecks = SetupRegistry:GetCounts(self.activeBossKey, self.activeDifficultyKey)
 
     local states = {}
     if #missingRequired > 0 then states[#states + 1] = "CHECK ASSIGNMENTS" end
     if #rosterMissing > 0 then states[#states + 1] = "CHECK ROSTER" end
+    if setupRequired and not setupReady then states[#states + 1] = "CHECK SETUP" end
     if customCurrentness == "review" then states[#states + 1] = "CHECK CUSTOM TEXT" end
     if timed > 0 and self.db.automaticTimingEnabled ~= false and Timeline:GetProviderSummary() == "" then
         states[#states + 1] = "CHECK PROVIDER DRIFT"
@@ -100,6 +106,12 @@ function App:PrintDoctor()
         #rosterMissing == 0 and "yes" or ("no; " .. #rosterMissing .. " assigned player(s) not currently in raid")
     ))
     if #rosterMissing > 0 then ns:Print("Roster review: " .. table.concat(rosterMissing, ", ")) end
+    ns:Print(("Pre-pull setup: %s | world=%d | target=%d | checks=%d"):format(
+        setupRequired and (setupReady and "ready" or "check") or "not required",
+        worldMarkers,
+        targetMarkers,
+        setupChecks
+    ))
     ns:Print("Custom text: " .. customCurrentness)
     ns:Print(("Timed provider coverage observed: %d/%d call(s)"):format(covered, timed))
 end
