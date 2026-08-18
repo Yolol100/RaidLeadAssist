@@ -1,6 +1,8 @@
 local _, ns = ...
 
-local AssignmentRegistry = {}
+local AssignmentRegistry = {
+    layouts = {},
+}
 
 local BOSS_KEYS = {
     "altar",
@@ -21,7 +23,7 @@ local VALID_KINDS = { assignee = true, rotation = true, rule = true, sequence = 
 
 local function fallbackLayout(bossKey, difficultyKey)
     return {
-        summary = ("Assignment override unavailable for %s/%s; fail closed with no editable fields."):format(
+        summary = ("Assignment layout unavailable for %s/%s; fail closed with no editable fields."):format(
             tostring(bossKey), tostring(difficultyKey)
         ),
         sections = {},
@@ -93,11 +95,26 @@ function AssignmentRegistry:ValidateLayout(bossKey, difficultyKey, profile)
     return profile
 end
 
--- Encounter-specific override modules replace this method as they load from the
--- TOC. Keeping the base deliberately strategy-free prevents old tactics from
--- becoming a second source of truth if an override changes later.
+function AssignmentRegistry:Register(bossKey, difficultyKey, profile)
+    self:ValidateLayout(bossKey, difficultyKey, profile)
+    self.layouts[bossKey] = self.layouts[bossKey] or {}
+    assert(self.layouts[bossKey][difficultyKey] == nil,
+        "Duplicate assignment layout: " .. bossKey .. "/" .. difficultyKey)
+    self.layouts[bossKey][difficultyKey] = profile
+end
+
+function AssignmentRegistry:RegisterLayouts(bossKey, layouts)
+    assert(type(layouts) == "table", "Assignment layouts must be a table")
+    for _, difficultyKey in ipairs({ "normal", "heroic", "mythic" }) do
+        local profile = layouts[difficultyKey]
+        if profile then self:Register(bossKey, difficultyKey, profile) end
+    end
+end
+
 function AssignmentRegistry:GetLayout(bossKey, difficultyKey)
-    return fallbackLayout(bossKey, difficultyKey)
+    local boss = self.layouts[bossKey]
+    local profile = boss and boss[difficultyKey]
+    return profile or fallbackLayout(bossKey, difficultyKey)
 end
 
 function AssignmentRegistry:GetDefinitions(bossKey, difficultyKey)
