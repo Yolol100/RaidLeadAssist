@@ -10,8 +10,8 @@ local function sharedCalls()
             warning = "MATCH TO 4 > 1+3 OR 2+2",
             voice = "Match to four",
             spellIDs = { 1284588 },
-            prepareSeconds = 8,
-            pressSeconds = 5,
+            prepareSeconds = 6,
+            pressSeconds = 2,
             uiGroup = "shared",
         },
         {
@@ -26,8 +26,8 @@ local function sharedCalls()
         {
             key = "balance",
             ability = "Boss Health Balance",
-            action = "Check bars > high boss stops",
-            warning = "KEEP HEALTH EVEN > HIGH BOSS STOP DPS",
+            action = "Check bars > stop lower HP boss",
+            warning = "KEEP HP EVEN > STOP LOWER HP BOSS",
             voice = "Balance",
             timing = false,
             uiGroup = "balance",
@@ -62,15 +62,16 @@ local function sharedCalls()
     }
 end
 
-local function breathCalls(includeLiving)
-    local calls = {
+local function breathCalls()
+    return {
         {
             key = "coagulation",
             ability = "Venom Coagulation",
             action = "Kill add",
             warning = "KILL ADD",
             voice = "Kill add",
-            spellIDs = { 1284251 },
+            timing = false,
+            iconSpellID = 1284251,
             uiGroup = "breath",
         },
         {
@@ -85,53 +86,22 @@ local function breathCalls(includeLiving)
             uiGroup = "breath",
         },
     }
-    if includeLiving then
-        calls[#calls + 1] = {
-            key = "living",
-            ability = "Living Venom",
-            action = "Dodge venom",
-            warning = "DODGE VENOM",
-            voice = "Dodge venom",
-            timing = false,
-            uiGroup = "breath",
-        }
-    end
-    return calls
 end
 
-local function bloodCalls(includePool)
-    local calls = {
+local function bloodCalls()
+    return {
         {
             key = "miasma",
             ability = "Unstable Miasma",
-            action = "Soak circle",
-            warning = "SOAK CIRCLE",
-            voice = "Soak circle",
+            action = "Groups 3+4 soak target",
+            warning = "GROUPS 3+4 > SOAK TARGET",
+            voice = "Red side soak",
             spellIDs = { 1288232 },
+            prepareSeconds = 5,
+            pressSeconds = 1,
             uiGroup = "blood",
         },
     }
-    if includePool then
-        calls[#calls + 1] = {
-            key = "bloodvenom",
-            ability = "Blood Venom",
-            action = "Go to corner",
-            warning = "GO TO CORNER",
-            voice = "Go corner",
-            timing = false,
-            uiGroup = "blood",
-        }
-    end
-    calls[#calls + 1] = {
-        key = "blood",
-        ability = "Blighted Blood",
-        action = "Dispel dots",
-        warning = "DISPEL DOTS",
-        voice = "Dispel dots",
-        spellIDs = { 1284483 },
-        uiGroup = "blood",
-    }
-    return calls
 end
 
 local function combine(...)
@@ -143,9 +113,9 @@ local function combine(...)
     return result
 end
 
-local normalCalls = combine(breathCalls(false), bloodCalls(false), sharedCalls())
-local heroicCalls = combine(breathCalls(true), bloodCalls(true), sharedCalls())
-local mythicCalls = combine(breathCalls(true), bloodCalls(true), sharedCalls())
+local normalCalls = combine(breathCalls(), bloodCalls(), sharedCalls())
+local heroicCalls = combine(breathCalls(), bloodCalls(), sharedCalls())
+local mythicCalls = combine(breathCalls(), bloodCalls(), sharedCalls())
 mythicCalls[#mythicCalls + 1] = {
     key = "protovenom",
     ability = "Shifting Protovenom",
@@ -162,12 +132,12 @@ Registry:Register({
     key = "sentinels",
     name = "Entombed Sentinels",
     encounterID = 3445,
-    strategyStatus = "12.1 Journal + current community/PTR strategy source-reviewed 2026-08-18; split layout and secret-safe HP display; live validation pending",
+    strategyStatus = "12.1 Journal + current Wowhead/Ready Check Pull/Raidstrats + DBM/BigWigs source-reviewed 2026-08-18; raidlead-only split layout; live validation pending",
     profiles = {
         normal = {
             explanation = {
                 "PLAN: GROUPS 1+2 GO GREEN/BREATH. GROUPS 3+4 GO RED/BLOOD. KEEP BOSSES 40+ YARDS APART AND KEEP HP EVEN.",
-                "GREEN: KILL THE ADD AND RUN OVER GREEN DROPLETS. RED: SOAK THE CIRCLE TOGETHER AND HEALERS DISPEL THE DOTS.",
+                "GREEN: KILL THE COAGULATION ADD AND RUN OVER GREEN DROPLETS. RED: GROUPS 3+4 SOAK MIASMA; HEALERS DISPEL BLIGHTED BLOOD.",
                 "AT STASIS: MATCH TO EXACTLY 4 TOXIN STACKS (1+3 OR 2+2), CLEAR IT, THEN GROUPS 1+2 AND 3+4 SWAP BOSS SIDES.",
             },
             calls = normalCalls,
@@ -175,8 +145,8 @@ Registry:Register({
         heroic = {
             explanation = {
                 "PLAN: GROUPS 1+2 GO GREEN/BREATH. GROUPS 3+4 GO RED/BLOOD. KEEP BOSSES 40+ YARDS APART AND KEEP HP EVEN.",
-                "GREEN: KILL ADD, RUN OVER GREEN DROPLETS, DODGE RETURNING VENOM. RED: SOAK CIRCLE; DOT TARGETS MOVE OUT, THEN DISPEL.",
-                "AT STASIS: MATCH TO EXACTLY 4 TOXIN STACKS (1+3 OR 2+2), CLEAR IT, THEN SWAP BOSS SIDES. KEEP HP EVEN.",
+                "GREEN: KILL ADD, RUN OVER GREEN DROPLETS, DODGE RETURNING VENOM. RED: GROUPS 3+4 SOAK MIASMA; POOL TARGETS MOVE OUT BEFORE EXPIRY.",
+                "HEALERS DISPEL BLIGHTED BLOOD AFTER SAFE POSITIONING. AT STASIS MATCH EXACTLY 4 (1+3 OR 2+2), THEN SWAP BOSS SIDES.",
             },
             calls = heroicCalls,
         },
@@ -184,8 +154,8 @@ Registry:Register({
             explanation = {
                 "PLAN: GROUPS 1+2 GO GREEN/BREATH. GROUPS 3+4 GO RED/BLOOD. KEEP BOSSES 40+ YARDS APART AND KEEP HP EVEN.",
                 "DO HEROIC RULES. PROTOVENOM: MARKED PLAYERS TOUCH ANOTHER MARKED PLAYER ONLY; NEVER TOUCH A CLEAN PLAYER.",
-                "AT STASIS: MATCH TO EXACTLY 4 TOXIN STACKS (1+3 OR 2+2), CLEAR IT, THEN SWAP SIDES AND RESET THE SPLIT FAST.",
-                "WATCH ADD + DROPLET + MIASMA OVERLAPS.",
+                "AT STASIS MATCH EXACTLY 4 (1+3 OR 2+2), CLEAR IT, THEN SWAP SIDES AND RESET THE SPLIT FAST.",
+                "WATCH ADD + DROPLET + MIASMA OVERLAPS; PERSONAL DODGES, POOLS AND DISPELS STAY BOSSMod/ROLE-OWNED.",
             },
             calls = mythicCalls,
         },
