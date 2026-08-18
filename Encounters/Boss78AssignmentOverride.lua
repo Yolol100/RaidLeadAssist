@@ -108,10 +108,10 @@ local ALTAR_LAYOUTS = {
     },
 }
 
-local ULATEK_EGG_NORMAL = {
+local ULATEK_EGG_HANDLER = {
     key = "eggs",
     title = "Doomscale Egg Handler",
-    description = "Assign the player who handles the planned Doomscale Egg after the Warden dies. Warden's Protection forbids touching eggs while it lives.",
+    description = "Assign the player who handles the planned Doomscale Egg after the Warden dies. Never touch the egg while Warden's Protection is active.",
     columns = 1,
     slots = {
         slot("egg_handler", "Egg Handler", {
@@ -122,10 +122,10 @@ local ULATEK_EGG_NORMAL = {
     },
 }
 
-local ULATEK_COILS = {
+local ULATEK_COILS_MYTHIC = {
     key = "coils",
     title = "Spectral Coil Rotation",
-    description = "Heroic/Mythic: alternate distinct soak groups because Soul Constrictor prevents affected players from mitigating the next Spectral Coils.",
+    description = "Mythic: alternate distinct soak groups because Soul Constrictor prevents the previous group from mitigating the next Spectral Coils.",
     columns = 2,
     slots = {
         slot("coil_a", "Coil Group A", {
@@ -145,31 +145,10 @@ local ULATEK_COILS = {
     },
 }
 
-local ULATEK_EGGS_HEROIC = {
-    key = "eggs",
-    title = "Doomscale Egg Sides",
-    description = "Assign one distinct owner to each side. Trigger only the planned side after the Warden dies because Mass Gestation starts the remaining eggs on that side.",
-    columns = 2,
-    slots = {
-        slot("egg_left", "Left Egg Owner", {
-            callKey = "eggs",
-            callLabel = "LEFT",
-            required = true,
-            exclusiveGroup = "ulatek_eggs",
-        }),
-        slot("egg_right", "Right Egg Owner", {
-            callKey = "eggs",
-            callLabel = "RIGHT",
-            required = true,
-            exclusiveGroup = "ulatek_eggs",
-        }),
-    },
-}
-
 local ULATEK_EGGS_MYTHIC = {
     key = "eggs",
     title = "Doomscale Egg Carriers",
-    description = "Assign one distinct carrier to each side. Noxious Shell carriers stay more than 3 yards apart and trigger only the planned side after the Warden dies.",
+    description = "Mythic: assign one carrier per planned side. Carriers stay more than 3 yards apart and only activate the called side after the Warden dies.",
     columns = 2,
     slots = {
         slot("egg_left", "Left Egg Carrier", {
@@ -190,7 +169,7 @@ local ULATEK_EGGS_MYTHIC = {
 local ULATEK_INCUBATION = {
     key = "incubation",
     title = "Toxic Incubation Intercepts",
-    description = "Mythic: one Incubation applies four impacts over four seconds. Assign at least four distinct interceptors so each planned player takes one hit instead of stacking Toxic Burn.",
+    description = "Mythic: one Incubation applies four impacts. Assign at least four distinct interceptors so each player takes one hit instead of stacking Toxic Burn.",
     columns = 1,
     slots = {
         slot("incubation_team", "Incubation Team", {
@@ -204,16 +183,16 @@ local ULATEK_INCUBATION = {
 
 local ULATEK_LAYOUTS = {
     normal = {
-        summary = "Assign one egg handler. Coils are a full-raid stack on Normal; personal Bite, Purge and dodge reactions remain bossmod-owned.",
-        sections = { ULATEK_EGG_NORMAL },
+        summary = "Assign one egg handler. Spectral Coils is a full-raid stack; personal debuffs and dodges remain bossmod-owned.",
+        sections = { ULATEK_EGG_HANDLER },
     },
     heroic = {
-        summary = "Assign two alternating Coil groups plus distinct left/right egg owners. Fangs are broken one at a time as a live raid-leader call.",
-        sections = { ULATEK_COILS, ULATEK_EGGS_HEROIC },
+        summary = "Keep the Normal egg-handler setup. Heroic adds live Fang and add reactions, but no extra pre-pull roster assignment is required.",
+        sections = { ULATEK_EGG_HANDLER },
     },
     mythic = {
         summary = "Assign alternating Coil groups, distinct egg-side carriers and a 4+ player Toxic Incubation intercept team.",
-        sections = { ULATEK_COILS, ULATEK_EGGS_MYTHIC, ULATEK_INCUBATION },
+        sections = { ULATEK_COILS_MYTHIC, ULATEK_EGGS_MYTHIC, ULATEK_INCUBATION },
     },
 }
 
