@@ -32,7 +32,7 @@ local function explorerRotationLayout(summary)
                 slots = {
                     { key = "crate_a", label = "Breaker 1", kind = "rotation", callKey = "crates", callLabel = "BREAKER 1", rotation = "crates", required = true, exclusiveGroup = "crates" },
                     { key = "crate_b", label = "Breaker 2", kind = "rotation", callKey = "crates", callLabel = "BREAKER 2", rotation = "crates", required = true, exclusiveGroup = "crates" },
-                    { key = "crate_c", label = "Breaker 3", kind = "rotation", callKey = "crates", callLabel = "BREAKER 3", rotation = "crates", exclusiveGroup = "crates" },
+                    { key = "crate_c", label = "Breaker 3", kind = "rotation", callKey = "crates", callLabel = "BREAKER 3", rotation = "crates", required = false, exclusiveGroup = "crates" },
                 },
             },
             {
@@ -42,7 +42,7 @@ local function explorerRotationLayout(summary)
                 columns = 2,
                 slots = {
                     { key = "fish_a", label = "Runner 1", kind = "rotation", callKey = "fish", callLabel = "RUNNER 1", rotation = "fish", required = true },
-                    { key = "fish_b", label = "Runner 2", kind = "rotation", callKey = "fish", callLabel = "RUNNER 2", rotation = "fish" },
+                    { key = "fish_b", label = "Runner 2", kind = "rotation", callKey = "fish", callLabel = "RUNNER 2", rotation = "fish", required = false },
                 },
             },
         },
