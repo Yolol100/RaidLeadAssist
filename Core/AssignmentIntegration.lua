@@ -4,18 +4,25 @@ local Constants = ns:GetModule("Core.Constants")
 local Database = ns:GetModule("Core.Database")
 local EventBus = ns:GetModule("Core.EventBus")
 local Registry = ns:GetModule("Encounters.Registry")
+local SetupRegistry = ns:GetModule("Encounters.SetupRegistry")
 local RaidWarning = ns:GetModule("Services.RaidWarningService")
 local Messages = ns:GetModule("Services.MessageService")
 local Assignments = ns:GetModule("Services.AssignmentService")
+local Setup = ns:GetModule("Services.SetupService")
 local Timeline = ns:GetModule("Services.TimelineService")
 local Encounter = ns:GetModule("Services.EncounterService")
 local UI = ns:GetModule("UI.MainFrame")
 local SettingsUI = ns:GetModule("UI.SettingsFrame")
 local AssignmentUI = ns:GetModule("UI.AssignmentFrame")
 local Launchers = ns:GetModule("UI.AssignmentLaunchers")
+local SetupCard = ns:GetModule("UI.SetupCard")
 local App = ns:GetModule("Core.App")
 
-local Integration = {}
+local Integration = {
+    setupCard = nil,
+    setupExtraHeight = 72,
+    setupHeightApplied = false,
+}
 
 local function canEditAssignments()
     if Encounter:IsActive() then return false, "Assignments are available outside active encounters." end
@@ -66,6 +73,46 @@ local function refreshCallAvailability()
     return callsEnabled, reason
 end
 
+local function refreshSetupCard(nativeHeightReset)
+    if not UI.frame or not UI.timeline or not UI.explanationTitle then return end
+
+    if nativeHeightReset then Integration.setupHeightApplied = false end
+    if Integration.setupHeightApplied then
+        UI.frame:SetHeight(math.max(1, UI.frame:GetHeight() - Integration.setupExtraHeight))
+        Integration.setupHeightApplied = false
+    end
+
+    if not Integration.setupCard then Integration.setupCard = SetupCard:Create(UI.frame) end
+
+    UI.explanationTitle:ClearAllPoints()
+    if not SetupRegistry:HasSetup(App.activeBossKey, App.activeDifficultyKey) then
+        Integration.setupCard:Hide()
+        UI.explanationTitle:SetPoint("TOPLEFT", UI.timeline.frame, "BOTTOMLEFT", 0, -16)
+        return
+    end
+
+    local layout = SetupRegistry:GetLayout(App.activeBossKey, App.activeDifficultyKey)
+    local ready = Setup:IsReady(App.activeBossKey, App.activeDifficultyKey)
+    local card = Integration.setupCard
+
+    card.frame:ClearAllPoints()
+    card.frame:SetPoint("TOPLEFT", UI.timeline.frame, "BOTTOMLEFT", 0, -12)
+    card.frame:SetPoint("RIGHT", UI.timeline.frame, "RIGHT", 0, 0)
+    card.frame:SetEnabled(not Encounter:IsActive())
+    card:SetLayout(layout, ready, function()
+        if Encounter:IsActive() then
+            ns:Print("Pre-pull Setup is locked during an active encounter.")
+            return
+        end
+        Setup:Toggle(App.activeBossKey, App.activeDifficultyKey)
+        refreshSetupCard(false)
+    end)
+
+    UI.explanationTitle:SetPoint("TOPLEFT", card.frame, "BOTTOMLEFT", 0, -16)
+    UI.frame:SetHeight(UI.frame:GetHeight() + Integration.setupExtraHeight)
+    Integration.setupHeightApplied = true
+end
+
 local function openAssignments()
     AssignmentUI:Open(App.activeBossKey, App.activeDifficultyKey)
 end
@@ -84,12 +131,14 @@ function App:Initialize(...)
     originalInitialize(self, ...)
 
     Assignments:Initialize(self.db)
+    Setup:Initialize()
     AssignmentUI:Initialize(self.db, {
         canOpen = canEditAssignments,
         onAnnounce = announceAssignments,
     })
     Launchers:Attach(UI, SettingsUI, openAssignments)
     refreshCallAvailability()
+    refreshSetupCard(true)
 
     local originalSlash = SlashCmdList.RAIDLEADASSIST
     SlashCmdList.RAIDLEADASSIST = function(message)
@@ -108,6 +157,7 @@ function App:SelectBoss(key, automatic)
     if changed then
         Assignments:ResetRuntime()
         refreshCallAvailability()
+        refreshSetupCard(true)
     end
     return changed
 end
@@ -118,6 +168,7 @@ function App:SelectDifficulty(key, automatic)
     if changed then
         Assignments:ResetRuntime()
         refreshCallAvailability()
+        refreshSetupCard(true)
     end
     return changed
 end
@@ -170,6 +221,7 @@ local function refreshForActiveEncounter()
     Assignments:ResetRuntime()
     AssignmentUI:CloseForEncounter()
     local enabled, reason = refreshCallAvailability()
+    refreshSetupCard(false)
     if not enabled then ns:Print(reason) end
 end
 
@@ -179,6 +231,7 @@ EventBus:On("ENCOUNTER_RECOVERED", Integration, refreshForActiveEncounter)
 EventBus:On("ENCOUNTER_ENDED", Integration, function()
     Assignments:ResetRuntime()
     refreshCallAvailability()
+    refreshSetupCard(false)
 end)
 
 ns:RegisterModule("Core.AssignmentIntegration", Integration)
