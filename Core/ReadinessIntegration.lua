@@ -85,7 +85,7 @@ function App:PrintDoctor()
     local covered, timed = timedProviderCoverage(profile)
     local setupRequired = SetupRegistry:HasSetup(self.activeBossKey, self.activeDifficultyKey)
     local setupReady = Setup:IsReady(self.activeBossKey, self.activeDifficultyKey)
-    local worldMarkers, targetMarkers, setupChecks = SetupRegistry:GetCounts(self.activeBossKey, self.activeDifficultyKey)
+    local worldMarkers, targetMarkers, prepSteps = SetupRegistry:GetCounts(self.activeBossKey, self.activeDifficultyKey)
 
     local states = {}
     if #missingRequired > 0 then states[#states + 1] = "CHECK ASSIGNMENTS" end
@@ -106,11 +106,11 @@ function App:PrintDoctor()
         #rosterMissing == 0 and "yes" or ("no; " .. #rosterMissing .. " assigned player(s) not currently in raid")
     ))
     if #rosterMissing > 0 then ns:Print("Roster review: " .. table.concat(rosterMissing, ", ")) end
-    ns:Print(("Pre-pull setup: %s | world=%d | target=%d | checks=%d"):format(
+    ns:Print(("Pre-pull setup: %s | world=%d | target=%d | prep=%d"):format(
         setupRequired and (setupReady and "ready" or "check") or "not required",
         worldMarkers,
         targetMarkers,
-        setupChecks
+        prepSteps
     ))
     ns:Print("Custom text: " .. customCurrentness)
     ns:Print(("Timed provider coverage observed: %d/%d call(s)"):format(covered, timed))
