@@ -9,7 +9,7 @@ local function calls(crateAction, crateWarning, includeUnitedDefense)
         { key="shell", ability="Shell Spin", action="Dodge shells", warning="SHELL SPIN > DODGE SHELLS", voice="Dodge shells", spellIDs={1291759}, prepareSeconds=6, pressSeconds=3 },
         { key="blink", ability="Blink Nova", action="Target edge > raid away", warning="BLINK NOVA > TARGET EDGE > RAID AWAY", voice="Move away", spellIDs={1290711}, prepareSeconds=6, pressSeconds=3 },
         { key="volley", ability="Frostfire Volley", action="Clear with opposite element", warning="FROST/FIRE > CLEAR WITH OPPOSITE", voice="Use opposite", spellIDs={1295886,1295935}, prepareSeconds=6, pressSeconds=3 },
-        { key="bomb", ability="Explosive Surprise", action="Bomb edge > mushroom over wave", warning="BOMB > EDGE > MUSHROOM OVER WAVE", voice="Bomb to edge", spellIDs={1296249}, prepareSeconds=6, pressSeconds=3 },
+        { key="bomb", ability="Explosive Surprise", action="Move out from bomb", warning="BOMB > MOVE OUT", voice="Move out", spellIDs={1296249}, prepareSeconds=6, pressSeconds=3 },
     }
     if includeUnitedDefense then
         result[#result + 1] = {
