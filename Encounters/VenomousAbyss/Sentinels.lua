@@ -74,17 +74,6 @@ local function breathCalls()
             iconSpellID = 1284251,
             uiGroup = "breath",
         },
-        {
-            key = "droplets",
-            ability = "Toxic Droplets",
-            action = "Run over green droplets",
-            warning = "RUN OVER GREEN DROPLETS",
-            voice = "Green droplets",
-            spellIDs = { 1284434 },
-            prepareSeconds = 6,
-            pressSeconds = 3,
-            uiGroup = "breath",
-        },
     }
 end
 
@@ -155,7 +144,7 @@ Registry:Register({
                 "PLAN: GROUPS 1+2 GO GREEN/BREATH. GROUPS 3+4 GO RED/BLOOD. KEEP BOSSES 40+ YARDS APART AND KEEP HP EVEN.",
                 "DO HEROIC RULES. PROTOVENOM: MARKED PLAYERS TOUCH ANOTHER MARKED PLAYER ONLY; NEVER TOUCH A CLEAN PLAYER.",
                 "AT STASIS MATCH EXACTLY 4 (1+3 OR 2+2), CLEAR IT, THEN SWAP SIDES AND RESET THE SPLIT FAST.",
-                "WATCH ADD + DROPLET + MIASMA OVERLAPS; PERSONAL DODGES, POOLS AND DISPELS STAY BOSSMod/ROLE-OWNED.",
+                "WATCH ADD + DROPLET + MIASMA OVERLAPS; PERSONAL DODGES, POOLS AND DISPELS STAY BOSSMOD/ROLE-OWNED.",
             },
             calls = mythicCalls,
         },
