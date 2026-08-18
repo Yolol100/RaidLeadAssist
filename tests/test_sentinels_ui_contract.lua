@@ -47,10 +47,12 @@ assert(encounter:find('warning = "STOP DPS > BREATH OF ULA\'TEK"', 1, true))
 assert(encounter:find('warning = "STOP DPS > BLOOD OF ULA\'TEK"', 1, true))
 assert(encounter:find('warning = "RESUME DPS > KEEP BOTH EVEN"', 1, true))
 assert(not encounter:find('key = "balance"', 1, true))
-assert(encounter:find("BOSS HP BARS ARE DISPLAY%-ONLY"))
-assert(encounter:find("RAID LEADER DECIDES MANUALLY"))
+assert(not encounter:find("BOSS HP BARS ARE DISPLAY%-ONLY"),
+    "raidleader UI policy should not be duplicated in the player Boss Plan")
+assert(not encounter:find("RAID LEADER DECIDES MANUALLY"),
+    "raidleader-only balance instructions belong to the dedicated Sentinels panel")
 
 assert(toc:find("UI/SentinelsPanel.lua", 1, true))
 assert(toc:find("Core/SentinelsIntegration.lua", 1, true))
 
-print("ok - Sentinels health is locale-independent display-only data with manual raidleader balance calls")
+print("ok - Sentinels health remains display-only with manual raidleader calls outside the player briefing")
