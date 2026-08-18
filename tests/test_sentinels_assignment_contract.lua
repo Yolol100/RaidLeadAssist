@@ -3,8 +3,12 @@ local ns = T.NewNamespace()
 
 T.Load("Encounters/AssignmentRegistry.lua", ns)
 T.Load("Encounters/Boss12AssignmentOverride.lua", ns)
+T.Load("Services/AssignmentService.lua", ns)
 
 local Registry = ns:GetModule("Encounters.AssignmentRegistry")
+local Assignments = ns:GetModule("Services.AssignmentService")
+local db = { assignments = {} }
+Assignments:Initialize(db)
 
 for _, difficulty in ipairs({ "normal", "heroic", "mythic" }) do
     local layout = Registry:GetLayout("sentinels", difficulty)
@@ -25,4 +29,26 @@ for _, difficulty in ipairs({ "normal", "heroic", "mythic" }) do
     assert(definitions[2].rotation == nil and definitions[2].exclusiveGroup == nil)
 end
 
-print("ok - Sentinels exposes only two required flex-safe Green/Red team selectors")
+local missing = Assignments:GetMissingRequired("sentinels", "heroic")
+assert(#missing == 2, "Sentinels must require both split selectors before the pull")
+
+local ok, result = Assignments:ApplyBossDraft("sentinels", "heroic", {
+    green_team = "Group 1",
+    red_team = "Group 2",
+})
+assert(ok, result and result.message)
+assert(#Assignments:GetMissingRequired("sentinels", "heroic") == 0)
+
+local greenWarning, greenComplete = Assignments:BuildCallWarning(
+    "GREEN TEAM > KILL ADD", "sentinels", "heroic", "coagulation"
+)
+assert(greenComplete and greenWarning:find("GREEN: Group 1", 1, true),
+    "Green team selector must be appended to the live add-priority call")
+
+local redWarning, redComplete = Assignments:BuildCallWarning(
+    "RED TEAM > SOAK TARGET", "sentinels", "heroic", "miasma"
+)
+assert(redComplete and redWarning:find("RED: Group 2", 1, true),
+    "Red team selector must be appended to the live Miasma soak call")
+
+print("ok - Sentinels has two required flex selectors and injects them into live raidleader calls")
