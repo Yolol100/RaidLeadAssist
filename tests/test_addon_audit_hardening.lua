@@ -25,7 +25,7 @@ end
 local messages = read("Services/MessageService.lua")
 assert(messages:find("defaultFingerprint", 1, true))
 assert(messages:find("GetCustomCurrentness", 1, true))
-assert(messages:find('return "current" or "review"', 1, true))
+assert(messages:find('and "current" or "review"', 1, true))
 
 local readiness = read("Core/ReadinessIntegration.lua")
 for _, marker in ipairs({
