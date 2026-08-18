@@ -40,8 +40,8 @@ local function layout(summary, sections)
     return { summary = summary, sections = sections or {} }
 end
 
-local PYRE = section("pyre", "Hungering Pyre", "Choose the players who always join the Pyre soak.", 1, {
-    slot("pyre_soak", "Pyre Soak Team", { callKey = "pyre", callLabel = "SOAK", required = true }),
+local PYRE = section("pyre", "Mythic Hungering Pyre", "Mythic strategy: configure the players represented by Groups 1+2 for the fixed Pyre soak team.", 1, {
+    slot("pyre_soak", "Groups 1+2 Soak Team", { callKey = "pyre", callLabel = "SOAK", required = true }),
 })
 
 local CREMATION = section("cremation", "Cremation Rules", "Heroic+: Slithering Flame chooses its target dynamically. Store the movement rule instead of pretending a player can be preselected.", 2, {
@@ -186,9 +186,9 @@ local ULATEK_INCUBATION = section("incubation", "Toxic Incubation Intercepts", "
 
 local LAYOUTS = {
     nekzali = {
-        normal = layout("Simple fixed soak plan.", { PYRE }),
-        heroic = layout("Pyre soak plus static Cremation movement rules for dynamically selected targets.", { PYRE, CREMATION }),
-        mythic = layout("Pyre soak, alternating Well teams and static Cremation movement rules.", { PYRE, WELL, CREMATION }),
+        normal = layout("Role-based plan: melee soak and ranged spread need no fixed player assignment.", {}),
+        heroic = layout("Role-based Pyre/Cremation plan; only static corpse-burn movement rules need configuration.", { CREMATION }),
+        mythic = layout("Fixed Groups 1+2 Pyre soak, alternating Well teams and static Cremation movement rules.", { PYRE, WELL, CREMATION }),
     },
     sentinels = {
         normal = layout("Split the raid first, then build exact four-player Stasis groups.", { SENTINEL_SPLIT, SENTINEL_STASIS, SENTINEL_HEAL }),
