@@ -26,7 +26,6 @@ for _, difficulty in ipairs(difficulties) do
     assert(nek.callsByKey.adds.prepareSeconds == 7 and nek.callsByKey.adds.pressSeconds == 4)
     assert(nek.callsByKey.echoes and nek.callsByKey.echoes.warning == "KILL ECHOES" and nek.callsByKey.echoes.timing == false)
     assert(nek.callsByKey.pyre and nek.callsByKey.pyre.prepareSeconds == 8 and nek.callsByKey.pyre.pressSeconds == 5)
-    assert(nek.callsByKey.flame and nek.callsByKey.flame.timing == false)
     assert(nek.callsByKey.phase2 and nek.callsByKey.phase2.timing == false)
 
     assert(nek.callsByKey.rend == nil, "Essence Rend is a personal bossmod responsibility, not an RLA button")
@@ -37,7 +36,8 @@ for _, difficulty in ipairs(difficulties) do
 end
 
 assert(Registry:GetProfile("nekzali", "normal").callsByKey.pyre.warning == "MELEE SOAK")
-assert(Registry:GetProfile("nekzali", "normal").callsByKey.flame.warning == "RANGED SPREAD OUT")
+assert(Registry:GetProfile("nekzali", "normal").callsByKey.flame == nil,
+    "Normal Slithering Flame spreading is personal bossmod execution and should stay in the plan only")
 assert(Registry:GetProfile("nekzali", "heroic").callsByKey.pyre.warning == "MELEE SOAK")
 assert(Registry:GetProfile("nekzali", "heroic").callsByKey.flame.warning == "RANGED BURN CORPSES")
 assert(Registry:GetProfile("nekzali", "mythic").callsByKey.pyre.warning == "GROUPS 1+2 SOAK")
@@ -64,8 +64,8 @@ for _, difficulty in ipairs(difficulties) do
     assert(sent.callsByKey.coagulation and sent.callsByKey.coagulation.warning == "KILL ADD")
     assert(sent.callsByKey.coagulation.timing == false,
         "Coagulation must stay manual because BigWigs publishes both the parent bar and a same-key add-spawn follow-up")
-    assert(sent.callsByKey.droplets and sent.callsByKey.droplets.warning == "RUN OVER GREEN DROPLETS")
-    assert(sent.callsByKey.droplets.prepareSeconds == 6 and sent.callsByKey.droplets.pressSeconds == 3)
+    assert(sent.callsByKey.droplets == nil,
+        "Toxic Droplets already has a bossmod help-soak warning; RLA should teach it in the plan without duplicating the live call")
     assert(sent.callsByKey.miasma and sent.callsByKey.miasma.warning == "GROUPS 3+4 > SOAK TARGET")
     assert(sent.callsByKey.miasma.prepareSeconds == 5 and sent.callsByKey.miasma.pressSeconds == 1)
     assert(sent.callsByKey.stasis and sent.callsByKey.stasis.warning == "MATCH TO 4 > 1+3 OR 2+2")
@@ -87,7 +87,7 @@ assert(proto and proto.warning == "PROTOVENOM > MARKED + MARKED")
 assert(proto.prepareSeconds == 7 and proto.pressSeconds == 4)
 
 assert(Registry:MatchCall("sentinels", "normal", 1284251, nil) == nil)
-assert(Registry:MatchCall("sentinels", "normal", 1284434, nil).key == "droplets")
+assert(Registry:MatchCall("sentinels", "normal", 1284434, nil) == nil)
 assert(Registry:MatchCall("sentinels", "normal", 1288232, nil).key == "miasma")
 assert(Registry:MatchCall("sentinels", "normal", 1284588, nil).key == "stasis")
 assert(Registry:MatchCall("sentinels", "normal", 1284483, nil) == nil)
