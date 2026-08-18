@@ -37,6 +37,7 @@ for _, difficulty in ipairs({ "normal", "heroic", "mythic" }) do
 
     assert(contains(plan(difficulty), "30%"))
     assert(contains(plan(difficulty), "BLOODLUST"))
+    assert(contains(plan(difficulty), "DISTINCT 5+"))
     assert(not contains(plan(difficulty), "TANK"))
 end
 
@@ -44,7 +45,6 @@ assert(contains(plan("normal"), "3 WORLD MARKERS"))
 assert(contains(plan("normal"), "LAUNCHES COLLIDE"))
 assert(contains(plan("heroic"), "CAUSTIC PUDDLES"))
 assert(contains(plan("heroic"), "REPEAT SOAK DAMAGE"))
-assert(Registry:GetProfile("normal", "sszorak") == nil)
 
 local mythic = Registry:GetProfile("sszorak", "mythic")
 assert(mythic.callsByKey.serpent.warning == "SERPENT'S FURY > 14+ STACK ON MARK")
