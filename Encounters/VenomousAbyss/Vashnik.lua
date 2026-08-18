@@ -1,20 +1,59 @@
 local _, ns = ...
 local Registry = ns:GetModule("Encounters.Registry")
 
-local function timedCall(key, ability, warning, voice, spellIDs, prepareSeconds, pressSeconds)
-    return { key=key, ability=ability, action=warning, warning=warning, voice=voice, spellIDs=spellIDs, prepareSeconds=prepareSeconds, pressSeconds=pressSeconds }
+local function timedCall(key, ability, action, warning, voice, spellIDs, prepareSeconds, pressSeconds)
+    return {
+        key = key,
+        ability = ability,
+        action = action,
+        warning = warning,
+        voice = voice,
+        spellIDs = spellIDs,
+        prepareSeconds = prepareSeconds,
+        pressSeconds = pressSeconds,
+    }
 end
 
-local function manualCall(key, ability, warning, voice)
-    return { key=key, ability=ability, action=warning, warning=warning, voice=voice, timing=false }
+local function manualCall(key, ability, action, warning, voice)
+    return { key=key, ability=ability, action=action, warning=warning, voice=voice, timing=false }
 end
 
-local killAdds = timedCall("imbibe", "Imbibe", "IMBIBE > KILL ADDS", "Kill adds", { 1283164 }, 8, 5)
-local fireStagger = manualCall("fire_stagger", "Burning Venoms", "SKULL FIRST > WAIT > X", "Stagger fire adds")
-local siphon = manualCall("siphon", "Siphoning Infection", "SIPHON > STACK HELPERS ON TARGET", "Stack for siphon")
-local catalyst = timedCall("catalyst", "Malignant Catalyst", "BILE > SOAK EVERY GREEN CIRCLE", "Soak every circle", { 1282525, 1282509 }, 7, 4)
-local frothMythic = timedCall("froth", "Plague Froth", "FROTH > AIM WAVES THROUGH TUMORS", "Aim at tumors", { 1281907 }, 6, 3)
-local killTumors = manualCall("tumors", "Malignant Tumors", "KILL EXPOSED TUMORS", "Kill tumors")
+local killAdds = timedCall(
+    "imbibe", "Imbibe",
+    "Kill fountain adds before center",
+    "Fountain adds: kill them before center.",
+    "Kill adds", { 1283164 }, 8, 5
+)
+local fireStagger = manualCall(
+    "fire_stagger", "Burning Venoms",
+    "Kill Skull, wait, then kill Cross",
+    "Fire adds: Skull first, wait, then Cross.",
+    "Stagger fire adds"
+)
+local siphon = manualCall(
+    "siphon", "Siphoning Infection",
+    "Stack helpers on the target",
+    "Siphon: stack on the target.",
+    "Stack for siphon"
+)
+local catalyst = timedCall(
+    "catalyst", "Malignant Catalyst",
+    "Soak every green circle",
+    "Green circles: soak every one.",
+    "Soak every circle", { 1282525, 1282509 }, 7, 4
+)
+local frothMythic = timedCall(
+    "froth", "Plague Froth",
+    "Aim one wave through a Tumor",
+    "Froth: aim one wave through a Tumor.",
+    "Aim at tumors", { 1281907 }, 6, 3
+)
+local killTumors = manualCall(
+    "tumors", "Malignant Tumors",
+    "Switch and kill the exposed Tumor",
+    "Tumor exposed: switch and kill it.",
+    "Kill tumors"
+)
 
 local function normalCalls() return { killAdds, siphon } end
 local function heroicCalls() return { killAdds, fireStagger, siphon, catalyst } end
