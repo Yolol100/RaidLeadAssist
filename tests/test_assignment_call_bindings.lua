@@ -12,6 +12,7 @@ end
 T.Load("Encounters/AssignmentRegistry.lua", ns)
 T.Load("Encounters/Boss12AssignmentOverride.lua", ns)
 T.Load("Encounters/Boss34AssignmentOverride.lua", ns)
+T.Load("Encounters/SszorakAssignmentOverride.lua", ns)
 T.Load("Encounters/TwinFangsAssignmentOverride.lua", ns)
 
 local Registry = ns:GetModule("Encounters.Registry")
