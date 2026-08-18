@@ -34,6 +34,7 @@ ns:RegisterModule("Encounters.Registry", {
         end
     end,
 })
+ns:RegisterModule("Encounters.SetupRegistry", {})
 ns:RegisterModule("Services.RaidWarningService", {
     Send = function(_, text) warnings[#warnings + 1] = text return true end,
     SendBriefing = function() briefings = briefings + 1 return true end,
@@ -48,6 +49,7 @@ ns:RegisterModule("Services.AssignmentService", {
     BuildCallWarning = function(_, warning) return warning, true end,
     AdvanceCall = function() end,
 })
+ns:RegisterModule("Services.SetupService", { Initialize = function() end })
 ns:RegisterModule("Services.TimelineService", { AcknowledgeCall = function() end })
 encounterModule = {
     currentEncounter = nil,
@@ -68,6 +70,7 @@ ns:RegisterModule("UI.AssignmentFrame", {
     CloseForEncounter = function() end,
 })
 ns:RegisterModule("UI.AssignmentLaunchers", { Attach = function() end })
+ns:RegisterModule("UI.SetupCard", {})
 
 local App = {
     activeBossKey = "boss",
