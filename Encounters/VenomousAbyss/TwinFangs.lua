@@ -24,6 +24,17 @@ local globules = {
     pressSeconds=4,
 }
 
+local feastNormal = {
+    key="feast",
+    ability="Ravenous Feast",
+    action="Fresh 3+ soakers each hit",
+    warning="FEAST > FRESH 3+ SOAKERS EACH HIT",
+    voice="Feast",
+    spellIDs={1290516},
+    prepareSeconds=8,
+    pressSeconds=5,
+}
+
 local feastFresh = {
     key="feast",
     ability="Ravenous Feast",
@@ -54,23 +65,24 @@ Registry:Register({
     key="twinfangs",
     name="The Twin Fangs",
     encounterID=3421,
-    strategyStatus="12.1 Journal + current Wowhead + DBM/BigWigs source-reviewed 2026-08-19; Normal Feast corrected to fresh 3+ groups; player briefing split from raidleader prep; live validation pending",
+    strategyStatus="12.1 Journal + current Wowhead + Ready Check Pull + DBM/BigWigs source-reviewed 2026-08-19; Feast wording follows Feasted on every difficulty; live validation pending",
     profiles={
         normal={
             explanation={
                 "Keep both bosses at similar health and kill them together.",
-                "Green globule appears: assigned player soaks it before it bursts.",
-                "Feast starts: Team A, then Team B, then Team C soak.",
-                "Already soaked this Feast: stay out of the remaining hits.",
-                "Stone Breaker circles: assigned players soak every impact.",
+                "Green globule appears: one nearby player soaks it before it bursts.",
+                "Feast hits three times: at least 3 fresh players soak each hit.",
+                "After you soak one Feast hit, stay out of the next hits.",
+                "Red shrinking circle on you: take it to the arena edge.",
                 "Adds spawn: kill them quickly and face targeted spit away.",
                 "At 100 energy: regroup and dodge the incoming waves.",
             },
-            calls={ globules, adds, feastFresh, energy },
+            calls={ globules, adds, feastNormal, energy },
         },
         heroic={
             explanation={
-                "Storm leaves blood pools: keep them outside movement paths.",
+                "Feast is preassigned: soak only when your Team A, B or C is called.",
+                "The 100-energy storm leaves blood pools; keep movement paths clear.",
             },
             calls={ globules, adds, feastFresh, energy },
         },
