@@ -69,8 +69,8 @@ local function breathCalls()
         {
             key = "coagulation",
             ability = "Venom Coagulation",
-            action = "Kill add",
-            warning = "KILL ADD",
+            action = "Green team > kill add",
+            warning = "GREEN TEAM > KILL ADD",
             voice = "Kill add",
             timing = false,
             iconSpellID = 1284251,
@@ -84,8 +84,8 @@ local function bloodCalls()
         {
             key = "miasma",
             ability = "Unstable Miasma",
-            action = "Groups 3+4 soak target",
-            warning = "GROUPS 3+4 > SOAK TARGET",
+            action = "Red team soaks target",
+            warning = "RED TEAM > SOAK TARGET",
             voice = "Red side soak",
             spellIDs = { 1288232 },
             prepareSeconds = 5,
@@ -123,31 +123,31 @@ Registry:Register({
     key = "sentinels",
     name = "Entombed Sentinels",
     encounterID = 3445,
-    strategyStatus = "12.1 Journal + current Wowhead/Ready Check Pull/Raidstrats + DBM/BigWigs source-reviewed 2026-08-18; raidlead-only split layout; live validation pending",
+    strategyStatus = "12.1 Journal + current Wowhead/Ready Check Pull/Raidstrats + DBM/BigWigs source-reviewed 2026-08-18; flex-safe raid split; raidlead-only call scope; live validation pending",
     profiles = {
         normal = {
             explanation = {
-                "PLAN: GROUPS 1+2 GO GREEN/BREATH. GROUPS 3+4 GO RED/BLOOD. KEEP BOSSES 40+ YARDS APART AND KEEP HP EVEN.",
-                "GREEN: KILL THE COAGULATION ADD AND RUN OVER GREEN DROPLETS. RED: GROUPS 3+4 SOAK MIASMA; HEALERS DISPEL BLIGHTED BLOOD.",
-                "AT STASIS: MATCH TO EXACTLY 4 TOXIN STACKS (1+3 OR 2+2), CLEAR IT, THEN GROUPS 1+2 AND 3+4 SWAP BOSS SIDES.",
+                "PLAN: SPLIT THE RAID INTO GREEN TEAM/BREATH AND RED TEAM/BLOOD. KEEP BOSSES 40+ YARDS APART AND KEEP HP EVEN.",
+                "GREEN TEAM: KILL THE COAGULATION ADD AND RUN OVER GREEN DROPLETS. RED TEAM: SOAK MIASMA; HEALERS DISPEL BLIGHTED BLOOD.",
+                "AT STASIS: MATCH TO EXACTLY 4 TOXIN STACKS (1+3 OR 2+2), CLEAR IT, THEN GREEN AND RED TEAMS SWAP BOSS SIDES.",
                 BOSSMOD_RULE,
             },
             calls = normalCalls,
         },
         heroic = {
             explanation = {
-                "PLAN: GROUPS 1+2 GO GREEN/BREATH. GROUPS 3+4 GO RED/BLOOD. KEEP BOSSES 40+ YARDS APART AND KEEP HP EVEN.",
-                "GREEN: KILL ADD, RUN OVER GREEN DROPLETS, DODGE RETURNING VENOM. RED: GROUPS 3+4 SOAK MIASMA; POOL TARGETS MOVE OUT BEFORE EXPIRY.",
-                "HEALERS DISPEL BLIGHTED BLOOD AFTER SAFE POSITIONING. AT STASIS MATCH EXACTLY 4 (1+3 OR 2+2), THEN SWAP BOSS SIDES.",
+                "PLAN: SPLIT THE RAID INTO GREEN TEAM/BREATH AND RED TEAM/BLOOD. KEEP BOSSES 40+ YARDS APART AND KEEP HP EVEN.",
+                "GREEN TEAM: KILL ADD, RUN OVER GREEN DROPLETS, DODGE RETURNING VENOM. RED TEAM: SOAK MIASMA; POOL TARGETS MOVE OUT BEFORE EXPIRY.",
+                "HEALERS DISPEL BLIGHTED BLOOD AFTER SAFE POSITIONING. AT STASIS MATCH EXACTLY 4 (1+3 OR 2+2), THEN GREEN AND RED TEAMS SWAP SIDES.",
                 BOSSMOD_RULE,
             },
             calls = heroicCalls,
         },
         mythic = {
             explanation = {
-                "PLAN: GROUPS 1+2 GO GREEN/BREATH. GROUPS 3+4 GO RED/BLOOD. KEEP BOSSES 40+ YARDS APART AND KEEP HP EVEN.",
+                "PLAN: SPLIT THE RAID INTO GREEN TEAM/BREATH AND RED TEAM/BLOOD. KEEP BOSSES 40+ YARDS APART AND KEEP HP EVEN.",
                 "DO HEROIC RULES. PROTOVENOM: MARKED PLAYERS TOUCH ANOTHER MARKED PLAYER ONLY; NEVER TOUCH A CLEAN PLAYER.",
-                "AT STASIS MATCH EXACTLY 4 (1+3 OR 2+2), CLEAR IT, THEN SWAP SIDES AND RESET THE SPLIT FAST.",
+                "AT STASIS MATCH EXACTLY 4 (1+3 OR 2+2), CLEAR IT, THEN GREEN AND RED TEAMS SWAP SIDES AND RESET THE SPLIT FAST.",
                 "WATCH ADD + DROPLET + MIASMA OVERLAPS; PERSONAL DODGES, POOLS AND DISPELS STAY BOSSMOD/ROLE-OWNED.",
                 BOSSMOD_RULE,
             },
