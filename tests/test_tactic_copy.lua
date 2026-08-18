@@ -124,7 +124,6 @@ for _, profile in ipairs({ vashnikNormal, vashnikHeroic, vashnikMythic }) do
     assert(profile.callsByKey.stygian.warning == "SPREAD > KEEP MOVING")
     assert(profile.callsByKey.tankswap.warning == "TANK SWAP > DEFENSIVE")
     assert(profile.callsByKey.tankswap.spellIDs[1] == 1280935)
-    assert(contains(planText("vashnik", profile.difficultyKey or "normal"), "") or true)
 end
 assert(vashnikNormal.callsByKey.fire_stagger.warning == "KILL FIRE ADDS")
 assert(vashnikHeroic.callsByKey.fire_stagger.warning == "SKULL FIRST > WAIT > X")
