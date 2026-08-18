@@ -22,6 +22,10 @@ local ok = Assignments:ApplyBossDraft("sszorak","heroic",{
     cyst_popper_1="Kilo", cyst_popper_2="Lima", cyst_popper_3="Mike",
 })
 assert(ok)
-local warning = Assignments:BuildCallWarning("MAELSTROM > POPPERS 1/2/3 > KNOCK AGAINST EACH WIND","sszorak","heroic","maelstrom")
-assert(warning:find("POPPER 1: Kilo",1,true) and warning:find("POPPER 2: Lima",1,true) and warning:find("POPPER 3: Mike",1,true))
-print("ok - Sszorak validates two 5+ Mutilate teams and three distinct Cyst Poppers")
+local warning = Assignments:BuildCallWarning(
+    "Maelstrom: Popper 1, then 2, then 3 pop a saved Cyst on each wind.",
+    "sszorak", "heroic", "maelstrom"
+)
+assert(warning:find("Popper 1: Kilo.",1,true) and warning:find("Popper 2: Lima.",1,true) and warning:find("Popper 3: Mike.",1,true))
+assert(not warning:find(" > ",1,true))
+print("ok - Sszorak validates teams and composes readable Cyst Popper calls")
