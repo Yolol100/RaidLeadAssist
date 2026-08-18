@@ -51,31 +51,31 @@ local NEKZALI_MYTHIC = {
 }
 
 local SENTINELS_SPLIT = {
-    summary = "Define Team A and Team B for the starting split. A starts Breath/green and B starts Blood/red; both swap boss sides after every Stasis.",
+    summary = "Define two physical-side teams. Team A starts with Breath/green and Team B starts with Blood/red; after Stasis the groups hold their sides while the bosses are tank-swapped across them.",
     sections = {
         {
             key = "split",
-            title = "Starting Raid Split",
-            description = "Use group selectors or short team rules instead of fixed raid-group numbers. The start labels stay stable while the teams swap which boss they handle after Stasis.",
+            title = "Fixed Raid Sides",
+            description = "Use group selectors or short team rules instead of fixed raid-group numbers. These rosters stay on their physical side for the fight; only which boss is on that side changes after Stasis.",
             columns = 2,
             slots = {
                 {
                     key = "team_a",
-                    label = "Team A · Breath Start",
+                    label = "Team A · Green Side",
                     kind = "rule",
                     callKey = "side_swap",
                     callLabel = "TEAM A",
                     required = true,
-                    helper = "Example: Group 1 in a 10-player raid or Groups 1+2 in a 20-player raid. Team A starts on Breath/green.",
+                    helper = "Example: Group 1 in a 10-player raid or Groups 1+2 in a 20-player raid. Team A starts with Breath/green and holds this side.",
                 },
                 {
                     key = "team_b",
-                    label = "Team B · Blood Start",
+                    label = "Team B · Red Side",
                     kind = "rule",
                     callKey = "side_swap",
                     callLabel = "TEAM B",
                     required = true,
-                    helper = "Example: Group 2 in a 10-player raid or Groups 3+4 in a 20-player raid. Team B starts on Blood/red.",
+                    helper = "Example: Group 2 in a 10-player raid or Groups 3+4 in a 20-player raid. Team B starts with Blood/red and holds this side.",
                 },
             },
         },
