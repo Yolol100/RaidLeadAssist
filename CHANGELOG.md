@@ -1,11 +1,14 @@
 # Changelog
 
-## 0.9.0-beta.51 — 2026-08-18
+## 0.9.0-beta.51 — 2026-08-19
 
-- Add a first-class, difficulty-aware pre-pull setup registry for world markers, target markers and raidleader checks without turning marker placement into combat automation.
-- Add a compact `PRE-PULL SETUP` card between the timeline and Boss Plan that uses the existing Raid Lead Assist theme, shows CHECK/READY state and exposes exact marker purposes in its tooltip.
-- Add fixed setup plans for Entombed Sentinels, The Lost Explorers, Heroic/Mythic Vashnik, Sszorak, The Coiled Altar and Ula'tek while explicitly leaving Nek'zali, Twin Fangs and Normal Vashnik without invented fixed markers.
-- Keep setup confirmation session-scoped and pre-pull-only so `/rla doctor` cannot report stale marker readiness after a reload; add `CHECK SETUP` plus marker/check counts and regression coverage.
+- Add a first-class, difficulty-aware pre-pull setup registry for world markers, target markers and raidleader preparation without turning marker placement into combat automation.
+- Add a compact `PRE-PULL SETUP` card between the timeline and Boss Plan that uses the existing Raid Lead Assist theme, shows CHECK/READY state and separates `Markers` from concise `Raid Leader Prep` steps in its tooltip.
+- Move marker placement, team creation, kill-order setup, Cyst Poppers, fish/crate ownership, fountain routing, egg ownership and similar pre-pull decisions out of player Boss Plans and into setup/assignment surfaces.
+- Rewrite all eight Boss Plans as player-facing cue-to-action briefings: Normal contains the complete base strategy, Heroic contains only changes from Normal, and Mythic contains only changes from Heroic.
+- Refresh encounter copy against the current Encounter Journal/Wowhead evidence, Warcraft Wiki cross-checks, Raidstrats strategy guidance and the supplied Ready Check Pull recap images; keep Ula'tek conservative where current sources disagree because the final boss was not publicly PTR-tested.
+- Correct Twin Fangs Normal Ravenous Feast so every hit requires fresh eligible 3+ soakers; Heroic/Mythic retain explicit preassigned Team A > B > C rotations.
+- Keep setup confirmation session-scoped and pre-pull-only so `/rla doctor` cannot report stale marker/prep readiness after a reload; add `CHECK SETUP` plus marker/prep counts and regression coverage.
 
 ## 0.9.0-beta.50 — 2026-08-18
 
