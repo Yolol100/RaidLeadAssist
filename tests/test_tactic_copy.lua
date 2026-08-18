@@ -94,25 +94,26 @@ for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
     assert(not contains(planText("nekzali", difficultyKey), "TANK"))
 end
 
--- Boss 2: flex-safe split and team mechanics remain; personal bossmod alerts do not.
+-- Boss 2: starting team identities are stable, boss-side calls remain correct after swaps.
 local sentNormal = Registry:GetProfile("sentinels", "normal")
 local sentHeroic = Registry:GetProfile("sentinels", "heroic")
 local sentMythic = Registry:GetProfile("sentinels", "mythic")
 for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
     local profile = Registry:GetProfile("sentinels", difficultyKey)
     local plan = planText("sentinels", difficultyKey)
-    assert(contains(plan, "GREEN TEAM/BREATH"))
-    assert(contains(plan, "RED TEAM/BLOOD"))
+    assert(contains(plan, "TEAM A STARTS BREATH/GREEN"))
+    assert(contains(plan, "TEAM B STARTS BLOOD/RED"))
+    assert(contains(plan, "SWAP BOSS SIDES"))
     assert(not contains(plan, "GROUPS 1+2 GO GREEN"))
     assert(not contains(plan, "GROUPS 3+4 GO RED"))
     assert(contains(plan, "40+"))
     assert(contains(plan, "1+3 OR 2+2"))
     assert(not contains(plan, "TANK"))
-    assert(profile.callsByKey.coagulation.warning == "GREEN TEAM > KILL ADD")
+    assert(profile.callsByKey.coagulation.warning == "BREATH SIDE > KILL ADD")
     assert(profile.callsByKey.coagulation.timing == false)
     assert(profile.callsByKey.droplets == nil)
-    assert(profile.callsByKey.miasma.warning == "RED TEAM > SOAK TARGET")
-    assert(profile.callsByKey.side_swap.warning == "SWAP BOSS SIDES")
+    assert(profile.callsByKey.miasma.warning == "BLOOD SIDE > SOAK TARGET")
+    assert(profile.callsByKey.side_swap.warning == "TEAMS > SWAP BOSS SIDES")
     assert(profile.callsByKey.stasis.warning == "MATCH TO 4 > 1+3 OR 2+2")
     assert(profile.callsByKey.balance.warning == "KEEP HP EVEN > STOP LOWER HP BOSS")
     assert(profile.callsByKey.living == nil)
