@@ -1,7 +1,6 @@
 local _, ns = ...
 
 local AssignmentRegistry = ns:GetModule("Encounters.AssignmentRegistry")
-local originalGetLayout = AssignmentRegistry.GetLayout
 
 local function teamSlot(key, label, callLabel, helper)
     return {
@@ -44,9 +43,8 @@ local SSZORAK_GROUP_LAYOUT = {
     },
 }
 
-function AssignmentRegistry:GetLayout(bossKey, difficultyKey)
-    if bossKey == "sszorak" and (difficultyKey == "normal" or difficultyKey == "heroic" or difficultyKey == "mythic") then
-        return SSZORAK_GROUP_LAYOUT
-    end
-    return originalGetLayout(self, bossKey, difficultyKey)
-end
+AssignmentRegistry:RegisterLayouts("sszorak", {
+    normal = SSZORAK_GROUP_LAYOUT,
+    heroic = SSZORAK_GROUP_LAYOUT,
+    mythic = SSZORAK_GROUP_LAYOUT,
+})
