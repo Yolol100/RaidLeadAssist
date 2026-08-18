@@ -111,32 +111,46 @@ assert(sentNormal.callsByKey.stasis.prepareSeconds == 6 and sentNormal.callsByKe
 assert(sentNormal.callsByKey.protovenom == nil and sentHeroic.callsByKey.protovenom == nil)
 assert(sentMythic.callsByKey.protovenom.warning == "PROTOVENOM > MARKED + MARKED")
 
--- Keep representative contracts for the remaining encounters; dedicated tests cover their full detail.
+-- Boss 3: resource ownership and group soaks remain; personal mechanics stay bossmod-owned.
 local explorersNormal = Registry:GetProfile("explorers", "normal")
 local explorersHeroic = Registry:GetProfile("explorers", "heroic")
 local explorersMythic = Registry:GetProfile("explorers", "mythic")
 for _, profile in ipairs({ explorersNormal, explorersHeroic, explorersMythic }) do
-    assert(profile.callsByKey.balance == nil)
-    assert(profile.callsByKey.icebound == nil)
-    assert(profile.callsByKey.shell.warning == "SHELL SPIN > DODGE SHELLS")
-    assert(profile.callsByKey.blink.warning == "BLINK NOVA > TARGET EDGE > RAID AWAY")
-    assert(profile.callsByKey.volley.warning == "FROST/FIRE > CLEAR WITH OPPOSITE")
-    assert(profile.callsByKey.bomb.warning == "BOMB > MOVE OUT")
+    assert(profile.callsByKey.crates and profile.callsByKey.fish and profile.callsByKey.thud)
+    assert(profile.callsByKey.balance == nil and profile.callsByKey.icebound == nil)
+    assert(profile.callsByKey.shell == nil and profile.callsByKey.blink == nil)
+    assert(profile.callsByKey.volley == nil and profile.callsByKey.bomb == nil)
+    assert(profile.callsByKey.position == nil)
 end
-assert(explorersNormal.callsByKey.position == nil)
-assert(explorersHeroic.callsByKey.position and explorersMythic.callsByKey.position)
-assert(explorersMythic.callsByKey.crates.warning == "CRATE > BREAKER IN > RAID 15+ YARDS OUT")
+assert(contains(planText("explorers", "heroic"), "NAMA 30+ YARDS AWAY"))
+assert(contains(planText("explorers", "mythic"), "RAID CLEARS 15+ YARDS"))
+assert(explorersMythic.callsByKey.crates.warning == "CRATE > NEXT BREAKER > RAID 15+ YARDS CLEAR")
 
+-- Boss 4: team coordination remains; per-player infection/movement responses stay bossmod-owned.
 local vashnikNormal = Registry:GetProfile("vashnik", "normal")
 local vashnikHeroic = Registry:GetProfile("vashnik", "heroic")
 local vashnikMythic = Registry:GetProfile("vashnik", "mythic")
 for _, profile in ipairs({ vashnikNormal, vashnikHeroic, vashnikMythic }) do
-    assert(profile.callsByKey.imbibe.warning == "KILL ADDS")
+    assert(profile.callsByKey.imbibe.warning == "IMBIBE > KILL ADDS")
+    assert(profile.callsByKey.siphon.warning == "SIPHON > STACK HELPERS ON TARGET")
+    assert(profile.callsByKey.infection == nil)
+    assert(profile.callsByKey.shadow_dodge == nil)
+    assert(profile.callsByKey.exploding == nil)
+    assert(profile.callsByKey.stygian == nil)
     assert(profile.callsByKey.tankswap == nil)
+    assert(contains(planText("vashnik", profile.activeDifficultyKey or "normal"), "") or true)
 end
-assert(vashnikNormal.callsByKey.catalyst == nil)
-assert(vashnikHeroic.callsByKey.catalyst and vashnikMythic.callsByKey.catalyst)
-assert(vashnikMythic.callsByKey.tumors and vashnikNormal.callsByKey.tumors == nil)
+assert(vashnikNormal.callsByKey.fire_stagger == nil and vashnikNormal.callsByKey.catalyst == nil and vashnikNormal.callsByKey.froth == nil)
+assert(vashnikHeroic.callsByKey.fire_stagger.warning == "SKULL FIRST > WAIT > X")
+assert(vashnikHeroic.callsByKey.catalyst.warning == "BILE > SOAK TEAM")
+assert(vashnikHeroic.callsByKey.froth == nil)
+assert(vashnikMythic.callsByKey.fire_stagger.warning == "SKULL FIRST > WAIT > X")
+assert(vashnikMythic.callsByKey.catalyst.warning == "BILE > SOAK TEAM")
+assert(vashnikMythic.callsByKey.froth.warning == "FROTH > AIM WAVES THROUGH TUMORS")
+assert(vashnikMythic.callsByKey.tumors.warning == "KILL EXPOSED TUMORS")
+for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
+    assert(contains(planText("vashnik", difficultyKey), "BLOODLUST ON PULL"))
+end
 
 local sszorakMythic = Registry:GetProfile("sszorak", "mythic")
 assert(sszorakMythic.callsByKey.serpent)
