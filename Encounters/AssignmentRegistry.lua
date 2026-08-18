@@ -97,12 +97,14 @@ end
 -- TOC. Keeping the base deliberately strategy-free prevents old tactics from
 -- becoming a second source of truth if an override changes later.
 function AssignmentRegistry:GetLayout(bossKey, difficultyKey)
-    assert(VALID_BOSSES[bossKey], "Unknown assignment boss: " .. tostring(bossKey))
-    assert(VALID_DIFFICULTIES[difficultyKey], "Invalid assignment difficulty: " .. tostring(difficultyKey))
     return fallbackLayout(bossKey, difficultyKey)
 end
 
 function AssignmentRegistry:GetDefinitions(bossKey, difficultyKey)
+    if not VALID_BOSSES[bossKey] or not VALID_DIFFICULTIES[difficultyKey] then
+        return {}
+    end
+
     local result = {}
     local profile = self:ValidateLayout(bossKey, difficultyKey, self:GetLayout(bossKey, difficultyKey))
     for sectionIndex = 1, #profile.sections do
