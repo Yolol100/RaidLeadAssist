@@ -291,9 +291,11 @@ function SentinelsPanel:UpdateBalance(breathPercent, bloodPercent)
 
     local difference = breathPercent - bloodPercent
     if difference > BALANCE_THRESHOLD_PERCENT then
-        self:SetBalanceCall("balance_stop_breath")
-    elseif difference < -BALANCE_THRESHOLD_PERCENT then
+        -- Breath has more HP, so stop damaging the lower-health Blood boss until Breath catches up.
         self:SetBalanceCall("balance_stop_blood")
+    elseif difference < -BALANCE_THRESHOLD_PERCENT then
+        -- Blood has more HP, so stop damaging the lower-health Breath boss until Blood catches up.
+        self:SetBalanceCall("balance_stop_breath")
     else
         self:SetBalanceCall("balance_resume")
     end
