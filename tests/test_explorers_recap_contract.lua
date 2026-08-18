@@ -26,7 +26,7 @@ for _, difficulty in ipairs({ "normal", "heroic", "mythic" }) do
     assert(not contains(plan(difficulty), "ICEBOUND FLAMES"))
     assert(profile.callsByKey.icebound == nil)
 
-    assert(profile.callsByKey.bomb.warning == "BOMB > MOVE OUT")
+    assert(profile.callsByKey.bomb.warning == "BOMB > EDGE > MUSHROOM OVER WAVE")
     assert(profile.callsByKey.bomb.spellIDs[1] == 1296249)
     assert(profile.callsByKey.bomb.prepareSeconds == 6 and profile.callsByKey.bomb.pressSeconds == 3)
 
