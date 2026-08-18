@@ -50,13 +50,18 @@ end
 
 for _, difficulty in ipairs({ "normal", "heroic", "mythic" }) do
     local profile = Registry:GetProfile("twinfangs", difficulty)
-    assert(profile.callsByKey.balance and profile.callsByKey.balance.timing == false,
-        "Twin Fangs needs a manual boss-health coordination call on every difficulty")
-    assert(contains(profile.callsByKey.balance.warning, "KEEP BOTH EVEN"),
-        "Twin Fangs boss-health button must give only the immediate balancing action")
-    assert(contains(text("twinfangs", difficulty), "BOSSES TOGETHER"),
+    assert(profile.callsByKey.balance == nil,
+        "Twin Fangs health balancing belongs in the raidplan, not as a duplicate button")
+    assert(profile.callsByKey.stone == nil,
+        "Twin Fangs Stone Breaker is DBM-owned and must not duplicate as a RaidLeadAssist call")
+    assert(contains(text("twinfangs", difficulty), "FINISH TOGETHER"),
         "Twin Fangs briefing must explain the joint finish requirement")
+    assert(profile.callsByKey.globules and profile.callsByKey.adds and profile.callsByKey.feast and profile.callsByKey.energy,
+        "Twin Fangs must retain the four core raidlead calls")
 end
+assert(contains(Registry:GetProfile("twinfangs", "normal").callsByKey.feast.warning, "GROUPS 1+2 > 3+4 > 5+6"))
+assert(contains(Registry:GetProfile("twinfangs", "heroic").callsByKey.feast.warning, "GROUPS 1+2 > 3+4 > 5+6"))
+assert(contains(Registry:GetProfile("twinfangs", "mythic").callsByKey.feast.warning, "GROUP 1 > GROUP 2 > GROUPS 3+4"))
 
 for _, difficulty in ipairs({ "normal", "heroic", "mythic" }) do
     local plan = text("sszorak", difficulty)

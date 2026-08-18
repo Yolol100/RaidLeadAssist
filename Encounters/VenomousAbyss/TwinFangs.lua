@@ -1,68 +1,104 @@
 local _, ns = ...
 local Registry = ns:GetModule("Encounters.Registry")
 
-local balance = { key="balance", ability="Boss Health", action="Keep both even", warning="BOSS HEALTH > KEEP BOTH EVEN", voice="Balance", timing=false }
-local adds = { key="adds", ability="Venomous Emergence", action="Kill adds", warning="VENOMOUS EMERGENCE > KILL ADDS", voice="Adds", spellIDs={1291404}, prepareSeconds=6, pressSeconds=3 }
+local adds = {
+    key="adds",
+    ability="Venomous Emergence",
+    action="Kill adds",
+    warning="KILL ADDS",
+    voice="Adds",
+    spellIDs={1291404},
+    prepareSeconds=6,
+    pressSeconds=3,
+}
+
 local globules = {
     key="globules",
     ability="Caustic Globules",
-    action="Assigned players soak globules",
-    warning="GLOBULES > ASSIGNED PLAYERS SOAK",
-    voice="Globules",
+    action="Soak green orbs before rupture",
+    warning="GREEN ORBS > SOAK BEFORE RUPTURE",
+    voice="Orbs",
     spellIDs={1289237,1289192},
     timerNames={"Caustic Deluge","Caustic Globules"},
     prepareSeconds=7,
     pressSeconds=4,
 }
-local stone = {
-    key="stone",
-    ability="Stone Breaker",
-    action="Next assigned soaker in",
-    warning="STONE BREAKER > NEXT SOAKER IN",
-    voice="Stone breaker",
-    spellIDs={1289092,1310371,1288538,1288484},
-    prepareSeconds=7,
-    pressSeconds=4,
-}
-local function feast()
-    return { key="feast", ability="Ravenous Feast", action="Groups A > B > C", warning="RAVENOUS FEAST > GROUPS A > B > C", voice="Feast", spellIDs={1290516}, prepareSeconds=8, pressSeconds=5 }
+
+local function feast(warning, action)
+    return {
+        key="feast",
+        ability="Ravenous Feast",
+        action=action,
+        warning=warning,
+        voice="Feast",
+        spellIDs={1290516},
+        prepareSeconds=8,
+        pressSeconds=5,
+    }
 end
 
+local energy = {
+    key="energy",
+    ability="100 Energy",
+    action="Move toward Ithraz",
+    warning="100 ENERGY > MOVE TO ITHRAZ",
+    voice="Move to Ithraz",
+    spellIDs={1294921,1293792,1306872},
+    timerNames={"Vile Flood","Flood","Sanguine Storm"},
+    prepareSeconds=8,
+    pressSeconds=5,
+}
+
+local normalFeast = feast(
+    "FEAST > GROUPS 1+2 > 3+4 > 5+6",
+    "Groups 1+2 > 3+4 > 5+6"
+)
+
+local mythicFeast = feast(
+    "FEAST > GROUP 1 > GROUP 2 > GROUPS 3+4",
+    "Group 1 > Group 2 > Groups 3+4"
+)
+
 Registry:Register({
-    key="twinfangs", name="The Twin Fangs", encounterID=3421,
-    strategyStatus="12.1 Journal + current community/PTR strategy source-reviewed 2026-08-17; volatile tuning not hard-coded; live validation pending",
+    key="twinfangs",
+    name="The Twin Fangs",
+    encounterID=3421,
+    strategyStatus="12.1 Journal + current Wowhead/Raidstrats + Ready Check Pull visual guide + DBM/BigWigs source-reviewed 2026-08-18; volatile tuning not hard-coded; live validation pending",
     profiles={
         normal={
             explanation={
-                "PLAN: KEEP BOTH BOSSES TOGETHER FOR CLEAVE, KEEP HEALTH EVEN, AND FINISH BOTH BOSSES TOGETHER TO AVOID UNCOILED WRATH.",
-                "KEEP ETERNAL VENOM STACKS LOW. FEAST HITS THREE TIMES: USE DISTINCT 3+ PLAYER GROUPS A, B, C. ASSIGNED PLAYERS SOAK GLOBULES AND ROTATE STONE BREAKER SOAKERS.",
-                "KILL VENOMOUS EMERGENCE ADDS FAST. AT 100 ENERGY DODGE VILE FLOOD AND SANGUINE STORM.",
+                "PLAN: BLOODLUST ON PULL. CLEAVE BOTH BOSSES, KEEP THEIR HEALTH CLOSE, AND FINISH TOGETHER TO LIMIT UNCOILED WRATH. KEEP ETERNAL VENOM LOW.",
+                "GREEN ORBS: SOAK BEFORE THEY RUPTURE. KILL VENOMOUS EMERGENCE ADDS; CORROSIVE SPIT TARGETS AIM LINES AWAY. RED CIRCLES GO TO THE EDGE.",
+                "RAVENOUS FEAST: HIT 1 GROUPS 1+2, HIT 2 GROUPS 3+4, HIT 3 GROUPS 5+6. EACH HIT NEEDS 3+ PLAYERS; DO NOT REPEAT FEASTED PLAYERS.",
+                "AT 100 ENERGY MOVE TOWARD ITHRAZ; DODGE VEXHUL'S FLOOD AND BLOOD IMPACTS. STONE BREAKER IS DBM-OWNED.",
             },
-            calls={ balance, feast(), globules, stone, adds },
+            calls={ globules, adds, normalFeast, energy },
         },
         heroic={
             explanation={
-                "PLAN: KEEP BOSSES TOGETHER, HEALTH EVEN, AND FINISH BOTH BOSSES TOGETHER; UNCOILED WRATH PUNISHES LEAVING ONE ALIVE.",
-                "KEEP STACKS LOW: RAVENOUS FEAST USES THREE DISTINCT 3+ PLAYERS PER HIT GROUPS A, B, C; FEASTED PLAYERS DO NOT REPEAT.",
-                "ASSIGNED PLAYERS SOAK GLOBULES BEFORE RUPTURE. ROTATE DISTINCT STONE BREAKER SOAKERS. KILL EMERGENCE ADDS; DODGE 100-ENERGY FLOOD/STORM.",
+                "PLAN: BLOODLUST ON PULL. CLEAVE BOTH BOSSES, KEEP THEIR HEALTH CLOSE, AND FINISH TOGETHER TO LIMIT UNCOILED WRATH. KEEP ETERNAL VENOM LOW.",
+                "GREEN ORBS: SOAK BEFORE RUPTURE. KILL EMERGENCE ADDS; SPIT TARGETS AIM LINES AWAY. RED CIRCLES AND CONGEALED GORE STAY AT THE EDGE.",
+                "RAVENOUS FEAST: HIT 1 GROUPS 1+2, HIT 2 GROUPS 3+4, HIT 3 GROUPS 5+6. EACH HIT NEEDS 3+ PLAYERS; FEASTED PLAYERS DO NOT REPEAT.",
+                "AT 100 ENERGY MOVE TOWARD ITHRAZ; DODGE VEXHUL'S FLOOD AND SANGUINE STORM. STONE BREAKER IS DBM-OWNED.",
             },
-            calls={ balance, feast(), globules, stone, adds },
+            calls={ globules, adds, normalFeast, energy },
         },
         mythic={
             explanation={
-                "PLAN: HEROIC FEAST/GLOBULE/STONE ROTATIONS PLUS BLOOD FOUNT AND BROODLING COVERAGE. KEEP BOTH BOSSES EVEN AND FINISH BOTH BOSSES TOGETHER.",
-                "KEEP ETERNAL VENOM LOW WITH DISTINCT 3+ PLAYER FEAST GROUPS A/B/C. BLOOD TORRENT: HEAL THE TANK ABSORB AND STOP BARBED BULWARK CASTS.",
-                "TAINTED BLOOD GROUPS ENTER FOUNTS AND GET HEALED OUT. EACH BROODLING GETS A SEPARATE INTERRUPT OWNER. KILL EMERGENCE ADDS FAST.",
+                "PLAN: BLOODLUST ON PULL. MYTHIC IS FIXED AT 20 PLAYERS: CLEAVE BOTH BOSSES, KEEP HEALTH CLOSE, FINISH TOGETHER, AND KEEP ETERNAL VENOM LOW.",
+                "GREEN ORBS: SOAK BEFORE RUPTURE. DYING WITH ETERNAL VENOM CREATES EXTRA GLOBULES. KILL EMERGENCE ADDS; SPIT TARGETS AIM LINES AWAY.",
+                "RAVENOUS FEAST: HIT 1 GROUP 1, HIT 2 GROUP 2, HIT 3 GROUPS 3+4. TAINTED BLOOD FOUNTS MUST BE HEALED OUT BEFORE THEY BURST.",
+                "BLOOD TORRENT CREATES BARBED BULWARKS AROUND GLOBULES: INTERRUPT PROTECTED GESTATION. ROUSE THE BROOD: INTERRUPT EVERY BROODLING.",
+                "AT 100 ENERGY MOVE TOWARD ITHRAZ; DODGE FLOOD AND SANGUINE STORM. STONE BREAKER IS DBM-OWNED.",
             },
             calls={
-                balance,
-                feast(),
                 globules,
-                stone,
                 adds,
-                { key="blood", ability="Blood Torrent", action="Heal absorb > stop Bulwarks", warning="BLOOD TORRENT > HEAL ABSORB > STOP BULWARKS", voice="Blood", spellIDs={1303230}, prepareSeconds=7, pressSeconds=4 },
-                { key="brood", ability="Rouse the Brood", action="Interrupt every Broodling", warning="ROUSE THE BROOD > INTERRUPT EVERY BROODLING", voice="Interrupt", spellIDs={1308356}, prepareSeconds=4, pressSeconds=1 },
-                { key="tainted", ability="Tainted Blood", action="Groups in founts > heal out", warning="TAINTED BLOOD > GROUPS IN FOUNTS > HEAL OUT", voice="Heal founts", timing=false },
+                mythicFeast,
+                { key="tainted", ability="Tainted Blood", action="Founts > heal out", warning="TAINTED BLOOD > FOUNTS > HEAL OUT", voice="Heal founts", timing=false },
+                { key="bulwark", ability="Blood Torrent / Barbed Bulwark", action="Interrupt Bulwarks", warning="BULWARKS > INTERRUPT", voice="Interrupt", spellIDs={1303230}, prepareSeconds=7, pressSeconds=4 },
+                { key="brood", ability="Rouse the Brood", action="Interrupt every Broodling", warning="BROODLINGS > INTERRUPT ALL", voice="Interrupt", spellIDs={1308356}, prepareSeconds=4, pressSeconds=1 },
+                energy,
             },
         },
     },
