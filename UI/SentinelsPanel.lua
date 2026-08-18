@@ -8,9 +8,8 @@ local Messages = ns:GetModule("Services.MessageService")
 local SentinelsPanel = {}
 SentinelsPanel.__index = SentinelsPanel
 
-local BREATH_NAME = "Breath of Ula'tek"
-local BLOOD_NAME = "Blood of Ula'tek"
-local BALANCE_THRESHOLD_PERCENT = 2
+local BREATH_NPC_ID = 258557
+local BLOOD_NPC_ID = 258558
 local BOSS_TOKENS = { "boss1", "boss2", "boss3", "boss4", "boss5" }
 
 local function valueIsSecret(value)
@@ -21,6 +20,13 @@ local function valueIsAccessible(value)
     if valueIsSecret(value) then return false end
     if type(canaccessvalue) == "function" and not canaccessvalue(value) then return false end
     return value ~= nil
+end
+
+local function npcIDFromGUID(guid)
+    if not valueIsAccessible(guid) or type(guid) ~= "string" then return nil end
+    local unitType, npcID = guid:match("^([^-]+)%-[^-]+%-[^-]+%-[^-]+%-[^-]+%-([^-]+)%-")
+    if unitType ~= "Creature" and unitType ~= "Vehicle" then return nil end
+    return tonumber(npcID)
 end
 
 local function setBackdrop(frame, color)
@@ -98,16 +104,15 @@ function SentinelsPanel:Create(parent, mainUI)
     instance.frame = CreateFrame("Frame", nil, parent)
     instance.frame:Hide()
     instance.callButtonsByKey = {}
-    instance.balanceCalls = {}
     instance.units = {}
     instance.healthAccumulator = 0
-    instance.currentBalanceKey = "balance"
     instance.breathButtons = {}
     instance.bloodButtons = {}
     instance.sharedButtons = {}
+    instance.balanceButtons = {}
 
-    instance.breathColumn = createColumn(instance.frame, "BREATH OF ULA'TEK", Theme.colors.venomBright)
-    instance.bloodColumn = createColumn(instance.frame, "BLOOD OF ULA'TEK", Theme.colors.error)
+    instance.breathColumn = createColumn(instance.frame, "BREATH SIDE", Theme.colors.venomBright)
+    instance.bloodColumn = createColumn(instance.frame, "BLOOD SIDE", Theme.colors.error)
 
     local columnGap = Theme.gap
     instance.breathColumn:SetPoint("TOPLEFT", 0, 0)
@@ -115,22 +120,21 @@ function SentinelsPanel:Create(parent, mainUI)
     instance.bloodColumn:SetPoint("TOPLEFT", instance.frame, "TOP", columnGap / 2, 0)
     instance.bloodColumn:SetPoint("TOPRIGHT", 0, 0)
 
-    instance.breathHealth = createHealthCard(instance.breathColumn, BREATH_NAME, Theme.colors.venomBright)
+    instance.breathHealth = createHealthCard(instance.breathColumn, "BREATH BOSS HP", Theme.colors.venomBright)
     instance.breathHealth:SetPoint("TOPLEFT", instance.breathColumn.title, "BOTTOMLEFT", 0, -5)
     instance.breathHealth:SetPoint("RIGHT", instance.breathColumn, "RIGHT", 0, 0)
 
-    instance.bloodHealth = createHealthCard(instance.bloodColumn, BLOOD_NAME, Theme.colors.error)
+    instance.bloodHealth = createHealthCard(instance.bloodColumn, "BLOOD BOSS HP", Theme.colors.error)
     instance.bloodHealth:SetPoint("TOPLEFT", instance.bloodColumn.title, "BOTTOMLEFT", 0, -5)
     instance.bloodHealth:SetPoint("RIGHT", instance.bloodColumn, "RIGHT", 0, 0)
 
     instance.sharedTitle = createTitle(instance.frame, "SHARED RAID CALLS", Theme.colors.text)
-    instance.balanceButton = CallButton:Create(instance.frame)
-    instance.balanceButton.frame:Hide()
+    instance.balanceTitle = createTitle(instance.frame, "MANUAL BALANCE CALLS", Theme.colors.text)
 
     return instance
 end
 
-function SentinelsPanel:BindButton(button, call, parent, previous, healthCard)
+function SentinelsPanel:BindButton(button, call, previous, healthCard)
     if previous then
         button.frame:SetPoint("TOP", previous.frame, "BOTTOM", 0, -Theme.gap)
     else
@@ -149,14 +153,13 @@ function SentinelsPanel:Configure(profile)
     hidePool(self.breathButtons)
     hidePool(self.bloodButtons)
     hidePool(self.sharedButtons)
-    self.balanceButton.frame:Hide()
+    hidePool(self.balanceButtons)
     self.callButtonsByKey = {}
-    self.balanceCalls = {}
 
-    local breathCalls, bloodCalls, sharedCalls = {}, {}, {}
+    local breathCalls, bloodCalls, sharedCalls, balanceCalls = {}, {}, {}, {}
     for _, call in ipairs(profile.calls) do
-        if call.key == "balance" or call.key == "balance_stop_breath" or call.key == "balance_stop_blood" or call.key == "balance_resume" then
-            self.balanceCalls[call.key] = call
+        if call.uiGroup == "balance" then
+            balanceCalls[#balanceCalls + 1] = call
         elseif call.uiGroup == "breath" then
             breathCalls[#breathCalls + 1] = call
         elseif call.uiGroup == "blood" then
@@ -169,13 +172,13 @@ function SentinelsPanel:Configure(profile)
     local breathPrevious
     for index, call in ipairs(breathCalls) do
         local button = ensureButton(self.breathButtons, index, self.breathColumn)
-        breathPrevious = self:BindButton(button, call, self.breathColumn, breathPrevious, self.breathHealth)
+        breathPrevious = self:BindButton(button, call, breathPrevious, self.breathHealth)
     end
 
     local bloodPrevious
     for index, call in ipairs(bloodCalls) do
         local button = ensureButton(self.bloodButtons, index, self.bloodColumn)
-        bloodPrevious = self:BindButton(button, call, self.bloodColumn, bloodPrevious, self.bloodHealth)
+        bloodPrevious = self:BindButton(button, call, bloodPrevious, self.bloodHealth)
     end
 
     local sideRows = math.max(#breathCalls, #bloodCalls)
@@ -200,40 +203,36 @@ function SentinelsPanel:Configure(profile)
         sharedPrevious = button
     end
 
-    local balanceCall = self.balanceCalls[self.currentBalanceKey] or self.balanceCalls.balance
-    if balanceCall then
-        self.balanceButton.frame:ClearAllPoints()
-        self.balanceButton.frame:SetPoint("LEFT", self.frame, "LEFT", 0, 0)
-        self.balanceButton.frame:SetPoint("RIGHT", self.frame, "RIGHT", 0, 0)
-        if sharedPrevious then
-            self.balanceButton.frame:SetPoint("TOP", sharedPrevious.frame, "BOTTOM", 0, -Theme.gap)
+    self.balanceTitle:ClearAllPoints()
+    if sharedPrevious then
+        self.balanceTitle:SetPoint("TOPLEFT", sharedPrevious.frame, "BOTTOMLEFT", 0, -12)
+    else
+        self.balanceTitle:SetPoint("TOPLEFT", self.sharedTitle, "BOTTOMLEFT", 0, -5)
+    end
+    self.balanceTitle:SetPoint("RIGHT", self.frame, "RIGHT", 0, 0)
+
+    local balancePrevious
+    for index, call in ipairs(balanceCalls) do
+        local button = ensureButton(self.balanceButtons, index, self.frame)
+        if balancePrevious then
+            button.frame:SetPoint("TOP", balancePrevious.frame, "BOTTOM", 0, -Theme.gap)
         else
-            self.balanceButton.frame:SetPoint("TOP", self.sharedTitle, "BOTTOM", 0, -5)
+            button.frame:SetPoint("TOP", self.balanceTitle, "BOTTOM", 0, -5)
         end
-        self:SetBalanceCall(balanceCall.key)
-        self.balanceButton.frame:Show()
-        self.callButtonsByKey.balance = self.balanceButton
-        self.callButtonsByKey.balance_stop_breath = self.balanceButton
-        self.callButtonsByKey.balance_stop_blood = self.balanceButton
-        self.callButtonsByKey.balance_resume = self.balanceButton
+        button:SetCall(call, function(callKey)
+            if self.mainUI.callbacks.onCall then self.mainUI.callbacks.onCall(callKey) end
+        end, function(callKey)
+            return Messages:GetCallWarning("sentinels", self.mainUI.currentDifficultyKey, callKey)
+        end)
+        self.callButtonsByKey[call.key] = button
+        balancePrevious = button
     end
 
-    local sharedCount = #sharedCalls + (balanceCall and 1 or 0)
+    local sharedHeight = #sharedCalls * Theme.callButtonHeight + math.max(0, #sharedCalls - 1) * Theme.gap
+    local balanceHeight = #balanceCalls * Theme.callButtonHeight + math.max(0, #balanceCalls - 1) * Theme.gap
     self.height = 18 + 5 + 46 + Theme.gap + sideRows * Theme.callButtonHeight + math.max(0, sideRows - 1) * Theme.gap
-        + 12 + 18 + 5 + sharedCount * Theme.callButtonHeight + math.max(0, sharedCount - 1) * Theme.gap
+        + 12 + 18 + 5 + sharedHeight + 12 + 18 + 5 + balanceHeight
     self.frame:SetHeight(self.height)
-end
-
-function SentinelsPanel:SetBalanceCall(callKey)
-    local call = self.balanceCalls[callKey] or self.balanceCalls.balance
-    if not call then return end
-    if self.currentBalanceKey == call.key and self.balanceButton.call == call then return end
-    self.currentBalanceKey = call.key
-    self.balanceButton:SetCall(call, function()
-        if self.mainUI.callbacks.onCall then self.mainUI.callbacks.onCall(call.key) end
-    end, function(key)
-        return Messages:GetCallWarning("sentinels", self.mainUI.currentDifficultyKey, key)
-    end)
 end
 
 function SentinelsPanel:RefreshUnitMap()
@@ -241,11 +240,9 @@ function SentinelsPanel:RefreshUnitMap()
     self.units.blood = nil
     for _, token in ipairs(BOSS_TOKENS) do
         if UnitExists(token) then
-            local name = UnitName(token)
-            if valueIsAccessible(name) then
-                if name == BREATH_NAME then self.units.breath = token end
-                if name == BLOOD_NAME then self.units.blood = token end
-            end
+            local npcID = npcIDFromGUID(UnitGUID(token))
+            if npcID == BREATH_NPC_ID then self.units.breath = token end
+            if npcID == BLOOD_NPC_ID then self.units.blood = token end
         end
     end
 end
@@ -255,7 +252,7 @@ function SentinelsPanel:UpdateHealthCard(card, unit)
         card.bar:SetMinMaxValues(0, 1)
         card.bar:SetValue(0)
         card.status:SetText("WAITING")
-        return nil
+        return
     end
 
     local health = UnitHealth(unit, true)
@@ -266,39 +263,20 @@ function SentinelsPanel:UpdateHealthCard(card, unit)
         card.bar:SetMinMaxValues(0, maximum)
         card.bar:SetValue(health, Enum.StatusBarInterpolation.ExponentialEaseOut)
         card.status:SetText("LIVE HP")
-        return nil
+        return
     end
 
     if not valueIsAccessible(health) or not valueIsAccessible(maximum) or maximum <= 0 then
         card.bar:SetMinMaxValues(0, 1)
         card.bar:SetValue(0)
         card.status:SetText("UNAVAILABLE")
-        return nil
+        return
     end
 
     card.bar:SetMinMaxValues(0, maximum)
     card.bar:SetValue(health, Enum.StatusBarInterpolation.ExponentialEaseOut)
     local percent = (health / maximum) * 100
     card.status:SetFormattedText("%.1f%%", percent)
-    return percent
-end
-
-function SentinelsPanel:UpdateBalance(breathPercent, bloodPercent)
-    if type(breathPercent) ~= "number" or type(bloodPercent) ~= "number" then
-        self:SetBalanceCall("balance")
-        return
-    end
-
-    local difference = breathPercent - bloodPercent
-    if difference > BALANCE_THRESHOLD_PERCENT then
-        -- Breath has more HP, so stop damaging the lower-health Blood boss until Breath catches up.
-        self:SetBalanceCall("balance_stop_blood")
-    elseif difference < -BALANCE_THRESHOLD_PERCENT then
-        -- Blood has more HP, so stop damaging the lower-health Breath boss until Blood catches up.
-        self:SetBalanceCall("balance_stop_breath")
-    else
-        self:SetBalanceCall("balance_resume")
-    end
 end
 
 function SentinelsPanel:UpdateHealth(elapsed)
@@ -308,25 +286,20 @@ function SentinelsPanel:UpdateHealth(elapsed)
     self.healthAccumulator = 0
 
     self:RefreshUnitMap()
-    local breathPercent = self:UpdateHealthCard(self.breathHealth, self.units.breath)
-    local bloodPercent = self:UpdateHealthCard(self.bloodHealth, self.units.blood)
-    self:UpdateBalance(breathPercent, bloodPercent)
+    self:UpdateHealthCard(self.breathHealth, self.units.breath)
+    self:UpdateHealthCard(self.bloodHealth, self.units.blood)
 end
 
 function SentinelsPanel:SetCallState(callKey, state)
     local button = self.callButtonsByKey[callKey]
     if not button then return false end
-    if callKey == self.currentBalanceKey or not callKey:find("^balance") then button:SetState(state) end
+    button:SetState(state)
     return true
 end
 
 function SentinelsPanel:ResetCallStates()
-    local seen = {}
     for _, button in pairs(self.callButtonsByKey) do
-        if not seen[button] then
-            button:SetState(Constants.CallState.IDLE, true)
-            seen[button] = true
-        end
+        button:SetState(Constants.CallState.IDLE, true)
     end
 end
 
