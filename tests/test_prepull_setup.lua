@@ -17,25 +17,41 @@ end
 
 for _, difficultyKey in ipairs({ "normal", "heroic", "mythic" }) do
     counts("sentinels", difficultyKey, 2, 0, 2)
-    counts("explorers", difficultyKey, 3, 0, 1)
+    counts("explorers", difficultyKey, 3, 0, 2)
     counts("sszorak", difficultyKey, 3, 0, 2)
     counts("altar", difficultyKey, 2, 0, 2)
-    counts("ulatek", difficultyKey, 3, 0, 2)
-    counts("nekzali", difficultyKey, 0, 0, 0)
-    counts("twinfangs", difficultyKey, 0, 0, 0)
 end
 
-counts("vashnik", "normal", 0, 0, 0)
-counts("vashnik", "heroic", 0, 2, 1)
-counts("vashnik", "mythic", 0, 2, 1)
+counts("nekzali", "normal", 0, 0, 0)
+counts("nekzali", "heroic", 0, 0, 2)
+counts("nekzali", "mythic", 0, 0, 2)
+
+counts("vashnik", "normal", 0, 0, 2)
+counts("vashnik", "heroic", 0, 2, 2)
+counts("vashnik", "mythic", 0, 2, 2)
+
+counts("twinfangs", "normal", 0, 0, 1)
+counts("twinfangs", "heroic", 0, 0, 1)
+counts("twinfangs", "mythic", 0, 0, 2)
+
+counts("ulatek", "normal", 1, 0, 1)
+counts("ulatek", "heroic", 1, 0, 1)
+counts("ulatek", "mythic", 3, 0, 2)
 
 local sentinels = Registry:GetLayout("sentinels", "heroic")
-assert(sentinels.markers[1].icon == 4 and sentinels.markers[1].label == "Breath side")
-assert(sentinels.markers[2].icon == 7 and sentinels.markers[2].label == "Blood side")
+assert(sentinels.markers[1].icon == 4 and sentinels.markers[1].label == "Green / Breath side")
+assert(sentinels.markers[2].icon == 7 and sentinels.markers[2].label == "Red / Blood side")
 
 local vashnik = Registry:GetLayout("vashnik", "heroic")
 assert(vashnik.markers[1].kind == "target" and vashnik.markers[1].icon == 8, "Vashnik first Fire target must be Skull")
 assert(vashnik.markers[2].kind == "target" and vashnik.markers[2].icon == 7, "Vashnik second Fire target must be Cross")
+
+local ulatekHeroic = Registry:GetLayout("ulatek", "heroic")
+assert(#ulatekHeroic.markers == 1 and ulatekHeroic.markers[1].icon == 6,
+    "Ula'tek Heroic keeps only the full-raid Coils marker")
+local ulatekMythic = Registry:GetLayout("ulatek", "mythic")
+assert(#ulatekMythic.markers == 3,
+    "Ula'tek Mythic adds both egg-side markers to the Coils marker")
 
 Setup:Initialize()
 assert(not Setup:IsReady("sszorak", "heroic"), "required setup starts unchecked each addon session")
@@ -43,10 +59,10 @@ assert(Setup:Toggle("sszorak", "heroic") == true, "setup can be manually confirm
 assert(Setup:IsReady("sszorak", "heroic"), "manual confirmation makes setup ready")
 assert(Setup:Toggle("sszorak", "heroic") == false, "setup confirmation can be revoked")
 assert(not Setup:IsReady("sszorak", "heroic"), "revoked setup returns to check")
-assert(Setup:IsReady("nekzali", "heroic"), "bosses without fixed setup are ready by definition")
+assert(Setup:IsReady("nekzali", "normal"), "bosses without setup are ready by definition")
 
 Setup:SetReady("altar", "heroic", true)
 Setup:Initialize()
 assert(not Setup:IsReady("altar", "heroic"), "setup readiness must not persist across addon initialization")
 
-print("ok - pre-pull marker setup contracts and session-scoped readiness")
+print("ok - pre-pull marker and raidleader-prep contracts")
