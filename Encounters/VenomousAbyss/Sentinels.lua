@@ -1,8 +1,6 @@
 local _, ns = ...
 local Registry = ns:GetModule("Encounters.Registry")
 
-local BOSSMOD_RULE = "CALL PRIORITY: FOLLOW DBM OR BIGWIGS FOR YOUR PERSONAL DEBUFFS, DODGES, ROLE WARNINGS AND TIMERS. FOLLOW RLA/RAID-LEADER CALLS FOR GROUPS, MARKERS, SOAKS, TARGET PRIORITY AND SHARED RAID MOVEMENT."
-
 local function sharedCalls()
     return {
         {
@@ -114,36 +112,31 @@ Registry:Register({
     key = "sentinels",
     name = "Entombed Sentinels",
     encounterID = 3445,
-    strategyStatus = "12.1 Journal + current Wowhead + DBM/BigWigs source-reviewed 2026-08-18; flex-safe fixed-side raid split with post-Stasis boss swap; raidleader-only call scope; live validation pending",
+    strategyStatus = "12.1 Journal + current Wowhead + DBM/BigWigs source-reviewed 2026-08-19; fixed-side split with difficulty deltas; live validation pending",
     profiles = {
         normal = {
             explanation = {
-                "PLAN: BLOODLUST ON PULL. TEAM A HOLDS GREEN SIDE; TEAM B HOLDS RED SIDE. A STARTS WITH BREATH, B WITH BLOOD. KEEP BOSSES 40+ YARDS APART AND HP EVEN.",
-                "CURRENT BREATH SIDE: KILL COAGULATION ADD AND RUN OVER GREEN DROPLETS. CURRENT BLOOD SIDE: SOAK MIASMA; HEALERS DISPEL BLIGHTED BLOOD.",
-                "AT STASIS: MATCH EXACTLY 4 TOXIN STACKS (1+3 OR 2+2). AFTERWARD GROUPS HOLD THEIR PHYSICAL SIDES; TANKS TAUNT-SWAP THE BOSSES ACROSS THEM.",
-                "BOSS HP BARS ARE DISPLAY-ONLY. THE RAID LEADER DECIDES MANUALLY WHEN TO PRESS STOP BREATH, STOP BLOOD OR RESUME.",
-                BOSSMOD_RULE,
+                "Stay with your assigned green or red group.",
+                "Keep both bosses 40+ yards apart and their health even.",
+                "Green side: kill the slime, then clear green droplets.",
+                "Red mark on you: stack with your group to split damage.",
+                "Stasis: pair toxin numbers to total exactly four.",
+                "Use 1+3 or 2+2, then return to your side.",
+                "After Stasis: stay put while tanks swap the bosses.",
             },
             calls = normalCalls,
         },
         heroic = {
             explanation = {
-                "PLAN: BLOODLUST ON PULL. TEAM A HOLDS GREEN SIDE; TEAM B HOLDS RED SIDE. A STARTS WITH BREATH, B WITH BLOOD. KEEP BOSSES 40+ YARDS APART AND HP EVEN.",
-                "BREATH SIDE: KILL ADD, RUN OVER GREEN DROPLETS, DODGE RETURNING VENOM. BLOOD SIDE: SOAK MIASMA; POOL TARGETS MOVE OUT BEFORE EXPIRY.",
-                "DISPEL BLIGHTED BLOOD SAFELY. AT STASIS MATCH EXACTLY 4 (1+3 OR 2+2); GROUPS HOLD SIDES WHILE TANKS TAUNT-SWAP THE BOSSES.",
-                "BOSS HP BARS ARE DISPLAY-ONLY. THE RAID LEADER DECIDES MANUALLY WHEN TO PRESS STOP BREATH, STOP BLOOD OR RESUME.",
-                BOSSMOD_RULE,
+                "Returning green poison: move out of its path.",
+                "Blood poison on you: move out and drop the puddle away.",
             },
             calls = heroicCalls,
         },
         mythic = {
             explanation = {
-                "PLAN: BLOODLUST ON PULL. TEAM A HOLDS GREEN SIDE; TEAM B HOLDS RED SIDE. A STARTS WITH BREATH, B WITH BLOOD. KEEP BOSSES 40+ YARDS APART AND HP EVEN.",
-                "DO HEROIC RULES. PROTOVENOM: MARKED PLAYERS TOUCH ANOTHER MARKED PLAYER ONLY; NEVER TOUCH A CLEAN PLAYER.",
-                "AT STASIS MATCH EXACTLY 4 (1+3 OR 2+2); GROUPS HOLD PHYSICAL SIDES WHILE TANKS TAUNT-SWAP BOSSES. RE-ESTABLISH 40+ YARDS FAST.",
-                "BOSS HP BARS ARE DISPLAY-ONLY. THE RAID LEADER DECIDES MANUALLY WHEN TO PRESS STOP BREATH, STOP BLOOD OR RESUME.",
-                "WATCH ADD + DROPLET + MIASMA OVERLAPS; PERSONAL DODGES, POOLS, DISPELS AND TANK EXECUTION STAY BOSSMOD/ROLE-OWNED.",
-                BOSSMOD_RULE,
+                "Protovenom on you: find another Protovenom-marked player.",
+                "Touch that marked player; never touch an unmarked player.",
             },
             calls = mythicCalls,
         },
