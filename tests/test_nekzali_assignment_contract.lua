@@ -2,6 +2,7 @@ local T = assert(loadfile("tests/testlib.lua"))()
 local ns = T.NewNamespace()
 
 T.Load("Encounters/AssignmentRegistry.lua", ns)
+T.Load("Encounters/Boss12AssignmentOverride.lua", ns)
 
 local Registry = ns:GetModule("Encounters.AssignmentRegistry")
 
@@ -9,17 +10,20 @@ local normal = Registry:GetLayout("nekzali", "normal")
 local heroic = Registry:GetLayout("nekzali", "heroic")
 local mythic = Registry:GetLayout("nekzali", "mythic")
 
-assert(#normal.sections == 0, "Normal Nek'zali uses role-based melee/ranged calls and should not require a fixed soak roster")
-assert(#heroic.sections == 1 and heroic.sections[1].key == "cremation", "Heroic Nek'zali should only configure static Cremation movement rules")
-assert(#mythic.sections == 3, "Mythic Nek'zali should keep Pyre, Well and Cremation planning")
+assert(#normal.sections == 0, "Normal Nek'zali uses fixed role responsibilities and needs no editable assignment")
+assert(#heroic.sections == 0, "Heroic Nek'zali Cremation is a fixed ranged responsibility, not an editable assignment")
+assert(#mythic.sections == 1 and mythic.sections[1].key == "well",
+    "Mythic Nek'zali should expose only the fresh Grasping Depths well-group rotation")
 
-local mythicDefinitions = Registry:GetDefinitions("nekzali", "mythic")
-local pyre
-for _, definition in ipairs(mythicDefinitions) do
-    if definition.key == "pyre_soak" then pyre = definition end
+local definitions = Registry:GetDefinitions("nekzali", "mythic")
+assert(#definitions == 2, "Mythic Nek'zali needs exactly two alternating well-group fields")
+assert(definitions[1].key == "well_a" and definitions[1].label == "Well Group 1")
+assert(definitions[2].key == "well_b" and definitions[2].label == "Well Group 2")
+for _, definition in ipairs(definitions) do
+    assert(definition.kind == "rotation", "well groups must rotate after successful Grasping calls")
+    assert(definition.rotation == "well", "both Mythic well groups must share one rotation")
+    assert(definition.callKey == "grasping", "well settings must append to the Grasping raidleader call")
+    assert(definition.required == true, "both fresh well groups are required before Mythic progression")
 end
-assert(pyre, "Mythic Nek'zali needs the configured Pyre soak team")
-assert(pyre.label == "Groups 1+2 Soak Team", "Mythic Pyre settings must match the Groups 1+2 raid tactic")
-assert(pyre.required == true and pyre.callKey == "pyre", "Mythic Pyre assignment must remain required and bound to the Pyre call")
 
-print("ok - Nek'zali assignment settings match Normal/Heroic/Mythic raid tactics")
+print("ok - Nek'zali settings keep only the genuine Mythic well-group coordination")
