@@ -44,7 +44,7 @@ for _, difficulty in ipairs({ "normal", "heroic", "mythic" }) do
     assert(profile.callsByKey.fish and profile.callsByKey.fish.spellIDs[1] == 1292779)
     assert(profile.callsByKey.fish.prepareSeconds == 8 and profile.callsByKey.fish.pressSeconds == 5)
     assert(profile.callsByKey.thud and profile.callsByKey.thud.spellIDs[1] == 1296092)
-    assert(profile.callsByKey.thud.warning == "MIGHTY THUD > 3 TARGETS > 3 SOAK POINTS")
+    assert(profile.callsByKey.thud.warning == "Mighty Thud: targets to separate markers; soakers stack in.")
     assert(profile.callsByKey.thud.prepareSeconds == 7 and profile.callsByKey.thud.pressSeconds == 4)
 
     assert(profile.callsByKey.icebound == nil, "Icebound interrupt remains a player reaction, not a duplicate RLA button")
@@ -60,4 +60,4 @@ assert(Registry:MatchCall("explorers", "normal", 1291933, nil).key == "crates")
 assert(Registry:MatchCall("explorers", "normal", 1292779, nil).key == "fish")
 assert(Registry:MatchCall("explorers", "normal", 1296092, nil).key == "thud")
 
-print("ok - Lost Explorers uses player cue/action base plus Heroic/Mythic deltas")
+print("ok - Lost Explorers uses player cue/action base plus concise shared callouts")
