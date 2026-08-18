@@ -26,8 +26,8 @@ local function baseCalls()
         {
             key = "maelstrom",
             ability = "Howling Maelstrom",
-            action = "Poppers 1, 2, then 3 handle each wind",
-            warning = "Maelstrom: Poppers 1, 2, then 3 handle each wind.",
+            action = "Poppers 1, 2, then 3 pop on each wind",
+            warning = "Maelstrom: Popper 1, then 2, then 3 pop a saved Cyst on each wind.",
             voice = "Maelstrom",
             spellIDs = { 1285732 },
             prepareSeconds = 8,
