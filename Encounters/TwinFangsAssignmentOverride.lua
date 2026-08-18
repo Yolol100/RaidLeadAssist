@@ -19,7 +19,7 @@ end
 local FEAST_TEAMS = {
     key = "feast",
     title = "Ravenous Feast Soak Order",
-    description = "Heroic/Mythic: build three fresh teams of at least 3 players because Feasted makes repeating within the same cast unsafe.",
+    description = "Heroic/Mythic: build three fresh 3+ teams. Feasted players must not repeat within the same three-hit cast.",
     columns = 3,
     slots = {
         assigneeSlot("feast_team_a", "Hit 1 · Team A", "feast", "TEAM A", true, "feast", 3, "Select at least 3 unique players for the first Feast hit."),
@@ -53,15 +53,15 @@ local MYTHIC_FOUNTS = {
 
 local LAYOUTS = {
     normal = {
-        summary = "No fixed Feast roster is required on Normal: the raid stack soaks all three hits. Stone Breaker stays tank/bossmod-owned.",
+        summary = "No fixed Feast roster is required on Normal, but every hit still needs 3+ players who have not already been Feasted during that cast.",
         sections = {},
     },
     heroic = {
-        summary = "Assign three fresh 3+ Feast teams so Feasted players never repeat within the same cast. Stone Breaker stays tank/bossmod-owned.",
+        summary = "Assign three fresh 3+ Feast teams so Feasted players never repeat within the same cast.",
         sections = { FEAST_TEAMS },
     },
     mythic = {
-        summary = "Assign three fresh 3+ Feast teams plus Broodling kick coverage and optional Tainted Blood fount coverage. Stone Breaker stays tank/bossmod-owned.",
+        summary = "Assign three fresh 3+ Feast teams plus Broodling kick coverage and optional Tainted Blood fount coverage.",
         sections = { FEAST_TEAMS, MYTHIC_BROOD, MYTHIC_FOUNTS },
     },
 }
