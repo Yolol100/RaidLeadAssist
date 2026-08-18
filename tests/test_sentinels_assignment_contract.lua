@@ -1,3 +1,4 @@
+-- Phase 2 regression: settings must describe the same split and dynamic stack math as the raid tactic.
 local T = assert(loadfile("tests/testlib.lua"))()
 local ns = T.NewNamespace()
 
