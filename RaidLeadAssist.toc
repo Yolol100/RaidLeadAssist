@@ -53,5 +53,6 @@ UI/SentinelsPanel.lua
 UI/MainFrame.lua
 Core/App.lua
 Core/AssignmentIntegration.lua
+Core/ReadinessIntegration.lua
 Core/ProviderRecoveryIntegration.lua
 Core/SentinelsIntegration.lua
