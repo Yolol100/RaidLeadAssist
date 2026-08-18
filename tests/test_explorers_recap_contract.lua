@@ -21,7 +21,7 @@ end
 for _, difficulty in ipairs({ "normal", "heroic", "mythic" }) do
     local profile = Registry:GetProfile("explorers", difficulty)
     assert(contains(plan(difficulty), "BLOODLUST ON PULL"))
-    assert(contains(plan(difficulty), "NAMA > IKU > GEBBO"))
+    assert(contains(plan(difficulty), "FISH TARGET ORDER: 1 NAMA, 2 IKU, 3 GEBBO"))
     assert(contains(plan(difficulty), "MUSHROOM"))
     assert(not contains(plan(difficulty), "ICEBOUND FLAMES"))
     assert(profile.callsByKey.icebound == nil)
