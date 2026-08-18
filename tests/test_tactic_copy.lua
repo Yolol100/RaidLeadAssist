@@ -19,15 +19,19 @@ for _,enc in ipairs(R:GetOrdered()) do
    assert(#line<=200)
    assert(line ~= string.upper(line) or not line:find("[A-Z][A-Z][A-Z]"), "briefing lines should use normal capitalization")
   end
-  for _,call in ipairs(p.calls) do assert(#call.action<=96 and #call.warning<=120) end
+  for _,call in ipairs(p.calls) do
+   assert(#call.action<=64 and #call.warning<=96)
+   assert(call.warning:find(":",1,true), "raid call should use cue: action wording")
+   assert(not call.warning:find(" > ",1,true), "raid call should use natural language rather than arrow chains")
+  end
  end
 end
-assert(R:GetProfile("sentinels","heroic").callsByKey.side_swap.warning == "GROUPS HOLD SIDES > BOSSES SWAP")
-assert(R:GetProfile("vashnik","heroic").callsByKey.catalyst.warning == "BILE > SOAK EVERY GREEN CIRCLE")
-assert(R:GetProfile("sszorak","heroic").callsByKey.maelstrom.warning == "MAELSTROM > POPPERS 1/2/3 > KNOCK AGAINST EACH WIND")
-assert(R:GetProfile("twinfangs","normal").callsByKey.feast.warning == "FEAST > FRESH 3+ SOAKERS EACH HIT")
-assert(R:GetProfile("twinfangs","heroic").callsByKey.feast.warning == "FEAST > TEAM A > TEAM B > TEAM C")
-assert(R:GetProfile("altar","heroic").callsByKey.intermission.warning:find("BLOODLUST",1,true))
-assert(R:GetProfile("altar","heroic").callsByKey.final.warning == "PHASE 3 > KEEP BOTH EVEN > KILL TOGETHER")
+assert(R:GetProfile("sentinels","heroic").callsByKey.side_swap.warning == "After Stasis: hold your side while tanks swap the bosses.")
+assert(R:GetProfile("vashnik","heroic").callsByKey.catalyst.warning == "Green circles: soak every one.")
+assert(R:GetProfile("sszorak","heroic").callsByKey.maelstrom.warning == "Maelstrom: Popper 1, then 2, then 3 pop a saved Cyst on each wind.")
+assert(R:GetProfile("twinfangs","normal").callsByKey.feast.warning == "Feast: fresh 3+ players soak each hit.")
+assert(R:GetProfile("twinfangs","heroic").callsByKey.feast.warning == "Feast: Team A, then Team B, then Team C.")
+assert(R:GetProfile("altar","heroic").callsByKey.intermission.warning:find("Bloodlust",1,true))
+assert(R:GetProfile("altar","heroic").callsByKey.final.warning == "Final phase: keep both bosses even and kill together.")
 for _,d in ipairs(C.DIFFICULTY_ORDER) do for _,call in ipairs(R:GetProfile("ulatek",d).calls) do assert(call.timing==false) end end
-print("ok - all eight player briefings remain bounded, normally capitalized and free of policy boilerplate")
+print("ok - all eight player briefings and raid calls remain bounded, normally capitalized and action-first")
