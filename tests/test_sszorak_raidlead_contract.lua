@@ -11,8 +11,8 @@ local function has(text, needle) return text:find(needle,1,true) ~= nil end
 
 for _, d in ipairs({"normal","heroic","mythic"}) do
     local p = Registry:GetProfile("sszorak",d)
-    assert(p.callsByKey.maelstrom.warning == "MAELSTROM > POPPERS 1/2/3 > KNOCK AGAINST EACH WIND")
-    assert(p.callsByKey.apex.warning == "GREEN MUTILATE > NEXT 5+ SOAK TEAM")
+    assert(p.callsByKey.maelstrom.warning == "Maelstrom: Popper 1, then 2, then 3 pop a saved Cyst on each wind.")
+    assert(p.callsByKey.apex.warning == "Mutilate: called team soak the green frontal.")
 end
 local normal = plan("normal")
 assert(has(normal, "assigned outer marker"))
@@ -28,5 +28,5 @@ local mythic = plan("mythic")
 assert(has(mythic, "14+ players stack"))
 assert(has(mythic, "Virulence players spread"))
 assert(not has(mythic, "poison pools at the arena edge"), "Mythic should contain only changes from Heroic")
-assert(Registry:GetProfile("sszorak","mythic").callsByKey.serpent.warning == "SERPENT'S FURY > 14+ STACK ON MARK")
-print("ok - Sszorak player plan keeps combat cues while popper/team creation stays in prep")
+assert(Registry:GetProfile("sszorak","mythic").callsByKey.serpent.warning == "Serpent's Fury: 14+ stack on the marked player.")
+print("ok - Sszorak player plan keeps combat cues while concise popper/team calls stay raidleader-owned")
