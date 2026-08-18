@@ -2,6 +2,7 @@ local T = assert(loadfile("tests/testlib.lua"))()
 local ns = T.NewNamespace()
 
 T.Load("Encounters/AssignmentRegistry.lua", ns)
+T.Load("Encounters/Boss78AssignmentOverride.lua", ns)
 T.Load("Services/AssignmentService.lua", ns)
 
 local Registry = ns:GetModule("Encounters.AssignmentRegistry")
@@ -26,10 +27,12 @@ for _, bossKey in ipairs(bosses) do
 end
 
 assert(#Registry:GetDefinitions("sszorak", "heroic") == 3, "Sszorak should stay a focused Mutilate rotation")
-assert(#Registry:GetDefinitions("ulatek", "normal") == 1, "Normal Ula'tek should expose optional egg ownership")
+assert(#Registry:GetDefinitions("ulatek", "normal") == 1, "Normal Ula'tek should expose one required egg handler")
 assert(#Registry:GetDefinitions("ulatek", "mythic") > #Registry:GetDefinitions("ulatek", "heroic"), "Mythic Ula'tek needs extra intercept planning")
 assert(#Registry:GetLayout("twinfangs", "mythic").sections == 4, "Mythic Twin Fangs should have four tactic-specific assignment blocks")
 assert(#Registry:GetLayout("vashnik", "normal").sections == 1, "Normal Vashnik should stay lightweight")
+assert(#Registry:GetLayout("altar", "heroic").sections == 3, "Altar must expose orb collectors, Guillotine and Wail assignments")
+assert(#Registry:GetLayout("ulatek", "heroic").sections == 2, "Heroic Ula'tek must expose Coil rotation plus egg-side ownership")
 
 local vashnikNormal = Registry:GetDefinitions("vashnik", "normal")
 assert(vashnikNormal[1].key == "fountain_order" and vashnikNormal[1].kind == "sequence", "Vashnik Normal must use one sequence field")
@@ -69,8 +72,20 @@ for _, definition in ipairs(twinMythic) do
 end
 
 local altarNormal = Registry:GetDefinitions("altar", "normal")
-assert(altarNormal[1].key == "guillotine_a" and altarNormal[1].required, "Normal Altar needs one required Guillotine team")
-assert(altarNormal[2].key == "guillotine_b" and not altarNormal[2].required, "Normal Altar second Guillotine team should be optional")
+assert(altarNormal[1].key == "orb_collectors" and altarNormal[1].required, "Normal Altar needs required Orb Collectors")
+assert(altarNormal[2].key == "guillotine_a" and altarNormal[2].required, "Normal Altar needs one required Guillotine team")
+assert(altarNormal[3].key == "guillotine_b" and not altarNormal[3].required, "Normal Altar second Guillotine team should be optional")
+
+local ulatekHeroic = Registry:GetDefinitions("ulatek", "heroic")
+assert(ulatekHeroic[1].key == "coil_a" and ulatekHeroic[1].rotation == "coils")
+assert(ulatekHeroic[2].key == "coil_b" and ulatekHeroic[2].rotation == "coils")
+assert(ulatekHeroic[3].key == "egg_left" and ulatekHeroic[3].exclusiveGroup == "ulatek_eggs")
+assert(ulatekHeroic[4].key == "egg_right" and ulatekHeroic[4].exclusiveGroup == "ulatek_eggs")
+
+local ulatekMythic = Registry:GetDefinitions("ulatek", "mythic")
+assert(ulatekMythic[#ulatekMythic].key == "incubation_team")
+assert(ulatekMythic[#ulatekMythic].minPlayers == 4)
+assert(ulatekMythic[#ulatekMythic].rotation == nil, "Incubation is four hits within one cast, not one interceptor per cast")
 
 local ok, values = Assignments:ApplyBossDraft("sszorak", "heroic", {
     mutilate_a = "Alpha, Bravo, Charlie, Delta, Echo",
@@ -155,14 +170,22 @@ ok = Assignments:ApplyBossDraft("vashnik", "mythic", {
 })
 assert(ok, "rule and sequence fields should accept tactic text without roster-count validation")
 
+ok = Assignments:ApplyBossDraft("altar", "heroic", {
+    orb_collectors = "Collectorone, Collectortwo",
+    guillotine_a = "Alpha, Bravo, Charlie, Delta, Echo",
+    guillotine_b = "Foxtrot, Golf, Hotel, India, Juliet",
+    wail_kick_a = "Kickerone",
+})
+assert(ok, "Altar should accept collector, soak and kick ownership")
+local toxicWarning = Assignments:BuildCallWarning("DELUGE > COLLECTORS MOVE ORBS TO SEVER MARK", "altar", "heroic", "toxic")
+assert(toxicWarning:find("COLLECTORS: Collectorone", 1, true), "Altar Deluge call should name configured orb collectors")
+
 ok = Assignments:ApplyBossDraft("ulatek", "mythic", {
     coil_a = "Group One",
     coil_b = "Group Two",
     egg_left = "Hunterone",
     egg_right = "Magetwo",
-    incubation_a = "Tankone",
-    incubation_b = "Tanktwo",
-    incubation_c = "Rogueone",
+    incubation_team = "Tankone, Tanktwo, Rogueone, Priestone",
 })
 assert(ok)
 local coil = Assignments:BuildCallWarning("SPECTRAL COILS", "ulatek", "mythic", "coils")
@@ -171,8 +194,40 @@ Assignments:AdvanceCall("ulatek", "mythic", "coils")
 coil = Assignments:BuildCallWarning("SPECTRAL COILS", "ulatek", "mythic", "coils")
 assert(coil:find("GROUP B: Group Two", 1, true), "Ula'tek Coil call should rotate to Group B")
 
+local incubation = Assignments:BuildCallWarning("INCUBATION > 4 INTERCEPTORS > ONE HIT EACH", "ulatek", "mythic", "incubation")
+assert(incubation:find("INTERCEPTORS: Tankone", 1, true), "Ula'tek Incubation must announce the full interceptor team")
+
+local invalidIncubation, incubationError = Assignments:ApplyBossDraft("ulatek", "mythic", {
+    coil_a = "Group One",
+    coil_b = "Group Two",
+    egg_left = "Hunterone",
+    egg_right = "Magetwo",
+    incubation_team = "Tankone, Tanktwo, Rogueone",
+})
+assert(not invalidIncubation and incubationError.assignmentKey == "incubation_team",
+    "Ula'tek Incubation must reject fewer than four configured interceptors")
+assert(incubationError.message:find("at least 4 unique players", 1, true),
+    "Ula'tek Incubation validation should explain the four-player minimum")
+
+local overlapEggs, overlapEggError = Assignments:ApplyBossDraft("ulatek", "heroic", {
+    coil_a = "Group One",
+    coil_b = "Group Two",
+    egg_left = "Sameplayer",
+    egg_right = "Sameplayer",
+})
+assert(not overlapEggs and overlapEggError.assignmentKey == "egg_right",
+    "Ula'tek left/right egg owners must be distinct")
+
+ok = Assignments:ApplyBossDraft("ulatek", "mythic", {
+    coil_a = "Group One",
+    coil_b = "Group Two",
+    egg_left = "Hunterone",
+    egg_right = "Magetwo",
+    incubation_team = "Tankone, Tanktwo, Rogueone, Priestone",
+})
+assert(ok)
 local plan = Assignments:GetPlanLines("ulatek", "mythic")
-assert(#plan >= 7, "Ula'tek Mythic plan should announce configured jobs")
+assert(#plan >= 5, "Ula'tek Mythic plan should announce Coil groups, egg carriers and the Incubation team")
 for index = 1, #plan do assert(#plan[index] <= Assignments.MAX_WARNING_LENGTH, "assignment plan line too long") end
 
 local overflowOk = Assignments:ApplyBossDraft("twinfangs", "normal", {
@@ -191,4 +246,4 @@ assert(overflowWarning == feastBase, "overflow must fall back to the complete ba
 local invalid, err = Assignments:ApplyBossDraft("sszorak", "heroic", { mutilate_a = "Bad\1Name" })
 assert(not invalid and err and err.assignmentKey == "mutilate_a", "control characters must be rejected")
 
-print("ok - typed assignments, uniqueness, overlap safety, group sizes, overflow fallback, persistence, and rotations")
+print("ok - typed assignments, uniqueness, overlap safety, group sizes, boss 7/8 coordination, overflow fallback, persistence, and rotations")

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.0-beta.48 — 2026-08-18
+
+- Re-audit The Coiled Altar and Ula'tek across Normal, Heroic and Mythic against the current Patch 12.1 Encounter Journal/strategy evidence and current DBM/BigWigs source contracts, using the same raidleader-only ownership model as bosses 1-6.
+- Make The Coiled Altar explicitly raidleader-driven: add required Coalesced Venom Orb Collectors, keep Guillotine 5+ soak rotations and Wail interrupt ownership, add the Zul'jan-focused Soulbinding intermission call and Phase 3 Bloodlust/synchronized-kill call, and remove the tank-only Sever button plus personal Normal/Heroic Gloombomb buttons.
+- Keep Mythic Coiled Altar Gloombomb as a shared call only because it is used to strip Spirit Shield from Soulcoilers before the raid can kill them; personal bomb positioning and Gravebound recovery remain bossmod-owned.
+- Rebuild Ula'tek around shared coordination only: add Doomscale Warden/egg ownership, Heroic+ alternating Spectral Coil groups, Heroic+ one-at-a-time Fang breaks, Venomous Heart target priority, Phase 3 Bloodlust and Circling Prey shared movement while removing personal Bite, Sting and generic dodge buttons.
+- Correct Mythic Toxic Incubation planning from one rotating interceptor per cast to one required 4+ player intercept team, matching the four sequential impacts in a single Incubation while avoiding unnecessary Toxic Burn stacking.
+- Keep every Ula'tek call manual (`timing=false`) because Blizzard explicitly excluded the final boss from public PTR raid testing and current bossmod modules still lack live-proven stable timing identity/cadence for RLA PREPARE/PRESS automation.
+- Extend the common DBM/BigWigs-vs-RLA ownership contract to all eight bosses and add boss 7/8 assignment, call-scope and pre-live timing regressions.
+
 ## 0.9.0-beta.47 — 2026-08-18
 
 - Re-audit bosses 1-6 against current Patch 12.1 encounter strategy evidence and current DBM/BigWigs source contracts, including raid-size scaling, failure conditions, provider gaps, duplicate timer arming, assignments and UI/plan consistency.

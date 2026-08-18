@@ -34,3 +34,10 @@ On 2026-08-18 the tracked BigWigs `Core/BossPrototype.lua` master fingerprint ch
 ## Encounter strategy
 
 Encounter-facing copy is checked against current Encounter Journal/PTR/live evidence and reputable current raid guides, then remains marked pre-release/live-pending until reproduced in Retail. Source disagreement never authorizes silently enabling timing or hard-coding volatile thresholds.
+
+Boss 7/8 review on 2026-08-18 additionally used:
+
+- The current The Coiled Altar strategy/Encounter Journal guide, which identifies Orb Collectors, Heroic alternating Guillotine groups, Zul'jan double-damage intermission priority, Phase 3 Bloodlust and the synchronized-kill failure condition.
+- Blizzard's official Venomous Abyss PTR raid-testing schedule, which explicitly states that the final boss was not available for testing while The Coiled Altar received Heroic/Mythic test windows.
+- The current Ula'tek strategy/Encounter Journal guide, including Heroic+ Soul Constrictor Coil alternation, Doomscale Warden egg protection, Mythic 3-yard Noxious Shell separation, four-impact Toxic Incubation, Circling Prey space loss and Phase 3 Bloodlust.
+- Current DBM and BigWigs encounter modules for both bosses. Coiled Altar's proven bossmod identities may drive RLA's shared timed calls; Ula'tek remains manual-only until Retail evidence proves exact stable timing identity and cadence.

@@ -1,68 +1,91 @@
 local _, ns = ...
 local Registry = ns:GetModule("Encounters.Registry")
 
-local function calls(coilText, fangsText, includeSting, biteText, includeMythic)
-    local result = {
-        { key="waves", ability="Caustic Waves", action="Dodge > keep waves off eggs", warning="CAUSTIC WAVES > DODGE > KEEP OFF EGGS", voice="Waves", timing=false, iconSpellID=1292188 },
-        { key="coils", ability="Spectral Coils", action=coilText, warning=coilText, voice="Coils", timing=false, iconSpellID=1300530 },
-        { key="serpents", ability="Call of the Serpent", action="Dodge impacts > kill adds", warning="CALL OF SERPENT > DODGE > KILL ADDS", voice="Adds", timing=false, iconSpellID=1300751 },
-        { key="heart", ability="Rage of the Shackled", action="Dodge > burn heart", warning="RAGE > DODGE > BURN HEART", voice="Heart", timing=false, iconSpellID=1286860 },
-        { key="bite", ability="Serpent's Bite", action=biteText, warning=biteText, voice="Bite", timing=false, iconSpellID=1295905 },
+local BOSSMOD_RULE = "CALL PRIORITY: FOLLOW DBM OR BIGWIGS FOR YOUR PERSONAL DEBUFFS, DODGES, ROLE WARNINGS AND TIMERS. FOLLOW RLA/RAID-LEADER CALLS FOR GROUPS, MARKERS, SOAKS, TARGET PRIORITY AND SHARED RAID MOVEMENT."
+
+local function manualCall(key, ability, action, warning, voice, iconSpellID)
+    return {
+        key = key,
+        ability = ability,
+        action = action,
+        warning = warning,
+        voice = voice,
+        timing = false,
+        iconSpellID = iconSpellID,
     }
-    if fangsText then
-        result[#result+1] = { key="fangs", ability="Grasping Fangs", action=fangsText, warning=fangsText, voice="Fangs", timing=false, iconSpellID=1311611 }
+end
+
+local function calls(coilText, eggText, includeFangs, includeMythic)
+    local result = {
+        manualCall("coils", "Spectral Coils", coilText, coilText, "Coils", 1300530),
+        manualCall("warden", "Doomscale Warden", "Kill Warden > no egg touch until dead", "WARDEN > KILL > NO EGG TOUCH UNTIL DEAD", "Warden", 1298559),
+        manualCall("eggs", "Doomscale Eggs", eggText, eggText, "Eggs", 1299650),
+        manualCall("serpents", "Call of the Serpent", "Kill serpent adds", includeMythic and "CALL OF SERPENT > KILL ADDS BEFORE BOIL" or "CALL OF SERPENT > KILL ADDS", "Adds", 1300751),
+        manualCall("heart", "Rage of the Shackled", "Burn exposed Venomous Heart", "RAGE > BURN VENOMOUS HEART", "Heart", 1286860),
+    }
+
+    if includeFangs then
+        result[#result + 1] = manualCall("fangs", "Grasping Fangs", "Break one at a time", "FANGS > BREAK ONE AT A TIME", "Fangs", 1311611)
     end
-    if includeSting then
-        result[#result+1] = { key="sting", ability="Petrifying Sting", action="Target out > raid clear 10+", warning="PETRIFYING STING > TARGET OUT > RAID 10+ YARDS", voice="Sting", timing=false, iconSpellID=1303414 }
-    end
+
     if includeMythic then
-        result[#result+1] = { key="eggs", ability="Hardened Eggs", action="Break shell > carriers spread 3+", warning="HARDENED EGGS > BREAK SHELL > CARRIERS 3+ YARDS", voice="Eggs", timing=false, iconSpellID=1299650 }
-        result[#result+1] = { key="incubation", ability="Toxic Incubation", action="Next assigned interceptor in", warning="TOXIC INCUBATION > NEXT INTERCEPTOR IN", voice="Intercept", timing=false, iconSpellID=1299759 }
+        result[#result + 1] = manualCall("incubation", "Toxic Incubation", "Four interceptors > one hit each", "INCUBATION > 4 INTERCEPTORS > ONE HIT EACH", "Intercept", 1299759)
     end
+
+    result[#result + 1] = manualCall("phase3", "Ula'tek's Ascension", "Bloodlust > preserve safe space", "PHASE 3 > BLOODLUST > PRESERVE SAFE SPACE", "Bloodlust", 1286905)
+    result[#result + 1] = manualCall("circling", "Circling Prey", "Move raid to next safe space", "CIRCLING PREY > MOVE TO NEXT SAFE SPACE", "Move", 1301510)
     return result
 end
 
 Registry:Register({
-    key="ulatek", name="Ula'tek", encounterID=3492,
-    strategyStatus="12.1 Journal + current bossmod source review 2026-08-17; final boss was not PTR-tested; live validation required; timing disabled",
-    profiles={
-        normal={
-            explanation={
-                "PLAN: KEEP CAUSTIC WAVES OFF EGGS AND CONTROL WHICH EGGS HATCH. STACK AT THE ASSIGNED SPECTRAL COIL SOAK POINT.",
-                "DODGE CALL OF THE SERPENT IMPACTS AND KILL ADDS. DURING RAGE, DODGE DEBRIS AND BURN THE EXPOSED HEART.",
-                "SERPENT'S BITE: LEECH VENOM BEFORE CALCIFICATION; PURGERS SPREAD 7+ YARDS. PRESERVE SAFE SPACE FOR THE FINAL PHASE.",
-            }, calls=calls(
-                "COILS > STACK AT SOAK POINT",
-                nil,
+    key = "ulatek",
+    name = "Ula'tek",
+    encounterID = 3492,
+    strategyStatus = "12.1 Journal + current strategy + DBM/BigWigs source-reviewed 2026-08-18; final boss was not PTR-tested; live validation required; timing remains manual",
+    profiles = {
+        normal = {
+            explanation = {
+                "P1: KEEP CAUSTIC WAVES OFF UNPLANNED EGGS. SPECTRAL COILS: RAID STACKS AT THE SOAK MARK. DURING RAGE, DODGE DEBRIS AND BURN THE EXPOSED HEART.",
+                "P2: KILL THE DOOMSCALE WARDEN, THEN THE ASSIGNED EGG HANDLER USES THE PLANNED EGG. WARDEN'S PROTECTION FORBIDS TOUCHING EGGS WHILE IT LIVES.",
+                "CALL OF SERPENT ADDS DIE FAST. BITE, PURGE, PETRIFYING STING, DODGES AND TANK-ONLY REACTIONS STAY DBM/BIGWIGS-OWNED.",
+                "P3: BLOODLUST. CIRCLING PREY DESTROYS SAFE SPACE; MOVE AS A RAID TO THE NEXT SAFE AREA, KEEP WAVES OFF EGGS, AND BURN BEFORE FURY UNLEASHED.",
+                BOSSMOD_RULE,
+            },
+            calls = calls(
+                "COILS > STACK AT SOAK MARK",
+                "EGG > ASSIGNED HANDLER AFTER WARDEN",
                 false,
-                "SERPENT'S BITE > LEECH > PURGERS 7+ YARDS",
                 false
             ),
         },
-        heroic={
-            explanation={
-                "PLAN: NORMAL POSITIONING PLUS HEROIC ADD MECHANICS. KEEP WAVES OFF EGGS; KILL BIRTHLINGS/VIPERS QUICKLY; STACK AT THE COIL SOAK POINT.",
-                "BREAK GRASPING FANGS AND HEAL TARGETS THROUGH BLIGHT VEIN. PETRIFYING STING TARGET OUT; RAID CLEARS 10+ YARDS.",
-                "SERPENT'S BITE: LEECH BEFORE CALCIFICATION, PURGERS 7+ YARDS. RAGE: DODGE AND BURN HEART. PRESERVE SAFE SPACE.",
-            }, calls=calls(
-                "COILS > STACK AT SOAK POINT",
-                "GRASPING FANGS > BREAK FANGS > HEAL TARGETS",
-                true,
-                "SERPENT'S BITE > LEECH > PURGERS 7+ YARDS",
-                false
-            ),
-        },
-        mythic={
-            explanation={
-                "PLAN: JOURNAL-BASED UNTIL LIVE. ASSIGN EGG CARRIERS, ALTERNATING COIL GROUPS, FANG ORDER, AND TOXIC INCUBATION INTERCEPTORS BEFORE PULL.",
-                "HARDENED EGG CARRIERS STAY 3+ YARDS APART. ROTATE COIL GROUPS BECAUSE SOUL CONSTRICTOR BLOCKS REPEAT SOAKS. BREAK FANGS ONE AT A TIME.",
-                "DOOMSCALE EGGS: ONLY DISTURB THE PLANNED SIDE WHEN THE RAID IS READY FOR MASS GESTATION. KEEP CAUSTIC WAVES OFF OTHER EGGS.",
-                "TOXIC WOMB: KILL BLIGHTSCALE AND ROTATE INCUBATION INTERCEPTS. BITE: LEECH, PURGERS 7+ YARDS, THEN DODGE THEIR WAVES. PRESERVE SAFE SPACE.",
-            }, calls=calls(
+        heroic = {
+            explanation = {
+                "P1: KEEP WAVES OFF EGGS. COIL TEAM A/B ALTERNATE BECAUSE SOUL CONSTRICTOR PREVENTS THE SAME PLAYERS FROM MITIGATING THE NEXT COILS.",
+                "P2: KILL WARDEN, THEN HANDLE ONLY THE PLANNED EGG SIDE; MASS GESTATION STARTS THE REMAINING EGGS ON THAT SIDE.",
+                "BREAK GRASPING FANGS ONE AT A TIME TO SPACE RAIDWIDE BLIGHT VEIN. PETRIFYING STING, BITE, DODGES AND INDIVIDUAL ADD DEBUFFS STAY BOSSMOD-OWNED.",
+                "RAGE: BURN HEART. CALL OF SERPENT: KILL ADDS. P3: BLOODLUST; MOVE TO EACH NEXT SAFE SPACE FOR CIRCLING PREY AND PRESERVE THE PLATFORM.",
+                BOSSMOD_RULE,
+            },
+            calls = calls(
                 "COILS > NEXT SOAK GROUP IN",
-                "GRASPING FANGS > BREAK ONE AT A TIME",
+                "EGGS > PLANNED SIDE ONLY > OWNER IN",
                 true,
-                "SERPENT'S BITE > LEECH > PURGERS 7+ > DODGE WAVES",
+                false
+            ),
+        },
+        mythic = {
+            explanation = {
+                "P1: KEEP WAVES OFF EGGS. COIL TEAMS A/B ALTERNATE FOR SOUL CONSTRICTOR. TOXIC INCUBATION HAS FOUR IMPACTS; USE 4+ DISTINCT INTERCEPTORS, ONE HIT EACH.",
+                "P2: KILL WARDEN. BREAK HARDENED EGG SHELLS; LEFT/RIGHT CARRIERS STAY 3+ YARDS APART. MASS GESTATION STARTS THE PLANNED SIDE.",
+                "RANCID YOLK MAKES REPEAT SHELL DAMAGE DANGEROUS. BREAK FANGS ONE AT A TIME BECAUSE RAIDWIDE BLIGHT VEIN STACKS. KILL RAWLINGS BEFORE BOILING VENOM.",
+                "CALL OF SERPENT ADDS DIE IMMEDIATELY. RAGE: BURN HEART. P3: BLOODLUST; MOVE WITH CIRCLING PREY, PRESERVE SAFE SPACE, AND BURN BEFORE FURY UNLEASHED.",
+                "FINAL-BOSS TIMERS STAY MANUAL UNTIL LIVE RETAIL EVIDENCE CONFIRMS STABLE DBM/BIGWIGS/BLIZZARD EVENT IDENTITY AND CADENCE.",
+                BOSSMOD_RULE,
+            },
+            calls = calls(
+                "COILS > NEXT SOAK GROUP IN",
+                "EGGS > PLANNED SIDE ONLY > CARRIERS 3+ YARDS",
+                true,
                 true
             ),
         },

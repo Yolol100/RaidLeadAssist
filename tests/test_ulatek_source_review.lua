@@ -8,6 +8,7 @@ T.Load("Core/Util.lua", ns)
 T.Load("Encounters/Registry.lua", ns)
 T.Load("Encounters/VenomousAbyss/Ulatek.lua", ns)
 T.Load("Encounters/AssignmentRegistry.lua", ns)
+T.Load("Encounters/Boss78AssignmentOverride.lua", ns)
 
 local Registry = ns:GetModule("Encounters.Registry")
 local Assignments = ns:GetModule("Encounters.AssignmentRegistry")
@@ -31,43 +32,44 @@ local normal = Registry:GetProfile("ulatek", "normal")
 local heroic = Registry:GetProfile("ulatek", "heroic")
 local mythic = Registry:GetProfile("ulatek", "mythic")
 
--- Pre-release strategy currently scopes Soul Constrictor and Mass Gestation to Mythic.
--- Keep strategy in the briefing; mechanic buttons should remain immediate-action only.
-assert(not contains(planText("heroic"), "SOUL CONSTRICTOR"), "Heroic plan must not include Soul Constrictor before live validation supports it")
-assert(not contains(planText("heroic"), "MASS GESTATION"), "Heroic plan must not include Mass Gestation before live validation supports it")
+-- Current 12.1 Journal data explicitly places Soul Constrictor and Mass Gestation on Heroic as well as Mythic.
+assert(contains(planText("heroic"), "SOUL CONSTRICTOR"), "Heroic plan must preserve the source-backed Soul Constrictor rotation")
+assert(contains(planText("heroic"), "MASS GESTATION"), "Heroic plan must preserve the source-backed Mass Gestation side rule")
 assert(contains(planText("mythic"), "SOUL CONSTRICTOR"), "Mythic should retain Soul Constrictor rotation guidance")
 assert(contains(planText("mythic"), "MASS GESTATION"), "Mythic should retain Mass Gestation guidance")
 
--- Current pre-release plan treats Heroic Spectral Coils as a shared raid soak;
--- alternating-group assignment remains Mythic-only pending live validation.
-assert(not contains(heroic.callsByKey.coils.warning, "NEXT SOAK GROUP"), "Heroic Spectral Coils must not force a pre-release Mythic rotation")
-assert(contains(mythic.callsByKey.coils.warning, "NEXT SOAK GROUP"), "Mythic Spectral Coils button must call only the next assigned group")
-assert(not hasDefinition("heroic", "coil_a") and not hasDefinition("heroic", "coil_b"),
-    "Heroic assignment layout must not require Coil rotation groups in the current pre-release plan")
+-- Heroic and Mythic Spectral Coils need alternating groups because affected players cannot mitigate the next Coils.
+assert(contains(heroic.callsByKey.coils.warning, "NEXT SOAK GROUP"), "Heroic Spectral Coils must call the next assigned group")
+assert(contains(mythic.callsByKey.coils.warning, "NEXT SOAK GROUP"), "Mythic Spectral Coils must call the next assigned group")
+assert(hasDefinition("heroic", "coil_a") and hasDefinition("heroic", "coil_b"),
+    "Heroic assignment layout must expose Coil rotation groups")
 assert(hasDefinition("mythic", "coil_a") and hasDefinition("mythic", "coil_b"),
     "Mythic assignment layout must keep Coil rotation groups")
 
--- Heroic egg ownership is canonical and deliberately avoids Mass Gestation copy until live validation.
+-- Heroic/Mythic egg ownership is preassigned because Mass Gestation is side-specific.
 local heroicLayout = Assignments:GetLayout("ulatek", "heroic")
+local sawMassGestation = false
 for _, section in ipairs(heroicLayout.sections) do
-    assert(not contains(section.description, "Mass Gestation"), "Heroic egg assignment copy must not claim Mass Gestation before live validation")
+    if contains(section.description, "Mass Gestation") then sawMassGestation = true end
 end
+assert(sawMassGestation, "Heroic egg assignment copy must explain the Mass Gestation side consequence")
 assert(hasDefinition("heroic", "egg_left") and hasDefinition("heroic", "egg_right"),
-    "Heroic may still preassign left/right Doomscale Egg owners")
+    "Heroic requires distinct left/right Doomscale Egg owners")
 
-assert(normal.callsByKey.fangs == nil, "Normal should not expose a Heroic mechanic")
-assert(heroic.callsByKey.fangs, "Heroic requires a Grasping Fangs manual call")
-assert(mythic.callsByKey.fangs, "Mythic requires a Grasping Fangs manual call")
+-- Normal Fangs are a personal removal; Heroic/Mythic removal causes raidwide Blight Vein and needs shared spacing.
+assert(normal.callsByKey.fangs == nil, "Normal Grasping Fangs must stay bossmod-owned")
+assert(heroic.callsByKey.fangs, "Heroic requires a shared Grasping Fangs manual call")
+assert(mythic.callsByKey.fangs, "Mythic requires a shared Grasping Fangs manual call")
+assert(contains(heroic.callsByKey.fangs.warning, "ONE AT A TIME"))
 assert(contains(mythic.callsByKey.fangs.warning, "ONE AT A TIME"),
     "Mythic Fangs copy should warn against stacking raid-wide Blight Vein")
 
+-- Personal target mechanics are intentionally delegated to DBM/BigWigs rather than duplicated by RLA.
 for _, profile in ipairs({ normal, heroic, mythic }) do
-    assert(profile.callsByKey.bite, "Every Ula'tek difficulty requires a Serpent's Bite manual call")
-    assert(contains(profile.callsByKey.bite.warning, "LEECH"), "Serpent's Bite call must tell the raid to leech the venom")
-    assert(contains(profile.callsByKey.bite.warning, "7+"), "Volatile Purge call must preserve 7+ yard spread guidance")
+    assert(profile.callsByKey.bite == nil, "Serpent/Bite target reactions must remain bossmod-owned")
+    assert(profile.callsByKey.sting == nil, "Petrifying Sting target reactions must remain bossmod-owned")
+    assert(profile.callsByKey.waves == nil, "Caustic Wave dodging must remain bossmod-owned")
 end
-assert(contains(mythic.callsByKey.bite.warning, "WAVES"),
-    "Mythic Serpent's Bite should warn that Volatile Purge creates Caustic Waves")
 
 assert(mythic.callsByKey.eggs.iconSpellID == 1299650,
     "Hardened Eggs must use the Hardened spell identity")
@@ -86,4 +88,4 @@ for _, difficultyKey in ipairs({ "normal", "heroic", "mythic" }) do
     end
 end
 
-print("ok - Ula'tek pre-release plan keeps difficulty rules, display identities and manual-only timing guarded")
+print("ok - Ula'tek current Journal difficulty rules, raidleader ownership, display identities and manual-only timing guarded")

@@ -55,9 +55,9 @@ for _, encounter in ipairs(encounters) do
 end
 assert(profileCount == 24)
 
--- Bosses 1-6 share one explicit responsibility contract in every difficulty:
+-- All eight bosses share one explicit responsibility contract in every difficulty:
 -- bossmods own personal execution; RLA/raid leader owns shared coordination.
-for _, bossKey in ipairs({ "nekzali", "sentinels", "explorers", "vashnik", "sszorak", "twinfangs" }) do
+for _, bossKey in ipairs({ "nekzali", "sentinels", "explorers", "vashnik", "sszorak", "twinfangs", "altar", "ulatek" }) do
     for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
         local plan = planText(bossKey, difficultyKey)
         assert(contains(plan, "FOLLOW DBM OR BIGWIGS"), bossKey .. "/" .. difficultyKey .. " must direct personal execution to a bossmod")
@@ -190,22 +190,41 @@ end
 local twinMythic = Registry:GetProfile("twinfangs", "mythic")
 assert(twinMythic.callsByKey.bulwark and twinMythic.callsByKey.brood and twinMythic.callsByKey.tainted)
 
-for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
-    local altar = Registry:GetProfile("altar", difficultyKey)
-    assert(altar.callsByKey.toxic)
-    assert(contains(altar.callsByKey.guillotine.warning, "5+"))
+-- Boss 7: RLA owns orb collectors, soak rotations, target priority, interrupts and phase calls.
+local altarNormal = Registry:GetProfile("altar", "normal")
+local altarHeroic = Registry:GetProfile("altar", "heroic")
+local altarMythic = Registry:GetProfile("altar", "mythic")
+for _, profile in ipairs({ altarNormal, altarHeroic, altarMythic }) do
+    assert(profile.callsByKey.toxic and profile.callsByKey.guillotine)
+    assert(profile.callsByKey.dreadmarch and profile.callsByKey.nightfall and profile.callsByKey.spiritcackle)
+    assert(profile.callsByKey.intermission and profile.callsByKey.final)
+    assert(profile.callsByKey.sever == nil, "Sever tank-facing execution belongs to DBM/BigWigs, not an RLA raid button")
+    assert(contains(profile.callsByKey.toxic.warning, "ORBS TO SEVER MARK"), "Toxic Deluge call must coordinate orb collectors")
+    assert(contains(profile.callsByKey.guillotine.warning, "5+"), "Guillotine must retain the five-player minimum")
+    assert(profile.callsByKey.final.warning == "PHASE 3 > BLOODLUST > KEEP BOTH EVEN > KILL TOGETHER")
 end
+assert(altarNormal.callsByKey.gloombomb == nil and altarHeroic.callsByKey.gloombomb == nil,
+    "Normal/Heroic Gloombomb is personal positioning and must stay bossmod-owned")
+assert(altarMythic.callsByKey.gloombomb and contains(altarMythic.callsByKey.gloombomb.warning, "SOULCOILERS"),
+    "Mythic Gloombomb remains only for the shared Soulcoiler shield-break strategy")
 
+-- Boss 8: all pre-live calls are manual and only shared raidleader coordination is exposed.
 local ulatekNormal = Registry:GetProfile("ulatek", "normal")
 local ulatekHeroic = Registry:GetProfile("ulatek", "heroic")
 local ulatekMythic = Registry:GetProfile("ulatek", "mythic")
-assert(ulatekNormal.callsByKey.sting == nil)
-assert(ulatekHeroic.callsByKey.sting and ulatekMythic.callsByKey.sting)
-for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
-    for _, call in ipairs(Registry:GetProfile("ulatek", difficultyKey).calls) do
-        assert(call.timing == false)
-    end
+for _, profile in ipairs({ ulatekNormal, ulatekHeroic, ulatekMythic }) do
+    assert(profile.callsByKey.coils and profile.callsByKey.warden and profile.callsByKey.eggs)
+    assert(profile.callsByKey.serpents and profile.callsByKey.heart)
+    assert(profile.callsByKey.phase3 and profile.callsByKey.circling)
+    assert(profile.callsByKey.waves == nil and profile.callsByKey.bite == nil and profile.callsByKey.sting == nil,
+        "personal wave/bite/sting execution must remain DBM/BigWigs-owned")
+    assert(profile.callsByKey.phase3.warning == "PHASE 3 > BLOODLUST > PRESERVE SAFE SPACE")
+    for _, call in ipairs(profile.calls) do assert(call.timing == false) end
 end
+assert(ulatekNormal.callsByKey.fangs == nil and ulatekNormal.callsByKey.incubation == nil)
+assert(ulatekHeroic.callsByKey.fangs and ulatekHeroic.callsByKey.incubation == nil)
+assert(ulatekMythic.callsByKey.fangs and ulatekMythic.callsByKey.incubation)
+assert(ulatekMythic.callsByKey.incubation.warning == "INCUBATION > 4 INTERCEPTORS > ONE HIT EACH")
 
 assert(Registry:SetActiveDifficulty("normal"))
 assert(Registry:Get("vashnik").callsByKey.catalyst == nil)
