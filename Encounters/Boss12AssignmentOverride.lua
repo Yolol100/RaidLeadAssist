@@ -2,8 +2,6 @@ local _, ns = ...
 
 local AssignmentRegistry = ns:GetModule("Encounters.AssignmentRegistry")
 
-local originalGetLayout = AssignmentRegistry.GetLayout
-
 local NEKZALI_NORMAL = {
     summary = "No pre-pull assignment is required on Normal; melee/ranged responsibilities are fixed in the raid plan.",
     sections = {},
@@ -82,13 +80,13 @@ local SENTINELS_SPLIT = {
     },
 }
 
-function AssignmentRegistry:GetLayout(bossKey, difficultyKey)
-    if bossKey == "nekzali" then
-        if difficultyKey == "normal" then return NEKZALI_NORMAL end
-        if difficultyKey == "heroic" then return NEKZALI_HEROIC end
-        if difficultyKey == "mythic" then return NEKZALI_MYTHIC end
-    elseif bossKey == "sentinels" and (difficultyKey == "normal" or difficultyKey == "heroic" or difficultyKey == "mythic") then
-        return SENTINELS_SPLIT
-    end
-    return originalGetLayout(self, bossKey, difficultyKey)
-end
+AssignmentRegistry:RegisterLayouts("nekzali", {
+    normal = NEKZALI_NORMAL,
+    heroic = NEKZALI_HEROIC,
+    mythic = NEKZALI_MYTHIC,
+})
+AssignmentRegistry:RegisterLayouts("sentinels", {
+    normal = SENTINELS_SPLIT,
+    heroic = SENTINELS_SPLIT,
+    mythic = SENTINELS_SPLIT,
+})
