@@ -32,21 +32,22 @@ for _, difficulty in ipairs({ "normal", "heroic", "mythic" }) do
     assert(profile.callsByKey.maelstrom.spellIDs[1] == 1285732)
     assert(profile.callsByKey.maelstrom.prepareSeconds == 8 and profile.callsByKey.maelstrom.pressSeconds == 5)
 
-    assert(profile.callsByKey.apex.warning == "GREEN MUTILATE > NEXT 5+ SOAK GROUP")
+    assert(profile.callsByKey.apex.warning == "GREEN MUTILATE > NEXT 5+ SOAK TEAM")
     assert(profile.callsByKey.apex.prepareSeconds == 7 and profile.callsByKey.apex.pressSeconds == 4)
 
     assert(contains(plan(difficulty), "30%"))
     assert(contains(plan(difficulty), "BLOODLUST"))
-    assert(contains(plan(difficulty), "WHITE RAVAGE IS DBM-ONLY"))
+    assert(contains(plan(difficulty), "WHITE RAVAGE IS BOSSMOD/ROLE-OWNED"))
     assert(contains(plan(difficulty), "GREEN MUTILATE"))
     assert(contains(plan(difficulty), "DISTINCT 5+"))
+    assert(contains(plan(difficulty), "TEAM A THEN TEAM B"))
     assert(contains(plan(difficulty), "CYST"))
+    assert(contains(plan(difficulty), "FOLLOW DBM OR BIGWIGS"))
     assert(not contains(plan(difficulty), "TANK"))
 end
 
 assert(contains(plan("normal"), "3 WORLD MARKERS"))
 assert(contains(plan("heroic"), "CAUSTIC PUDDLES"))
-assert(contains(plan("heroic"), "GROUP 1 THEN GROUP 2"))
 
 local mythic = Registry:GetProfile("sszorak", "mythic")
 assert(mythic.callsByKey.serpent.warning == "SERPENT'S FURY > 14+ STACK ON MARK")
@@ -58,4 +59,4 @@ assert(Registry:MatchCall("sszorak", "normal", 1285425, nil).key == "crosswinds"
 assert(Registry:MatchCall("sszorak", "normal", 1285732, nil).key == "maelstrom")
 assert(Registry:MatchCall("sszorak", "normal", 1285430, nil).key == "apex")
 
-print("ok - Sszorak marker cyst setup, group Mutilate soak and timer identities stay aligned")
+print("ok - Sszorak marker cyst setup, flexible Mutilate teams and timer identities stay aligned")
