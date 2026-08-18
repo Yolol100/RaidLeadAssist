@@ -21,21 +21,51 @@
         },
         {
           "ref": "master",
+          "path": "DBM-Raids-Midnight/TheVenomousAbyss/NekzalitheSoulcoiler.lua",
+          "blobSha": "264dc083b6b5afb5ae7507b19384246aa9aaed8f",
+          "reason": "Nek'zali boss-specific timer and spell identities"
+        },
+        {
+          "ref": "master",
           "path": "DBM-Raids-Midnight/TheVenomousAbyss/TheTwinFangs.lua",
           "blobSha": "f7d43c1bb81eaa905dc728b52a89bbbfefa3eecd",
-          "reason": "Twin Fangs Feast, Stone Breaker, 100-energy movement and Mythic interrupt identities are source-reviewed against this module"
+          "reason": "Twin Fangs Feast, Stone Breaker, movement and Mythic interrupt identities"
         },
         {
           "ref": "master",
           "path": "DBM-Raids-Midnight/TheVenomousAbyss/TheCoiledAltar.lua",
           "blobSha": "d933271c9bf23665f4284f69af4d02be823d1bb2",
-          "reason": "Coiled Altar Guillotine, Dreadmarch, Nightfall, Spiritcackle and stage identities are source-reviewed against this module"
+          "reason": "Coiled Altar Guillotine, Dreadmarch, Nightfall, Spiritcackle and stage identities"
+        },
+        {
+          "ref": "master",
+          "path": "DBM-Raids-Midnight/TheVenomousAbyss/EntombedSentinels.lua",
+          "blobSha": "6a2549f56958607882849cd2d0206735ba99704e",
+          "reason": "Entombed Sentinels boss-specific timer and spell identities"
+        },
+        {
+          "ref": "master",
+          "path": "DBM-Raids-Midnight/TheVenomousAbyss/TheLostExplorers.lua",
+          "blobSha": "b1fc3744667788216f4200b01608afae8a695940",
+          "reason": "Lost Explorers boss-specific timer and spell identities"
+        },
+        {
+          "ref": "master",
+          "path": "DBM-Raids-Midnight/TheVenomousAbyss/VashniktheMalignant.lua",
+          "blobSha": "4e45ae0a8889ae78b00b11be8f6ee6944c1f883d",
+          "reason": "Vashnik boss-specific timer and spell identities"
+        },
+        {
+          "ref": "master",
+          "path": "DBM-Raids-Midnight/TheVenomousAbyss/Sszorak.lua",
+          "blobSha": "59c67f6066f9ef85b317c97c830652064672c5dc",
+          "reason": "Sszorak boss-specific timer and spell identities"
         },
         {
           "ref": "master",
           "path": "DBM-Raids-Midnight/TheVenomousAbyss/Ulatek.lua",
           "blobSha": "12b7ef5eedff1cb590b77c3861fdbc86ac95948c",
-          "reason": "Ula'tek drycode/timeline coverage is still pre-live and must not silently enable automatic timing"
+          "reason": "Ula'tek drycode/timeline coverage remains manual/fail-closed until exact live timing is validated"
         }
       ]
     },
@@ -49,19 +79,49 @@
           "ref": "master",
           "path": "Core/BossPrototype.lua",
           "blobSha": "dfcd2952467c62bad92d95230683799a713be0e9",
-          "reason": "RLA consumes BigWigs Timer/CastTimer/StartBar contracts; current 2026-08-18 master signatures were re-verified after another upstream drift"
+          "reason": "RLA consumes BigWigs Timer/CastTimer/StartBar contracts"
+        },
+        {
+          "ref": "master",
+          "path": "TheVenomousAbyss/Nekzali.lua",
+          "blobSha": "2d074bdba5acc60c89fa05b64c1924dadb37be1f",
+          "reason": "Nek'zali boss-specific timer and spell identities"
         },
         {
           "ref": "master",
           "path": "TheVenomousAbyss/TwinFangs.lua",
           "blobSha": "e3c79c7d1ba8781f1a338dd1064a8a826b517043",
-          "reason": "Twin Fangs uses distinct Sanguine Storm/Flood bars and a direct Ravenous Feast key; RLA must preserve single-anchor synchronization"
+          "reason": "Twin Fangs distinct bars and Ravenous Feast identity"
         },
         {
           "ref": "master",
           "path": "TheVenomousAbyss/CoiledAltar.lua",
-          "blobSha": "aabbf4f6503e71b17b9d9fbbbf04045a03601998",
-          "reason": "Coiled Altar stage and spell identities are watched because shared raidleader calls depend on their stable mapping"
+          "blobSha": "afbb4e4849275437108e6a965ac1c07effd1f337",
+          "reason": "Semantic review confirmed Toxic Deluge, Guillotine, Dreadmarch, Eternal Nightfall, Spiritcackle and Gloombomb identities remain compatible after stage/custom-timer changes"
+        },
+        {
+          "ref": "master",
+          "path": "TheVenomousAbyss/Sentinels.lua",
+          "blobSha": "85d8949929b7b02bce7c6a10737a3d332c4b5604",
+          "reason": "Entombed Sentinels boss-specific timer and spell identities"
+        },
+        {
+          "ref": "master",
+          "path": "TheVenomousAbyss/Explorers.lua",
+          "blobSha": "cfb6e889bf1408fa91235e07003fd48681a9d3c5",
+          "reason": "Lost Explorers boss-specific timer and spell identities"
+        },
+        {
+          "ref": "master",
+          "path": "TheVenomousAbyss/Vashnik.lua",
+          "blobSha": "056035f8ad2917e2a7234e3ead4e8eb22d409111",
+          "reason": "Vashnik boss-specific timer and spell identities"
+        },
+        {
+          "ref": "master",
+          "path": "TheVenomousAbyss/Sszorak.lua",
+          "blobSha": "cea3b7fc007c920a1ddbbb49fa4edf50662d0529",
+          "reason": "Sszorak boss-specific timer and spell identities"
         },
         {
           "ref": "master",
