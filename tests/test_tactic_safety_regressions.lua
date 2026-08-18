@@ -35,13 +35,19 @@ for _, difficulty in ipairs({ "normal", "heroic", "mythic" }) do
         "Lost Explorers must not retain the obsolete fixed Nama > Iku > Gebbo kill-order call")
     assert(not contains(plan, "NAMA FIRST") and not contains(plan, "NAMA > IKU > GEBBO"),
         "Lost Explorers plan must not instruct an early Nama kill")
-    assert(profile.callsByKey.shell and profile.callsByKey.blink and profile.callsByKey.volley and profile.callsByKey.bomb,
-        "Lost Explorers must retain Shell Spin, Blink Nova, Frostfire Volley and Explosive Surprise raidlead buttons")
+    assert(profile.callsByKey.crates and profile.callsByKey.fish and profile.callsByKey.thud,
+        "Lost Explorers must retain crate, fish and three-point Thud raidlead coordination")
+    assert(profile.callsByKey.shell == nil and profile.callsByKey.blink == nil,
+        "Shell and Blink are personal bossmod mechanics, not raidlead buttons")
+    assert(profile.callsByKey.volley == nil and profile.callsByKey.bomb == nil,
+        "Frostfire and Explosive Surprise are personal bossmod mechanics, not raidlead buttons")
+    assert(profile.callsByKey.position == nil,
+        "fixed two-boss positioning belongs in the briefing, not a recurring button")
 end
 for _, difficulty in ipairs({ "heroic", "mythic" }) do
     local plan = text("explorers", difficulty)
-    assert(contains(plan, "UNITED DEFENSE") or difficulty == "mythic",
-        "Heroic Lost Explorers must explicitly manage United Defense; Mythic may inherit the Heroic positioning contract")
+    assert(contains(plan, "NAMA 30+ YARDS AWAY"),
+        "Heroic/Mythic Lost Explorers must preserve the chosen safe United Defense positioning")
     assert(contains(plan, "FINISH TOGETHER"),
         "Heroic/Mythic Lost Explorers must coordinate the three health pools")
     assert(not contains(plan, "35+ YARDS APART"),
