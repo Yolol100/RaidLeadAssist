@@ -22,9 +22,9 @@ local FEAST_TEAMS = {
     description = "Heroic/Mythic: build three fresh 3+ teams. Feasted players must not repeat within the same three-hit cast.",
     columns = 3,
     slots = {
-        assigneeSlot("feast_team_a", "Hit 1 · Team A", "feast", "TEAM A", true, "feast", 3, "Select at least 3 unique players for the first Feast hit."),
-        assigneeSlot("feast_team_b", "Hit 2 · Team B", "feast", "TEAM B", true, "feast", 3, "Select at least 3 different players for the second Feast hit."),
-        assigneeSlot("feast_team_c", "Hit 3 · Team C", "feast", "TEAM C", true, "feast", 3, "Select at least 3 different players for the third Feast hit."),
+        assigneeSlot("feast_team_a", "Hit 1 · Team A", "feast", "Team A", true, "feast", 3, "Select at least 3 unique players for the first Feast hit."),
+        assigneeSlot("feast_team_b", "Hit 2 · Team B", "feast", "Team B", true, "feast", 3, "Select at least 3 different players for the second Feast hit."),
+        assigneeSlot("feast_team_c", "Hit 3 · Team C", "feast", "Team C", true, "feast", 3, "Select at least 3 different players for the third Feast hit."),
     },
 }
 
@@ -34,9 +34,9 @@ local MYTHIC_BROOD = {
     description = "Mythic Broodlings can cast together. Keep separate kick owners so every Visceral Burst is stopped.",
     columns = 3,
     slots = {
-        assigneeSlot("brood_kick_a", "Broodling 1 Kick", "brood", "KICK 1", true, "brood"),
-        assigneeSlot("brood_kick_b", "Broodling 2 Kick", "brood", "KICK 2", true, "brood"),
-        assigneeSlot("brood_kick_c", "Broodling 3 Kick", "brood", "KICK 3", false, "brood"),
+        assigneeSlot("brood_kick_a", "Broodling 1 Kick", "brood", "Kick 1", true, "brood"),
+        assigneeSlot("brood_kick_b", "Broodling 2 Kick", "brood", "Kick 2", true, "brood"),
+        assigneeSlot("brood_kick_c", "Broodling 3 Kick", "brood", "Kick 3", false, "brood"),
     },
 }
 
@@ -46,8 +46,8 @@ local MYTHIC_FOUNTS = {
     description = "Optional distinct coverage for Mythic Tainted Blood founts after Ravenous Feast.",
     columns = 2,
     slots = {
-        assigneeSlot("tainted_a", "Fount Team 1", "tainted", "FOUNT 1", false, "tainted"),
-        assigneeSlot("tainted_b", "Fount Team 2", "tainted", "FOUNT 2", false, "tainted"),
+        assigneeSlot("tainted_a", "Fount Team 1", "tainted", "Fount 1", false, "tainted"),
+        assigneeSlot("tainted_b", "Fount Team 2", "tainted", "Fount 2", false, "tainted"),
     },
 }
 
