@@ -49,24 +49,28 @@ function SetupCard:Create(parent)
         GameTooltip:SetText("Pre-pull Setup", 1, 1, 1)
         GameTooltip:AddLine(layout.summary, 0.82, 0.86, 0.82, true)
 
-        for index = 1, #layout.markers do
-            local marker = layout.markers[index]
-            local prefix = marker.kind == "world" and "World" or "Target"
-            local markerName = SetupRegistry:GetMarkerName(marker.icon) or tostring(marker.icon)
-            GameTooltip:AddLine(("%s %s %s — %s"):format(iconTexture(marker.icon), prefix, markerName, marker.label),
-                0.73, 0.91, 0.20, true)
-            GameTooltip:AddLine(marker.purpose, 0.68, 0.74, 0.69, true)
+        if #layout.markers > 0 then
+            GameTooltip:AddLine(" ")
+            GameTooltip:AddLine("Markers", 1, 1, 1)
+            for index = 1, #layout.markers do
+                local marker = layout.markers[index]
+                local prefix = marker.kind == "world" and "World" or "Target"
+                local markerName = SetupRegistry:GetMarkerName(marker.icon) or tostring(marker.icon)
+                GameTooltip:AddLine(("%s %s %s — %s"):format(iconTexture(marker.icon), prefix, markerName, marker.label),
+                    0.73, 0.91, 0.20, true)
+                GameTooltip:AddLine(marker.purpose, 0.68, 0.74, 0.69, true)
+            end
         end
 
         if #layout.checks > 0 then
             GameTooltip:AddLine(" ")
-            GameTooltip:AddLine("Checks", 1, 1, 1)
+            GameTooltip:AddLine("Raid Leader Prep", 1, 1, 1)
             for index = 1, #layout.checks do
                 GameTooltip:AddLine("• " .. layout.checks[index], 0.68, 0.74, 0.69, true)
             end
         end
         GameTooltip:AddLine(" ")
-        GameTooltip:AddLine(instance.ready and "Click to mark setup as CHECK again." or "Click only after the raidleader setup is in place.",
+        GameTooltip:AddLine(instance.ready and "Click to mark setup as CHECK again." or "Click READY when markers and raidleader prep are complete.",
             0.55, 0.63, 0.58, true)
         GameTooltip:Show()
     end)
@@ -97,7 +101,7 @@ function SetupCard:SetLayout(layout, ready, onToggle)
     local parts = {}
     if world > 0 then parts[#parts + 1] = world .. " world marker" .. (world == 1 and "" or "s") end
     if target > 0 then parts[#parts + 1] = target .. " target marker" .. (target == 1 and "" or "s") end
-    if #layout.checks > 0 then parts[#parts + 1] = #layout.checks .. " check" .. (#layout.checks == 1 and "" or "s") end
+    if #layout.checks > 0 then parts[#parts + 1] = #layout.checks .. " prep step" .. (#layout.checks == 1 and "" or "s") end
 
     self.frame.summary:SetText(table.concat(parts, " · ") .. " · hover for details")
     if self.ready then
