@@ -74,7 +74,7 @@ local EXPLORER_CRATES_NORMAL = section("crates", "Crates & Fish", "Assign who op
     slot("fish_a", "Fish Runner", { callKey = "fish", callLabel = "RUNNER", required = true }),
 })
 
-local EXPLORER_CRATES_ROTATION = section("crates", "Crate Rotation", "Rotate distinct crate breakers so Splinters are controlled; Mythic crate breaks also damage the raid.", 3, {
+local EXPLORER_CRATES_ROTATION = section("crates", "Crate Rotation", "Rotate distinct crate breakers so Splinters are controlled. On Mythic, the raid clears 15+ yards before the assigned breaker stomps a crate.", 3, {
     slot("crate_a", "Breaker 1", { callKey = "crates", callLabel = "BREAKER 1", rotation = "crates", required = true, exclusiveGroup = "crates" }),
     slot("crate_b", "Breaker 2", { callKey = "crates", callLabel = "BREAKER 2", rotation = "crates", required = true, exclusiveGroup = "crates" }),
     slot("crate_c", "Breaker 3", { callKey = "crates", callLabel = "BREAKER 3", rotation = "crates", exclusiveGroup = "crates" }),
@@ -195,7 +195,7 @@ local LAYOUTS = {
     explorers = {
         normal = layout("One clear crate/fish owner plus three soak-point groups for random Thud targets.", { EXPLORER_CRATES_NORMAL, EXPLORER_THUD }),
         heroic = layout("Rotate crate breakers, keep fish responsibility explicit and define three Thud soak points.", { EXPLORER_CRATES_ROTATION, EXPLORER_FISH, EXPLORER_THUD }),
-        mythic = layout("Strict crate rotation because Mythic breaks hit the raid, plus fish and Thud planning.", { EXPLORER_CRATES_ROTATION, EXPLORER_FISH, EXPLORER_THUD }),
+        mythic = layout("Rotate crate breakers for Splinters; clear 15+ yards around each Mythic crate stomp, plus fish and Thud planning.", { EXPLORER_CRATES_ROTATION, EXPLORER_FISH, EXPLORER_THUD }),
     },
     vashnik = {
         normal = layout("No mandatory named assignment; save only the planned fountain sequence.", { VASHNIK_FOUNTAINS }),
