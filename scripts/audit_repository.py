@@ -48,6 +48,9 @@ APPROVED_RUNTIME_PATCHES = {
     "Core/AssignmentIntegration.lua": {
         "Core.App": {"Initialize", "SelectBoss", "SelectDifficulty", "SendExplanation", "SendCall"},
     },
+    "Core/ReadinessIntegration.lua": {
+        "Core.App": {"PrintDoctor"},
+    },
     "Core/SentinelsIntegration.lua": {
         "UI.MainFrame": {"Initialize", "SetEncounter", "SetCallState", "ResetCallStates"},
     },
