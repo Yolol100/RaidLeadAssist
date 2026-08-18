@@ -34,7 +34,6 @@ local siphon = manualCall("siphon", "Siphoning Infection", "SIPHON > STACK HELPE
 local exploding = manualCall("exploding", "Exploding Infection", "BIG CIRCLE > MOVE FAR OUT", "Move far out")
 local stygian = manualCall("stygian", "Stygian Infection", "SPREAD > KEEP MOVING", "Spread and move")
 local catalyst = timedCall("catalyst", "Malignant Catalyst", "SOAK BILE", "Soak bile", { 1282525, 1282509 }, 7, 4)
-local tankswap = timedCall("tankswap", "Dripping Fangs", "TANK SWAP > DEFENSIVE", "Tank swap", { 1280935 }, 5, 2)
 
 local frothNormal = timedCall("froth", "Plague Froth", "FROTH > MOVE OUT > AIM AWAY", "Aim waves away", { 1281907 }, 6, 3)
 local frothMythic = timedCall("froth", "Plague Froth", "FROTH > AIM AT TUMORS", "Aim at tumors", { 1281907 }, 6, 3)
@@ -50,7 +49,6 @@ local function normalCalls()
         frothNormal,
         exploding,
         stygian,
-        tankswap,
     }
 end
 
@@ -65,7 +63,6 @@ local function heroicCalls()
         catalyst,
         exploding,
         stygian,
-        tankswap,
     }
 end
 
@@ -80,7 +77,6 @@ local function mythicCalls()
         catalyst,
         exploding,
         stygian,
-        tankswap,
         killTumors,
     }
 end
@@ -96,7 +92,6 @@ Registry:Register({
                 "PLAN: FLAME > SHADOW > SHADOW > BLOOD > BLOOD > FLAME. EACH IMBIBE USES THE TWO NEAREST FOUNTAINS. KILL ADDS BEFORE CENTER.",
                 "FIRE: KILL ADDS. SHADOW: DODGE SWIRLIES. BLOOD: STACK HELPERS ON THE SIPHON TARGET TO CLEAR THE HEAL ABSORB.",
                 "FROTH: MOVE OUT AND AIM WAVES AWAY. BIG CIRCLE: MOVE FAR OUT. SHADOW INFECTION: SPREAD AND KEEP MOVING.",
-                "TANKS: SWAP AFTER EACH DRIPPING FANGS AND USE A DEFENSIVE FOR THE HIT.",
             },
             calls = normalCalls(),
         },
@@ -105,7 +100,6 @@ Registry:Register({
                 "PLAN: FLAME > SHADOW > SHADOW > BLOOD > BLOOD > FLAME. EACH IMBIBE USES THE TWO NEAREST FOUNTAINS. KILL ADDS BEFORE CENTER.",
                 "FIRE: KILL SKULL, WAIT, THEN X SO CAUSTIC SURGE STACKS DO NOT OVERLAP. SHADOW: DODGE SWIRLIES. BLOOD: STACK HELPERS FOR SIPHON.",
                 "FROTH: MOVE OUT AND AIM WAVES AWAY. SOAK EVERY BILE. BIG CIRCLE: MOVE FAR OUT. SHADOW INFECTION: SPREAD AND KEEP MOVING.",
-                "TANKS: SWAP AFTER EACH DRIPPING FANGS AND USE A DEFENSIVE FOR THE HIT.",
             },
             calls = heroicCalls(),
         },
@@ -114,7 +108,7 @@ Registry:Register({
                 "PLAN: USE THE HEROIC ROUTE AND RULES. KILL ADDS BEFORE CENTER; FIRE STAYS STAGGERED; SOAK EVERY BILE.",
                 "FROTH TARGETS AIM A WAVE THROUGH TUMORS TO REMOVE HARDENED TUMOR, THEN KILL THE EXPOSED TUMORS.",
                 "BLOOD: STACK HELPERS ON SIPHON TARGETS. BIG CIRCLE: MOVE FAR OUT. SHADOW INFECTION: SPREAD AND KEEP MOVING.",
-                "TANKS: SWAP AFTER EACH DRIPPING FANGS. MYTHIC MALIGNANCE MAKES REPEATED INFECTION MISTAKES MORE DANGEROUS.",
+                "MYTHIC MALIGNANCE MAKES REPEATED INFECTION MISTAKES MORE DANGEROUS.",
             },
             calls = mythicCalls(),
         },
