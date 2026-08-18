@@ -33,8 +33,8 @@ for _, difficulty in ipairs({ "normal", "heroic", "mythic" }) do
         "Lost Explorers briefing must coordinate a synchronized finish")
     assert(profile.callsByKey.killorder == nil,
         "Lost Explorers must not retain the obsolete fixed Nama > Iku > Gebbo kill-order call")
-    assert(not contains(plan, "NAMA FIRST") and not contains(plan, "NAMA > IKU > GEBBO"),
-        "Lost Explorers plan must not instruct an early Nama kill")
+    assert(not contains(plan, "NAMA FIRST") and not contains(plan, "KILL NAMA") and not contains(plan, "KILL ORDER"),
+        "Lost Explorers plan must not instruct an early Nama kill; the Nama > Iku > Gebbo sequence is fish ownership only")
     assert(profile.callsByKey.crates and profile.callsByKey.fish and profile.callsByKey.thud,
         "Lost Explorers must retain crate, fish and three-point Thud raidlead coordination")
     assert(profile.callsByKey.shell == nil and profile.callsByKey.blink == nil,
