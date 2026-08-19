@@ -22,6 +22,7 @@ local function plan(profile)
 end
 
 assert(plan(normal):find("Keep all three bosses even", 1, true))
+assert(plan(normal):find("Crates appear: break them until a fish appears", 1, true))
 assert(plan(normal):find("Fish order: Nama, then Iku, then Gebbo", 1, true))
 assert(plan(heroic):find("Keep Nama away", 1, true) and plan(heroic):find("Iku and Gebbo together", 1, true))
 assert(not plan(mythic):find("Keep Nama away", 1, true), "Mythic should not repeat Heroic positioning")
@@ -34,22 +35,21 @@ for _, profile in ipairs({ normal, heroic, mythic }) do
     assert(profile.callsByKey.position == nil and profile.callsByKey.icebound == nil)
     assert(profile.callsByKey.tankswap == nil and profile.callsByKey.tank == nil)
 end
-
+assert(normal.callsByKey.crates.warning == "Crates: open them until fish appears.")
+assert(heroic.callsByKey.crates.warning == "Crates: open them until fish appears.")
 assert(mythic.callsByKey.crates.warning == "Crate: clear 15+ yards, then break.")
 assert(plan(mythic):find("15+ yards away", 1, true))
 
-local normalDefs = Assignments:GetDefinitions("explorers", "normal")
-assert(#normalDefs == 1, "Normal settings should contain only crate ownership")
-assert(normalDefs[1].key == "crate_a" and normalDefs[1].callKey == "crates")
-
-for _, difficulty in ipairs({ "heroic", "mythic" }) do
-    local defs = Assignments:GetDefinitions("explorers", difficulty)
-    assert(#defs == 3, difficulty .. " should contain only the breaker rotation")
-    for _, definition in ipairs(defs) do
-        assert(not definition.key:find("thud", 1, true), "Thud points are fixed setup markers, not roster assignments")
-        assert(not definition.key:find("fish", 1, true), "Fish order is fixed strategy, not roster ownership")
-        assert(definition.kind == "rotation" and definition.callKey == "crates")
-    end
+assert(#Assignments:GetDefinitions("explorers", "normal") == 0,
+    "Normal settings need no fixed crate owner")
+assert(#Assignments:GetDefinitions("explorers", "heroic") == 0,
+    "Heroic settings need no fixed crate owner")
+local mythicDefs = Assignments:GetDefinitions("explorers", "mythic")
+assert(#mythicDefs == 3, "Mythic should contain only the controlled breaker rotation")
+for _, definition in ipairs(mythicDefs) do
+    assert(not definition.key:find("thud", 1, true), "Thud points are fixed setup markers, not roster assignments")
+    assert(not definition.key:find("fish", 1, true), "Fish order is fixed strategy, not roster ownership")
+    assert(definition.kind == "rotation" and definition.callKey == "crates")
 end
 
 print("ok - Lost Explorers fixed strategy, difficulty deltas and assignments stay separated")
