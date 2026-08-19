@@ -81,14 +81,16 @@ assert(baseline:find("06b08a1d288d961d7efe89d85bb8aca215da8d7e", 1, true),
     "Vashnik DBM day-one Normal/fallback baseline must stay pinned")
 assert(baseline:find("5314afd2931cd3ffc3234790acb7b4eb04816974", 1, true),
     "Twin Fangs DBM post-unlock lifecycle baseline must stay pinned")
+assert(baseline:find("99a4b7fd2b8b79aac10be011e473527976a82bca", 1, true),
+    "Coiled Altar DBM Normal+Heroic hardcoded/fallback baseline must stay pinned")
 assert(baseline:find("c82ba65249ce3b4d98293c9d299fbf8530fb9cd0", 1, true),
     "Sentinels DBM post-unlock Normal-routing baseline must stay pinned")
 assert(baseline:find("1c241c906fb1a415c280991e231f086479893aa9", 1, true),
     "Lost Explorers DBM fallback-authority baseline must stay pinned")
 assert(baseline:find("bcfbcc0fea3c4e0c06336c0066accd3fdf33b0fc", 1, true),
     "Sszorak DBM post-unlock routing baseline must stay pinned")
-assert(baseline:find("ddc0ca1049fa6214046bc52f01a501b7d58850ed", 1, true),
-    "Nek'zali BigWigs day-one Essence Rend baseline must stay pinned")
+assert(baseline:find("9c2fe74b4ac0fb297e8b6716e0d61965747a7ca5", 1, true),
+    "Nek'zali BigWigs P2 Possession Barrage baseline must stay pinned")
 assert(baseline:find("9114bf6331598d210e20ffe3716e05842ccb43c6", 1, true),
     "Sentinels BigWigs intermission/reset baseline must stay pinned")
 assert(baseline:find("ca995e7b0fc55414ff1deb59f67e11ae99b242a1", 1, true),

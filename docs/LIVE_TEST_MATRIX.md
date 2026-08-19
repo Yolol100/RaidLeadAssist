@@ -2,18 +2,19 @@
 
 Source/CI checks cannot fill these rows. Record evidence on the exact addon SHA/version and current Retail build.
 
-## 0.9.0-beta.55 release-candidate status — 2026-08-19
+## 0.9.0-beta.56 release-candidate status — 2026-08-19
 
-The source/release path may be marked `PASS-CI` only after the final beta.55 head passes the full workflow and the online upstream-drift check against the latest 2026-08-19 day-one provider baselines.
+The source/release path may be marked `PASS-CI` only after the final beta.56 head passes the full workflow and the online upstream-drift check against the latest 2026-08-19 day-one provider baselines.
 
 The release remains a **prerelease/beta**, not a live-proven stable release. Do not convert any row below to `PASS-LIVE` from guides, source code, screenshots or CI alone.
 
 Known release boundaries:
 
 - DBM 12.1.4 remains the reviewed stable DBM release contract. Current `master` has continued to move after raid unlock. RLA pins the reviewed source fingerprints without requiring unreleased DBM.
-- Current DBM Venomous Abyss modules can switch between reviewed hardcoded Encounter Timeline routing and fail-closed Blizzard fallback. Beta.55 therefore treats DBM timing for all eight raid encounter IDs as exact only while DBM has asserted `DBM_IgnoreBlizzAPI` authority. Once DBM resumes Blizzard, the DBM copy is preview-only until an independently exact direct source is available.
-- DBM's shared `TLBatchTrackLatest` Encounter Timeline de-duplication helper is now part of the upstream drift oracle because it can change which public boss bar RLA observes without changing a boss-module call identity.
-- BigWigs v419.2 remains the reviewed stable release baseline and still predates finalized live-launch coverage for parts of The Venomous Abyss. Current `master` contains additional live fixes, including Nek'zali Phase 1 Essence Rend routing; the latter is not a direct RLA raidleader identity but is pinned for provider-currentness.
+- Current DBM Venomous Abyss modules can switch between reviewed hardcoded Encounter Timeline routing and fail-closed Blizzard fallback. Beta.56 therefore treats DBM timing for all eight raid encounter IDs as exact only while DBM has asserted `DBM_IgnoreBlizzAPI` authority. Once DBM resumes Blizzard, the DBM copy is preview-only until an independently exact direct source is available.
+- Late day-one DBM Coiled Altar now enables preliminary Normal hardcoded timelines in addition to Heroic. Unknown/unmapped timeline rows still call `ResumeBlizzardAPI`, so RLA exactness must continue to follow DBM authority rather than the provider name.
+- DBM's shared `TLBatchTrackLatest` Encounter Timeline de-duplication helper is part of the upstream drift oracle because it can change which public boss bar RLA observes without changing a boss-module call identity.
+- BigWigs v419.2 remains the reviewed stable release baseline and still predates finalized live-launch coverage for parts of The Venomous Abyss. Current `master` contains additional live fixes. The latest Nek'zali change adds non-Mythic Phase 2 Possession Barrage routing; that mechanic is not a direct RLA raidleader identity but the source fingerprint is pinned for provider-currentness.
 - Direct BigWigs timers preserve the upstream `isApproximate` signal. A BigWigs nil-module `StartBar` produced by the Blizzard bridge does not carry that metadata and is therefore preview-only in RLA.
 - Blizzard Encounter Timeline events explicitly marked `isApproximate=true` are preview-only. They must never become actionable PREPARE/PRESS/TTS timing merely because their source is Blizzard or because a bossmod re-emits the event.
 - Ula'tek stays manual-only on every difficulty until real Retail pulls prove stable exact timer identities and cadence. Provider authority hardening does not promote the encounter to timed support.
@@ -56,12 +57,13 @@ For every timed mechanic reproduce the occurrence more than once when practical.
 - Transition from DBM hardcoded authority to Blizzard fallback during the same pull where upstream supports that recovery. Verify no stale exact timer survives the authority release and no replacement/fallback bar is precision-escalated.
 - Vashnik current DBM source: exercise the new Normal hardcoded route and, if reproducible, an unmatched/bad-state timeline transition. Verify the shared `TLBatchTrackLatest` duplicate handling does not leave two RLA timers and that `ResumeBlizzardAPI` changes DBM timing to preview-only.
 - Nek'zali current DBM source: verify Normal hardcoded routing and a fallback/authority release if reproducible; exactness must follow DBM authority rather than provider name.
+- Coiled Altar current DBM source: exercise both the newly added Normal hardcoded route and Heroic hardcoded route, then reproduce an unmapped/bad-state fallback where practical. Confirm DBM exactness disappears immediately after `ResumeBlizzardAPI` and no stale exact timer survives into Blizzard fallback.
 - Lost Explorers Normal with hardcoded timeline authority: verify reviewed direct timers may remain exact. Heroic/Mythic/current fallback and Normal with hardcoded timers disabled must remain preview-only until an independent exact source is available.
 - DBM current Sentinels: verify Normal routing plus Stasis/Miasma/Protovenom identities remain correct and an authority release cannot leave stale exact bars.
 - BigWigs current Sentinels: verify intermission end/reset does not leave a stale Stasis or backup bridge bar in RLA.
 - DBM current Sszorak: verify Normal/Heroic calls against confirmed routing, keep Mythic `PASS-LIVE`-pending where upstream itself labels routing extrapolated, and verify fallback precision is preview-only after DBM resumes Blizzard.
 - DBM/BigWigs current Twin Fangs: verify Submerge lifecycle changes do not duplicate or orphan Ravenous Feast/shared movement timing; DBM fallback precision must follow authority state.
-- BigWigs current Nek'zali: repeat Phase 1 timeline rows around the day-one Essence Rend fix and verify cancelled/replaced provider bars do not leave duplicate or stale RLA timing.
+- BigWigs current Nek'zali: repeat Phase 1 rows around the earlier Essence Rend correction and non-Mythic Phase 2 rows around the new 28-second Possession Barrage routing. Neither change may leave duplicate/stale RLA timing or create a new RLA call identity that is not explicitly registered.
 - BigWigs v419.2 with Coiled Altar/finalized-module coverage absent: verify Blizzard/manual fallback remains usable and no stale bossmod authority suppresses the call.
 - permission loss during a scheduled pre-pull briefing.
 - combat starts during briefing.

@@ -204,6 +204,8 @@ def validate_workflows(files: list[str]) -> None:
     if not workflows:
         fail("no GitHub Actions workflows found")
     uses_re = re.compile(r"^\s*-?\s*uses:\s*([^\s#]+)", re.M)
+    checkout_re = re.compile(r"^\s*-?\s*uses:\s*actions/checkout@[0-9a-f]{40}\b", re.M)
+    persist_re = re.compile(r"^\s*persist-credentials:\s*false\s*(?:#.*)?$", re.M)
     for rel in workflows:
         text = read_text(rel)
         if "permissions:" not in text:
@@ -223,6 +225,13 @@ def validate_workflows(files: list[str]) -> None:
             _, ref = uses.rsplit("@", 1)
             if not re.fullmatch(r"[0-9a-f]{40}", ref):
                 fail(f"workflow action must be pinned to a full commit SHA: {rel}: {uses}")
+        checkout_count = len(checkout_re.findall(text))
+        persist_count = len(persist_re.findall(text))
+        if persist_count != checkout_count:
+            fail(
+                f"every checkout must set persist-credentials: false: {rel} "
+                f"({persist_count}/{checkout_count})"
+            )
     validate = read_text(".github/workflows/validate.yml")
     for job in ("validation:", "reproducibility:", "reproducibility-check:", "provenance:", "release:"):
         if job not in validate:
