@@ -72,6 +72,10 @@ function CallButton:SetCall(call, onClick, warningResolver)
     self.frame:Show()
 end
 
+function CallButton:SetActionText(text)
+    self.frame.action:SetText(text or (self.call and self.call.action) or "")
+end
+
 function CallButton:SetState(state, force)
     if not force and self.state == state then return end
 
