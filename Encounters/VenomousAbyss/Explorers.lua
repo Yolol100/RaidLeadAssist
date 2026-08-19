@@ -16,8 +16,8 @@ local function calls(crateAction, crateWarning)
         {
             key = "fish",
             ability = "Final Ascension",
-            action = "Take fish to the next planned boss",
-            warning = "Fish: take it to the next planned boss.",
+            action = "Take fish to planned boss",
+            warning = "Fish: take it to the planned boss.",
             voice = "Fish",
             spellIDs = { 1292779 },
             prepareSeconds = 8,
@@ -26,8 +26,8 @@ local function calls(crateAction, crateWarning)
         {
             key = "thud",
             ability = "Mighty Thud",
-            action = "Targets to separate markers; soakers stack in",
-            warning = "Mighty Thud: targets to separate markers; soakers stack in.",
+            action = "Targets to markers; soakers stack",
+            warning = "Thud: targets to markers; soakers stack.",
             voice = "Three soak points",
             spellIDs = { 1296092 },
             prepareSeconds = 7,
@@ -54,7 +54,7 @@ Registry:Register({
                 "Icebound Flames starts: interrupt it immediately.",
             },
             calls = calls(
-                "Open the next crate",
+                "Open next crate",
                 "Crate: open the next one."
             ),
         },
@@ -64,7 +64,7 @@ Registry:Register({
                 "Spreading fire appears: keep it away from usable space.",
             },
             calls = calls(
-                "Open the next crate",
+                "Open next crate",
                 "Crate: open the next one."
             ),
         },
@@ -73,8 +73,8 @@ Registry:Register({
                 "Before a crate is broken, everyone else moves 15+ yards away.",
             },
             calls = calls(
-                "Raid clear 15+ yards, then break",
-                "Crate: raid clear 15+ yards, then break it."
+                "Clear 15+ yards; then break",
+                "Crate: clear 15+ yards, then break."
             ),
         },
     },
