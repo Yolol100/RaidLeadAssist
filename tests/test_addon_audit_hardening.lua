@@ -59,7 +59,8 @@ for _, path in ipairs({
 }) do
     assert(baseline:find(path, 1, true), "missing provider boss watch: " .. path)
 end
-assert(baseline:find("afbb4e4849275437108e6a965ac1c07effd1f337", 1, true))
+assert(baseline:find("1d6be4cb982af82d7d5040e794689e516cec7def", 1, true),
+    "Coiled Altar BigWigs live-launch baseline must stay pinned to the reviewed source")
 
 local security = read("SECURITY.md")
 assert(security:find("RaidLeadAssist.toc", 1, true))
