@@ -91,6 +91,10 @@ function BlizzardProvider:AddEvent(info, fallbackEventID, durationOverride)
     if Util.IsSecret(info) or type(info) ~= "table" then return end
     if Util.IsSecret(info.source) or info.source ~= 0 then return end
     if Util.IsSecret(info.duration) or not isFiniteNumber(info.duration) then return end
+    if Util.IsSecret(info.isApproximate)
+        or (info.isApproximate ~= nil and type(info.isApproximate) ~= "boolean") then
+        return
+    end
 
     local eventID = normalizeEventID(fallbackEventID or info.id)
     if not eventID then return end
@@ -109,7 +113,7 @@ function BlizzardProvider:AddEvent(info, fallbackEventID, durationOverride)
         duration = duration,
         icon = icon,
         nativeEventID = eventID,
-        precision = "native",
+        precision = info.isApproximate == true and "approximate" or "native",
     })
 end
 
