@@ -42,9 +42,9 @@ local expectedCalls = {
         mythic = { "imbibe", "fire_stagger", "siphon", "catalyst", "froth", "tumors" },
     },
     sszorak = {
-        normal = { "venom", "crosswinds", "maelstrom", "apex" },
-        heroic = { "venom", "crosswinds", "maelstrom", "apex" },
-        mythic = { "venom", "crosswinds", "maelstrom", "apex", "serpent" },
+        normal = { "venom", "crosswinds", "maelstrom", "apex", "dig_in" },
+        heroic = { "venom", "crosswinds", "maelstrom", "apex", "dig_in" },
+        mythic = { "venom", "crosswinds", "maelstrom", "apex", "dig_in", "serpent" },
     },
     twinfangs = {
         normal = { "globules", "adds", "feast", "energy" },
