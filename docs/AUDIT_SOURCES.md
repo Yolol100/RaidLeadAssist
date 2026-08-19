@@ -11,6 +11,8 @@ Review date: 2026-08-19. Changing platform/provider facts must be rechecked befo
 
 Audit implications: addon code stays readable/free of advertising/premium behavior, avoids real-time combat-decision automation, treats secret values fail-closed, validates the Retail interface/API surface and uses the Blizzard timeline only as presentation timing.
 
+Launch-day review on 2026-08-19 confirmed the regional Season 2/Venomous Abyss unlock schedule. Blizzard's current official news/content-update index still surfaced `Hotfixes: July 28, 2026` as the latest official hotfix publication during this audit; no verified launch-day Venomous Abyss mechanic/timer hotfix was found there. A contemporaneous Wowhead PTR datamine only changed `Stir the Depths`, `Barbed Bulwark` and `Vile Flood` to be treated as area-of-effect damage for mitigation/Avoidance. Those flags do not alter RLA's raidleader action, assignment or timer identity contract, so no tactic/timing change is encoded from that datamine.
+
 ## GitHub / supply chain
 
 - Secure use reference: https://docs.github.com/en/actions/reference/security/secure-use
@@ -27,11 +29,13 @@ Audit implications: least-privilege workflow permissions, actions pinned to full
 - DBM repository/releases: https://github.com/DeadlyBossMods/DeadlyBossMods
 - BigWigs repository/releases: https://github.com/BigWigsMods/BigWigs
 
-The machine-readable exact reviewed commits/file fingerprints live in `UPSTREAM_BASELINES.json`. The stable release-contract pins remain DBM `12.1.3` and BigWigs `v419.2` at this review.
+The machine-readable exact reviewed commits/file fingerprints live in `UPSTREAM_BASELINES.json`. The stable release-contract pins are DBM `12.1.4` and BigWigs `v419.2` at this review.
 
-The 2026-08-19 pre-release pass found new BigWigs `master` drift in Nek'zali, Entombed Sentinels, Lost Explorers, Twin Fangs, Coiled Altar and Ula'tek. RLA re-reviewed the changed live-launch modules and refreshed their exact fingerprints. The watched `Core/BossPrototype.lua` callback contract did not change, and the configured RLA mechanic identities remain present/compatible. DBM's watched provider and all eight encounter modules remained unchanged from the reviewed baseline.
+DBM `12.1.4` resolves to commit `88ec781e9b213dbf7d9ca59164a584c2529d9bf9`. The watched Timer callback source remained unchanged from the prior contract review, and every Venomous Abyss encounter file in the `12.1.4` tag matches the current reviewed `master` fingerprint. RLA therefore updates the stable release pin without changing DBM provider parsing semantics. The Midnight raid TOC is now watched as well so interface/module-inventory changes cannot bypass per-boss drift checks.
 
-BigWigs `v419.2` predates the finalized `TheVenomousAbyss/CoiledAltar.lua` module: that tag still contains the earlier next-build `Crown.lua` placeholder while current `master` has the finalized Coiled Altar module. RLA therefore must not assume that a loaded stable BigWigs installation can provide every Venomous Abyss boss bar. Its provider reconciliation deliberately falls back to Blizzard Encounter Timeline events whenever the active bossmod has no usable matching timer. This is a compatibility/failure-mode requirement, not a recommendation to install unreleased BigWigs source.
+BigWigs `v419.2` remains the latest stable tag found in this review and predates the finalized `TheVenomousAbyss/CoiledAltar.lua` module: that tag still contains the earlier next-build `Crown.lua` placeholder while current `master` has the finalized Coiled Altar module. RLA therefore must not assume that a loaded stable BigWigs installation can provide every Venomous Abyss boss bar. Its provider reconciliation deliberately falls back to Blizzard Encounter Timeline events whenever the active bossmod has no usable matching timer. This is a compatibility/failure-mode requirement, not a recommendation to install unreleased BigWigs source.
+
+The 2026-08-19 launch-day BigWigs recheck found one additional watched encounter drift after the previous release-candidate audit: `TheVenomousAbyss/CoiledAltar.lua` added fail-closed filtering for non-encounter timeline sources and wipe-state callbacks. The consumed Toxic Deluge, Guillotine, Dreadmarch, Eternal Nightfall, Spiritcackle and Gloombomb identities remain compatible. `Core/BossPrototype.lua` did not change from the reviewed callback contract. The Venomous Abyss raid TOC is now also pinned so the module inventory and Crown-to-Coiled-Altar transition are monitored directly.
 
 ## Encounter strategy
 
