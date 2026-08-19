@@ -20,12 +20,22 @@ for _, d in ipairs({"normal","heroic","mythic"}) do
     local ulatek = Registry:GetProfile("ulatek",d)
     for _, call in ipairs(ulatek.calls) do assert(call.timing == false) end
 end
+
+assert(#AR:GetCallDefinitions("altar", "normal", "guillotine") == 0,
+    "Normal Guillotine uses any 5+ players and needs no fixed roster group")
+assert(#AR:GetCallDefinitions("altar", "heroic", "guillotine") == 2,
+    "Heroic Guillotine requires two assigned soak groups")
+assert(#AR:GetCallDefinitions("altar", "mythic", "guillotine") == 4,
+    "Mythic exposes fresh Guillotine groups for the permanent debuff")
+
 local h = AR:GetDefinitions("altar","heroic")
 local requiredWail=0
 for _,def in ipairs(h) do if def.key:find("wail_kick_",1,true) and def.required then requiredWail=requiredWail+1 end end
 assert(requiredWail == 2)
 
+local un = AR:GetDefinitions("ulatek","normal")
 local uh = AR:GetDefinitions("ulatek","heroic")
+assert(#un == 1 and un[1].key == "egg_handler")
 assert(#uh == 1 and uh[1].key == "egg_handler", "Heroic Ula'tek keeps only the Normal egg-handler assignment")
 local um = AR:GetDefinitions("ulatek","mythic")
 local found = {}
@@ -35,4 +45,4 @@ assert(found.coil_a and found.coil_b and found.egg_left and found.egg_right and 
 assert(Registry:GetProfile("ulatek","normal").callsByKey.demolish,
     "Ula'tek phase-3 shared movement uses the corrected Demolish identity")
 
-print("ok - Coiled Altar prep remains complete and final shared calls stay concise")
+print("ok - Coiled Altar and Ula'tek prep stays difficulty-specific and minimal")
