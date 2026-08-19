@@ -26,13 +26,13 @@ local killAdds = timedCall(
 )
 local fireStagger = manualCall(
     "fire_stagger", "Burning Venoms",
-    "Kill Skull, wait, then kill Cross",
-    "Fire adds: Skull first, wait, then Cross.",
+    "Skull, wait, then Cross",
+    "Fire adds: Skull, wait, then Cross.",
     "Stagger fire adds"
 )
 local siphon = manualCall(
     "siphon", "Siphoning Infection",
-    "Stack helpers on the target",
+    "Stack on Siphon target",
     "Siphon: stack on the target.",
     "Stack for siphon"
 )
@@ -44,14 +44,14 @@ local catalyst = timedCall(
 )
 local frothMythic = timedCall(
     "froth", "Plague Froth",
-    "Aim one wave through a Tumor",
+    "Aim wave through Tumor",
     "Froth: aim one wave through a Tumor.",
     "Aim at tumors", { 1281907 }, 6, 3
 )
 local killTumors = manualCall(
     "tumors", "Malignant Tumors",
-    "Switch and kill the exposed Tumor",
-    "Tumor exposed: switch and kill it.",
+    "Kill exposed Tumor",
+    "Tumor exposed: switch and kill.",
     "Kill tumors"
 )
 
