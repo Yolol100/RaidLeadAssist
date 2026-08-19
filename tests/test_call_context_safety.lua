@@ -46,6 +46,8 @@ ns:RegisterModule("Services.AssignmentService", {
     Initialize = function() end,
     ResetRuntime = function() end,
     GetPlanLines = function() return { "PLAN" } end,
+    IsCallReady = function() return true end,
+    BuildCallAction = function(_, action) return action, true end,
     BuildCallWarning = function(_, warning) return warning, true end,
     AdvanceCall = function() end,
 })
