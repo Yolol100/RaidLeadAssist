@@ -2,7 +2,7 @@
 ## Title: Raid Lead Assist
 ## Notes: Manual raid-leader tactical callouts with bossmod and Blizzard timeline support.
 ## Author: RaidLeadAssist Contributors
-## Version: 0.9.0-beta.50
+## Version: 0.9.0-beta.52
 ## SavedVariables: RaidLeadAssistDB
 ## OptionalDeps: DBM-Core, BigWigs
 ## X-Category: Raid
@@ -14,6 +14,7 @@ Core/EventBus.lua
 Core/Database.lua
 Encounters/Registry.lua
 Encounters/AssignmentRegistry.lua
+Encounters/SetupRegistry.lua
 Encounters/Boss12AssignmentOverride.lua
 Encounters/Boss34AssignmentOverride.lua
 Encounters/SszorakAssignmentOverride.lua
@@ -27,11 +28,13 @@ Encounters/VenomousAbyss/Sszorak.lua
 Encounters/VenomousAbyss/TwinFangs.lua
 Encounters/VenomousAbyss/CoiledAltar.lua
 Encounters/VenomousAbyss/Ulatek.lua
+Encounters/VenomousAbyss/SetupLayouts.lua
 Services/RaidWarningService.lua
 Services/MessageService.lua
 Services/AudioService.lua
 Services/RosterService.lua
 Services/AssignmentService.lua
+Services/SetupService.lua
 Services/Providers/BigWigsProvider.lua
 Services/Providers/DBMProvider.lua
 Services/Providers/BlizzardProvider.lua
@@ -50,6 +53,7 @@ UI/AssignmentFrame.lua
 UI/AssignmentLaunchers.lua
 UI/SettingsFrame.lua
 UI/SentinelsPanel.lua
+UI/SetupCard.lua
 UI/MainFrame.lua
 Core/App.lua
 Core/AssignmentIntegration.lua

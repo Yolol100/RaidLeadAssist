@@ -7,16 +7,34 @@ T.Load("Encounters/Registry.lua", ns)
 T.Load("Encounters/VenomousAbyss/Vashnik.lua", ns)
 local Registry = ns:GetModule("Encounters.Registry")
 local function plan(d) return table.concat(Registry:GetProfile("vashnik", d).explanation, "\n") end
+local function has(text, needle) return text:find(needle,1,true) ~= nil end
+
 for _, d in ipairs({"normal","heroic","mythic"}) do
-    assert(plan(d):find("BLOODLUST ON PULL",1,true))
-    assert(Registry:GetProfile("vashnik",d).callsByKey.imbibe.warning == "IMBIBE > KILL ADDS")
+    assert(Registry:GetProfile("vashnik",d).callsByKey.imbibe.warning == "Fountain adds: kill them before center.")
 end
+local normal = plan("normal")
+assert(has(normal, "Flame+Shadow, Shadow+Blood, then Blood+Flame"))
+assert(has(normal, "Fountain adds spawn"))
+assert(has(normal, "Fire debuff on you"))
+assert(has(normal, "Blood circle on you"))
+assert(has(normal, "stack with several teammates so you can be healed"))
+assert(has(normal, "Shadow debuff on you"))
+assert(has(normal, "Froth circle on you"))
+
 assert(Registry:GetProfile("vashnik","normal").callsByKey.catalyst == nil)
+local heroic = plan("heroic")
+assert(has(heroic, "Skull then Cross"))
+assert(has(heroic, "Catalyst circles appear"))
+assert(not has(heroic, "Fountain adds spawn"), "Heroic should contain only changes from Normal")
 for _, d in ipairs({"heroic","mythic"}) do
     local catalyst = Registry:GetProfile("vashnik",d).callsByKey.catalyst
-    assert(catalyst.warning == "BILE > SOAK EVERY GREEN CIRCLE")
-    assert(plan(d):find("EACH IMPACT MUST HIT AT LEAST ONE PLAYER",1,true))
+    assert(catalyst.warning == "Catalyst: soak every circle.")
 end
-assert(plan("mythic"):find("NO FIXED BILE TEAM IS REQUIRED",1,true))
-assert(Registry:GetProfile("vashnik","mythic").callsByKey.froth.warning == "FROTH > AIM WAVES THROUGH TUMORS")
-print("ok - Vashnik uses dynamic Catalyst soaking with no fixed Bile-team assignment")
+
+local mythic = plan("mythic")
+assert(has(mythic, "aim one wave through the Tumor"))
+assert(has(mythic, "switch and kill it immediately"))
+assert(not has(mythic, "Skull"), "Mythic should contain only changes from Heroic")
+assert(Registry:GetProfile("vashnik","mythic").callsByKey.froth.warning == "Froth: aim one wave through Tumor.")
+
+print("ok - Vashnik keeps one fixed route plus clear Normal/Heroic/Mythic execution")

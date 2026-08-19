@@ -2,6 +2,22 @@
 
 Source/CI checks cannot fill these rows. Record evidence on the exact addon SHA/version and current Retail build.
 
+## 0.9.0-beta.52 release-candidate status — 2026-08-19
+
+The source/release path may be marked `PASS-CI` only after the final beta.52 head passes the full workflow and the online upstream-drift check against the 2026-08-19 post-unlock provider baselines.
+
+The release remains a **prerelease/beta**, not a live-proven stable release. Do not convert any row below to `PASS-LIVE` from guides, source code, screenshots or CI alone.
+
+Known release boundaries:
+
+- DBM 12.1.4 is the reviewed stable DBM contract baseline. Current DBM `master` is two commits ahead and adds Normal hardcoded timeline routing for Nek'zali and Twin Fangs; RLA re-reviewed and pinned those changes because the consumed timer identities remain compatible.
+- BigWigs v419.2 is the reviewed stable callback/release baseline, but it predates the finalized Coiled Altar module. Missing stable BigWigs boss bars must therefore degrade to Blizzard timeline/manual behavior without disabling RLA.
+- Current DBM/BigWigs live-launch `master` modules, core callback contracts and raid TOCs were source-reviewed on 2026-08-19 and are pinned for drift detection; users are not expected to install unreleased source.
+- Ula'tek stays manual-only on every difficulty until real Retail pulls prove stable exact timer identities and cadence.
+- Season 2/The Venomous Abyss is open by region; source review can track post-unlock upstream changes, but encounter plans remain `PASS-LIVE`-pending until reproduced in the raid.
+
+Before promoting beyond beta, record at minimum one clean supported pull/wipe lifecycle per boss on the intended release difficulty, plus the provider/failure combinations below.
+
 ## Environment matrix
 
 For each relevant scenario record: date/region, WoW build/interface, resolution, UI scale, language, raid size, RLA version/SHA, DBM version, BigWigs version, and enabled addon set.
@@ -26,6 +42,8 @@ For every timed mechanic reproduce the occurrence more than once when practical.
 - disconnect/reconnect where practical.
 - bossmod loaded late or disabled.
 - provider timer update, pause/resume, cancel/fade and duplicate second-provider arrival.
+- DBM current `master` Normal Nek'zali/Twin Fangs hardcoded bars: verify direct DBM timers remain actionable while DBM suppresses Blizzard timeline authority, and that stop/wipe restores fallback cleanly.
+- BigWigs v419.2 with Coiled Altar/finalized-module coverage absent: verify Blizzard/manual fallback remains usable and no stale bossmod authority suppresses the call.
 - permission loss during a scheduled pre-pull briefing.
 - combat starts during briefing.
 - unsupported encounter, Raid Finder/Story/other unsupported difficulty and unknown context.

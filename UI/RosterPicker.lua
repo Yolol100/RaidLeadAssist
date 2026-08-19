@@ -4,25 +4,94 @@ local Theme = ns:GetModule("UI.Theme")
 local ActionButton = ns:GetModule("UI.ActionButton")
 local Roster = ns:GetModule("Services.RosterService")
 
-local RosterPicker = { rows = {}, selected = {}, extras = {} }
+local RosterPicker = { rows = {}, selected = {}, extras = {}, compactGroups = false }
 
-local function splitNames(value)
+local function trim(value)
+    return type(value) == "string" and (value:match("^%s*(.-)%s*$") or "") or ""
+end
+
+local function parseGroupNumbers(value)
+    local lower = trim(value):lower()
+    local body = lower:match("^group%s+(%d+)$") or lower:match("^groups%s+([%d+]+)$")
+    if not body then return nil end
+    local result = {}
+    local seen = {}
+    for token in body:gmatch("%d+") do
+        local group = tonumber(token)
+        if not group or group < 1 or group > 8 or seen[group] then return nil end
+        seen[group] = true
+        result[#result + 1] = group
+    end
+    table.sort(result)
+    return #result > 0 and result or nil
+end
+
+local function splitTokens(value)
     local result = {}
     if type(value) ~= "string" then return result end
     for part in value:gmatch("[^,]+") do
-        local name = part:match("^%s*(.-)%s*$")
-        if name and name ~= "" then result[#result + 1] = name end
+        local token = trim(part)
+        if token ~= "" then result[#result + 1] = token end
     end
     return result
 end
 
-local function orderedSelection(roster, selected, extras)
+local function groupMap(roster)
+    local result = {}
+    for index = 1, #roster do
+        local entry = roster[index]
+        local group = tonumber(entry.subgroup) or 1
+        result[group] = result[group] or {}
+        result[group][#result[group] + 1] = entry.name
+    end
+    return result
+end
+
+local function shouldCompactGroups(label, explicit)
+    if explicit ~= nil then return explicit == true end
+    label = type(label) == "string" and label or ""
+    return label:find("Group", 1, true) ~= nil
+        or label:find("Feast Hit", 1, true) ~= nil
+        or label == "Green Side"
+        or label == "Red Side"
+end
+
+local function orderedSelection(roster, selected, extras, compactGroups)
     local values = {}
     local seen = {}
+    local consumed = {}
+
+    if compactGroups then
+        local groups = groupMap(roster)
+        local completeGroups = {}
+        for group = 1, 8 do
+            local members = groups[group]
+            if members and #members > 0 then
+                local complete = true
+                for index = 1, #members do
+                    if not selected[members[index]] then complete = false break end
+                end
+                if complete then
+                    completeGroups[#completeGroups + 1] = group
+                    for index = 1, #members do consumed[members[index]] = true end
+                end
+            end
+        end
+        if #completeGroups == 1 then
+            values[#values + 1] = "Group " .. completeGroups[1]
+        elseif #completeGroups > 1 then
+            local labels = {}
+            for index = 1, #completeGroups do labels[index] = tostring(completeGroups[index]) end
+            values[#values + 1] = "Groups " .. table.concat(labels, "+")
+        end
+    end
+
     for index = 1, #roster do
         local name = roster[index].name
-        if selected[name] then
+        if selected[name] and not consumed[name] then
             values[#values + 1] = name
+            seen[name] = true
+        elseif consumed[name] then
             seen[name] = true
         end
     end
@@ -63,8 +132,9 @@ function RosterPicker:Initialize(parent)
     local helper = frame:CreateFontString(nil, "OVERLAY")
     helper:SetFont(Theme.font, 9, "OUTLINE")
     helper:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -5)
-    helper:SetText("Click names, or use G1-G8 to select a complete current raid group.")
+    helper:SetText("Choose current players. Available G1-G8 buttons select complete raid groups.")
     helper:SetTextColor(Theme.colors.muted[1], Theme.colors.muted[2], Theme.colors.muted[3], 1)
+    self.helper = helper
 
     local close = CreateFrame("Button", nil, frame)
     close:SetSize(28, 28)
@@ -106,7 +176,7 @@ function RosterPicker:Initialize(parent)
     local apply = ActionButton:Create(frame, { text = "APPLY", width = 96, height = 28, fontSize = 9, variant = "primary" })
     apply:SetPoint("BOTTOMRIGHT", -16, 16)
     apply:SetScript("OnClick", function()
-        local value = orderedSelection(self.roster or {}, self.selected, self.extras)
+        local value = orderedSelection(self.roster or {}, self.selected, self.extras, self.compactGroups)
         local callback = self.onApply
         self:Hide()
         if callback then callback(value) end
@@ -178,35 +248,70 @@ function RosterPicker:RefreshRows()
             row:Hide()
         end
     end
+
+    local groups = groupMap(roster)
+    for group = 1, 8 do
+        local button = self.groupButtons[group]
+        local members = groups[group] or {}
+        local exists = #members > 0
+        local complete = exists
+        for index = 1, #members do
+            if not self.selected[members[index]] then complete = false break end
+        end
+        button:SetActionEnabled(exists)
+        button:SetActionVariant(complete and "primary" or "secondary")
+    end
+
     self.content:SetHeight(math.max(1, (#roster * 34) - 4))
 end
 
 function RosterPicker:ToggleGroup(group)
     local roster = self.roster or {}
+    local anyMember = false
     local anyUnselected = false
     for index = 1, #roster do
-        if roster[index].subgroup == group and not self.selected[roster[index].name] then anyUnselected = true break end
+        if roster[index].subgroup == group then
+            anyMember = true
+            if not self.selected[roster[index].name] then anyUnselected = true end
+        end
     end
+    if not anyMember then return end
     for index = 1, #roster do
         if roster[index].subgroup == group then self.selected[roster[index].name] = anyUnselected or nil end
     end
     self:RefreshRows()
 end
 
-function RosterPicker:Open(label, currentValue, onApply)
+function RosterPicker:Open(label, currentValue, onApply, compactGroups)
     self:Initialize(UIParent)
     self.roster = Roster:GetRoster()
     self.selected = {}
     self.extras = {}
     self.onApply = onApply
+    self.compactGroups = shouldCompactGroups(label, compactGroups)
     self.title:SetText("Choose players · " .. (label or "Assignment"))
+    self.helper:SetText(self.compactGroups
+        and "Select players or complete current raid groups; full groups are saved compactly."
+        or "Select current players; unavailable raid groups cannot be selected.")
 
     local rosterNames = {}
+    local groups = groupMap(self.roster)
     for index = 1, #self.roster do rosterNames[self.roster[index].name] = true end
-    local names = splitNames(currentValue)
-    for index = 1, #names do
-        local name = names[index]
-        if rosterNames[name] then self.selected[name] = true else self.extras[#self.extras + 1] = name end
+
+    local tokens = splitTokens(currentValue)
+    for index = 1, #tokens do
+        local token = tokens[index]
+        local groupNumbers = self.compactGroups and parseGroupNumbers(token) or nil
+        if groupNumbers then
+            for groupIndex = 1, #groupNumbers do
+                local members = groups[groupNumbers[groupIndex]] or {}
+                for memberIndex = 1, #members do self.selected[members[memberIndex]] = true end
+            end
+        elseif rosterNames[token] then
+            self.selected[token] = true
+        else
+            self.extras[#self.extras + 1] = token
+        end
     end
 
     self:RefreshRows()

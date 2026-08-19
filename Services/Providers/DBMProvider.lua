@@ -79,7 +79,7 @@ local function canSupplyBossTimers()
     if not _G.DBM then return false end
     if type(DBM.Options) ~= "table" then return true end
 
-    -- DBM 12.1.3 Timer:Start returns before DBM_TimerBegin when either of
+    -- DBM 12.1.4/current Timer:Start returns before DBM_TimerBegin when either of
     -- these global boss-bar switches is enabled. In that mode DBM cannot be
     -- RLA's timer authority, so Blizzard-derived data must remain available.
     return DBM.Options.HideDBMBars ~= true

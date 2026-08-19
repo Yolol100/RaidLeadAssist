@@ -13,15 +13,36 @@ local AR = ns:GetModule("Encounters.AssignmentRegistry")
 for _, d in ipairs({"normal","heroic","mythic"}) do
     local altar = Registry:GetProfile("altar",d)
     assert(altar.callsByKey.sever == nil)
-    assert(altar.callsByKey.intermission.warning:find("BLOODLUST",1,true))
-    assert(altar.callsByKey.final.warning == "PHASE 3 > KEEP BOTH EVEN > KILL TOGETHER")
+    assert(altar.callsByKey.intermission.warning:find("Bloodlust",1,true))
+    assert(altar.callsByKey.final.warning == "Final phase: keep health even; kill together.")
     local defs = AR:GetDefinitions("altar",d)
     assert(defs[1].key == "orb_collectors" and defs[1].minPlayers == 2 and defs[1].required)
     local ulatek = Registry:GetProfile("ulatek",d)
     for _, call in ipairs(ulatek.calls) do assert(call.timing == false) end
 end
+
+assert(#AR:GetCallDefinitions("altar", "normal", "guillotine") == 0,
+    "Normal Guillotine uses any 5+ players and needs no fixed roster group")
+assert(#AR:GetCallDefinitions("altar", "heroic", "guillotine") == 2,
+    "Heroic Guillotine requires two assigned soak groups")
+assert(#AR:GetCallDefinitions("altar", "mythic", "guillotine") == 4,
+    "Mythic exposes fresh Guillotine groups for the permanent debuff")
+
 local h = AR:GetDefinitions("altar","heroic")
 local requiredWail=0
 for _,def in ipairs(h) do if def.key:find("wail_kick_",1,true) and def.required then requiredWail=requiredWail+1 end end
 assert(requiredWail == 2)
-print("ok - Coiled Altar uses intermission Bloodlust, orb collectors and Heroic Wail coverage; Ulatek remains manual")
+
+local un = AR:GetDefinitions("ulatek","normal")
+local uh = AR:GetDefinitions("ulatek","heroic")
+assert(#un == 1 and un[1].key == "egg_handler")
+assert(#uh == 1 and uh[1].key == "egg_handler", "Heroic Ula'tek keeps only the Normal egg-handler assignment")
+local um = AR:GetDefinitions("ulatek","mythic")
+local found = {}
+for _,def in ipairs(um) do found[def.key] = true end
+assert(found.coil_a and found.coil_b and found.egg_left and found.egg_right and found.incubation_team,
+    "Mythic Ula'tek adds Coil rotation, egg carriers and Incubation team")
+assert(Registry:GetProfile("ulatek","normal").callsByKey.demolish,
+    "Ula'tek phase-3 shared movement uses the corrected Demolish identity")
+
+print("ok - Coiled Altar and Ula'tek prep stays difficulty-specific and minimal")

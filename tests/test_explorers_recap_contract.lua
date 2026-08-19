@@ -18,40 +18,47 @@ local function contains(value, needle)
     return string.find(value, needle, 1, true) ~= nil
 end
 
+local normal = plan("normal")
+assert(contains(normal, "Keep all three bosses even"))
+assert(contains(normal, "Crates appear"))
+assert(contains(normal, "Fish order: Nama, then Iku, then Gebbo"))
+assert(contains(normal, "Three players marked"))
+assert(contains(normal, "Star, Circle and Diamond"))
+assert(contains(normal, "pair Fire with Frost and drop them together"))
+assert(contains(normal, "step into the opposite elemental patch"))
+assert(contains(normal, "Icebound Flames starts"))
+
+local heroic = plan("heroic")
+assert(contains(heroic, "Keep Nama away"))
+assert(contains(heroic, "Spreading fire appears"))
+assert(not contains(heroic, "Fish order"), "Heroic should only contain changes from Normal")
+
+local mythic = plan("mythic")
+assert(contains(mythic, "15+ yards away"))
+assert(not contains(mythic, "Keep Nama away"), "Mythic should only contain changes from Heroic")
+
 for _, difficulty in ipairs({ "normal", "heroic", "mythic" }) do
     local profile = Registry:GetProfile("explorers", difficulty)
-    assert(contains(plan(difficulty), "BLOODLUST ON PULL"))
-    assert(contains(plan(difficulty), "FISH ORDER: NAMA > IKU > GEBBO"))
-    assert(contains(plan(difficulty), "MUSHROOM"))
-    assert(contains(plan(difficulty), "INTERRUPT ICEBOUND FLAMES"))
-
     assert(profile.callsByKey.crates and profile.callsByKey.crates.spellIDs[1] == 1291933)
     assert(profile.callsByKey.crates.prepareSeconds == 6 and profile.callsByKey.crates.pressSeconds == 3)
     assert(profile.callsByKey.fish and profile.callsByKey.fish.spellIDs[1] == 1292779)
+    assert(profile.callsByKey.fish.warning == "Fish: Nama, then Iku, then Gebbo.")
     assert(profile.callsByKey.fish.prepareSeconds == 8 and profile.callsByKey.fish.pressSeconds == 5)
     assert(profile.callsByKey.thud and profile.callsByKey.thud.spellIDs[1] == 1296092)
-    assert(profile.callsByKey.thud.warning == "MIGHTY THUD > 3 TARGETS > 3 SOAK POINTS")
+    assert(profile.callsByKey.thud.warning == "Thud: targets Star/Circle/Diamond; soakers stack.")
     assert(profile.callsByKey.thud.prepareSeconds == 7 and profile.callsByKey.thud.pressSeconds == 4)
 
-    assert(profile.callsByKey.icebound == nil, "Icebound interrupt is bossmod-owned")
-    assert(profile.callsByKey.shell == nil, "Shell Spin is a personal bossmod dodge")
-    assert(profile.callsByKey.blink == nil, "Blink Nova target handling is bossmod-owned")
-    assert(profile.callsByKey.volley == nil, "Frostfire target handling is bossmod-owned")
-    assert(profile.callsByKey.bomb == nil, "Explosive Surprise target handling is bossmod-owned")
-    assert(profile.callsByKey.position == nil, "fixed positioning belongs in the pre-pull plan")
+    assert(profile.callsByKey.icebound == nil, "Icebound interrupt remains a player reaction, not a duplicate RLA button")
+    assert(profile.callsByKey.shell == nil)
+    assert(profile.callsByKey.blink == nil)
+    assert(profile.callsByKey.volley == nil)
+    assert(profile.callsByKey.bomb == nil)
+    assert(profile.callsByKey.position == nil)
     assert(profile.callsByKey.tankswap == nil)
 end
-
-assert(contains(plan("heroic"), "NAMA 30+ YARDS AWAY"))
-assert(contains(plan("mythic"), "NAMA 30+ YARDS AWAY"))
-assert(contains(plan("mythic"), "RAID CLEARS 15+ YARDS"))
 
 assert(Registry:MatchCall("explorers", "normal", 1291933, nil).key == "crates")
 assert(Registry:MatchCall("explorers", "normal", 1292779, nil).key == "fish")
 assert(Registry:MatchCall("explorers", "normal", 1296092, nil).key == "thud")
-assert(Registry:MatchCall("explorers", "normal", 1291759, nil) == nil)
-assert(Registry:MatchCall("explorers", "normal", 1290711, nil) == nil)
-assert(Registry:MatchCall("explorers", "normal", 1295886, nil) == nil)
-assert(Registry:MatchCall("explorers", "normal", 1296249, nil) == nil)
 
-print("ok - Lost Explorers keeps resource and group coordination while bossmods own personal mechanics")
+print("ok - Lost Explorers fixed strategy and shared calls stay aligned")

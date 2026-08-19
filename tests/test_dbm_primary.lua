@@ -14,8 +14,8 @@ _G.C_AddOns = {
         local versions = {
             BigWigs = "v419.2",
             BigWigs_TheVenomousAbyss = "v419.2",
-            ["DBM-Core"] = "12.1.3",
-            ["DBM-Raids-Midnight"] = "12.1.3",
+            ["DBM-Core"] = "12.1.4",
+            ["DBM-Raids-Midnight"] = "12.1.4",
         }
         return versions[name]
     end,
@@ -84,4 +84,4 @@ Timeline:ProviderTimerStopped("DBM", "dbm-1")
 assert(Timeline:GetActionableTimerForCall("mechanic") == bigwigs,
     "BigWigs must remain a safe fallback if the preferred DBM timer stops")
 
-print("ok - DBM is primary while BigWigs and Blizzard remain safe fallbacks")
+print("ok - DBM 12.1.4 is primary while BigWigs and Blizzard remain safe fallbacks")

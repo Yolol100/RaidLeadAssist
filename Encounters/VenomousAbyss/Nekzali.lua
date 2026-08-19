@@ -1,15 +1,13 @@
 local _, ns = ...
 local Registry = ns:GetModule("Encounters.Registry")
 
-local BOSSMOD_RULE = "CALL PRIORITY: FOLLOW DBM OR BIGWIGS FOR YOUR PERSONAL DEBUFFS, DODGES, ROLE WARNINGS AND TIMERS. FOLLOW RLA/RAID-LEADER CALLS FOR GROUPS, MARKERS, SOAKS, TARGET PRIORITY AND SHARED RAID MOVEMENT."
-
-local function baseCalls(pyreAction, flameAction)
+local function baseCalls(pyreAction, pyreWarning, pyreActionTemplate, pyreWarningTemplate)
     local calls = {
         {
             key = "adds",
             ability = "Restless Amani",
-            action = "Kill adds",
-            warning = "KILL ADS",
+            action = "Kill Amani before the Well",
+            warning = "Amani: kill them before the Well.",
             voice = "Adds",
             spellIDs = { 1295397, 1297630 },
             prepareSeconds = 7,
@@ -18,8 +16,8 @@ local function baseCalls(pyreAction, flameAction)
         {
             key = "echoes",
             ability = "Echoes of Jawae",
-            action = "Kill each Echo as it awakens",
-            warning = "KILL ECHOES",
+            action = "Kill each Echo as it wakes",
+            warning = "Echoes: kill each one as it wakes.",
             voice = "Echoes",
             timing = false,
             iconSpellID = 1289696,
@@ -28,28 +26,20 @@ local function baseCalls(pyreAction, flameAction)
             key = "pyre",
             ability = "Hungering Pyre",
             action = pyreAction,
-            warning = pyreAction,
+            warning = pyreWarning,
+            actionTemplate = pyreActionTemplate,
+            warningTemplate = pyreWarningTemplate,
             voice = "Pyre",
             spellIDs = { 1305421, 1290679 },
             prepareSeconds = 8,
             pressSeconds = 5,
         },
     }
-    if flameAction then
-        calls[#calls + 1] = {
-            key = "flame",
-            ability = "Slithering Flame",
-            action = flameAction,
-            warning = flameAction,
-            voice = "Flame",
-            timing = false,
-        }
-    end
     calls[#calls + 1] = {
         key = "phase2",
         ability = "Phase 2",
-        action = "Bloodlust > burn boss",
-        warning = "PHASE 2 > BLOODLUST > BURN BOSS",
+        action = "Bloodlust and burn boss",
+        warning = "Phase 2: Bloodlust and burn boss.",
         voice = "Phase two",
         timing = false,
         iconSpellID = 1299673,
@@ -57,14 +47,29 @@ local function baseCalls(pyreAction, flameAction)
     return calls
 end
 
-local normalCalls = baseCalls("MELEE SOAK", nil)
-local heroicCalls = baseCalls("MELEE SOAK", "RANGED BURN CORPSES")
-local mythicCalls = baseCalls("GROUPS 1+2 SOAK", "GROUPS 3+4 BURN CORPSES")
+local normalCalls = baseCalls(
+    "Melee soak together",
+    "Pyre: melee soak together."
+)
+local heroicCalls = baseCalls(
+    "Assigned group soaks Pyre",
+    "Pyre: assigned group soak together.",
+    "{{pyre_soakers}} soak Pyre",
+    "Pyre: {{pyre_soakers}} soak together."
+)
+local mythicCalls = baseCalls(
+    "Assigned group soaks Pyre",
+    "Pyre: assigned group soak together.",
+    "{{pyre_soakers}} soak Pyre",
+    "Pyre: {{pyre_soakers}} soak together."
+)
 table.insert(mythicCalls, 2, {
     key = "grasping",
     ability = "Grasping Depths",
-    action = "Next fresh well group in > kick > kill Echo > out",
-    warning = "GRASPING > NEXT WELL GROUP IN > KICK > KILL ECHO > OUT",
+    action = "Assigned well group enters",
+    warning = "Grasping: assigned well group enter.",
+    actionTemplate = "{{rotation:well}} enter the Well",
+    warningTemplate = "Grasping: {{rotation:well}} enter; interrupt and kill Echo.",
     voice = "Well group",
     spellIDs = { 1293212 },
     prepareSeconds = 8,
@@ -75,35 +80,32 @@ Registry:Register({
     key = "nekzali",
     name = "Nek'zali the Soulcoiler",
     encounterID = 3470,
-    strategyStatus = "12.1 Journal + current Wowhead/Ready Check Pull + DBM/BigWigs source-reviewed 2026-08-18; raidlead-only call scope; live validation pending",
+    strategyStatus = "12.1 Journal + current Wowhead/Ready Check Pull + DBM/BigWigs source-reviewed 2026-08-19; player briefing split from raidleader prep; live validation pending",
     profiles = {
         normal = {
             explanation = {
-                "PLAN: KEEP THE SOULCOIL WELL EMPTY. KILL RAISED AMANI BEFORE THEY REACH IT; NEVER DIE IN THE WELL.",
-                "ESSENCE REND GOES TO THE EDGE. STAY CLEAR OF POSSESSION BARRAGE AND DODGE SOULCOIL IGNITION IMPACTS.",
-                "AT 50% KILL EACH ECHO AS IT AWAKENS. MELEE SOAK HUNGERING PYRE; RANGED STAY OUT AND SPREAD FOR SLITHERING FLAME.",
-                "PHASE 2: BLOODLUST WHEN NEK'ZALI BECOMES ACTIVE, THEN BURN BEFORE FULL ENERGY.",
-                BOSSMOD_RULE,
+                "Keep the Soulcoil Well clear; kill Amani before they enter.",
+                "At 50%, kill each Echo as it becomes active.",
+                "Hungering Pyre: melee stay in and soak together.",
+                "Ranged stay outside and spread for their fire circles.",
+                "Phase 2: Bloodlust and burn before full energy.",
             },
             calls = normalCalls,
         },
         heroic = {
             explanation = {
-                "PLAN: KEEP THE WELL EMPTY. KILL AMANI BEFORE THEY REACH IT, BUT KEEP THEIR CORPSES AVAILABLE FOR THE INTERMISSION.",
-                "ESSENCE REND GOES TO THE EDGE. STAY CLEAR OF POSSESSION BARRAGE AND DODGE SOULCOIL IGNITION IMPACTS.",
-                "AT 50% KILL ECHOES. MELEE SOAK PYRE; RANGED STAY OUT, THEN TAKE CREMATION TO AMANI CORPSES TO BURN THEM.",
-                "PHASE 2: BLOODLUST WHEN NEK'ZALI BECOMES ACTIVE, THEN BURN BEFORE FULL ENERGY.",
-                BOSSMOD_RULE,
+                "Hungering Pyre: soak only with your assigned Pyre group.",
+                "Fire circle on you: move onto a dead Amani corpse.",
+                "Stay on the corpse until your fire explodes; keep 4+ yards from others.",
             },
             calls = heroicCalls,
         },
         mythic = {
             explanation = {
-                "PLAN: HEROIC RULES PLUS ALTERNATING FRESH WELL GROUPS FOR GRASPING DEPTHS. KEEP THE WELL EMPTY OUTSIDE ASSIGNED ENTRIES.",
-                "GROUPS 1+2 SOAK HUNGERING PYRE. GROUPS 3+4 STAY OUT, THEN BURN AMANI CORPSES WITH CREMATION.",
-                "GRASPING: NEXT FRESH WELL GROUP ENTERS, KICKS SOULCOILER'S CURSE, KILLS DROWNED ECHO, THEN EXITS; SOUL EXHAUSTION FORCES A FRESH GROUP.",
-                "INVOKE INTERRUPTS ACTIVE CASTS: STOP CASTING BEFORE IT LANDS. PHASE 2: BLOODLUST, THEN BURN BEFORE FULL ENERGY.",
-                BOSSMOD_RULE,
+                "When your well group is called, enter the Soulcoil Well.",
+                "Inside: interrupt Soulcoiler's Curse and kill the Drowned Echo.",
+                "Leave after it dies; Soul Exhaustion means do not enter again.",
+                "Invoke starts: stop casting until it finishes.",
             },
             calls = mythicCalls,
         },

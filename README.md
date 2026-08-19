@@ -16,7 +16,9 @@ RLA consumes public **DBM**, **BigWigs** and Blizzard Encounter Timeline timing.
 
 Provider payloads are untrusted runtime input. Secret, malformed, stale or cross-encounter data is rejected/downgraded. Direct bossmod timers must resolve to the verified active encounter. Cross-provider occurrence reconciliation prevents duplicate calls/audio and a successful manual call acknowledges the occurrence so a late provider cannot immediately re-arm it.
 
-The reviewed stable release-contract baselines remain **DBM 12.1.3** and **BigWigs v419.2**. Exact watched upstream commits/files are stored in `docs/UPSTREAM_BASELINES.json` and checked for drift.
+The stable release-contract baselines are **DBM 12.1.4** and **BigWigs v419.2**. DBM 12.1.4's Venomous Abyss encounter modules match the reviewed launch-day source. Current Venomous Abyss BigWigs `master` boss modules were re-reviewed on 2026-08-19 after launch-day source drift; exact core, raid-TOC and per-boss fingerprints live in `docs/UPSTREAM_BASELINES.json`.
+
+BigWigs `v419.2` predates the finalized Coiled Altar boss module, so RLA does not assume that a loaded stable BigWigs build can supply every live Venomous Abyss bar. When a bossmod cannot provide a usable matching timer, RLA intentionally falls back to Blizzard Encounter Timeline data for supported calls. Users do not need unreleased bossmod source for RLA to load or for manual calls to remain available.
 
 ## Ula'tek
 
@@ -42,7 +44,7 @@ Provider timer identity is kept separate from display spell identity; for exampl
 - `docs/ARCHITECTURE.md`: what each layer owns, when it runs, for whom and why.
 - `docs/TEN_OF_TEN_ACCEPTANCE.md`: the **160-check** maximum master audit.
 - `docs/LIVE_TEST_MATRIX.md`: evidence that can only be collected in the real Retail client.
-- `docs/AUDIT_SOURCES.md`: current Blizzard, GitHub, DBM/BigWigs and API source register.
+- `docs/AUDIT_SOURCES.md`: current Blizzard, GitHub, DBM/BigWigs and encounter source register.
 - `scripts/audit_runtime.py`: TOC/runtime/copy/policy hygiene.
 - `scripts/audit_repository.py`: repository paths/encoding/secrets/module order/combat API/workflow/supply-chain governance.
 
@@ -61,6 +63,8 @@ Every push/PR runs:
 - every `tests/test_*.lua` behavioral/adversarial regression;
 - two independent release-ZIP builds that must be byte-identical;
 - SHA-256 generation.
+
+The distributable ZIP is runtime-only: `RaidLeadAssist.toc` plus exactly the Lua files listed by that TOC. Repository documentation, tests, audit scripts and maintenance files are deliberately excluded from the addon package, so release cleanup does not require deleting useful verification source from Git.
 
 A successful `main` push additionally uploads the verified ZIP/checksum for 90 days, creates GitHub/Sigstore build provenance and publishes one version-locked prerelease/tag on the exact validated SHA with durable ZIP/checksum assets. Reusing the same version for another SHA fails.
 

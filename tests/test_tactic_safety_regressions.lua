@@ -7,17 +7,33 @@ T.Load("Encounters/Registry.lua", ns)
 for _, file in ipairs({"Explorers.lua","Sszorak.lua","TwinFangs.lua","CoiledAltar.lua","Ulatek.lua","Sentinels.lua","Vashnik.lua"}) do T.Load("Encounters/VenomousAbyss/"..file,ns) end
 local R=ns:GetModule("Encounters.Registry")
 local function text(k,d) return table.concat(R:GetProfile(k,d).explanation,"\n") end
-assert(R:GetProfile("twinfangs","normal").callsByKey.feast.warning == "FEAST > RAID SOAK ALL 3 HITS")
-assert(not text("twinfangs","normal"):find("THREE FRESH 3+ TEAMS",1,true))
-for _,d in ipairs({"heroic","mythic"}) do assert(R:GetProfile("twinfangs",d).callsByKey.feast.warning == "FEAST > TEAM A > TEAM B > TEAM C") end
-assert(text("altar","normal"):find("2-3 MOBILE ORB COLLECTORS",1,true))
-assert(text("altar","heroic"):find("2-3 WAIL INTERRUPTS",1,true))
-assert(R:GetProfile("altar","normal").callsByKey.intermission.warning:find("BLOODLUST",1,true))
-assert(not R:GetProfile("altar","normal").callsByKey.final.warning:find("BLOODLUST",1,true))
-for _,d in ipairs({"normal","heroic","mythic"}) do
-    assert(R:GetProfile("sentinels",d).callsByKey.side_swap.warning == "GROUPS HOLD SIDES > BOSSES SWAP")
-    assert(R:GetProfile("sszorak",d).callsByKey.maelstrom.warning:find("POPPERS 1/2/3",1,true))
+
+assert(R:GetProfile("twinfangs","normal").callsByKey.feast.warning == "Feast: fresh 3+ players soak each hit.")
+assert(text("twinfangs","normal"):find("at least 3 fresh players",1,true))
+for _,d in ipairs({"heroic","mythic"}) do
+    assert(R:GetProfile("twinfangs",d).callsByKey.feast.warning == "Feast: assigned groups soak in order.")
 end
-for _,d in ipairs({"heroic","mythic"}) do assert(R:GetProfile("vashnik",d).callsByKey.catalyst.warning == "BILE > SOAK EVERY GREEN CIRCLE") end
-for _,d in ipairs({"normal","heroic","mythic"}) do for _,call in ipairs(R:GetProfile("ulatek",d).calls) do assert(call.timing==false) end end
-print("ok - strategy regressions cover fixed Sentinels sides, Vashnik dynamic Bile, Sszorak poppers, Twin Normal Feast and Altar intermission lust")
+
+assert(text("altar","normal"):find("Green poison orbs spawn",1,true))
+assert(text("altar","normal"):find("only collectors touch them",1,true))
+assert(text("altar","normal"):find("5+ players stack",1,true))
+assert(text("altar","heroic"):find("Guillotine gives a repeat-hit debuff",1,true))
+assert(R:GetProfile("altar","normal").callsByKey.guillotine.warning == "Guillotine: 5+ soak; raid move 40+ yards.")
+assert(R:GetProfile("altar","normal").callsByKey.intermission.warning:find("Bloodlust",1,true))
+assert(not R:GetProfile("altar","normal").callsByKey.final.warning:find("Bloodlust",1,true))
+
+for _,d in ipairs({"normal","heroic","mythic"}) do
+    assert(R:GetProfile("sentinels",d).callsByKey.side_swap.warning == "After Stasis: hold assigned sides.")
+    assert(R:GetProfile("sszorak",d).callsByKey.maelstrom.warning == "Maelstrom: assigned Poppers trigger Cysts.")
+    assert(R:GetProfile("sszorak",d).callsByKey.dig_in.warning == "Dig In: use damage cooldowns.")
+end
+for _,d in ipairs({"heroic","mythic"}) do
+    assert(R:GetProfile("vashnik",d).callsByKey.catalyst.warning == "Catalyst: soak every circle.")
+end
+for _,d in ipairs({"normal","heroic","mythic"}) do
+    for _,call in ipairs(R:GetProfile("ulatek",d).calls) do assert(call.timing==false) end
+end
+assert(R:GetProfile("ulatek","heroic").callsByKey.coils.warning == "Coils: stack at Square.")
+assert(R:GetProfile("ulatek","mythic").callsByKey.coils.warning == "Coils: assigned group stack at Square.")
+
+print("ok - strategy regressions cover fixed execution, difficulty assignments and conservative Ula'tek split")

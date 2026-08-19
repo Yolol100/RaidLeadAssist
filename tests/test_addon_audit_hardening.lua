@@ -56,10 +56,19 @@ local baseline = read("docs/UPSTREAM_BASELINES.json")
 for _, path in ipairs({
     "Nekzali.lua", "TwinFangs.lua", "CoiledAltar.lua", "Sentinels.lua", "Explorers.lua", "Vashnik.lua", "Sszorak.lua", "Ulatek.lua",
     "NekzalitheSoulcoiler.lua", "TheTwinFangs.lua", "TheCoiledAltar.lua", "EntombedSentinels.lua", "TheLostExplorers.lua", "VashniktheMalignant.lua",
+    "DBM-Raids-Midnight_Mainline.toc", "BigWigs_TheVenomousAbyss_Mainline.toc",
 }) do
-    assert(baseline:find(path, 1, true), "missing provider boss watch: " .. path)
+    assert(baseline:find(path, 1, true), "missing provider watch: " .. path)
 end
-assert(baseline:find("afbb4e4849275437108e6a965ac1c07effd1f337", 1, true))
+assert(baseline:find('"releaseTag": "12.1.4"', 1, true), "DBM stable release pin must be 12.1.4")
+assert(baseline:find("88ec781e9b213dbf7d9ca59164a584c2529d9bf9", 1, true),
+    "DBM 12.1.4 release commit must stay pinned")
+assert(baseline:find("49ca8b3448e5aa60e0ac210459a6369e5b22641c", 1, true),
+    "Nek'zali DBM post-unlock Normal-timing baseline must stay pinned")
+assert(baseline:find("472b7e826c1e8f95eab2674edcdb46b28c911470", 1, true),
+    "Twin Fangs DBM post-unlock Normal-timing baseline must stay pinned")
+assert(baseline:find("67d6c66d1abdd47d2404801f8488d6a6468c9d28", 1, true),
+    "Coiled Altar BigWigs live-launch baseline must stay pinned to the reviewed source")
 
 local security = read("SECURITY.md")
 assert(security:find("RaidLeadAssist.toc", 1, true))
