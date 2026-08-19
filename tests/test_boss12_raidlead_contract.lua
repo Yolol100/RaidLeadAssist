@@ -12,10 +12,10 @@ local function has(value, needle) return value:find(needle, 1, true) ~= nil end
 
 for _, difficulty in ipairs({"normal","heroic","mythic"}) do
     local sent = Registry:GetProfile("sentinels", difficulty)
-    assert(sent.callsByKey.coagulation.warning == "Green side: kill the slime.")
-    assert(sent.callsByKey.miasma.warning == "Red side: stack on the target.")
-    assert(sent.callsByKey.stasis.warning == "Stasis: pair toxin numbers to exactly 4 (1+3 or 2+2).")
-    assert(sent.callsByKey.side_swap.warning == "After Stasis: hold your side while tanks swap the bosses.")
+    assert(sent.callsByKey.coagulation.warning == "Green side: kill slime.")
+    assert(sent.callsByKey.miasma.warning == "Red mark: stack together.")
+    assert(sent.callsByKey.stasis.warning == "Stasis: pair to 4; use 1+3 or 2+2.")
+    assert(sent.callsByKey.side_swap.warning == "After Stasis: hold sides; tanks swap bosses.")
     assert(sent.callsByKey.side_swap.timing == false)
 end
 
@@ -35,8 +35,8 @@ assert(Registry:GetProfile("sentinels","mythic").callsByKey.protovenom.warning =
 
 for _, difficulty in ipairs({"normal","heroic","mythic"}) do
     local nek = Registry:GetProfile("nekzali", difficulty)
-    assert(nek.callsByKey.adds.warning == "Amani adds: kill them before they reach the Well.")
-    assert(nek.callsByKey.phase2.warning == "Phase 2: Bloodlust and burn the boss.")
+    assert(nek.callsByKey.adds.warning == "Amani: kill them before the Well.")
+    assert(nek.callsByKey.phase2.warning == "Phase 2: Bloodlust and burn boss.")
 end
 assert(Registry:GetProfile("nekzali", "heroic").callsByKey.flame == nil)
 assert(Registry:GetProfile("nekzali", "mythic").callsByKey.flame == nil)
