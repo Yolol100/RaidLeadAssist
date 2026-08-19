@@ -65,10 +65,11 @@ end
 
 local function refreshDynamicCallText()
     local profile = Registry:GetProfile(App.activeBossKey, App.activeDifficultyKey)
-    if not profile then return end
+    local calls = type(profile) == "table" and type(profile.calls) == "table" and profile.calls or nil
+    if not calls then return end
 
-    for index = 1, #profile.calls do
-        local call = profile.calls[index]
+    for index = 1, #calls do
+        local call = calls[index]
         local button = UI.callButtons and UI.callButtons[index]
         if button then
             local action, complete = Assignments:BuildCallAction(call.action, App.activeBossKey, App.activeDifficultyKey, call.key)
@@ -82,6 +83,7 @@ local function refreshCallAvailability()
     local callsEnabled, reason = callContextSafety()
     local planEnabled = callsEnabled and not Encounter:IsActive()
     local profile = Registry:GetProfile(App.activeBossKey, App.activeDifficultyKey)
+    local calls = type(profile) == "table" and type(profile.calls) == "table" and profile.calls or nil
 
     local explanationFrame = UI.explanationButton and UI.explanationButton.frame
     if explanationFrame and type(explanationFrame.SetEnabled) == "function" then explanationFrame:SetEnabled(planEnabled) end
@@ -90,10 +92,16 @@ local function refreshCallAvailability()
         local button = UI.callButtons[index]
         local frame = button and button.frame
         if frame and type(frame.SetEnabled) == "function" then
-            local call = profile and profile.calls[index]
-            local assignmentReady = true
-            if call then assignmentReady = Assignments:IsCallReady(App.activeBossKey, App.activeDifficultyKey, call.key) end
-            frame:SetEnabled(callsEnabled and assignmentReady == true and call ~= nil)
+            if calls then
+                local call = calls[index]
+                local assignmentReady = true
+                if call then assignmentReady = Assignments:IsCallReady(App.activeBossKey, App.activeDifficultyKey, call.key) end
+                frame:SetEnabled(callsEnabled and assignmentReady == true and call ~= nil)
+            else
+                -- Partial test/recovery profiles may expose only callsByKey. Context safety
+                -- remains authoritative; full runtime profiles always provide ordered calls.
+                frame:SetEnabled(callsEnabled)
+            end
         end
     end
 
