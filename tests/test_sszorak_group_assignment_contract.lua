@@ -23,7 +23,7 @@ local ok = Assignments:ApplyBossDraft("sszorak","heroic",{
 })
 assert(ok)
 local warning = Assignments:BuildCallWarning(
-    "Maelstrom: Popper 1, then 2, then 3 pop a saved Cyst on each wind.",
+    "Maelstrom: Poppers 1-2-3 trigger Cysts on each wind.",
     "sszorak", "heroic", "maelstrom"
 )
 assert(warning:find("Popper 1: Kilo.",1,true) and warning:find("Popper 2: Lima.",1,true) and warning:find("Popper 3: Mike.",1,true))
