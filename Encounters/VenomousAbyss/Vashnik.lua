@@ -38,14 +38,14 @@ local siphon = manualCall(
 )
 local catalyst = timedCall(
     "catalyst", "Malignant Catalyst",
-    "Soak every green circle",
-    "Green circles: soak every one.",
+    "Soak every Catalyst circle",
+    "Catalyst: soak every circle.",
     "Soak every circle", { 1282525, 1282509 }, 7, 4
 )
 local frothMythic = timedCall(
     "froth", "Plague Froth",
     "Aim wave through Tumor",
-    "Froth: aim one wave through a Tumor.",
+    "Froth: aim one wave through Tumor.",
     "Aim at tumors", { 1281907 }, 6, 3
 )
 local killTumors = manualCall(
@@ -63,22 +63,23 @@ Registry:Register({
     key = "vashnik",
     name = "Vashnik the Malignant",
     encounterID = 3455,
-    strategyStatus = "12.1 Journal + current Wowhead + DBM/BigWigs source-reviewed 2026-08-19; player briefing split from raidleader fountain/target prep; live validation pending",
+    strategyStatus = "12.1 Journal + current Wowhead + Ready Check Pull + DBM/BigWigs source-reviewed 2026-08-19; fixed fountain-pair route; live validation pending",
     profiles = {
         normal = {
             explanation = {
+                "Fountain order: Flame+Shadow, Shadow+Blood, then Blood+Flame.",
                 "Fountain adds spawn: kill them before they reach the center.",
                 "Fire debuff on you: run far away before it explodes.",
                 "Blood debuff on you: stay near teammates while healers recover you.",
                 "Shadow debuff on you: spread and keep moving from eruptions.",
-                "Froth circle on you: spread and aim all waves into clear space.",
+                "Froth circle on you: spread and aim its waves into clear space.",
             },
             calls = normalCalls(),
         },
         heroic = {
             explanation = {
-                "Fire adds are Skull then Cross: kill Skull, wait, then kill Cross.",
-                "Green circles appear: at least one player soaks each circle.",
+                "Fire adds are Skull then Cross: kill Skull, wait, then Cross.",
+                "Catalyst circles appear: at least one player soaks each circle.",
             },
             calls = heroicCalls(),
         },
