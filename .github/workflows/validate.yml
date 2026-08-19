@@ -10,10 +10,26 @@ permissions:
 jobs:
   validation:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - run: sudo apt-get update && sudo apt-get install -y lua5.1 lua-check
+      - name: Install Lua validation tooling
+        shell: bash
+        run: |
+          set -euo pipefail
+          # GitHub-hosted Ubuntu runners can temporarily prefer an unhealthy
+          # Azure mirror. Keep CI deterministic and bounded by falling back to
+          # Ubuntu's canonical archive and using explicit network retries/timeouts.
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            sudo sed -i 's#http://azure.archive.ubuntu.com/ubuntu#https://archive.ubuntu.com/ubuntu#g' /etc/apt/apt-mirrors.txt
+          fi
+          apt_opts=(
+            -o Acquire::Retries=3
+            -o Acquire::http::Timeout=20
+            -o Acquire::https::Timeout=20
+          )
+          sudo apt-get "${apt_opts[@]}" update
+          sudo apt-get "${apt_opts[@]}" install -y lua5.1 lua-check
       - name: Validate audit tooling and baselines
         shell: bash
         run: |
