@@ -67,6 +67,11 @@ function AssignmentRegistry:ValidateLayout(bossKey, difficultyKey, profile)
             if definition.helper ~= nil then
                 assert(type(definition.helper) == "string", "Invalid assignment helper")
             end
+            if definition.compactGroups ~= nil then
+                assert(type(definition.compactGroups) == "boolean", "compactGroups must be boolean")
+                assert(definition.kind == "assignee" or definition.kind == "rotation",
+                    "compactGroups requires a roster-like assignment")
+            end
             if definition.rotation ~= nil then
                 assert(definition.kind == "rotation", "Rotating assignment must use rotation kind")
                 assert(type(definition.rotation) == "string" and definition.rotation ~= "", "Invalid rotation")
