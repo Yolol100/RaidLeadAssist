@@ -17,7 +17,7 @@
           "ref": "master",
           "path": "DBM-Core/modules/objects/Timer.lua",
           "blobSha": "c8039ffb656fabcc2eb8a36c3a60643128487ba9",
-          "reason": "RLA consumes DBM timer callback contracts and authority state; the Timer contract remained compatible in the 12.1.4 launch review"
+          "reason": "RLA consumes DBM timer callback contracts and authority state; the Timer contract remains compatible after the 2026-08-19 post-unlock drift review"
         },
         {
           "ref": "master",
@@ -28,14 +28,14 @@
         {
           "ref": "master",
           "path": "DBM-Raids-Midnight/TheVenomousAbyss/NekzalitheSoulcoiler.lua",
-          "blobSha": "264dc083b6b5afb5ae7507b19384246aa9aaed8f",
-          "reason": "Nek'zali boss-specific timer and spell identities"
+          "blobSha": "49ca8b3448e5aa60e0ac210459a6369e5b22641c",
+          "reason": "Post-unlock master adds Normal hardcoded timeline routing while preserving RLA-consumed Amani, Pyre and Grasping timer identities"
         },
         {
           "ref": "master",
           "path": "DBM-Raids-Midnight/TheVenomousAbyss/TheTwinFangs.lua",
-          "blobSha": "f7d43c1bb81eaa905dc728b52a89bbbfefa3eecd",
-          "reason": "Twin Fangs Feast, Stone Breaker, movement and Mythic interrupt identities"
+          "blobSha": "472b7e826c1e8f95eab2674edcdb46b28c911470",
+          "reason": "Post-unlock master adds Normal hardcoded routing and Submerge lifecycle coverage while preserving RLA-consumed Feast, globule, add and movement identities"
         },
         {
           "ref": "master",
@@ -85,7 +85,7 @@
           "ref": "master",
           "path": "Core/BossPrototype.lua",
           "blobSha": "dfcd2952467c62bad92d95230683799a713be0e9",
-          "reason": "RLA consumes BigWigs Timer/CastTimer/StartBar contracts; callback contract remained compatible in the 2026-08-19 live-launch review"
+          "reason": "RLA consumes BigWigs Timer/CastTimer/StartBar contracts; callback contract remains compatible in the 2026-08-19 post-unlock review"
         },
         {
           "ref": "master",
