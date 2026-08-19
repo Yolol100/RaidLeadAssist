@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.0-beta.56 — 2026-08-19
+
+- Re-review another late Season 2 day-one upstream movement after beta.55: DBM Coiled Altar now enables preliminary Normal hardcoded timelines in addition to Heroic, while unknown rows still fail closed through `ResumeBlizzardAPI`.
+- Refresh the DBM Coiled Altar fingerprint after confirming beta.55's encounter-wide authority rule already keeps exactness bound to active hardcoded DBM authority rather than provider name.
+- Refresh BigWigs Nek'zali after the non-Mythic Phase 2 Possession Barrage 28-second timeline routing fix; RLA does not consume Possession Barrage as a raidleader call identity, so no encounter call mapping changes.
+- Keep beta.56 prerelease/live-pending and assign the refreshed source evidence a new immutable version rather than mutating the already published beta.55 identity.
+
 ## 0.9.0-beta.55 — 2026-08-19
 
 - Generalize DBM timing provenance across all eight current Venomous Abyss modules: a DBM callback is exact only while DBM has asserted hardcoded Encounter Timeline authority; after `ResumeBlizzardAPI` the DBM copy is preview-only until another direct source independently proves exact timing.
