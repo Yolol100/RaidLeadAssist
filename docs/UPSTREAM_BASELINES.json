@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-08-18",
+  "reviewedAt": "2026-08-19",
   "wowInterface": 120100,
   "raidUnlock": {
     "eu": "2026-08-19",
@@ -79,37 +79,37 @@
           "ref": "master",
           "path": "Core/BossPrototype.lua",
           "blobSha": "dfcd2952467c62bad92d95230683799a713be0e9",
-          "reason": "RLA consumes BigWigs Timer/CastTimer/StartBar contracts"
+          "reason": "RLA consumes BigWigs Timer/CastTimer/StartBar contracts; callback contract remained compatible in the 2026-08-19 live-launch review"
         },
         {
           "ref": "master",
           "path": "TheVenomousAbyss/Nekzali.lua",
-          "blobSha": "2d074bdba5acc60c89fa05b64c1924dadb37be1f",
-          "reason": "Nek'zali boss-specific timer and spell identities"
+          "blobSha": "a8066c3ce8cdecb5dfb94beb7f6dab1740c7a4c3",
+          "reason": "Live-launch timeline refinements reviewed; RLA Nek'zali encounter and call identities remain compatible"
         },
         {
           "ref": "master",
           "path": "TheVenomousAbyss/TwinFangs.lua",
-          "blobSha": "e3c79c7d1ba8781f1a338dd1064a8a826b517043",
-          "reason": "Twin Fangs distinct bars and Ravenous Feast identity"
+          "blobSha": "d16ccc45b3f2221b69212f4e26f52b49f63c4de5",
+          "reason": "Live-launch Twin Fangs bars re-reviewed; Ravenous Feast and shared movement identities remain compatible"
         },
         {
           "ref": "master",
           "path": "TheVenomousAbyss/CoiledAltar.lua",
-          "blobSha": "afbb4e4849275437108e6a965ac1c07effd1f337",
-          "reason": "Semantic review confirmed Toxic Deluge, Guillotine, Dreadmarch, Eternal Nightfall, Spiritcackle and Gloombomb identities remain compatible after stage/custom-timer changes"
+          "blobSha": "1d6be4cb982af82d7d5040e794689e516cec7def",
+          "reason": "Finalized Coiled Altar live module re-reviewed for Toxic Deluge, Guillotine, Dreadmarch, Eternal Nightfall, Spiritcackle and Gloombomb identities"
         },
         {
           "ref": "master",
           "path": "TheVenomousAbyss/Sentinels.lua",
-          "blobSha": "85d8949929b7b02bce7c6a10737a3d332c4b5604",
-          "reason": "Entombed Sentinels boss-specific timer and spell identities"
+          "blobSha": "9a71d1dfabdca8e721a5dc49854aec0b36139c7e",
+          "reason": "Live-launch Entombed Sentinels timer refinements reviewed; RLA call identities remain compatible"
         },
         {
           "ref": "master",
           "path": "TheVenomousAbyss/Explorers.lua",
-          "blobSha": "cfb6e889bf1408fa91235e07003fd48681a9d3c5",
-          "reason": "Lost Explorers boss-specific timer and spell identities"
+          "blobSha": "a80d8800e7794947638d3b2899478c78b41bda69",
+          "reason": "Live-launch Lost Explorers timer refinements reviewed; crate, fish and Mighty Thud identities remain compatible"
         },
         {
           "ref": "master",
@@ -126,8 +126,8 @@
         {
           "ref": "master",
           "path": "TheVenomousAbyss/Ulatek.lua",
-          "blobSha": "cab4c11e2dc741742b9f51b15ed44c98e1a9ce63",
-          "reason": "Ula'tek currently relies on backup Blizzard timeline bars rather than a complete validated exact schedule"
+          "blobSha": "9c2b0ece40ebc03629455a7fa500f941d5a59487",
+          "reason": "Live-launch Ula'tek source re-reviewed; RLA remains manual-only until stable exact Retail timing is proved"
         }
       ]
     }
