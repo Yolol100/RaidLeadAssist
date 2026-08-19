@@ -1,6 +1,9 @@
 local _, ns = ...
 
 local AssignmentRegistry = ns:GetModule("Encounters.AssignmentRegistry")
+local EncounterRegistry = ns:GetModule("Encounters.Registry")
+local EventBus = ns:GetModule("Core.EventBus")
+local Roster = ns:GetModule("Services.RosterService")
 
 local AssignmentService = {
     database = nil,
@@ -29,19 +32,80 @@ local function containsControl(value)
     return value:find("[%z\1-\8\11\12\14-\31\127]") ~= nil
 end
 
-local function parsePlayers(value)
-    local players = {}
+local function parseGroupNumbers(value)
+    if type(value) ~= "string" then return nil end
+    local lower = trim(value):lower()
+    local body = lower:match("^group%s+(%d+)$") or lower:match("^groups%s+([%d+]+)$")
+    if not body then return nil end
+
+    local result = {}
     local seen = {}
+    for token in body:gmatch("%d+") do
+        local group = tonumber(token)
+        if not group or group < 1 or group > 8 or seen[group] then return nil, "invalid group expression" end
+        seen[group] = true
+        result[#result + 1] = group
+    end
+    if #result == 0 then return nil, "invalid group expression" end
+    table.sort(result)
+    return result
+end
+
+local function currentRosterByGroup()
+    local roster = Roster:GetRoster()
+    local byGroup = {}
+    for index = 1, #roster do
+        local entry = roster[index]
+        local group = tonumber(entry.subgroup) or 1
+        byGroup[group] = byGroup[group] or {}
+        byGroup[group][#byGroup[group] + 1] = entry.name
+    end
+    return roster, byGroup
+end
+
+local function parseSelection(value, compactGroups)
+    local selection = { players = {}, unresolvedGroups = false }
+    local seen = {}
+    local roster, byGroup = currentRosterByGroup()
+    local hasRoster = #roster > 0
+
+    local function add(name, key)
+        key = key or name:lower()
+        if seen[key] then return false, name end
+        seen[key] = true
+        selection.players[#selection.players + 1] = { name = name, key = key }
+        return true
+    end
+
     for part in tostring(value or ""):gmatch("[^,]+") do
-        local name = trim(part)
-        if name ~= "" then
-            local key = name:lower()
-            if seen[key] then return nil, name end
-            seen[key] = true
-            players[#players + 1] = { name = name, key = key }
+        local token = trim(part)
+        if token ~= "" then
+            local groups, groupError = compactGroups and parseGroupNumbers(token) or nil
+            if groupError then return nil, groupError end
+            if groups then
+                for index = 1, #groups do
+                    local group = groups[index]
+                    local members = byGroup[group] or {}
+                    if hasRoster then
+                        if #members == 0 then return nil, "Group " .. group .. " is not present in the current raid." end
+                        for memberIndex = 1, #members do
+                            local member = members[memberIndex]
+                            local ok, duplicate = add(member, member:lower())
+                            if not ok then return nil, "contains duplicate player " .. duplicate .. "." end
+                        end
+                    else
+                        selection.unresolvedGroups = true
+                        local ok = add("Group " .. group, "@group:" .. group)
+                        if not ok then return nil, "contains duplicate Group " .. group .. "." end
+                    end
+                end
+            else
+                local ok, duplicate = add(token)
+                if not ok then return nil, "contains duplicate player " .. duplicate .. "." end
+            end
         end
     end
-    return players
+    return selection
 end
 
 local function getProfile(database, bossKey, difficultyKey, create)
@@ -64,6 +128,7 @@ local function getProfile(database, bossKey, difficultyKey, create)
     end
     if not profile and create then
         profile = {}
+        database.assignments[bossKey] = boss
         boss[difficultyKey] = profile
     end
     return profile
@@ -167,13 +232,15 @@ function AssignmentService:ValidateDefinitionValue(definition, value)
 
     local kind = definition and definition.kind or "assignee"
     if kind == "assignee" or kind == "rotation" then
-        local players, duplicate = parsePlayers(normalized)
-        if not players then return false, "contains duplicate player " .. duplicate .. "." end
-        if definition.exactPlayers and #players ~= definition.exactPlayers then
-            return false, ("requires exactly %d unique players; found %d."):format(definition.exactPlayers, #players)
-        end
-        if definition.minPlayers and #players < definition.minPlayers then
-            return false, ("requires at least %d unique players; found %d."):format(definition.minPlayers, #players)
+        local selection, selectionError = parseSelection(normalized, definition and definition.compactGroups == true)
+        if not selection then return false, selectionError end
+        if not selection.unresolvedGroups then
+            if definition.exactPlayers and #selection.players ~= definition.exactPlayers then
+                return false, ("requires exactly %d unique players; found %d."):format(definition.exactPlayers, #selection.players)
+            end
+            if definition.minPlayers and #selection.players < definition.minPlayers then
+                return false, ("requires at least %d unique players; found %d."):format(definition.minPlayers, #selection.players)
+            end
         end
     end
 
@@ -217,14 +284,14 @@ function AssignmentService:ValidateBossDraft(bossKey, difficultyKey, values)
         if normalized ~= "" then
             clean[definition.key] = normalized
             if definition.exclusiveGroup then
-                local players = assert(parsePlayers(normalized))
+                local selection = assert(parseSelection(normalized, definition.compactGroups == true))
                 local bucket = exclusive[definition.exclusiveGroup]
                 if not bucket then
                     bucket = {}
                     exclusive[definition.exclusiveGroup] = bucket
                 end
-                for playerIndex = 1, #players do
-                    local player = players[playerIndex]
+                for playerIndex = 1, #selection.players do
+                    local player = selection.players[playerIndex]
                     local previous = bucket[player.key]
                     if previous then
                         return false, {
@@ -256,6 +323,7 @@ function AssignmentService:ApplyBossDraft(bossKey, difficultyKey, values)
     boss[difficultyKey] = clean
     cleanEmpty(self.database, bossKey, difficultyKey)
     self:ResetRuntime()
+    EventBus:Emit("ASSIGNMENTS_CHANGED", bossKey, difficultyKey)
     return true, clean
 end
 
@@ -265,6 +333,7 @@ function AssignmentService:ResetBoss(bossKey, difficultyKey)
     if type(boss) == "table" then boss[difficultyKey] = nil end
     cleanEmpty(self.database, bossKey, difficultyKey)
     self:ResetRuntime()
+    EventBus:Emit("ASSIGNMENTS_CHANGED", bossKey, difficultyKey)
 end
 
 function AssignmentService:GetMissingRequired(bossKey, difficultyKey, values)
@@ -285,7 +354,7 @@ function AssignmentService:GetPlanLines(bossKey, difficultyKey)
         local definition = definitions[index]
         local value = self:GetValue(bossKey, difficultyKey, definition.key)
         if value ~= "" then
-            local line = "ASSIGN > " .. definition.label .. ": " .. value
+            local line = definition.label .. ": " .. value .. "."
             if #line <= self.MAX_WARNING_LENGTH then
                 lines[#lines + 1] = line
                 if #lines >= self.MAX_PLAN_LINES then break end
@@ -293,6 +362,77 @@ function AssignmentService:GetPlanLines(bossKey, difficultyKey)
         end
     end
     return lines
+end
+
+function AssignmentService:GetRotationValue(bossKey, difficultyKey, callKey, rotation)
+    local definitions = AssignmentRegistry:GetCallDefinitions(bossKey, difficultyKey, callKey)
+    local bucket = {}
+    for index = 1, #definitions do
+        local definition = definitions[index]
+        if definition.rotation == rotation then
+            local value = self:GetValue(bossKey, difficultyKey, definition.key)
+            if value ~= "" then bucket[#bucket + 1] = { definition = definition, value = value } end
+        end
+    end
+    if #bucket == 0 then return nil end
+    local count = self.runtimeCounters[counterKey(bossKey, difficultyKey, rotation)] or 0
+    local selected = bucket[(count % #bucket) + 1]
+    return selected.value, selected.definition
+end
+
+function AssignmentService:IsCallReady(bossKey, difficultyKey, callKey)
+    local definitions = AssignmentRegistry:GetCallDefinitions(bossKey, difficultyKey, callKey)
+    local missing = {}
+    for index = 1, #definitions do
+        local definition = definitions[index]
+        local value = self:GetValue(bossKey, difficultyKey, definition.key)
+        if definition.required and value == "" then
+            missing[#missing + 1] = definition.label
+        elseif value ~= "" then
+            local ok, reason = self:ValidateDefinitionValue(definition, value)
+            if not ok then return false, definition.label .. " " .. reason end
+        end
+    end
+    if #missing > 0 then return false, "Missing: " .. table.concat(missing, ", ") end
+    return true
+end
+
+function AssignmentService:RenderCallTemplate(template, bossKey, difficultyKey, callKey)
+    if type(template) ~= "string" or template == "" then return template, true end
+    local definitions = definitionMap(bossKey, difficultyKey)
+    local missing
+
+    local rendered = template:gsub("{{rotation:([%w_]+)}}", function(rotation)
+        local value, definition = self:GetRotationValue(bossKey, difficultyKey, callKey, rotation)
+        if not value then
+            missing = missing or (definition and definition.label or rotation)
+            return ""
+        end
+        return value
+    end)
+
+    rendered = rendered:gsub("{{([%w_]+)}}", function(key)
+        local value = self:GetValue(bossKey, difficultyKey, key)
+        if value == "" then
+            local definition = definitions[key]
+            missing = missing or (definition and definition.label or key)
+            return ""
+        end
+        return value
+    end)
+
+    if missing then return nil, false, "Missing: " .. missing end
+    return rendered, true
+end
+
+function AssignmentService:BuildCallAction(baseAction, bossKey, difficultyKey, callKey)
+    local profile = EncounterRegistry:GetProfile(bossKey, difficultyKey)
+    local call = profile and profile.callsByKey[callKey]
+    local template = call and call.actionTemplate or baseAction
+    if type(template) == "string" and template:find("{{", 1, true) then
+        return self:RenderCallTemplate(template, bossKey, difficultyKey, callKey)
+    end
+    return baseAction, true
 end
 
 function AssignmentService:GetCallFragments(bossKey, difficultyKey, callKey)
@@ -306,12 +446,7 @@ function AssignmentService:GetCallFragments(bossKey, difficultyKey, callKey)
         local value = self:GetValue(bossKey, difficultyKey, definition.key)
         if value ~= "" then
             if definition.rotation then
-                local bucket = rotations[definition.rotation]
-                if not bucket then
-                    bucket = {}
-                    rotations[definition.rotation] = bucket
-                end
-                bucket[#bucket + 1] = { definition = definition, value = value }
+                rotations[definition.rotation] = true
             else
                 fragments[#fragments + 1] = (definition.callLabel or definition.label) .. ": " .. value .. "."
             end
@@ -322,13 +457,9 @@ function AssignmentService:GetCallFragments(bossKey, difficultyKey, callKey)
     for rotation in pairs(rotations) do rotationNames[#rotationNames + 1] = rotation end
     table.sort(rotationNames)
     for index = 1, #rotationNames do
-        local rotation = rotationNames[index]
-        local bucket = rotations[rotation]
-        if #bucket > 0 then
-            local count = self.runtimeCounters[counterKey(bossKey, difficultyKey, rotation)] or 0
-            local selected = bucket[(count % #bucket) + 1]
-            local definition = selected.definition
-            fragments[#fragments + 1] = (definition.callLabel or definition.label) .. ": " .. selected.value .. "."
+        local value, definition = self:GetRotationValue(bossKey, difficultyKey, callKey, rotationNames[index])
+        if value and definition then
+            fragments[#fragments + 1] = (definition.callLabel or definition.label) .. ": " .. value .. "."
         end
     end
 
@@ -337,12 +468,24 @@ end
 
 function AssignmentService:BuildCallWarning(baseWarning, bossKey, difficultyKey, callKey)
     if type(baseWarning) ~= "string" or baseWarning == "" then return baseWarning, true end
+    local profile = EncounterRegistry:GetProfile(bossKey, difficultyKey)
+    local call = profile and profile.callsByKey[callKey]
+    local template
+
+    if baseWarning:find("{{", 1, true) then
+        template = baseWarning
+    elseif call and call.warningTemplate and baseWarning == call.warning then
+        template = call.warningTemplate
+    end
+
+    if template then return self:RenderCallTemplate(template, bossKey, difficultyKey, callKey) end
+
     local result = baseWarning
     local fragments = self:GetCallFragments(bossKey, difficultyKey, callKey)
     for index = 1, #fragments do
         local appended
         result, appended = appendFragment(result, fragments[index], self.MAX_WARNING_LENGTH)
-        if not appended then return baseWarning, false end
+        if not appended then return nil, false, "Assignment detail exceeds the Raid Warning limit." end
     end
     return result, true
 end
