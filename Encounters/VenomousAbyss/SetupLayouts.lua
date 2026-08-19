@@ -16,114 +16,114 @@ end
 
 Setup:RegisterLayouts("nekzali", {
     normal = layout(
-        "Normal needs no fixed raidleader markers or preassigned rotation.",
+        "Normal needs no fixed raidleader markers or assignments.",
         {},
         {}
     ),
     heroic = layout(
-        "Prepare the Heroic Pyre/Cremation roles before pull; players only need their own job in the Boss Plan.",
+        "Assign only the Heroic Pyre soak group before pull.",
         {},
         {
             "Set the Pyre soak group; everyone else stays outside for fire circles.",
-            "Confirm fire-circle players use their explosion on dead Amani corpses.",
+            "Fire-circle players burn dead Amani corpses with their expiration.",
         }
     ),
     mythic = layout(
-        "Prepare Pyre/Cremation roles plus fresh Grasping Depths well groups before pull.",
+        "Keep the Pyre group and add two fresh Grasping Depths groups.",
         {},
         {
-            "Set separate Pyre soak and Cremation groups.",
-            "Set two fresh well groups and the order they enter for Grasping Depths.",
+            "Set the Pyre soak group.",
+            "Set two different well groups for alternating Grasping Depths entries.",
         }
     ),
 })
 
 Setup:RegisterLayouts("sentinels", sameForAll(layout(
-    "Set two fixed physical raid sides; after Stasis the groups stay put while tanks swap the bosses.",
+    "Set two fixed physical raid sides; players stay while tanks swap bosses after Stasis.",
     {
-        { key="breath_side", kind="world", icon=4, label="Green / Breath side", purpose="Triangle is Team A's fixed green-side position." },
-        { key="blood_side", kind="world", icon=7, label="Red / Blood side", purpose="Cross is Team B's fixed red-side position." },
+        { key="breath_side", kind="world", icon=4, label="Green / Breath side", purpose="Triangle is the fixed green-side position." },
+        { key="blood_side", kind="world", icon=7, label="Red / Blood side", purpose="Cross is the fixed red-side position." },
     },
     {
-        "Set Team A on Triangle / green and Team B on Cross / red.",
-        "Confirm both teams stay on their physical side after Stasis.",
+        "Assign the Green Side to Triangle and Red Side to Cross.",
+        "Both sides stay in place after Stasis while tanks swap bosses.",
     }
 )))
 
 Setup:RegisterLayouts("explorers", {
     normal = layout(
-        "Pre-place three Mighty Thud soak points and confirm the crate/fish plan before pull.",
+        "Place three Mighty Thud soak points and set the crate breaker.",
         {
             { key="thud_one", kind="world", icon=1, label="Thud 1", purpose="Star is Mighty Thud soak point 1." },
             { key="thud_two", kind="world", icon=2, label="Thud 2", purpose="Circle is Mighty Thud soak point 2." },
             { key="thud_three", kind="world", icon=3, label="Thud 3", purpose="Diamond is Mighty Thud soak point 3." },
         },
         {
-            "Use the fish order Nama > Iku > Gebbo.",
-            "Confirm the crate breaker and fish runner are assigned.",
+            "Use fish order: Nama, then Iku, then Gebbo.",
+            "Assign the crate breaker; fish delivery follows the fixed order.",
         }
     ),
     heroic = layout(
-        "Keep the three Thud points and confirm the Heroic crate rotation plus fish plan.",
+        "Keep the three Thud points and set the Heroic crate rotation.",
         {
             { key="thud_one", kind="world", icon=1, label="Thud 1", purpose="Star is Mighty Thud soak point 1." },
             { key="thud_two", kind="world", icon=2, label="Thud 2", purpose="Circle is Mighty Thud soak point 2." },
             { key="thud_three", kind="world", icon=3, label="Thud 3", purpose="Diamond is Mighty Thud soak point 3." },
         },
         {
-            "Use the fish order Nama > Iku > Gebbo.",
-            "Confirm the crate-breaker rotation and fish runner are assigned.",
+            "Use fish order: Nama, then Iku, then Gebbo.",
+            "Assign the crate-breaker rotation.",
         }
     ),
     mythic = layout(
-        "Keep the three Thud points and confirm the Mythic crate rotation plus fish plan.",
+        "Keep the Thud points and crate rotation; Mythic adds 15+ yard crate clearance.",
         {
             { key="thud_one", kind="world", icon=1, label="Thud 1", purpose="Star is Mighty Thud soak point 1." },
             { key="thud_two", kind="world", icon=2, label="Thud 2", purpose="Circle is Mighty Thud soak point 2." },
             { key="thud_three", kind="world", icon=3, label="Thud 3", purpose="Diamond is Mighty Thud soak point 3." },
         },
         {
-            "Use the fish order Nama > Iku > Gebbo.",
-            "Confirm the crate-breaker rotation and fish runner are assigned.",
+            "Use fish order: Nama, then Iku, then Gebbo.",
+            "Assign the crate rotation; raid clears 15+ yards before each break.",
         }
     ),
 })
 
 Setup:RegisterLayouts("vashnik", {
     normal = layout(
-        "Set the fountain route before pull so every Imbibe position is decided in advance.",
+        "Use the fixed three-pair fountain route; no player assignment is required.",
         {},
         {
-            "Use the RLA route: Flame > Shadow > Shadow > Blood > Blood > Flame.",
-            "Before each Imbibe, position Vashnik between the next planned fountains.",
+            "Route: Flame+Shadow, then Shadow+Blood, then Blood+Flame.",
+            "Before each Imbibe, position Vashnik between the next fountain pair.",
         }
     ),
     heroic = layout(
-        "Use the fixed fountain route and reserve Skull/Cross for the two Fire adds.",
+        "Keep the fountain route and reserve Skull/Cross for the two Fire adds.",
         {
             { key="fire_first", kind="target", icon=8, label="Fire add first", purpose="Skull is the first Burning Venom kill target." },
-            { key="fire_second", kind="target", icon=7, label="Fire add second", purpose="Cross dies only after the first Fire DoT has ended." },
+            { key="fire_second", kind="target", icon=7, label="Fire add second", purpose="Cross dies after the first Fire DoT has ended." },
         },
         {
-            "Use the RLA route: Flame > Shadow > Shadow > Blood > Blood > Flame.",
-            "For each Fire pair: Skull dies first; wait for the DoT, then kill Cross.",
+            "Route: Flame+Shadow, then Shadow+Blood, then Blood+Flame.",
+            "Fire pair: kill Skull, wait for the DoT, then kill Cross.",
         }
     ),
     mythic = layout(
-        "Use the fixed fountain route and the same Skull/Cross Fire-add stagger as Heroic.",
+        "Keep the same fountain route and Skull/Cross Fire-add stagger.",
         {
             { key="fire_first", kind="target", icon=8, label="Fire add first", purpose="Skull is the first Burning Venom kill target." },
-            { key="fire_second", kind="target", icon=7, label="Fire add second", purpose="Cross dies only after the first Fire DoT has ended." },
+            { key="fire_second", kind="target", icon=7, label="Fire add second", purpose="Cross dies after the first Fire DoT has ended." },
         },
         {
-            "Use the RLA route: Flame > Shadow > Shadow > Blood > Blood > Flame.",
-            "For each Fire pair: Skull dies first; wait for the DoT, then kill Cross.",
+            "Route: Flame+Shadow, then Shadow+Blood, then Blood+Flame.",
+            "Fire pair: kill Skull, wait for the DoT, then kill Cross.",
         }
     ),
 })
 
 Setup:RegisterLayouts("sszorak", sameForAll(layout(
-    "Place three Cyst-drop markers opposite the tornado clusters and prepare the soak/poppers rotation.",
+    "Place three saved-Cyst markers and prepare Mutilate groups plus Cyst Poppers.",
     {
         { key="cyst_one", kind="world", icon=1, label="Cyst 1", purpose="Star is the first saved Cyst position." },
         { key="cyst_two", kind="world", icon=2, label="Cyst 2", purpose="Circle is the second saved Cyst position." },
@@ -131,100 +131,100 @@ Setup:RegisterLayouts("sszorak", sameForAll(layout(
     },
     {
         "Place each Cyst marker opposite a different tornado cluster.",
-        "Assign Cyst Poppers 1/2/3 and separate Mutilate Teams A/B.",
+        "Assign Poppers 1/2/3 and two different Mutilate soak groups.",
     }
 )))
 
 Setup:RegisterLayouts("twinfangs", {
     normal = layout(
-        "Normal can handle Feast dynamically, but every hit still needs fresh eligible soakers.",
+        "Normal Feast is dynamic; every hit still needs fresh eligible soakers.",
         {},
         {
-            "Confirm every Feast hit gets 3+ players who did not soak an earlier hit in that cast.",
+            "Each Feast hit needs 3+ players who skipped earlier hits in that cast.",
         }
     ),
     heroic = layout(
-        "Preassign three fresh Feast teams so each of the three hits has different soakers.",
+        "Assign three different Feast groups, one for each hit.",
         {},
         {
-            "Set separate 3+ Feast Teams A, B and C for hits 1, 2 and 3.",
+            "Set three different 3+ Feast groups for hits 1, 2 and 3.",
         }
     ),
     mythic = layout(
-        "Keep the three Feast teams and add Mythic interrupt/healing coverage.",
+        "Keep the three Feast groups and add Broodling interrupt owners.",
         {},
         {
-            "Set separate 3+ Feast Teams A, B and C for hits 1, 2 and 3.",
-            "Confirm Broodling interrupts and Tainted Blood fount healing coverage.",
+            "Set three different 3+ Feast groups for hits 1, 2 and 3.",
+            "Assign Broodling interrupts; Tainted Blood needs no fixed roster group.",
         }
     ),
 })
 
 Setup:RegisterLayouts("altar", {
     normal = layout(
-        "Mark both platform ends and prepare the core orb, axe and interrupt jobs.",
+        "Mark both platform ends and prepare Orb Collectors plus Wail interrupt ownership.",
         {
             { key="sever_end", kind="world", icon=4, label="Orb / Sever end", purpose="Triangle is the orb collection and Sever reference end." },
             { key="soul_end", kind="world", icon=7, label="Ghost / Soul Sever end", purpose="Cross is the ghost routing and Soul Sever reference end." },
         },
         {
-            "Assign 2-3 mobile Orb Collectors.",
-            "Set 5+ Guillotine soak coverage and Wail interrupt coverage.",
+            "Assign 2-3 mobile Orb Collectors and a primary Wail interrupt.",
+            "Normal Guillotine needs any 5+ soakers; no fixed team is required.",
         }
     ),
     heroic = layout(
-        "Use the same two platform markers and prepare the Heroic axe rotation and interrupts.",
+        "Use the same markers; add two different Guillotine groups and Wail interrupts.",
         {
             { key="sever_end", kind="world", icon=4, label="Orb / Sever end", purpose="Triangle is the orb collection and Sever reference end." },
             { key="soul_end", kind="world", icon=7, label="Ghost / Soul Sever end", purpose="Cross is the ghost routing and Soul Sever reference end." },
         },
         {
             "Assign 2-3 mobile Orb Collectors.",
-            "Set two separate 5+ Guillotine teams and 2-3 Wail interrupts.",
+            "Assign two different 5+ Guillotine groups and at least two Wail kicks.",
         }
     ),
     mythic = layout(
-        "Use the same two platform markers and prepare fresh Mythic axe teams plus interrupts.",
+        "Use the same markers; prepare fresh Guillotine groups and Wail interrupts.",
         {
             { key="sever_end", kind="world", icon=4, label="Orb / Sever end", purpose="Triangle is the orb collection and Sever reference end." },
             { key="soul_end", kind="world", icon=7, label="Ghost / Soul Sever end", purpose="Cross is the ghost routing and Soul Sever reference end." },
         },
         {
             "Assign 2-3 mobile Orb Collectors.",
-            "Plan fresh 5+ Guillotine teams for later axes and 2-3 Wail interrupts.",
+            "Plan fresh 5+ Guillotine groups and at least two Wail kicks.",
         }
     ),
 })
 
 Setup:RegisterLayouts("ulatek", {
     normal = layout(
-        "Give Spectral Coils one fixed soak reference and confirm the planned egg handler.",
+        "Give Spectral Coils one fixed soak marker and assign the planned egg handler.",
         {
             { key="coils_soak", kind="world", icon=6, label="Coils soak", purpose="Square is the full-raid Spectral Coils soak point." },
         },
         {
-            "Confirm the Doomscale Egg handler and planned egg before pull.",
+            "Assign the Doomscale Egg handler and choose the planned egg before pull.",
         }
     ),
     heroic = layout(
-        "Keep the full-raid Coils marker and the same planned egg-handler setup as Normal.",
+        "Keep the full-raid Coils marker and the same egg handler as Normal.",
         {
             { key="coils_soak", kind="world", icon=6, label="Coils soak", purpose="Square is the full-raid Spectral Coils soak point." },
         },
         {
-            "Confirm the Doomscale Egg handler and planned egg before pull.",
+            "Assign the Doomscale Egg handler and choose the planned egg before pull.",
         }
     ),
     mythic = layout(
-        "Mythic needs alternating Coils groups plus planned left/right egg-side references.",
+        "Mythic needs alternating Coils groups plus left/right egg-side references.",
         {
             { key="coils_soak", kind="world", icon=6, label="Coils soak", purpose="Square is the Spectral Coils soak point for the called group." },
             { key="egg_left", kind="world", icon=4, label="Left eggs", purpose="Triangle labels the planned left egg side." },
             { key="egg_right", kind="world", icon=7, label="Right eggs", purpose="Cross labels the planned right egg side." },
         },
         {
-            "Set alternating Coil Groups A/B and choose the active egg side.",
-            "Confirm left/right egg carriers and the 4+ Toxic Incubation intercept team.",
+            "Assign alternating Coils groups and left/right egg carriers.",
+            "Assign a 4+ Toxic Incubation intercept group; call the active egg side.",
         }
     ),
 })
