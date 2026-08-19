@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.0-beta.55 — 2026-08-19
+
+- Generalize DBM timing provenance across all eight current Venomous Abyss modules: a DBM callback is exact only while DBM has asserted hardcoded Encounter Timeline authority; after `ResumeBlizzardAPI` the DBM copy is preview-only until another direct source independently proves exact timing.
+- Add regression coverage for every reviewed Venomous Abyss encounter ID so provider priority cannot launder Blizzard fallback timing into actionable PREPARE/PRESS/TTS state.
+- Refresh late day-one DBM drift for Vashnik, Nek'zali and the shared `TLBatchTrackLatest` batch-routing helper; add the shared BossMod timeline helper to the automated upstream drift oracle.
+- Refresh BigWigs Nek'zali after its Phase 1 Essence Rend duplicate/cancel routing fix; RLA does not consume Essence Rend directly, so raidleader call identities remain unchanged while the new source fingerprint is pinned.
+- Expand live Retail acceptance for authority-release transitions, Vashnik/Nek'zali hardcoded-to-Blizzard fallback, duplicate timeline batches and current BigWigs Nek'zali. Beta.55 remains prerelease/live-pending.
+
 ## 0.9.0-beta.54 — 2026-08-19
 
 - Preserve timing provenance across bossmod fallback paths: BigWigs' Blizzard bridge is preview-only when it does not expose `isApproximate`, and current DBM Lost Explorers fallback is preview-only unless DBM explicitly asserts hardcoded timeline authority.
