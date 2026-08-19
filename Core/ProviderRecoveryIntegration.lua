@@ -9,6 +9,56 @@ local Integration = {
     generation = 0,
 }
 
+-- Bossmods can expose Blizzard Encounter Timeline data through their own public
+-- timer callbacks. That must not upgrade unknown/approximate native timing into
+-- an actionable "exact" RLA timer merely because the callback came from a
+-- higher-priority provider.
+--
+-- BigWigs' nil-module StartBar bridge does not expose Blizzard's isApproximate
+-- metadata, so that bridge is always preview-only. Direct BigWigs_Timer events
+-- keep their explicit isApproximate value in BigWigsProvider.
+--
+-- DBM's current Lost Explorers source (2026-08-19 post-unlock) intentionally
+-- uses Blizzard fallback on Heroic/Mythic and whenever hardcoded timers are not
+-- active. DBM_IgnoreBlizzAPI is the public authority signal used by RLA already:
+-- only while it is true can those encounter timers remain exact. The upstream
+-- fingerprint is locked in docs/UPSTREAM_BASELINES.json, so future source drift
+-- forces a fresh semantic review before this exception can silently go stale.
+local DBM_BLIZZARD_FALLBACK_ENCOUNTERS = {
+    [3497] = true, -- The Lost Explorers
+}
+
+local function dbmOwnsHardcodedTimeline()
+    return _G.DBM ~= nil
+        and type(DBM.Options) == "table"
+        and DBM.Options.IgnoreBlizzAPI == true
+end
+
+function Integration:ApplyProviderPrecisionPolicy(providerName, data)
+    if type(data) ~= "table" then return data end
+
+    if providerName == "BigWigs" and data.bridge == "Blizzard" then
+        data.precision = "approximate"
+        return data
+    end
+
+    local encounterID = type(data.encounterID) == "number" and data.encounterID or nil
+    if providerName == "DBM"
+        and encounterID
+        and DBM_BLIZZARD_FALLBACK_ENCOUNTERS[encounterID]
+        and not dbmOwnsHardcodedTimeline() then
+        data.precision = "approximate"
+    end
+
+    return data
+end
+
+local originalProviderTimerStarted = Timeline.ProviderTimerStarted
+Timeline.ProviderTimerStarted = function(self, providerName, timerID, data)
+    Integration:ApplyProviderPrecisionPolicy(providerName, data)
+    return originalProviderTimerStarted(self, providerName, timerID, data)
+end
+
 local function seedActiveBossmods()
     if not Encounter:IsActive() or Encounter:HasKnownEncounter() then return false end
 
