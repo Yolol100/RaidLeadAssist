@@ -41,7 +41,6 @@ for _, marker in ipairs({
 end
 
 local raidWarning = read("Services/RaidWarningService.lua")
-assert(raidWarning:find("defaultFingerprint", 1, true) == nil or true)
 assert(raidWarning:find("compactAssignmentLines", 1, true))
 assert(raidWarning:find('lines%[index%]:find%("%^ASSIGN > "%)'))
 assert(raidWarning:find("MAX_CHAT_LENGTH = 200", 1, true))
@@ -52,6 +51,16 @@ assert(workflow:find("reproducibility%-check:"))
 assert(workflow:find("cmp primary/RaidLeadAssist.zip repro/RaidLeadAssist.zip", 1, true))
 assert(workflow:find("gh attestation verify dist/RaidLeadAssist.zip", 1, true))
 assert(workflow:find("runs%-on: ubuntu%-24%.04"))
+local checkoutCount = select(2, workflow:gsub("actions/checkout@", ""))
+local nonPersistingCheckoutCount = select(2, workflow:gsub("persist%-credentials:%s*false", ""))
+assert(checkoutCount == 3, "validate workflow checkout inventory drifted")
+assert(nonPersistingCheckoutCount == checkoutCount,
+    "every validate/release checkout must disable persisted Git credentials")
+local driftWorkflow = read(".github/workflows/upstream-drift.yml")
+assert(select(2, driftWorkflow:gsub("actions/checkout@", "")) == 1,
+    "upstream drift checkout inventory drifted")
+assert(select(2, driftWorkflow:gsub("persist%-credentials:%s*false", "")) == 1,
+    "upstream drift checkout must disable persisted Git credentials")
 
 local baseline = read("docs/UPSTREAM_BASELINES.json")
 for _, path in ipairs({
