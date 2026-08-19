@@ -56,16 +56,45 @@ local function callContextSafety()
     return true
 end
 
+local function dynamicWarning(callKey)
+    local base = Messages:GetCallWarning(App.activeBossKey, App.activeDifficultyKey, callKey)
+    local warning, complete, reason = Assignments:BuildCallWarning(base, App.activeBossKey, App.activeDifficultyKey, callKey)
+    if complete == false then return reason or "Complete required assignments before this call." end
+    return warning or base
+end
+
+local function refreshDynamicCallText()
+    local profile = Registry:GetProfile(App.activeBossKey, App.activeDifficultyKey)
+    if not profile then return end
+
+    for index = 1, #profile.calls do
+        local call = profile.calls[index]
+        local button = UI.callButtons and UI.callButtons[index]
+        if button then
+            local action, complete = Assignments:BuildCallAction(call.action, App.activeBossKey, App.activeDifficultyKey, call.key)
+            button:SetActionText(complete == false and "Complete required assignment" or (action or call.action))
+            button.warningResolver = dynamicWarning
+        end
+    end
+end
+
 local function refreshCallAvailability()
     local callsEnabled, reason = callContextSafety()
     local planEnabled = callsEnabled and not Encounter:IsActive()
+    local profile = Registry:GetProfile(App.activeBossKey, App.activeDifficultyKey)
 
     local explanationFrame = UI.explanationButton and UI.explanationButton.frame
     if explanationFrame and type(explanationFrame.SetEnabled) == "function" then explanationFrame:SetEnabled(planEnabled) end
 
     for index = 1, #(UI.callButtons or {}) do
-        local frame = UI.callButtons[index] and UI.callButtons[index].frame
-        if frame and type(frame.SetEnabled) == "function" then frame:SetEnabled(callsEnabled) end
+        local button = UI.callButtons[index]
+        local frame = button and button.frame
+        if frame and type(frame.SetEnabled) == "function" then
+            local call = profile and profile.calls[index]
+            local assignmentReady = true
+            if call then assignmentReady = Assignments:IsCallReady(App.activeBossKey, App.activeDifficultyKey, call.key) end
+            frame:SetEnabled(callsEnabled and assignmentReady == true and call ~= nil)
+        end
     end
 
     UI.callsDisabledReason = callsEnabled and nil or reason
@@ -126,6 +155,11 @@ local function announceAssignments(bossKey, difficultyKey)
     return RaidWarning:SendBriefing(lines)
 end
 
+local function refreshAssignmentSurface()
+    refreshDynamicCallText()
+    refreshCallAvailability()
+end
+
 local originalInitialize = App.Initialize
 function App:Initialize(...)
     originalInitialize(self, ...)
@@ -137,7 +171,7 @@ function App:Initialize(...)
         onAnnounce = announceAssignments,
     })
     Launchers:Attach(UI, SettingsUI, openAssignments)
-    refreshCallAvailability()
+    refreshAssignmentSurface()
     refreshSetupCard(true)
 
     local originalSlash = SlashCmdList.RAIDLEADASSIST
@@ -156,7 +190,7 @@ function App:SelectBoss(key, automatic)
     local changed = originalSelectBoss(self, key, automatic)
     if changed then
         Assignments:ResetRuntime()
-        refreshCallAvailability()
+        refreshAssignmentSurface()
         refreshSetupCard(true)
     end
     return changed
@@ -167,7 +201,7 @@ function App:SelectDifficulty(key, automatic)
     local changed = originalSelectDifficulty(self, key, automatic)
     if changed then
         Assignments:ResetRuntime()
-        refreshCallAvailability()
+        refreshAssignmentSurface()
         refreshSetupCard(true)
     end
     return changed
@@ -198,20 +232,29 @@ function App:SendCall(callKey)
     local call = profile and profile.callsByKey[callKey]
     if not call then return false end
 
+    local assignmentReady, assignmentReason = Assignments:IsCallReady(self.activeBossKey, self.activeDifficultyKey, callKey)
+    if not assignmentReady then
+        ns:Print((assignmentReason or "Required assignment is missing.") .. " Complete it before using this call.")
+        return false
+    end
+
     local now = GetTime()
     if (self.manualLockUntil[callKey] or 0) > now then return false end
 
     local baseWarning = Messages:GetCallWarning(self.activeBossKey, self.activeDifficultyKey, callKey)
-    local warning, assignmentComplete = Assignments:BuildCallWarning(baseWarning, self.activeBossKey, self.activeDifficultyKey, callKey)
+    local warning, assignmentComplete, renderReason = Assignments:BuildCallWarning(baseWarning, self.activeBossKey, self.activeDifficultyKey, callKey)
+    if assignmentComplete == false or not warning then
+        ns:Print(renderReason or "Required assignment text could not be rendered; call not sent.")
+        return false
+    end
+
     if RaidWarning:Send(warning) then
-        if assignmentComplete == false then
-            ns:Print("Assignment detail exceeded the Raid Warning limit; the base call was sent without partial assignment text. Use pre-pull ANNOUNCE for the full plan.")
-        end
         self.manualLockUntil[callKey] = now + Constants.MANUAL_CLICK_LOCK_SECONDS
         Timeline:AcknowledgeCall(callKey)
         self.visualCalledUntil[callKey] = now + Constants.CALLED_FEEDBACK_SECONDS
         UI:SetCallState(callKey, Constants.CallState.CALLED)
         Assignments:AdvanceCall(self.activeBossKey, self.activeDifficultyKey, callKey)
+        refreshDynamicCallText()
         return true
     end
     return false
@@ -220,17 +263,21 @@ end
 local function refreshForActiveEncounter()
     Assignments:ResetRuntime()
     AssignmentUI:CloseForEncounter()
-    local enabled, reason = refreshCallAvailability()
+    refreshAssignmentSurface()
     refreshSetupCard(false)
+    local enabled, reason = refreshCallAvailability()
     if not enabled then ns:Print(reason) end
 end
 
+EventBus:On("ASSIGNMENTS_CHANGED", Integration, function(_, bossKey, difficultyKey)
+    if bossKey == App.activeBossKey and difficultyKey == App.activeDifficultyKey then refreshAssignmentSurface() end
+end)
 EventBus:On("ENCOUNTER_STARTED", Integration, refreshForActiveEncounter)
 EventBus:On("ENCOUNTER_RECOVERED", Integration, refreshForActiveEncounter)
 
 EventBus:On("ENCOUNTER_ENDED", Integration, function()
     Assignments:ResetRuntime()
-    refreshCallAvailability()
+    refreshAssignmentSurface()
     refreshSetupCard(false)
 end)
 
