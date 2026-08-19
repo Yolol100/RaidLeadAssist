@@ -1,7 +1,7 @@
 local _, ns = ...
 local Registry = ns:GetModule("Encounters.Registry")
 
-local function baseCalls(pyreAction, pyreWarning)
+local function baseCalls(pyreAction, pyreWarning, pyreActionTemplate, pyreWarningTemplate)
     local calls = {
         {
             key = "adds",
@@ -27,6 +27,8 @@ local function baseCalls(pyreAction, pyreWarning)
             ability = "Hungering Pyre",
             action = pyreAction,
             warning = pyreWarning,
+            actionTemplate = pyreActionTemplate,
+            warningTemplate = pyreWarningTemplate,
             voice = "Pyre",
             spellIDs = { 1305421, 1290679 },
             prepareSeconds = 8,
@@ -50,18 +52,24 @@ local normalCalls = baseCalls(
     "Pyre: melee soak together."
 )
 local heroicCalls = baseCalls(
-    "Called group soak together",
-    "Pyre: called group soak together."
+    "Assigned group soaks Pyre",
+    "Pyre: assigned group soak together.",
+    "{{pyre_soakers}} soak Pyre",
+    "Pyre: {{pyre_soakers}} soak together."
 )
 local mythicCalls = baseCalls(
-    "Called group soak together",
-    "Pyre: called group soak together."
+    "Assigned group soaks Pyre",
+    "Pyre: assigned group soak together.",
+    "{{pyre_soakers}} soak Pyre",
+    "Pyre: {{pyre_soakers}} soak together."
 )
 table.insert(mythicCalls, 2, {
     key = "grasping",
     ability = "Grasping Depths",
-    action = "Enter, interrupt, kill Echo, exit",
-    warning = "Grasping: enter, interrupt, kill Echo, exit.",
+    action = "Assigned well group enters",
+    warning = "Grasping: assigned well group enter.",
+    actionTemplate = "{{rotation:well}} enter the Well",
+    warningTemplate = "Grasping: {{rotation:well}} enter; interrupt and kill Echo.",
     voice = "Well group",
     spellIDs = { 1293212 },
     prepareSeconds = 8,
@@ -86,7 +94,7 @@ Registry:Register({
         },
         heroic = {
             explanation = {
-                "Heroic Pyre: soak with your assigned group instead of melee-only.",
+                "Hungering Pyre: soak only with your assigned Pyre group.",
                 "Fire circle on you: move onto a dead Amani corpse.",
                 "Stay on the corpse until your fire explodes; keep 4+ yards from others.",
             },
