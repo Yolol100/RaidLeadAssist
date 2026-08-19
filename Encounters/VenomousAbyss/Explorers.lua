@@ -52,7 +52,8 @@ Registry:Register({
                 "Feed the next fish before Final Ascension finishes.",
                 "Three players marked: go to Star, Circle and Diamond.",
                 "Soakers stack with each marked player before impact.",
-                "Fire clears with Frost; Frost clears with Fire.",
+                "Frostfire circles: pair Fire with Frost and drop them together.",
+                "After they land, step into the opposite elemental patch.",
                 "Icebound Flames starts: interrupt it immediately.",
             },
             calls = calls(
