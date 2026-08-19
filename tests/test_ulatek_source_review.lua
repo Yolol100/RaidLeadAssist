@@ -38,7 +38,7 @@ local mythic = Registry:GetProfile("ulatek", "mythic")
 assert(normal.callsByKey.coils.warning == "Coils: stack at Square.")
 assert(heroic.callsByKey.coils.warning == "Coils: stack at Square.",
     "Heroic must keep the full-raid Coils instruction until live evidence proves a rotation")
-assert(contains(mythic.callsByKey.coils.warning, "called group"),
+assert(mythic.callsByKey.coils.warning == "Coils: assigned group stack at Square.",
     "Mythic Spectral Coils uses the assigned alternating group rotation")
 assert(not hasDefinition("heroic", "coil_a") and not hasDefinition("heroic", "coil_b"),
     "Heroic must not invent Mythic Coil rotation assignments")
@@ -65,7 +65,7 @@ assert(not contains(planText("heroic"), "Coil group"),
 
 -- Mythic adds Incubation, hardened egg handling and Coil/egg-side coordination.
 assert(mythic.callsByKey.incubation, "Mythic must keep the Toxic Incubation call")
-assert(mythic.callsByKey.incubation.warning == "Incubation: each interceptor takes one hit.")
+assert(mythic.callsByKey.incubation.warning == "Incubation: assigned group take one hit each.")
 assert(hasDefinition("mythic", "incubation_team"), "Mythic needs the 4+ Incubation team")
 assert(contains(planText("mythic"), "Toxic Incubation"))
 assert(contains(planText("mythic"), "Hardened egg"))
