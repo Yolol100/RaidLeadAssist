@@ -144,8 +144,8 @@
         {
           "ref": "master",
           "path": "TheVenomousAbyss/Ulatek.lua",
-          "blobSha": "9c2b0ece40ebc03629455a7fa500f941d5a59487",
-          "reason": "Live-launch Ula'tek source re-reviewed; RLA remains manual-only until stable exact Retail timing is proved"
+          "blobSha": "a16df3b2a1b4bc83929d2ca7e2f5275069aad727",
+          "reason": "Latest day-one Ula'tek source only disables BigWigs' missing-bars diagnostic message. RLA remains manual-only for Ula'tek; no timer identity is promoted and exact Retail timing still requires live evidence."
         }
       ]
     }
