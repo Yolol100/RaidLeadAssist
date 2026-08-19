@@ -97,6 +97,8 @@ assert(baseline:find("ca995e7b0fc55414ff1deb59f67e11ae99b242a1", 1, true),
     "Twin Fangs BigWigs Submerge baseline must stay pinned")
 assert(baseline:find("67d6c66d1abdd47d2404801f8488d6a6468c9d28", 1, true),
     "Coiled Altar BigWigs live-launch baseline must stay pinned to the reviewed source")
+assert(baseline:find("b262cf1e1d7af9d5f48c8e4575ac853588ee1e72", 1, true),
+    "Ula'tek BigWigs live timeline-event/custom-bar baseline must stay pinned")
 
 local security = read("SECURITY.md")
 assert(security:find("RaidLeadAssist.toc", 1, true))

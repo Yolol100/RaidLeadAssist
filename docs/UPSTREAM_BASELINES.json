@@ -144,8 +144,8 @@
         {
           "ref": "master",
           "path": "TheVenomousAbyss/Ulatek.lua",
-          "blobSha": "a16df3b2a1b4bc83929d2ca7e2f5275069aad727",
-          "reason": "Latest day-one Ula'tek source only disables BigWigs' missing-bars diagnostic message. RLA remains manual-only for Ula'tek; no timer identity is promoted and exact Retail timing still requires live evidence."
+          "blobSha": "b262cf1e1d7af9d5f48c8e4575ac853588ee1e72",
+          "reason": "Current day-one Ula'tek source now contains substantial difficulty-specific Encounter Timeline handlers and custom bars. RLA deliberately keeps every Ula'tek raidleader call manual-only; provider traffic may be observed diagnostically but must not promote PREPARE/PRESS/TTS without separate live evidence and a reviewed product decision."
         }
       ]
     }

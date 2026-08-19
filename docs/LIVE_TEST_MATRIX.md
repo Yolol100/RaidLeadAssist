@@ -2,22 +2,22 @@
 
 Source/CI checks cannot fill these rows. Record evidence on the exact addon SHA/version and current Retail build.
 
-## 0.9.0-beta.56 release-candidate status — 2026-08-19
+## 0.9.0-beta.57 release-candidate status — 2026-08-19
 
-The source/release path may be marked `PASS-CI` only after the final beta.56 head passes the full workflow and the online upstream-drift check against the latest 2026-08-19 day-one provider baselines.
+The source/release path may be marked `PASS-CI` only after the final beta.57 head passes the full workflow and the online upstream-drift check against the latest 2026-08-19 day-one provider baselines.
 
 The release remains a **prerelease/beta**, not a live-proven stable release. Do not convert any row below to `PASS-LIVE` from guides, source code, screenshots or CI alone.
 
 Known release boundaries:
 
 - DBM 12.1.4 remains the reviewed stable DBM release contract. Current `master` has continued to move after raid unlock. RLA pins the reviewed source fingerprints without requiring unreleased DBM.
-- Current DBM Venomous Abyss modules can switch between reviewed hardcoded Encounter Timeline routing and fail-closed Blizzard fallback. Beta.56 therefore treats DBM timing for all eight raid encounter IDs as exact only while DBM has asserted `DBM_IgnoreBlizzAPI` authority. Once DBM resumes Blizzard, the DBM copy is preview-only until an independently exact direct source is available.
+- Current DBM Venomous Abyss modules can switch between reviewed hardcoded Encounter Timeline routing and fail-closed Blizzard fallback. Beta.57 therefore treats DBM timing for all eight raid encounter IDs as exact only while DBM has asserted `DBM_IgnoreBlizzAPI` authority. Once DBM resumes Blizzard, the DBM copy is preview-only until an independently exact direct source is available.
 - Late day-one DBM Coiled Altar now enables preliminary Normal hardcoded timelines in addition to Heroic. Unknown/unmapped timeline rows still call `ResumeBlizzardAPI`, so RLA exactness must continue to follow DBM authority rather than the provider name.
 - DBM's shared `TLBatchTrackLatest` Encounter Timeline de-duplication helper is part of the upstream drift oracle because it can change which public boss bar RLA observes without changing a boss-module call identity.
-- BigWigs v419.2 remains the reviewed stable release baseline and still predates finalized live-launch coverage for parts of The Venomous Abyss. Current `master` contains additional live fixes. The latest Nek'zali change adds non-Mythic Phase 2 Possession Barrage routing; that mechanic is not a direct RLA raidleader identity but the source fingerprint is pinned for provider-currentness.
+- BigWigs v419.2 remains the reviewed stable release baseline and predates multiple live-launch Venomous Abyss fixes present on current `master`.
+- Current BigWigs Ula'tek now contains substantial difficulty-specific Encounter Timeline handling and custom boss bars. Beta.57 deliberately keeps all Ula'tek RLA calls manual-only; source-level provider traffic must not activate PREPARE/PRESS/TTS until live Retail evidence and an explicit product review approve timed support.
 - Direct BigWigs timers preserve the upstream `isApproximate` signal. A BigWigs nil-module `StartBar` produced by the Blizzard bridge does not carry that metadata and is therefore preview-only in RLA.
 - Blizzard Encounter Timeline events explicitly marked `isApproximate=true` are preview-only. They must never become actionable PREPARE/PRESS/TTS timing merely because their source is Blizzard or because a bossmod re-emits the event.
-- Ula'tek stays manual-only on every difficulty until real Retail pulls prove stable exact timer identities and cadence. Provider authority hardening does not promote the encounter to timed support.
 - Season 2/The Venomous Abyss is open by region; source review can track day-one upstream changes, but encounter plans remain `PASS-LIVE`-pending until reproduced in the raid.
 
 Before promoting beyond beta, record at minimum one clean supported pull/wipe lifecycle per boss on the intended release difficulty, plus the provider/failure combinations below.
@@ -64,6 +64,8 @@ For every timed mechanic reproduce the occurrence more than once when practical.
 - DBM current Sszorak: verify Normal/Heroic calls against confirmed routing, keep Mythic `PASS-LIVE`-pending where upstream itself labels routing extrapolated, and verify fallback precision is preview-only after DBM resumes Blizzard.
 - DBM/BigWigs current Twin Fangs: verify Submerge lifecycle changes do not duplicate or orphan Ravenous Feast/shared movement timing; DBM fallback precision must follow authority state.
 - BigWigs current Nek'zali: repeat Phase 1 rows around the earlier Essence Rend correction and non-Mythic Phase 2 rows around the new 28-second Possession Barrage routing. Neither change may leave duplicate/stale RLA timing or create a new RLA call identity that is not explicitly registered.
+- BigWigs current Ula'tek on Normal, Heroic and Mythic: verify current custom bars/events can be observed in provider diagnostics if they match known data, but the Ula'tek profile remains `MANUAL CALLS ONLY`; no automatic timeline state, PREPARE/PRESS audio or automatic call acknowledgement may occur.
+- BigWigs current Ula'tek: exercise phase changes, custom Encounter Timeline additions and repeat/wipe lifecycle. Provider timer churn must not silently turn any `timing=false` Ula'tek call into a timed call or carry stale timer state into the next pull.
 - BigWigs v419.2 with Coiled Altar/finalized-module coverage absent: verify Blizzard/manual fallback remains usable and no stale bossmod authority suppresses the call.
 - permission loss during a scheduled pre-pull briefing.
 - combat starts during briefing.
@@ -79,4 +81,4 @@ Verify text remains legible, controls do not overlap, PREPARE/PRESS/CALLED are d
 
 ## Ula'tek gate
 
-Do not change `timing=false` until live evidence confirms the difficulty split and stable exact public timing identities for the mechanics RLA would consume. Provider drycode or generic Blizzard timeline fallback alone is not sufficient.
+Current BigWigs source now provides materially more Ula'tek timer/event coverage, but do not change `timing=false` from source availability alone. Require live evidence for each difficulty, stable exact public timer identities/cadence, lifecycle behavior across repeated pulls, and a separate product review of which shared raid-leader calls genuinely benefit from automation. Until then, exact bossmod traffic is diagnostic/provider input only and RLA stays manual-only.
