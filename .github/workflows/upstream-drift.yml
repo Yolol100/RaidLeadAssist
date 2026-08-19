@@ -3,6 +3,7 @@ name: Check upstream drift
 on:
   schedule:
     - cron: "17 5 * * *"
+    - cron: "17 17 * * *"
   workflow_dispatch:
 
 permissions:
@@ -10,7 +11,7 @@ permissions:
 
 jobs:
   upstream-drift:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
