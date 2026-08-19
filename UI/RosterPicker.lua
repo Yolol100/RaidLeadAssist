@@ -47,6 +47,15 @@ local function groupMap(roster)
     return result
 end
 
+local function shouldCompactGroups(label, explicit)
+    if explicit ~= nil then return explicit == true end
+    label = type(label) == "string" and label or ""
+    return label:find("Group", 1, true) ~= nil
+        or label:find("Feast Hit", 1, true) ~= nil
+        or label == "Green Side"
+        or label == "Red Side"
+end
+
 local function orderedSelection(roster, selected, extras, compactGroups)
     local values = {}
     local seen = {}
@@ -279,7 +288,7 @@ function RosterPicker:Open(label, currentValue, onApply, compactGroups)
     self.selected = {}
     self.extras = {}
     self.onApply = onApply
-    self.compactGroups = compactGroups == true
+    self.compactGroups = shouldCompactGroups(label, compactGroups)
     self.title:SetText("Choose players · " .. (label or "Assignment"))
     self.helper:SetText(self.compactGroups
         and "Select players or complete current raid groups; full groups are saved compactly."
