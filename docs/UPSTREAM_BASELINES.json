@@ -10,14 +10,20 @@
     {
       "name": "DBM",
       "repository": "DeadlyBossMods/DeadlyBossMods",
-      "releaseTag": "12.1.3",
-      "releaseCommit": "cfc88e9cec69d6891e4e033e156808d6826111bb",
+      "releaseTag": "12.1.4",
+      "releaseCommit": "88ec781e9b213dbf7d9ca59164a584c2529d9bf9",
       "watchPaths": [
         {
           "ref": "master",
           "path": "DBM-Core/modules/objects/Timer.lua",
           "blobSha": "c8039ffb656fabcc2eb8a36c3a60643128487ba9",
-          "reason": "RLA consumes DBM timer callback contracts and authority state"
+          "reason": "RLA consumes DBM timer callback contracts and authority state; the Timer contract remained compatible in the 12.1.4 launch review"
+        },
+        {
+          "ref": "master",
+          "path": "DBM-Raids-Midnight/DBM-Raids-Midnight_Mainline.toc",
+          "blobSha": "3917a9aa212b00d11c42727e27bacbf396646ac9",
+          "reason": "Raid module inventory, Retail interface and Venomous Abyss load contract"
         },
         {
           "ref": "master",
@@ -83,6 +89,12 @@
         },
         {
           "ref": "master",
+          "path": "TheVenomousAbyss/BigWigs_TheVenomousAbyss_Mainline.toc",
+          "blobSha": "56ccb2131fd53e21588d0746b750eeeb70402b5c",
+          "reason": "Raid module inventory, Retail interface and Crown-to-Coiled-Altar load transition"
+        },
+        {
+          "ref": "master",
           "path": "TheVenomousAbyss/Nekzali.lua",
           "blobSha": "a8066c3ce8cdecb5dfb94beb7f6dab1740c7a4c3",
           "reason": "Live-launch timeline refinements reviewed; RLA Nek'zali encounter and call identities remain compatible"
@@ -96,8 +108,8 @@
         {
           "ref": "master",
           "path": "TheVenomousAbyss/CoiledAltar.lua",
-          "blobSha": "1d6be4cb982af82d7d5040e794689e516cec7def",
-          "reason": "Finalized Coiled Altar live module re-reviewed for Toxic Deluge, Guillotine, Dreadmarch, Eternal Nightfall, Spiritcackle and Gloombomb identities"
+          "blobSha": "67d6c66d1abdd47d2404801f8488d6a6468c9d28",
+          "reason": "Latest Coiled Altar source/wipe filtering re-reviewed; Toxic Deluge, Guillotine, Dreadmarch, Eternal Nightfall, Spiritcackle and Gloombomb identities remain compatible"
         },
         {
           "ref": "master",
