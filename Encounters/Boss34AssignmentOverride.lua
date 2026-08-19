@@ -3,16 +3,15 @@ local _, ns = ...
 local AssignmentRegistry = ns:GetModule("Encounters.AssignmentRegistry")
 
 local EXPLORERS_NORMAL = {
-    summary = "Only crate and fish ownership are editable. Mighty Thud uses the fixed three-soak-point raid plan; personal mechanics stay bossmod-owned.",
+    summary = "Only the crate breaker is assigned. Fish order and Thud markers are fixed strategy, not roster fields.",
     sections = {
         {
-            key = "resources",
-            title = "Crates & Fish",
-            description = "Choose the players responsible for opening crates and carrying the fish to the next unused controlled explorer.",
-            columns = 2,
+            key = "crates",
+            title = "Crate Breaker",
+            description = "Choose who opens Gebbo's crates until the fish appears.",
+            columns = 1,
             slots = {
                 { key = "crate_a", label = "Crate Breaker", kind = "assignee", callKey = "crates", callLabel = "Breaker", required = true },
-                { key = "fish_a", label = "Fish Runner", kind = "assignee", callKey = "fish", callLabel = "Runner", required = true },
             },
         },
     },
@@ -25,33 +24,23 @@ local function explorerRotationLayout(summary)
             {
                 key = "crates",
                 title = "Crate Breaker Rotation",
-                description = "Rotate distinct breakers so Splinters stay controlled. Mythic still requires the raid to clear 15+ yards before the break.",
+                description = "Rotate distinct breakers to control Splinters. Fish order remains fixed in the Boss Plan.",
                 columns = 3,
                 slots = {
-                    { key = "crate_a", label = "Breaker 1", kind = "rotation", callKey = "crates", callLabel = "Breaker 1", rotation = "crates", required = true, exclusiveGroup = "crates" },
-                    { key = "crate_b", label = "Breaker 2", kind = "rotation", callKey = "crates", callLabel = "Breaker 2", rotation = "crates", required = true, exclusiveGroup = "crates" },
-                    { key = "crate_c", label = "Breaker 3", kind = "rotation", callKey = "crates", callLabel = "Breaker 3", rotation = "crates", required = false, exclusiveGroup = "crates" },
-                },
-            },
-            {
-                key = "fish",
-                title = "Fish Runners",
-                description = "Choose one or two reliable runners for the Final Ascension fish handoff.",
-                columns = 2,
-                slots = {
-                    { key = "fish_a", label = "Runner 1", kind = "rotation", callKey = "fish", callLabel = "Runner 1", rotation = "fish", required = true },
-                    { key = "fish_b", label = "Runner 2", kind = "rotation", callKey = "fish", callLabel = "Runner 2", rotation = "fish", required = false },
+                    { key = "crate_a", label = "Breaker 1", kind = "rotation", callKey = "crates", callLabel = "Breaker", rotation = "crates", required = true, exclusiveGroup = "crates" },
+                    { key = "crate_b", label = "Breaker 2", kind = "rotation", callKey = "crates", callLabel = "Breaker", rotation = "crates", required = true, exclusiveGroup = "crates" },
+                    { key = "crate_c", label = "Breaker 3", kind = "rotation", callKey = "crates", callLabel = "Breaker", rotation = "crates", required = false, exclusiveGroup = "crates" },
                 },
             },
         },
     }
 end
 
-local EXPLORERS_HEROIC = explorerRotationLayout("Only the crate-breaker rotation and fish runners are editable. Positioning, Thud points and personal mechanics stay in the raid plan.")
-local EXPLORERS_MYTHIC = explorerRotationLayout("Only the crate-breaker rotation and fish runners are editable. Mythic crate clearance, Thud points and personal mechanics stay in the raid plan.")
+local EXPLORERS_HEROIC = explorerRotationLayout("Only the crate-breaker rotation is assigned. Fish order and Thud points stay fixed.")
+local EXPLORERS_MYTHIC = explorerRotationLayout("Only the crate-breaker rotation is assigned. Mythic adds raid clearance before each break.")
 
 local VASHNIK_NONE = {
-    summary = "No fixed pre-pull roster assignment is required. The route is fixed in the raid plan; Catalyst impacts, Froth targets and infections resolve dynamically with DBM/BigWigs.",
+    summary = "No fixed player assignment is needed. Fountain route and Fire-add marks are fixed raidleader strategy.",
     sections = {},
 }
 
