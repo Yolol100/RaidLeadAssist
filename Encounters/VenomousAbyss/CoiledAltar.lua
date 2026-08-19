@@ -4,8 +4,8 @@ local Registry = ns:GetModule("Encounters.Registry")
 local dread = {
     key = "dreadmarch",
     ability = "Dreadmarch",
-    action = "Break shields; move ghosts to Cross",
-    warning = "Dreadmarch: break shields, then move ghosts to Cross.",
+    action = "Break shields; ghosts to Cross",
+    warning = "Dreadmarch: break shields; move ghosts to Cross.",
     voice = "Dreadmarch",
     spellIDs = { 1289900 },
     prepareSeconds = 7,
@@ -15,8 +15,8 @@ local dread = {
 local night = {
     key = "nightfall",
     ability = "Eternal Nightfall",
-    action = "Break the shield, then interrupt",
-    warning = "Nightfall: break the shield, then interrupt.",
+    action = "Break shield; interrupt",
+    warning = "Nightfall: break shield, then interrupt.",
     voice = "Nightfall",
     spellIDs = { 1286918 },
     prepareSeconds = 5,
@@ -27,7 +27,7 @@ local spirit = {
     key = "spiritcackle",
     ability = "Spiritcackle",
     action = "Kill Soulcoilers; interrupt Wail",
-    warning = "Soulcoilers: kill them and interrupt Wail.",
+    warning = "Soulcoilers: kill them; interrupt Wail.",
     voice = "Add",
     spellIDs = { 1286441 },
 }
@@ -35,8 +35,8 @@ local spirit = {
 local intermission = {
     key = "intermission",
     ability = "Soulbinding",
-    action = "Bloodlust; burn Zul'jan; stop fragments one at a time",
-    warning = "Intermission: Bloodlust and burn Zul'jan; stop fragments one at a time.",
+    action = "Bloodlust; burn Zul'jan; stop fragments",
+    warning = "Intermission: Bloodlust, burn Zul'jan; stop fragments.",
     voice = "Bloodlust",
     timing = false,
 }
@@ -44,8 +44,8 @@ local intermission = {
 local final = {
     key = "final",
     ability = "Coiled Union",
-    action = "Keep both bosses even; kill together",
-    warning = "Final phase: keep both bosses even and kill together.",
+    action = "Keep health even; kill together",
+    warning = "Final phase: keep health even; kill together.",
     voice = "Kill together",
     timing = false,
     iconSpellID = 1298381,
@@ -112,12 +112,12 @@ Registry:Register({
             },
             calls = {
                 toxic(
-                    "Collectors move green orbs to Triangle",
-                    "Green orbs: collectors move them to Triangle."
+                    "Collectors move orbs to Triangle",
+                    "Orbs: collectors move them to Triangle."
                 ),
                 guillotine(
-                    "Called team soak; raid then moves 40+ yards",
-                    "Guillotine: called team soak, then raid move 40+ yards away."
+                    "Team soak; raid move 40+ yards",
+                    "Guillotine: team soak; raid move 40+ yards."
                 ),
                 dread,
                 night,
@@ -135,12 +135,12 @@ Registry:Register({
             },
             calls = {
                 toxic(
-                    "Collectors move green orbs to Triangle",
-                    "Green orbs: collectors move them to Triangle."
+                    "Collectors move orbs to Triangle",
+                    "Orbs: collectors move them to Triangle."
                 ),
                 guillotine(
-                    "Called team soak; raid then moves 40+ yards",
-                    "Guillotine: called team soak, then raid move 40+ yards away."
+                    "Team soak; raid move 40+ yards",
+                    "Guillotine: team soak; raid move 40+ yards."
                 ),
                 dread,
                 night,
@@ -158,19 +158,19 @@ Registry:Register({
             },
             calls = {
                 toxic(
-                    "Clear mutations; move orbs to Triangle",
-                    "Mutated venom: clear mutations, then move orbs to Triangle."
+                    "Clear mutations; orbs to Triangle",
+                    "Mutations: clear them; move orbs to Triangle."
                 ),
                 guillotine(
-                    "Fresh called team soak; raid moves 40+ yards",
-                    "Guillotine: fresh called team soak, then raid move 40+ yards away."
+                    "Fresh team soak; raid move 40+ yards",
+                    "Guillotine: fresh team soak; raid move 40+ yards."
                 ),
                 dread,
                 night,
                 spirit,
                 gloombomb(
-                    "Hit shielded Soulcoilers, then spread",
-                    "Gloombombs: hit shielded Soulcoilers, then spread."
+                    "Hit shielded Soulcoilers; spread",
+                    "Gloombomb: hit shielded Soulcoilers, then spread."
                 ),
                 intermission,
                 final,
