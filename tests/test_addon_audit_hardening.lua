@@ -51,6 +51,16 @@ assert(workflow:find("reproducibility%-check:"))
 assert(workflow:find("cmp primary/RaidLeadAssist.zip repro/RaidLeadAssist.zip", 1, true))
 assert(workflow:find("gh attestation verify dist/RaidLeadAssist.zip", 1, true))
 assert(workflow:find("runs%-on: ubuntu%-24%.04"))
+local checkoutCount = select(2, workflow:gsub("actions/checkout@", ""))
+local nonPersistingCheckoutCount = select(2, workflow:gsub("persist%-credentials:%s*false", ""))
+assert(checkoutCount == 3, "validate workflow checkout inventory drifted")
+assert(nonPersistingCheckoutCount == checkoutCount,
+    "every validate/release checkout must disable persisted Git credentials")
+local driftWorkflow = read(".github/workflows/upstream-drift.yml")
+assert(select(2, driftWorkflow:gsub("actions/checkout@", "")) == 1,
+    "upstream drift checkout inventory drifted")
+assert(select(2, driftWorkflow:gsub("persist%-credentials:%s*false", "")) == 1,
+    "upstream drift checkout must disable persisted Git credentials")
 
 local baseline = read("docs/UPSTREAM_BASELINES.json")
 for _, path in ipairs({
@@ -65,8 +75,18 @@ assert(baseline:find("88ec781e9b213dbf7d9ca59164a584c2529d9bf9", 1, true),
     "DBM 12.1.4 release commit must stay pinned")
 assert(baseline:find("49ca8b3448e5aa60e0ac210459a6369e5b22641c", 1, true),
     "Nek'zali DBM post-unlock Normal-timing baseline must stay pinned")
-assert(baseline:find("472b7e826c1e8f95eab2674edcdb46b28c911470", 1, true),
-    "Twin Fangs DBM post-unlock Normal-timing baseline must stay pinned")
+assert(baseline:find("5314afd2931cd3ffc3234790acb7b4eb04816974", 1, true),
+    "Twin Fangs DBM post-unlock lifecycle baseline must stay pinned")
+assert(baseline:find("c82ba65249ce3b4d98293c9d299fbf8530fb9cd0", 1, true),
+    "Sentinels DBM post-unlock Normal-routing baseline must stay pinned")
+assert(baseline:find("1c241c906fb1a415c280991e231f086479893aa9", 1, true),
+    "Lost Explorers DBM fallback-authority baseline must stay pinned")
+assert(baseline:find("bcfbcc0fea3c4e0c06336c0066accd3fdf33b0fc", 1, true),
+    "Sszorak DBM post-unlock routing baseline must stay pinned")
+assert(baseline:find("9114bf6331598d210e20ffe3716e05842ccb43c6", 1, true),
+    "Sentinels BigWigs intermission/reset baseline must stay pinned")
+assert(baseline:find("ca995e7b0fc55414ff1deb59f67e11ae99b242a1", 1, true),
+    "Twin Fangs BigWigs Submerge baseline must stay pinned")
 assert(baseline:find("67d6c66d1abdd47d2404801f8488d6a6468c9d28", 1, true),
     "Coiled Altar BigWigs live-launch baseline must stay pinned to the reviewed source")
 

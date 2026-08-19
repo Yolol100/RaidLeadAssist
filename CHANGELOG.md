@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.0-beta.54 — 2026-08-19
+
+- Preserve timing provenance across bossmod fallback paths: BigWigs' Blizzard bridge is preview-only when it does not expose `isApproximate`, and current DBM Lost Explorers fallback is preview-only unless DBM explicitly asserts hardcoded timeline authority.
+- Add regression coverage for bossmod-versus-Blizzard precision escalation and lock the central `TimelineService.ProviderTimerStarted` precision policy as an approved audited extension surface.
+- Refresh the second post-unlock DBM/BigWigs review for Entombed Sentinels, The Lost Explorers, Sszorak and The Twin Fangs, pinning the newly reviewed source fingerprints without requiring unreleased bossmod builds.
+- Expand the live Retail matrix for Lost Explorers Normal versus Heroic/Mythic authority, BigWigs direct-versus-bridge precision, Sentinels intermission reset, Sszorak Mythic extrapolation and Twin Fangs Submerge lifecycle. Beta.54 remains prerelease/live-pending.
+
 ## 0.9.0-beta.53 — 2026-08-19
 
 - Respect Blizzard Encounter Timeline `isApproximate` metadata: approximate native events remain preview-only and can no longer become actionable PREPARE/PRESS/TTS timing; secret or malformed approximation metadata fails closed.

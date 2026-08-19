@@ -51,6 +51,9 @@ APPROVED_RUNTIME_PATCHES = {
     "Core/ReadinessIntegration.lua": {
         "Core.App": {"PrintDoctor"},
     },
+    "Core/ProviderRecoveryIntegration.lua": {
+        "Services.TimelineService": {"ProviderTimerStarted"},
+    },
     "Core/SentinelsIntegration.lua": {
         "UI.MainFrame": {"Initialize", "SetEncounter", "SetCallState", "ResetCallStates"},
     },

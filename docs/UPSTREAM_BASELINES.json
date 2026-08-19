@@ -34,8 +34,8 @@
         {
           "ref": "master",
           "path": "DBM-Raids-Midnight/TheVenomousAbyss/TheTwinFangs.lua",
-          "blobSha": "472b7e826c1e8f95eab2674edcdb46b28c911470",
-          "reason": "Post-unlock master adds Normal hardcoded routing and Submerge lifecycle coverage while preserving RLA-consumed Feast, globule, add and movement identities"
+          "blobSha": "5314afd2931cd3ffc3234790acb7b4eb04816974",
+          "reason": "Post-unlock routing retains RLA-consumed Feast, add, movement and soak identities; latest drift adds Submerge lifecycle/safety-rounding coverage without changing those call identities"
         },
         {
           "ref": "master",
@@ -46,14 +46,14 @@
         {
           "ref": "master",
           "path": "DBM-Raids-Midnight/TheVenomousAbyss/EntombedSentinels.lua",
-          "blobSha": "6a2549f56958607882849cd2d0206735ba99704e",
-          "reason": "Entombed Sentinels boss-specific timer and spell identities"
+          "blobSha": "c82ba65249ce3b4d98293c9d299fbf8530fb9cd0",
+          "reason": "Post-unlock Normal routing is now confirmed from logs; Stasis, Miasma, Protovenom and other RLA-consumed identities remain compatible"
         },
         {
           "ref": "master",
           "path": "DBM-Raids-Midnight/TheVenomousAbyss/TheLostExplorers.lua",
-          "blobSha": "b1fc3744667788216f4200b01608afae8a695940",
-          "reason": "Lost Explorers boss-specific timer and spell identities"
+          "blobSha": "1c241c906fb1a415c280991e231f086479893aa9",
+          "reason": "Fresh Normal evidence rebuilt hardcoded routing; Heroic/Mythic deliberately fall back to Blizzard until equivalent logs exist, so RLA downgrades DBM timing for this encounter unless DBM_IgnoreBlizzAPI proves hardcoded authority"
         },
         {
           "ref": "master",
@@ -64,8 +64,8 @@
         {
           "ref": "master",
           "path": "DBM-Raids-Midnight/TheVenomousAbyss/Sszorak.lua",
-          "blobSha": "59c67f6066f9ef85b317c97c830652064672c5dc",
-          "reason": "Sszorak boss-specific timer and spell identities"
+          "blobSha": "bcfbcc0fea3c4e0c06336c0066accd3fdf33b0fc",
+          "reason": "Normal/Heroic routing is now log-confirmed and Mythic routing is explicitly extrapolated; RLA-consumed Venom, Crosswinds, Maelstrom and Apex identities remain unchanged"
         },
         {
           "ref": "master",
@@ -85,7 +85,7 @@
           "ref": "master",
           "path": "Core/BossPrototype.lua",
           "blobSha": "dfcd2952467c62bad92d95230683799a713be0e9",
-          "reason": "RLA consumes BigWigs Timer/CastTimer/StartBar contracts; callback contract remains compatible in the 2026-08-19 post-unlock review"
+          "reason": "RLA consumes BigWigs Timer/CastTimer/StartBar contracts; direct Timer continues to expose isApproximate while the nil-module Blizzard StartBar bridge does not, so RLA treats that bridge as preview-only"
         },
         {
           "ref": "master",
@@ -102,8 +102,8 @@
         {
           "ref": "master",
           "path": "TheVenomousAbyss/TwinFangs.lua",
-          "blobSha": "d16ccc45b3f2221b69212f4e26f52b49f63c4de5",
-          "reason": "Live-launch Twin Fangs bars re-reviewed; Ravenous Feast and shared movement identities remain compatible"
+          "blobSha": "ca995e7b0fc55414ff1deb59f67e11ae99b242a1",
+          "reason": "Latest source captures more Submerge timers while retaining Ravenous Feast and shared movement identities consumed by RLA"
         },
         {
           "ref": "master",
@@ -114,8 +114,8 @@
         {
           "ref": "master",
           "path": "TheVenomousAbyss/Sentinels.lua",
-          "blobSha": "9a71d1dfabdca8e721a5dc49854aec0b36139c7e",
-          "reason": "Live-launch Entombed Sentinels timer refinements reviewed; RLA call identities remain compatible"
+          "blobSha": "9114bf6331598d210e20ffe3716e05842ccb43c6",
+          "reason": "Post-unlock intermission/reset fix re-reviewed; Stasis, Miasma and Protovenom identities remain compatible and backup Blizzard bridge events stay preview-only in RLA"
         },
         {
           "ref": "master",
