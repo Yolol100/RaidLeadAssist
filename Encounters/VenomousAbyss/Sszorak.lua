@@ -26,8 +26,10 @@ local function baseCalls()
         {
             key = "maelstrom",
             ability = "Howling Maelstrom",
-            action = "Poppers 1-2-3 trigger Cysts",
-            warning = "Maelstrom: Poppers 1-2-3 trigger Cysts on each wind.",
+            action = "Assigned Poppers trigger Cysts",
+            warning = "Maelstrom: assigned Poppers trigger Cysts.",
+            actionTemplate = "{{cyst_popper_1}}/{{cyst_popper_2}}/{{cyst_popper_3}} pop Cysts",
+            warningTemplate = "Maelstrom: {{cyst_popper_1}}, {{cyst_popper_2}}, {{cyst_popper_3}} pop Cysts 1-2-3.",
             voice = "Maelstrom",
             spellIDs = { 1285732 },
             prepareSeconds = 8,
@@ -36,21 +38,45 @@ local function baseCalls()
         {
             key = "apex",
             ability = "Apex Predator",
-            action = "Called team soak green frontal",
-            warning = "Mutilate: called team soak green frontal.",
+            action = "Assigned group soaks Mutilate",
+            warning = "Mutilate: assigned group soak frontal.",
+            actionTemplate = "{{rotation:mutilate_teams}} soak Mutilate",
+            warningTemplate = "Mutilate: {{rotation:mutilate_teams}} soak frontal.",
             voice = "Soak",
             spellIDs = { 1277025, 1285430 },
             prepareSeconds = 7,
             pressSeconds = 4,
         },
+        {
+            key = "dig_in",
+            ability = "Dig In",
+            action = "Use damage cooldowns",
+            warning = "Dig In: use damage cooldowns.",
+            voice = "Burn",
+            timing = false,
+        },
     }
+end
+
+local function mythicCalls()
+    local calls = baseCalls()
+    calls[#calls + 1] = {
+        key = "serpent",
+        ability = "Serpent's Fury",
+        action = "14+ stack on marked player",
+        warning = "Serpent's Fury: 14+ stack on marked player.",
+        voice = "Stack",
+        timing = false,
+        iconSpellID = 1305621,
+    }
+    return calls
 end
 
 Registry:Register({
     key = "sszorak",
     name = "Sszorak",
     encounterID = 3420,
-    strategyStatus = "12.1 Journal + current Wowhead + DBM/BigWigs source-reviewed 2026-08-19; player briefing split from marker/poppers prep; live validation pending",
+    strategyStatus = "12.1 Journal + current Wowhead + Ready Check Pull + DBM/BigWigs source-reviewed 2026-08-19; roster-aware Mutilate/Poppers; live validation pending",
     profiles = {
         normal = {
             explanation = {
@@ -59,7 +85,7 @@ Registry:Register({
                 "Wind arrow on you: find the player with the opposite direction.",
                 "Position so both knockbacks send you toward each other.",
                 "Maelstrom starts: only assigned Cyst Poppers touch saved Cysts.",
-                "Mutilate frontal: assigned soak team enters; everyone else stays out.",
+                "Mutilate frontal: assigned soak group enters; everyone else stays out.",
                 "When Sszorak digs in, use major damage cooldowns.",
             },
             calls = baseCalls(),
@@ -67,7 +93,7 @@ Registry:Register({
         heroic = {
             explanation = {
                 "Keep new poison pools at the arena edge.",
-                "Use the other Mutilate soak team on every new cast.",
+                "Use the other Mutilate soak group on every new cast.",
             },
             calls = baseCalls(),
         },
@@ -77,18 +103,7 @@ Registry:Register({
                 "After the charge, Virulence players spread from everyone.",
                 "Drop Virulence residue away from the raid.",
             },
-            calls = {
-                baseCalls()[1], baseCalls()[2], baseCalls()[3], baseCalls()[4],
-                {
-                    key = "serpent",
-                    ability = "Serpent's Fury",
-                    action = "14+ stack on marked player",
-                    warning = "Serpent's Fury: 14+ stack on marked player.",
-                    voice = "Stack",
-                    timing = false,
-                    iconSpellID = 1305621,
-                },
-            },
+            calls = mythicCalls(),
         },
     },
 })
