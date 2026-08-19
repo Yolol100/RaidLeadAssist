@@ -14,7 +14,7 @@ for _, d in ipairs({"normal","heroic","mythic"}) do
     local altar = Registry:GetProfile("altar",d)
     assert(altar.callsByKey.sever == nil)
     assert(altar.callsByKey.intermission.warning:find("Bloodlust",1,true))
-    assert(altar.callsByKey.final.warning == "Final phase: keep both bosses even and kill together.")
+    assert(altar.callsByKey.final.warning == "Final phase: keep health even; kill together.")
     local defs = AR:GetDefinitions("altar",d)
     assert(defs[1].key == "orb_collectors" and defs[1].minPlayers == 2 and defs[1].required)
     local ulatek = Registry:GetProfile("ulatek",d)
