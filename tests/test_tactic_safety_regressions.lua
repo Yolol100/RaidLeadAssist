@@ -14,7 +14,8 @@ for _,d in ipairs({"heroic","mythic"}) do
     assert(R:GetProfile("twinfangs",d).callsByKey.feast.warning == "Feast: assigned groups soak in order.")
 end
 
-assert(text("altar","normal"):find("Green poison orb on you",1,true))
+assert(text("altar","normal"):find("Green poison orbs spawn",1,true))
+assert(text("altar","normal"):find("only collectors touch them",1,true))
 assert(text("altar","normal"):find("5+ players stack",1,true))
 assert(text("altar","heroic"):find("Guillotine gives a repeat-hit debuff",1,true))
 assert(R:GetProfile("altar","normal").callsByKey.guillotine.warning == "Guillotine: 5+ soak; raid move 40+ yards.")
