@@ -1,25 +1,32 @@
 local T = assert(loadfile("tests/testlib.lua"))()
 local ns = T.NewNamespace()
+_G.issecretvalue = function() return false end
+T.Load("Core/Constants.lua", ns)
+T.Load("Core/Util.lua", ns)
+T.Load("Encounters/Registry.lua", ns)
 T.Load("Encounters/AssignmentRegistry.lua", ns)
 T.Load("Encounters/Boss12AssignmentOverride.lua", ns)
+T.Load("Encounters/VenomousAbyss/Sentinels.lua", ns)
 T.Load("Services/AssignmentService.lua", ns)
 local Registry = ns:GetModule("Encounters.AssignmentRegistry")
+local Encounters = ns:GetModule("Encounters.Registry")
 local Assignments = ns:GetModule("Services.AssignmentService")
 Assignments:Initialize({ assignments = {} })
 for _, difficulty in ipairs({"normal","heroic","mythic"}) do
     local defs = Registry:GetDefinitions("sentinels", difficulty)
     assert(#defs == 2)
-    assert(defs[1].key == "team_a" and defs[1].label == "Team A · Green Side" and defs[1].required)
-    assert(defs[2].key == "team_b" and defs[2].label == "Team B · Red Side" and defs[2].required)
+    assert(defs[1].key == "team_a" and defs[1].label == "Green Side" and defs[1].required)
+    assert(defs[2].key == "team_b" and defs[2].label == "Red Side" and defs[2].required)
     assert(defs[1].callKey == "side_swap" and defs[2].callKey == "side_swap")
+    assert(defs[1].compactGroups and defs[2].compactGroups)
 end
 local ok = Assignments:ApplyBossDraft("sentinels", "heroic", { team_a="Group 1", team_b="Group 2" })
 assert(ok)
-local warning = Assignments:BuildCallWarning(
-    "After Stasis: hold sides; tanks swap bosses.",
-    "sentinels", "heroic", "side_swap"
-)
-assert(warning == "After Stasis: hold sides; tanks swap bosses. Team A: Group 1. Team B: Group 2.")
+local call = Encounters:GetProfile("sentinels", "heroic").callsByKey.side_swap
+local warning = Assignments:BuildCallWarning(call.warning, "sentinels", "heroic", "side_swap")
+assert(warning == "After Stasis: Group 1 hold green; Group 2 hold red.")
+local action = Assignments:BuildCallAction(call.action, "sentinels", "heroic", "side_swap")
+assert(action == "Group 1 green; Group 2 red")
 local breath = Assignments:BuildCallWarning("Green side: kill slime.", "sentinels", "heroic", "coagulation")
 assert(breath == "Green side: kill slime.")
-print("ok - Sentinels assignments append readable team context to shared calls")
+print("ok - Sentinels calls render the configured physical sides")
