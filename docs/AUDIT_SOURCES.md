@@ -1,6 +1,6 @@
 # Audit source register
 
-Review date: 2026-08-18. Changing platform/provider facts must be rechecked before a release claim.
+Review date: 2026-08-19. Changing platform/provider facts must be rechecked before a release claim.
 
 ## Blizzard / WoW
 
@@ -27,37 +27,67 @@ Audit implications: least-privilege workflow permissions, actions pinned to full
 - DBM repository/releases: https://github.com/DeadlyBossMods/DeadlyBossMods
 - BigWigs repository/releases: https://github.com/BigWigsMods/BigWigs
 
-The machine-readable exact reviewed commits/file fingerprints live in `UPSTREAM_BASELINES.json`; current stable release pins at this review remain DBM `12.1.3` and BigWigs `v419.2`.
+The machine-readable exact reviewed commits/file fingerprints live in `UPSTREAM_BASELINES.json`. The stable release-contract pins remain DBM `12.1.3` and BigWigs `v419.2` at this review.
 
-On 2026-08-18 the tracked BigWigs `Core/BossPrototype.lua` master fingerprint changed again after the earlier audit. RLA re-verified the current `BigWigs_Timer`, `BigWigs_CastTimer` and `BigWigs_StartBar` argument shapes, including the final timeline event-ID slot used as one-shot metadata. The provider contract remains compatible; the new reviewed fingerprint is recorded in `UPSTREAM_BASELINES.json`.
+The 2026-08-19 pre-release pass found new BigWigs `master` drift in Nek'zali, Entombed Sentinels, Lost Explorers, Twin Fangs, Coiled Altar and Ula'tek. RLA re-reviewed the changed live-launch modules and refreshed their exact fingerprints. The watched `Core/BossPrototype.lua` callback contract did not change, and the configured RLA mechanic identities remain present/compatible. DBM's watched provider and all eight encounter modules remained unchanged from the reviewed baseline.
 
-The boss-specific watch list now also pins current DBM and BigWigs Twin Fangs and Coiled Altar modules. This catches encounter-level timer/key drift that could otherwise leave a provider contract technically valid while a raid call silently stops matching the intended mechanic.
+BigWigs `v419.2` predates the finalized `TheVenomousAbyss/CoiledAltar.lua` module: that tag still contains the earlier next-build `Crown.lua` placeholder while current `master` has the finalized Coiled Altar module. RLA therefore must not assume that a loaded stable BigWigs installation can provide every Venomous Abyss boss bar. Its provider reconciliation deliberately falls back to Blizzard Encounter Timeline events whenever the active bossmod has no usable matching timer. This is a compatibility/failure-mode requirement, not a recommendation to install unreleased BigWigs source.
 
 ## Encounter strategy
 
-Encounter-facing copy is checked against current Encounter Journal/PTR/live evidence and reputable current raid guides, then remains marked live-pending until reproduced in Retail. Source disagreement never authorizes silently enabling timing or hard-coding volatile thresholds.
+Encounter-facing copy is checked against current Encounter Journal/live evidence and reputable current raid guides, then remains marked live-pending until reproduced in Retail. Source disagreement never authorizes silently enabling timing or hard-coding volatile thresholds.
 
-The 2026-08-18 follow-up review additionally used the user-provided Ready Check Pull recap screenshots for The Twin Fangs and The Coiled Altar and cross-checked them against the current Wowhead strategy/Journal plus current DBM/BigWigs source.
+The release review uses current Wowhead encounter guides/Journal data, current Raidstrats strategy guidance where useful, current DBM/BigWigs source, and the user-provided Ready Check Pull recap screenshots for Entombed Sentinels, Lost Explorers, Vashnik, Twin Fangs and Coiled Altar.
 
-Twin Fangs conclusions from that cross-check:
+### Nek'zali
 
-- Normal Ravenous Feast does not require the Heroic three-group assignment. The raid stack soaks all three hits together on Normal; Heroic/Mythic retain three fresh 3+ teams because Feasted makes repeats unsafe.
-- Stone Breaker remains tank/bossmod-owned as a live role mechanic, but the briefing now states the practical set execution: handle all three marked impacts in order and swap tanks after the set; never leave an impact empty.
-- The shared 100-energy movement remains one RLA call anchored only to Sanguine Storm, while the briefing explicitly moves the raid toward Ithraz and calls out Vexhul's rotating flood plus Sanguine Storm.
-- Ready Check Pull's recap mentions a 10-stack Heroic Eternal Venom threshold, while the current Wowhead page contains conflicting 9/10/11-stack wording across guide and Journal sections. RLA therefore keeps the lethal threshold qualitative instead of hard-coding a volatile number.
+- Keep the Soulcoil Well clear and stop Amani before they reach it.
+- Heroic/Mythic Cremation handling uses persistent Amani corpses; the player with the fire expiration handles the corpse rather than requiring a separate fixed Cremation roster.
+- Mythic Grasping Depths retains fresh Well groups because Soul Exhaustion makes immediate repeat entry unsafe.
 
-Coiled Altar conclusions from that cross-check:
+### Entombed Sentinels
 
-- Pre-pull setup now explicitly uses world markers at both platform ends, 2-3 mobile Orb Collectors, two Heroic Guillotine teams and 2-3 Heroic/Mythic Wail interrupt owners.
-- Phase 1 includes controlled orb destruction through Sever, the stacking Heroic Venom Rupture cost, the leftover-orb transition risk and the Guillotine soak-then-range movement.
-- Phase 2 includes breaking Dreadmarch before the edge, steering/stopping fixate ghosts at the Soul Sever mark, reclaiming Soul Fragments, breaking/interruption of Eternal Nightfall and Soulcoiler/Wail priority.
-- The supplied Ready Check Pull tactic uses Bloodlust during Soulbinding while Zul'jan takes 100% increased damage; the current Wowhead strategy header instead recommends Phase 3. Bloodlust timing is a raid-strategy choice rather than a mechanic invariant. For this RLA plan the supplied Ready Check Pull intermission tactic is selected and the source disagreement is recorded explicitly.
-- Phase 3 retains synchronized boss health/death, shared frontals/orb/ghost setup, Defilement healing-absorb awareness and Heroic Guillotine end-to-end movement.
+- The raid stays split on fixed physical sides while tanks swap bosses after Stasis.
+- Bosses remain separated, the weaker boss is healed during Stasis, and Helical Toxins must resolve at exactly four applications.
+- Heroic return-path venom and Blood pools plus Mythic Protovenom remain difficulty deltas rather than base-plan noise.
 
-The broader follow-up also corrected three prior assumptions using current strategy evidence:
+### Lost Explorers
 
-- Entombed Sentinels: raid groups remain on their physical sides after Stasis while tanks taunt-swap the bosses across them. RLA therefore says `GROUPS HOLD SIDES > BOSSES SWAP` instead of telling the raid groups to cross the room.
-- Vashnik the Malignant: the current guide lists no fixed key assignments. Malignant Catalyst remains a shared raid call to soak every green impact, but no permanent Bile roster is required.
-- Sszorak: the current guide lists three Cyst Poppers as the key assignment. RLA now exposes three distinct required poppers and names all three in the Maelstrom coordination call.
+- The selected fixed fish order is Nama, then Iku, then Gebbo. It is an RLA strategy choice, not a universal mechanic invariant.
+- Mighty Thud uses three fixed Star/Circle/Diamond soak points.
+- The supplied recap explicitly pairs Fire/Frost circles, drops them beside each other, then has players enter the opposite elemental patch; the Boss Plan mirrors that sequence instead of compressing it into an ambiguous one-line instruction.
+- Normal/Heroic do not need a fixed crate roster. Mythic alone uses a controlled breaker rotation so everyone else can clear 15+ yards before the break.
 
-Boss 7/8 review on 2026-08-18 also retains the earlier Ula'tek evidence boundary: Blizzard did not make the final boss available for public PTR testing, so every Ula'tek call remains manual until Retail evidence proves exact stable timing identity and cadence.
+### Vashnik
+
+- The selected fixed fountain route is Flame+Shadow, Shadow+Blood, then Blood+Flame; the encounter mechanic itself only requires controlling the two closest fountains at Imbibe.
+- No permanent player roster is required for Catalyst impacts.
+- The Blood infection instruction now names the visible circle and explicitly tells several teammates to stack in it so the affected player can receive the required healing; this matches both the supplied recap and current strategy guidance.
+- Heroic/Mythic Fire adds remain staggered Skull then Cross to avoid overlapping the stacking on-death damage-over-time effect.
+
+### Sszorak
+
+- The current strategy retains three Cyst Poppers and two separate 5+ Mutilate teams.
+- Raidstrats' current Heroic guidance supports pairing a Crosswinds player shoulder-to-shoulder with the opposite knockback direction.
+- Dig In remains a shared damage-cooldown call because it creates the encounter's major fixed damage window.
+
+### Twin Fangs
+
+- Ravenous Feast hits three times. Every hit requires at least 3 eligible players; after soaking one hit, Feasted prevents that player from safely serving as the fresh soak for the next hit of the same cast. Normal resolves fresh eligible soakers dynamically, while Heroic/Mythic use three preassigned groups.
+- Stone Breaker remains tank/bossmod-owned rather than adding another raidleader button.
+- The shared 100-energy movement remains one RLA call anchored to the current movement mechanic rather than duplicating each personal hazard.
+- Current sources disagree on the exact lethal Eternal Venom threshold. RLA therefore keeps the threshold qualitative instead of hard-coding a volatile number.
+
+### Coiled Altar
+
+- Pre-pull setup uses world markers at both platform ends plus assigned mobile Orb Collectors and Wail interrupt ownership.
+- The player plan now cues orb handling from the actual spawn event: only assigned collectors touch the green poison orbs and carry them to Triangle. It no longer implies that an orb initially appears on a player.
+- Normal Guillotine only needs any 5+ soakers; Heroic adds rotating groups; Mythic uses fresh groups because the repeat-hit restriction is stronger.
+- Dreadmarch/ghost routing, Nightfall shield+interrupt, Soulcoilers/Wail, intermission fragment control and synchronized final boss deaths remain the raid-lead essentials.
+- The selected Bloodlust timing is during Soulbinding/intermission from the supplied Ready Check Pull tactic. This is recorded as strategy rather than presented as a universal mechanic invariant.
+
+### Ula'tek
+
+- Ula'tek remains the lowest-confidence encounter because the final boss was not publicly PTR-tested.
+- Normal/Heroic Spectral Coils stays a full-raid Square stack; Mythic alone introduces the assigned Coil rotation and additional egg/incubation ownership.
+- Every Ula'tek call remains manual (`timing=false`) until live Retail evidence confirms stable exact public timer identity/cadence. Provider drycode or generic Blizzard timeline coverage alone is insufficient.
