@@ -70,6 +70,12 @@ local function sameKeys(profile, expected, label)
     end
 end
 
+local function wordCount(value)
+    local count = 0
+    for _ in tostring(value or ""):gmatch("%S+") do count = count + 1 end
+    return count
+end
+
 for bossKey, difficulties in pairs(expectedCalls) do
     for difficultyKey, expected in pairs(difficulties) do
         local profile = assert(Registry:GetProfile(bossKey, difficultyKey))
@@ -77,16 +83,19 @@ for bossKey, difficulties in pairs(expectedCalls) do
         sameKeys(profile, expected, label)
 
         for _, call in ipairs(profile.calls) do
-            assert(call.action:find("%l"), label .. "/" .. call.key .. " action should use sentence case")
-            assert(call.warning:find("%l"), label .. "/" .. call.key .. " warning should use sentence case")
-            assert(not call.action:find(" > ", 1, true), label .. "/" .. call.key .. " action should read as natural language")
-            assert(not call.warning:find(" > ", 1, true), label .. "/" .. call.key .. " warning should read as natural language")
-            assert(not call.action:lower():find("raid leader", 1, true), label .. "/" .. call.key .. " action must not contain operator meta-language")
-            assert(not call.warning:lower():find("raid leader", 1, true), label .. "/" .. call.key .. " warning must not contain operator meta-language")
-            assert(call.warning:find(":", 1, true), label .. "/" .. call.key .. " warning should use cue: action structure")
-            assert(call.warning:sub(-1) == ".", label .. "/" .. call.key .. " warning should be a complete short sentence")
-            assert(#call.action <= 64, label .. "/" .. call.key .. " action is too long for glance reading")
-            assert(#call.warning <= 96, label .. "/" .. call.key .. " warning is too long for rapid parsing")
+            local callLabel = label .. "/" .. call.key
+            assert(call.action:find("%l"), callLabel .. " action should use sentence case")
+            assert(call.warning:find("%l"), callLabel .. " warning should use sentence case")
+            assert(not call.action:find(" > ", 1, true), callLabel .. " action should read as natural language")
+            assert(not call.warning:find(" > ", 1, true), callLabel .. " warning should read as natural language")
+            assert(not call.action:lower():find("raid leader", 1, true), callLabel .. " action must not contain operator meta-language")
+            assert(not call.warning:lower():find("raid leader", 1, true), callLabel .. " warning must not contain operator meta-language")
+            assert(call.warning:find(":", 1, true), callLabel .. " warning should use cue: action structure")
+            assert(call.warning:sub(-1) == ".", callLabel .. " warning should be a complete short sentence")
+            assert(wordCount(call.action) <= 7, callLabel .. " action exceeds 7-word glance target")
+            assert(wordCount(call.warning) <= 9, callLabel .. " warning exceeds 9-word rapid-call target")
+            assert(#call.action <= 64, callLabel .. " action is too long for glance reading")
+            assert(#call.warning <= 96, callLabel .. " warning is too long for rapid parsing")
         end
     end
 end
@@ -96,4 +105,4 @@ assert(Registry:GetProfile("nekzali", "heroic").callsByKey.flame == nil,
 assert(not Registry:GetProfile("twinfangs", "normal").callsByKey.adds.warning:lower():find("spit", 1, true),
     "Twin Fangs add call should keep personal spit handling in the Boss Plan/bossmod layer")
 
-print("ok - callout copy uses concise cue-action language and only shared raidleader calls")
+print("ok - shared raidleader calls stay cue-first, single-step and glanceable")
