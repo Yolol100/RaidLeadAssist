@@ -17,8 +17,10 @@ local function sharedCalls()
         {
             key = "side_swap",
             ability = "After Stasis",
-            action = "Hold sides; tanks swap bosses",
-            warning = "After Stasis: hold sides; tanks swap bosses.",
+            action = "Hold assigned sides",
+            warning = "After Stasis: hold assigned sides.",
+            actionTemplate = "{{team_a}} green; {{team_b}} red",
+            warningTemplate = "After Stasis: {{team_a}} hold green; {{team_b}} hold red.",
             voice = "Hold sides",
             timing = false,
             uiGroup = "shared",
@@ -116,7 +118,7 @@ Registry:Register({
     profiles = {
         normal = {
             explanation = {
-                "Stay with your assigned green or red group.",
+                "Stay with your assigned green or red side.",
                 "Keep both bosses 40+ yards apart and their health even.",
                 "Green side: kill the slime, then clear green droplets.",
                 "Red mark on you: stack with your group to split damage.",
