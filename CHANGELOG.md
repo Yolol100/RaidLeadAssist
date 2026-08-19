@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.0-beta.53 — 2026-08-19
+
+- Respect Blizzard Encounter Timeline `isApproximate` metadata: approximate native events remain preview-only and can no longer become actionable PREPARE/PRESS/TTS timing; secret or malformed approximation metadata fails closed.
+- Add regression coverage for exact, approximate and secret Blizzard timeline precision and extend the live Retail matrix with the same provider boundary.
+- Remove temporary branch deletion from the privileged release job so release credentials are limited to release work rather than unrelated ref cleanup.
+- Preserve the version-locked prerelease contract by assigning these audited source changes a new beta version instead of mutating the existing beta.52 release identity.
+
 ## 0.9.0-beta.52 — 2026-08-19
 
 - Refresh the release candidate after Season 2 launch-day review and give it a new version so the previously built beta.51 artifact cannot be confused with this final audited source.
