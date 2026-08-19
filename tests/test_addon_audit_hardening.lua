@@ -64,7 +64,7 @@ assert(select(2, driftWorkflow:gsub("persist%-credentials:%s*false", "")) == 1,
 
 local baseline = read("docs/UPSTREAM_BASELINES.json")
 for _, path in ipairs({
-    "Nekzali.lua", "TwinFangs.lua", "CoiledAltar.lua", "Sentinels.lua", "Explorers.lua", "Vashnik.lua", "Sszorak.lua", "Ulatek.lua",
+    "BossMod.lua", "Nekzali.lua", "TwinFangs.lua", "CoiledAltar.lua", "Sentinels.lua", "Explorers.lua", "Vashnik.lua", "Sszorak.lua", "Ulatek.lua",
     "NekzalitheSoulcoiler.lua", "TheTwinFangs.lua", "TheCoiledAltar.lua", "EntombedSentinels.lua", "TheLostExplorers.lua", "VashniktheMalignant.lua",
     "DBM-Raids-Midnight_Mainline.toc", "BigWigs_TheVenomousAbyss_Mainline.toc",
 }) do
@@ -73,8 +73,12 @@ end
 assert(baseline:find('"releaseTag": "12.1.4"', 1, true), "DBM stable release pin must be 12.1.4")
 assert(baseline:find("88ec781e9b213dbf7d9ca59164a584c2529d9bf9", 1, true),
     "DBM 12.1.4 release commit must stay pinned")
-assert(baseline:find("49ca8b3448e5aa60e0ac210459a6369e5b22641c", 1, true),
-    "Nek'zali DBM post-unlock Normal-timing baseline must stay pinned")
+assert(baseline:find("57ba051543cac3612e273bf2f02ca3b7258fa388", 1, true),
+    "DBM shared timeline batch-routing baseline must stay pinned")
+assert(baseline:find("a0e89c8e31318fc8e934c94dc030afaeb792767e", 1, true),
+    "Nek'zali DBM day-one Normal/fallback baseline must stay pinned")
+assert(baseline:find("06b08a1d288d961d7efe89d85bb8aca215da8d7e", 1, true),
+    "Vashnik DBM day-one Normal/fallback baseline must stay pinned")
 assert(baseline:find("5314afd2931cd3ffc3234790acb7b4eb04816974", 1, true),
     "Twin Fangs DBM post-unlock lifecycle baseline must stay pinned")
 assert(baseline:find("c82ba65249ce3b4d98293c9d299fbf8530fb9cd0", 1, true),
@@ -83,6 +87,8 @@ assert(baseline:find("1c241c906fb1a415c280991e231f086479893aa9", 1, true),
     "Lost Explorers DBM fallback-authority baseline must stay pinned")
 assert(baseline:find("bcfbcc0fea3c4e0c06336c0066accd3fdf33b0fc", 1, true),
     "Sszorak DBM post-unlock routing baseline must stay pinned")
+assert(baseline:find("ddc0ca1049fa6214046bc52f01a501b7d58850ed", 1, true),
+    "Nek'zali BigWigs day-one Essence Rend baseline must stay pinned")
 assert(baseline:find("9114bf6331598d210e20ffe3716e05842ccb43c6", 1, true),
     "Sentinels BigWigs intermission/reset baseline must stay pinned")
 assert(baseline:find("ca995e7b0fc55414ff1deb59f67e11ae99b242a1", 1, true),

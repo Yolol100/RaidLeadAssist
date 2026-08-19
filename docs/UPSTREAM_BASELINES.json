@@ -17,7 +17,13 @@
           "ref": "master",
           "path": "DBM-Core/modules/objects/Timer.lua",
           "blobSha": "c8039ffb656fabcc2eb8a36c3a60643128487ba9",
-          "reason": "RLA consumes DBM timer callback contracts and authority state; the Timer contract remains compatible after the 2026-08-19 post-unlock drift review"
+          "reason": "RLA consumes DBM timer callback contracts and authority state; the Timer contract remains compatible after the 2026-08-19 day-one review"
+        },
+        {
+          "ref": "master",
+          "path": "DBM-Core/modules/objects/BossMod.lua",
+          "blobSha": "57ba051543cac3612e273bf2f02ca3b7258fa388",
+          "reason": "Day-one Vashnik fixes changed shared Encounter Timeline batch de-duplication through TLBatchTrackLatest; changes here can alter which DBM bar RLA observes even when a boss module file itself is unchanged"
         },
         {
           "ref": "master",
@@ -28,50 +34,50 @@
         {
           "ref": "master",
           "path": "DBM-Raids-Midnight/TheVenomousAbyss/NekzalitheSoulcoiler.lua",
-          "blobSha": "49ca8b3448e5aa60e0ac210459a6369e5b22641c",
-          "reason": "Post-unlock master adds Normal hardcoded timeline routing while preserving RLA-consumed Amani, Pyre and Grasping timer identities"
+          "blobSha": "a0e89c8e31318fc8e934c94dc030afaeb792767e",
+          "reason": "Day-one source adds Normal hardcoded routing and retains fail-closed ResumeBlizzardAPI fallback while preserving the RLA-consumed raidleader identities"
         },
         {
           "ref": "master",
           "path": "DBM-Raids-Midnight/TheVenomousAbyss/TheTwinFangs.lua",
           "blobSha": "5314afd2931cd3ffc3234790acb7b4eb04816974",
-          "reason": "Post-unlock routing retains RLA-consumed Feast, add, movement and soak identities; latest drift adds Submerge lifecycle/safety-rounding coverage without changing those call identities"
+          "reason": "Post-unlock routing retains RLA-consumed Feast, add, movement and soak identities; latest reviewed source has fail-closed Blizzard fallback and Submerge lifecycle/safety-rounding coverage"
         },
         {
           "ref": "master",
           "path": "DBM-Raids-Midnight/TheVenomousAbyss/TheCoiledAltar.lua",
           "blobSha": "d933271c9bf23665f4284f69af4d02be823d1bb2",
-          "reason": "Coiled Altar Guillotine, Dreadmarch, Nightfall, Spiritcackle and stage identities"
+          "reason": "Coiled Altar Guillotine, Dreadmarch, Nightfall, Spiritcackle and stage identities; current hardcoded routing can fail closed back to Blizzard"
         },
         {
           "ref": "master",
           "path": "DBM-Raids-Midnight/TheVenomousAbyss/EntombedSentinels.lua",
           "blobSha": "c82ba65249ce3b4d98293c9d299fbf8530fb9cd0",
-          "reason": "Post-unlock Normal routing is now confirmed from logs; Stasis, Miasma, Protovenom and other RLA-consumed identities remain compatible"
+          "reason": "Normal routing is log-confirmed; Stasis, Miasma and Protovenom identities remain compatible and current hardcoded routing can fail closed back to Blizzard"
         },
         {
           "ref": "master",
           "path": "DBM-Raids-Midnight/TheVenomousAbyss/TheLostExplorers.lua",
           "blobSha": "1c241c906fb1a415c280991e231f086479893aa9",
-          "reason": "Fresh Normal evidence rebuilt hardcoded routing; Heroic/Mythic deliberately fall back to Blizzard until equivalent logs exist, so RLA downgrades DBM timing for this encounter unless DBM_IgnoreBlizzAPI proves hardcoded authority"
+          "reason": "Fresh Normal evidence rebuilt hardcoded routing; Heroic/Mythic deliberately fall back to Blizzard until equivalent logs exist, so RLA downgrades DBM timing unless DBM_IgnoreBlizzAPI proves hardcoded authority"
         },
         {
           "ref": "master",
           "path": "DBM-Raids-Midnight/TheVenomousAbyss/VashniktheMalignant.lua",
-          "blobSha": "4e45ae0a8889ae78b00b11be8f6ee6944c1f883d",
-          "reason": "Vashnik boss-specific timer and spell identities"
+          "blobSha": "06b08a1d288d961d7efe89d85bb8aca215da8d7e",
+          "reason": "Day-one source adds Normal hardcoded routing, duplicate-batch handling and explicit fail-closed ResumeBlizzardAPI recovery; RLA therefore binds exactness to DBM hardcoded authority"
         },
         {
           "ref": "master",
           "path": "DBM-Raids-Midnight/TheVenomousAbyss/Sszorak.lua",
           "blobSha": "bcfbcc0fea3c4e0c06336c0066accd3fdf33b0fc",
-          "reason": "Normal/Heroic routing is now log-confirmed and Mythic routing is explicitly extrapolated; RLA-consumed Venom, Crosswinds, Maelstrom and Apex identities remain unchanged"
+          "reason": "Normal/Heroic routing is log-confirmed and Mythic routing is explicitly extrapolated; current hardcoded routing can fail closed back to Blizzard, so exactness is authority-bound"
         },
         {
           "ref": "master",
           "path": "DBM-Raids-Midnight/TheVenomousAbyss/Ulatek.lua",
           "blobSha": "12b7ef5eedff1cb590b77c3861fdbc86ac95948c",
-          "reason": "Ula'tek drycode/timeline coverage remains manual/fail-closed until exact live timing is validated"
+          "reason": "Ula'tek remains manual/fail-closed in RLA; upstream hardcoded timing can resume Blizzard and is monitored without promoting it to a supported timed encounter"
         }
       ]
     },
@@ -84,8 +90,8 @@
         {
           "ref": "master",
           "path": "Core/BossPrototype.lua",
-          "blobSha": "dfcd2952467c62bad92d95230683799a713be0e9",
-          "reason": "RLA consumes BigWigs Timer/CastTimer/StartBar contracts; direct Timer continues to expose isApproximate while the nil-module Blizzard StartBar bridge does not, so RLA treats that bridge as preview-only"
+          "blobSha": "87aad72f6014978dfe8e9173b9c7e98e62665c19",
+          "reason": "RLA consumes BigWigs Timer/CastTimer/StartBar contracts; the 2026-08-19 19:11 UTC RegisterBossEvent change adds secret-GUID/callback handling outside those timer contracts, which were re-reviewed as unchanged. Direct Timer still exposes isApproximate and the nil-module Blizzard StartBar bridge still does not"
         },
         {
           "ref": "master",
@@ -96,8 +102,8 @@
         {
           "ref": "master",
           "path": "TheVenomousAbyss/Nekzali.lua",
-          "blobSha": "a8066c3ce8cdecb5dfb94beb7f6dab1740c7a4c3",
-          "reason": "Live-launch timeline refinements reviewed; RLA Nek'zali encounter and call identities remain compatible"
+          "blobSha": "ddc0ca1049fa6214046bc52f01a501b7d58850ed",
+          "reason": "Day-one P1 Essence Rend routing was corrected for duplicated/cancelled Encounter Timeline rows; RLA does not consume Essence Rend directly and its raidleader identities remain compatible"
         },
         {
           "ref": "master",

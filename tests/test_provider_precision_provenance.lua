@@ -41,29 +41,45 @@ Timeline:ProviderTimerStarted("BigWigs", "direct", {
 assert(received[#received].precision == "exact",
     "direct BigWigs timers must preserve explicit exact precision")
 
+local fallbackCapableDBMEncounters = {
+    3420, -- Sszorak
+    3421, -- The Twin Fangs
+    3429, -- The Coiled Altar
+    3445, -- Entombed Sentinels
+    3455, -- Vashnik the Malignant
+    3470, -- Nek'zali the Soulcoiler
+    3492, -- Ula'tek
+    3497, -- The Lost Explorers
+}
+
 _G.DBM = { Options = { IgnoreBlizzAPI = false } }
-Timeline:ProviderTimerStarted("DBM", "explorers-fallback", {
-    encounterID = 3497,
-    precision = "exact",
-})
-assert(received[#received].precision == "approximate",
-    "Lost Explorers DBM fallback must not upgrade Blizzard-derived timing")
+for _, encounterID in ipairs(fallbackCapableDBMEncounters) do
+    Timeline:ProviderTimerStarted("DBM", "fallback-" .. tostring(encounterID), {
+        encounterID = encounterID,
+        precision = "exact",
+    })
+    assert(received[#received].precision == "approximate",
+        "fallback-capable DBM encounter must not launder Blizzard timing into exact: "
+            .. tostring(encounterID))
+end
 
 _G.DBM.Options.IgnoreBlizzAPI = true
-Timeline:ProviderTimerStarted("DBM", "explorers-hardcoded", {
-    encounterID = 3497,
-    precision = "exact",
-})
-assert(received[#received].precision == "exact",
-    "Lost Explorers may remain exact when DBM explicitly owns hardcoded timeline authority")
+for _, encounterID in ipairs(fallbackCapableDBMEncounters) do
+    Timeline:ProviderTimerStarted("DBM", "hardcoded-" .. tostring(encounterID), {
+        encounterID = encounterID,
+        precision = "exact",
+    })
+    assert(received[#received].precision == "exact",
+        "reviewed DBM hardcoded authority may remain exact: " .. tostring(encounterID))
+end
 
 _G.DBM.Options.IgnoreBlizzAPI = false
-Timeline:ProviderTimerStarted("DBM", "other-encounter", {
-    encounterID = 3420,
+Timeline:ProviderTimerStarted("DBM", "outside-reviewed-raid", {
+    encounterID = 999999,
     precision = "exact",
 })
 assert(received[#received].precision == "exact",
-    "unreviewed encounters must not be downgraded by the Lost Explorers exception")
+    "precision policy must remain scoped to the reviewed fallback-capable raid encounters")
 
 local malformed = { precision = "exact" }
 assert(Integration:ApplyProviderPrecisionPolicy("Unknown", malformed) == malformed)

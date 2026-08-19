@@ -18,13 +18,26 @@ local Integration = {
 -- metadata, so that bridge is always preview-only. Direct BigWigs_Timer events
 -- keep their explicit isApproximate value in BigWigsProvider.
 --
--- DBM's current Lost Explorers source (2026-08-19 post-unlock) intentionally
--- uses Blizzard fallback on Heroic/Mythic and whenever hardcoded timers are not
--- active. DBM_IgnoreBlizzAPI is the public authority signal used by RLA already:
--- only while it is true can those encounter timers remain exact. The upstream
--- fingerprint is locked in docs/UPSTREAM_BASELINES.json, so future source drift
--- forces a fresh semantic review before this exception can silently go stale.
+-- Day-one Venomous Abyss source review on 2026-08-19 confirmed that every
+-- current DBM raid module can enter a DBM-owned hardcoded timeline and then
+-- fail closed back to Blizzard when live timeline routing stops matching its
+-- reviewed source. DBM_IgnoreBlizzAPI is the public authority state already
+-- consumed by RLA: only while it is asserted may a timer from one of these
+-- fallback-capable modules remain exact. Once DBM resumes Blizzard, DBM bars
+-- for the encounter are preview-only unless another direct provider proves
+-- exact timing independently.
+--
+-- These encounter IDs and the DBM core/boss-module fingerprints are locked in
+-- docs/UPSTREAM_BASELINES.json. Future source drift therefore forces another
+-- semantic review instead of silently expanding the exact-timing trust boundary.
 local DBM_BLIZZARD_FALLBACK_ENCOUNTERS = {
+    [3420] = true, -- Sszorak
+    [3421] = true, -- The Twin Fangs
+    [3429] = true, -- The Coiled Altar
+    [3445] = true, -- Entombed Sentinels
+    [3455] = true, -- Vashnik the Malignant
+    [3470] = true, -- Nek'zali the Soulcoiler
+    [3492] = true, -- Ula'tek
     [3497] = true, -- The Lost Explorers
 }
 
