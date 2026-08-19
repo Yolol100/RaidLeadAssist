@@ -131,7 +131,7 @@ Registry:Register({
     profiles = {
         normal = {
             explanation = {
-                "Green poison orb on you: carry it to the Triangle orb marker.",
+                "Green poison orbs spawn: only collectors touch them and carry them to Triangle.",
                 "Huge axe marks a player: 5+ players stack, then run 40+ yards away.",
                 "Possessed player walks toward the edge: break their absorb immediately.",
                 "Ghost fixates you: face it to stop; look away to move it to Cross.",
