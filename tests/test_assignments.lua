@@ -40,9 +40,10 @@ local sentWarning = Assignments:BuildCallWarning(
 )
 assert(sentWarning == "After Stasis: hold assigned sides. Green: Group 1. Red: Group 2.")
 
--- Lost Explorers keeps only crate ownership; fish order is fixed strategy.
-assert(#Registry:GetDefinitions("explorers", "normal") == 1)
-assert(Registry:GetDefinitions("explorers", "normal")[1].callKey == "crates")
+-- Lost Explorers has no fixed roster on Normal/Heroic; Mythic controls crate breaks.
+assert(#Registry:GetDefinitions("explorers", "normal") == 0)
+assert(#Registry:GetDefinitions("explorers", "heroic") == 0)
+assert(#Registry:GetDefinitions("explorers", "mythic") == 3)
 for _, difficulty in ipairs(difficulties) do
     for _, definition in ipairs(Registry:GetDefinitions("explorers", difficulty)) do
         assert(definition.callKey ~= "fish")
