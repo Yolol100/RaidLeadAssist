@@ -13,6 +13,7 @@ Known release boundaries:
 - DBM 12.1.4 is the reviewed stable DBM contract baseline. Current DBM `master` is two commits ahead and adds Normal hardcoded timeline routing for Nek'zali and Twin Fangs; RLA re-reviewed and pinned those changes because the consumed timer identities remain compatible.
 - BigWigs v419.2 is the reviewed stable callback/release baseline, but it predates the finalized Coiled Altar module. Missing stable BigWigs boss bars must therefore degrade to Blizzard timeline/manual behavior without disabling RLA.
 - Current DBM/BigWigs live-launch `master` modules, core callback contracts and raid TOCs were source-reviewed on 2026-08-19 and are pinned for drift detection; users are not expected to install unreleased source.
+- Blizzard Encounter Timeline events explicitly marked `isApproximate=true` are preview-only. They must never become actionable PREPARE/PRESS/TTS timing merely because their source is Blizzard; only non-approximate native events may cross that precision gate.
 - Ula'tek stays manual-only on every difficulty until real Retail pulls prove stable exact timer identities and cadence.
 - Season 2/The Venomous Abyss is open by region; source review can track post-unlock upstream changes, but encounter plans remain `PASS-LIVE`-pending until reproduced in the raid.
 
@@ -42,6 +43,9 @@ For every timed mechanic reproduce the occurrence more than once when practical.
 - disconnect/reconnect where practical.
 - bossmod loaded late or disabled.
 - provider timer update, pause/resume, cancel/fade and duplicate second-provider arrival.
+- A Blizzard Encounter Timeline event with `isApproximate=false`: verify it can remain native/actionable when all normal encounter and authority checks pass.
+- A Blizzard Encounter Timeline event with `isApproximate=true`: verify it can appear as preview timing but cannot drive actionable PREPARE/PRESS/TTS state.
+- Malformed/secret approximation metadata or invalid timeline event state: verify the event fails closed and creates no actionable timer.
 - DBM current `master` Normal Nek'zali/Twin Fangs hardcoded bars: verify direct DBM timers remain actionable while DBM suppresses Blizzard timeline authority, and that stop/wipe restores fallback cleanly.
 - BigWigs v419.2 with Coiled Altar/finalized-module coverage absent: verify Blizzard/manual fallback remains usable and no stale bossmod authority suppresses the call.
 - permission loss during a scheduled pre-pull briefing.
