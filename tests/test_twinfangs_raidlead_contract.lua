@@ -24,7 +24,7 @@ assert(has(plan("normal"), "After you soak one Feast hit, stay out"))
 
 for _, d in ipairs({"heroic","mythic"}) do
     local p = Registry:GetProfile("twinfangs",d)
-    assert(p.callsByKey.feast.warning == "Feast: Team A, then Team B, then Team C.")
+    assert(p.callsByKey.feast.warning == "Feast: Team A, then B, then C.")
     local defs = AR:GetDefinitions("twinfangs",d)
     assert(#defs >= 3)
     for i=1,3 do assert(defs[i].minPlayers == 3 and defs[i].required and defs[i].exclusiveGroup == "feast") end
@@ -39,7 +39,7 @@ assert(not has(plan("mythic"), "Team A, B or C"), "Mythic briefing should only d
 for _, d in ipairs({"normal","heroic","mythic"}) do
     local p = Registry:GetProfile("twinfangs",d)
     assert(p.callsByKey.stone == nil, "tank Stone Breaker execution remains bossmod/role-owned")
-    assert(p.callsByKey.energy.warning == "100 energy: move to Ithraz and dodge the waves.")
+    assert(p.callsByKey.energy.warning == "100 energy: move to Ithraz; dodge waves.")
     assert(#p.callsByKey.energy.spellIDs == 1 and p.callsByKey.energy.spellIDs[1] == 1306872)
 end
 
