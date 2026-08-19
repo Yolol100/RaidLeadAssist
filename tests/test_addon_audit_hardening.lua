@@ -56,10 +56,14 @@ local baseline = read("docs/UPSTREAM_BASELINES.json")
 for _, path in ipairs({
     "Nekzali.lua", "TwinFangs.lua", "CoiledAltar.lua", "Sentinels.lua", "Explorers.lua", "Vashnik.lua", "Sszorak.lua", "Ulatek.lua",
     "NekzalitheSoulcoiler.lua", "TheTwinFangs.lua", "TheCoiledAltar.lua", "EntombedSentinels.lua", "TheLostExplorers.lua", "VashniktheMalignant.lua",
+    "DBM-Raids-Midnight_Mainline.toc", "BigWigs_TheVenomousAbyss_Mainline.toc",
 }) do
-    assert(baseline:find(path, 1, true), "missing provider boss watch: " .. path)
+    assert(baseline:find(path, 1, true), "missing provider watch: " .. path)
 end
-assert(baseline:find("1d6be4cb982af82d7d5040e794689e516cec7def", 1, true),
+assert(baseline:find('"releaseTag": "12.1.4"', 1, true), "DBM stable release pin must be 12.1.4")
+assert(baseline:find("88ec781e9b213dbf7d9ca59164a584c2529d9bf9", 1, true),
+    "DBM 12.1.4 release commit must stay pinned")
+assert(baseline:find("67d6c66d1abdd47d2404801f8488d6a6468c9d28", 1, true),
     "Coiled Altar BigWigs live-launch baseline must stay pinned to the reviewed source")
 
 local security = read("SECURITY.md")
