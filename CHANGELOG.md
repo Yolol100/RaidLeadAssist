@@ -4,11 +4,16 @@
 
 - Add a first-class, difficulty-aware pre-pull setup registry for world markers, target markers and raidleader preparation without turning marker placement into combat automation.
 - Add a compact `PRE-PULL SETUP` card between the timeline and Boss Plan that uses the existing Raid Lead Assist theme, shows CHECK/READY state and separates `Markers` from concise `Raid Leader Prep` steps in its tooltip.
-- Move marker placement, team creation, kill-order setup, Cyst Poppers, fish/crate ownership, fountain routing, egg ownership and similar pre-pull decisions out of player Boss Plans and into setup/assignment surfaces.
 - Rewrite all eight Boss Plans as player-facing cue-to-action briefings: Normal contains the complete base strategy, Heroic contains only changes from Normal, and Mythic contains only changes from Heroic.
-- Refresh encounter copy against the current Encounter Journal/Wowhead evidence, Warcraft Wiki cross-checks, Raidstrats strategy guidance and the supplied Ready Check Pull recap images; keep Ula'tek conservative where current sources disagree because the final boss was not publicly PTR-tested.
-- Correct Twin Fangs Normal Ravenous Feast so every hit requires fresh eligible 3+ soakers; Heroic/Mythic retain explicit preassigned Team A > B > C rotations.
+- Audit every boss/difficulty so settings exist only for real raidleader choices: remove unnecessary fixed fish/fountain/crate ownership fields, keep fixed strategy directly visible in the plan/setup, and render configured groups/players into the actual call where assignments are required.
+- Refresh encounter copy against current Wowhead/Encounter Journal evidence, Raidstrats guidance, current DBM/BigWigs source and the supplied Ready Check Pull recap images; clarify Vashnik's Blood-circle stack and Coiled Altar collector-first orb handling.
+- Correct Twin Fangs Normal Ravenous Feast so every hit requires fresh eligible 3+ soakers; Heroic/Mythic retain explicit preassigned three-group rotations while volatile Eternal Venom lethal thresholds remain qualitative.
+- Add/retain source-backed raidleader coordination only: Sszorak Cyst Poppers/Mutilate groups plus Dig In cooldown call, Sentinels fixed physical sides, Lost Explorers fixed Thud markers/fish order, Coiled Altar collector/Wail/Guillotine ownership and Mythic-only Ula'tek rotations.
+- Re-review live-launch provider drift on 2026-08-19: DBM watched modules remain unchanged; changed BigWigs Venomous Abyss master modules are re-pinned after semantic review while the core callback contract remains compatible.
+- Document that BigWigs v419.2 predates the finalized Coiled Altar module and keep Blizzard Encounter Timeline/manual fallback as the expected safe behavior when a stable bossmod lacks a usable bar.
+- Keep Ula'tek manual-only and preserve the live-evidence boundary: source/CI can make beta.51 technically green, but Retail pull, taint, performance, provider and UI acceptance still require live evidence.
 - Keep setup confirmation session-scoped and pre-pull-only so `/rla doctor` cannot report stale marker/prep readiness after a reload; add `CHECK SETUP` plus marker/prep counts and regression coverage.
+- Re-verify the runtime-only release boundary: the distributable ZIP contains only `RaidLeadAssist.toc` plus the 53 audited runtime Lua files; repository docs/tests/audit scripts stay in source control and out of the addon package.
 
 ## 0.9.0-beta.50 — 2026-08-18
 
