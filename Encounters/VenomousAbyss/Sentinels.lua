@@ -6,8 +6,8 @@ local function sharedCalls()
         {
             key = "stasis",
             ability = "Vitriolic Stasis",
-            action = "Pair toxins to exactly 4: 1+3 or 2+2",
-            warning = "Stasis: pair toxin numbers to exactly 4 (1+3 or 2+2).",
+            action = "Pair to 4: 1+3 or 2+2",
+            warning = "Stasis: pair to 4; use 1+3 or 2+2.",
             voice = "Match to four",
             spellIDs = { 1284588 },
             prepareSeconds = 6,
@@ -17,8 +17,8 @@ local function sharedCalls()
         {
             key = "side_swap",
             ability = "After Stasis",
-            action = "Hold your side; tanks swap the bosses",
-            warning = "After Stasis: hold your side while tanks swap the bosses.",
+            action = "Hold sides; tanks swap bosses",
+            warning = "After Stasis: hold sides; tanks swap bosses.",
             voice = "Hold sides",
             timing = false,
             uiGroup = "shared",
@@ -26,7 +26,7 @@ local function sharedCalls()
         {
             key = "balance_stop_breath",
             ability = "Stop DPS on Breath",
-            action = "Stop DPS on Breath",
+            action = "Stop Breath DPS",
             warning = "Breath: stop DPS.",
             voice = "Stop Breath",
             timing = false,
@@ -35,7 +35,7 @@ local function sharedCalls()
         {
             key = "balance_stop_blood",
             ability = "Stop DPS on Blood",
-            action = "Stop DPS on Blood",
+            action = "Stop Blood DPS",
             warning = "Blood: stop DPS.",
             voice = "Stop Blood",
             timing = false,
@@ -44,8 +44,8 @@ local function sharedCalls()
         {
             key = "balance_resume",
             ability = "Resume DPS",
-            action = "Resume DPS; keep both bosses even",
-            warning = "Resume DPS: keep both bosses even.",
+            action = "Resume DPS; keep health even",
+            warning = "Resume: keep both bosses even.",
             voice = "Resume DPS",
             timing = false,
             uiGroup = "balance",
@@ -58,8 +58,8 @@ local function breathCalls()
         {
             key = "coagulation",
             ability = "Venom Coagulation",
-            action = "Green side: kill the slime",
-            warning = "Green side: kill the slime.",
+            action = "Kill green slime",
+            warning = "Green side: kill slime.",
             voice = "Kill add",
             timing = false,
             iconSpellID = 1284251,
@@ -73,8 +73,8 @@ local function bloodCalls()
         {
             key = "miasma",
             ability = "Unstable Miasma",
-            action = "Red side: stack on the target",
-            warning = "Red side: stack on the target.",
+            action = "Stack on red target",
+            warning = "Red mark: stack together.",
             voice = "Blood side soak",
             spellIDs = { 1288232 },
             prepareSeconds = 5,
