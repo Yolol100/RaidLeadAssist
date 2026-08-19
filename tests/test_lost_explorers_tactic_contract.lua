@@ -33,7 +33,7 @@ for _, profile in ipairs({ normal, heroic, mythic }) do
     assert(profile.callsByKey.tankswap == nil and profile.callsByKey.tank == nil)
 end
 
-assert(mythic.callsByKey.crates.warning == "Crate: raid clear 15+ yards, then break it.")
+assert(mythic.callsByKey.crates.warning == "Crate: clear 15+ yards, then break.")
 assert(plan(mythic):find("15+ yards away", 1, true))
 
 local normalDefs = Assignments:GetDefinitions("explorers", "normal")
