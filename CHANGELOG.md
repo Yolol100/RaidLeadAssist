@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.0-beta.52 — 2026-08-19
+
+- Refresh the release candidate after Season 2 launch-day review and give it a new version so the previously built beta.51 artifact cannot be confused with this final audited source.
+- Update the reviewed stable DBM contract from `12.1.3` to `12.1.4`; recheck the Timer callback surface plus all eight Venomous Abyss encounter modules and confirm the current stable encounter files match the reviewed live source.
+- Re-review the latest BigWigs Coiled Altar source change: encounter-timeline callbacks now reject non-encounter sources and wipe-state events while the RLA-consumed timer/key identities remain compatible.
+- Expand upstream drift monitoring to include the DBM Midnight raid TOC and BigWigs Venomous Abyss raid TOC so interface/module-inventory changes are detected in addition to core and per-boss source drift.
+- Recheck Blizzard's launch schedule and current official hotfix publication state; no verified launch-day Venomous Abyss mechanic/timer hotfix requires a tactic change, so no speculative tuning is encoded into RLA.
+- Keep the runtime-only package boundary and all existing fail-closed behavior; no active runtime file is removed merely to reduce file count, while repository-only tests/docs/audit tooling remain excluded from the shipped ZIP.
+
 ## 0.9.0-beta.51 — 2026-08-19
 
 - Add a first-class, difficulty-aware pre-pull setup registry for world markers, target markers and raidleader preparation without turning marker placement into combat automation.
