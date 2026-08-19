@@ -2,9 +2,9 @@
 
 Source/CI checks cannot fill these rows. Record evidence on the exact addon SHA/version and current Retail build.
 
-## 0.9.0-beta.52 release-candidate status — 2026-08-19
+## 0.9.0-beta.53 release-candidate status — 2026-08-19
 
-The source/release path may be marked `PASS-CI` only after the final beta.52 head passes the full workflow and the online upstream-drift check against the 2026-08-19 post-unlock provider baselines.
+The source/release path may be marked `PASS-CI` only after the final beta.53 head passes the full workflow and the online upstream-drift check against the 2026-08-19 post-unlock provider baselines.
 
 The release remains a **prerelease/beta**, not a live-proven stable release. Do not convert any row below to `PASS-LIVE` from guides, source code, screenshots or CI alone.
 
