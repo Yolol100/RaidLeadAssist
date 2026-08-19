@@ -35,20 +35,19 @@ local feastNormal = {
     pressSeconds = 5,
 }
 
-local feastFresh = {
+local feastAssigned = {
     key = "feast",
     ability = "Ravenous Feast",
-    action = "Teams A, B, C soak",
-    warning = "Feast: Team A, then B, then C.",
+    action = "Assigned groups soak in order",
+    warning = "Feast: assigned groups soak in order.",
+    actionTemplate = "{{feast_team_a}}, {{feast_team_b}}, {{feast_team_c}}",
+    warningTemplate = "Feast: {{feast_team_a}}, then {{feast_team_b}}, then {{feast_team_c}}.",
     voice = "Feast",
     spellIDs = { 1290516 },
     prepareSeconds = 8,
     pressSeconds = 5,
 }
 
--- Use Sanguine Storm as the single synchronization anchor for the shared
--- 100-energy movement call. DBM and BigWigs expose both simultaneous boss
--- mechanics as separate bars; matching both would let one RLA call arm twice.
 local energy = {
     key = "energy",
     ability = "100 Energy",
@@ -65,7 +64,7 @@ Registry:Register({
     key = "twinfangs",
     name = "The Twin Fangs",
     encounterID = 3421,
-    strategyStatus = "12.1 Journal + current Wowhead + Ready Check Pull + DBM/BigWigs source-reviewed 2026-08-19; Feast wording follows Feasted on every difficulty; live validation pending",
+    strategyStatus = "12.1 Journal + current Wowhead + Ready Check Pull + DBM/BigWigs source-reviewed 2026-08-19; Normal Feast stays dynamic, Heroic/Mythic use configured groups; live validation pending",
     profiles = {
         normal = {
             explanation = {
@@ -81,10 +80,10 @@ Registry:Register({
         },
         heroic = {
             explanation = {
-                "Feast is preassigned: soak only when your Team A, B or C is called.",
+                "Feast is preassigned: soak only when your group is called.",
                 "The 100-energy storm leaves blood pools; keep movement paths clear.",
             },
-            calls = { globules, adds, feastFresh, energy },
+            calls = { globules, adds, feastAssigned, energy },
         },
         mythic = {
             explanation = {
@@ -95,7 +94,7 @@ Registry:Register({
             calls = {
                 globules,
                 adds,
-                feastFresh,
+                feastAssigned,
                 {
                     key = "tainted",
                     ability = "Tainted Blood",
@@ -117,8 +116,10 @@ Registry:Register({
                 {
                     key = "brood",
                     ability = "Rouse the Brood",
-                    action = "Interrupt every Visceral Burst",
-                    warning = "Broodlings: interrupt every Visceral Burst.",
+                    action = "Assigned kicks stop Visceral Burst",
+                    warning = "Broodlings: assigned kicks interrupt Visceral Burst.",
+                    actionTemplate = "{{brood_kick_a}}/{{brood_kick_b}} interrupt Broodlings",
+                    warningTemplate = "Broodlings: {{brood_kick_a}} and {{brood_kick_b}} interrupt Visceral Burst.",
                     voice = "Interrupt",
                     spellIDs = { 1308356 },
                     prepareSeconds = 4,
