@@ -70,7 +70,7 @@ Registry:Register({
                 "Fountain order: Flame+Shadow, Shadow+Blood, then Blood+Flame.",
                 "Fountain adds spawn: kill them before they reach the center.",
                 "Fire debuff on you: run far away before it explodes.",
-                "Blood debuff on you: stay near teammates while healers recover you.",
+                "Blood circle on you: stack with several teammates so you can be healed.",
                 "Shadow debuff on you: spread and keep moving from eruptions.",
                 "Froth circle on you: spread and aim its waves into clear space.",
             },
