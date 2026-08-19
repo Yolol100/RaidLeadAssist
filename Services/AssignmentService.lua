@@ -81,7 +81,8 @@ local function parseSelection(value, compactGroups)
     for part in tostring(value or ""):gmatch("[^,]+") do
         local token = trim(part)
         if token ~= "" then
-            local groups, groupError = compactGroups and parseGroupNumbers(token) or nil
+            local groups, groupError
+            if compactGroups then groups, groupError = parseGroupNumbers(token) end
             if groupError then return nil, groupError end
             if groups then
                 for index = 1, #groups do
