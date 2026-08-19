@@ -3,48 +3,42 @@ local _, ns = ...
 local AssignmentRegistry = ns:GetModule("Encounters.AssignmentRegistry")
 
 local NEKZALI_NORMAL = {
-    summary = "No pre-pull assignment is required on Normal; melee soak and ranged spread are fixed player responsibilities.",
+    summary = "No assignment is needed on Normal. Melee soak Pyre; ranged stay out and spread.",
     sections = {},
 }
 
-local NEKZALI_PYRE_ROLES = {
-    key = "pyre_roles",
-    title = "Pyre & Cremation Roles",
-    description = "Define who soaks Hungering Pyre and who stays outside for the fire circles that burn Amani corpses.",
-    columns = 2,
+local NEKZALI_PYRE = {
+    key = "pyre",
+    title = "Hungering Pyre Soak",
+    description = "Heroic/Mythic only: choose the players who soak Pyre. Everyone else stays outside and handles fire circles.",
+    columns = 1,
     slots = {
         {
             key = "pyre_soakers",
             label = "Pyre Soak Group",
-            kind = "rule",
+            kind = "assignee",
             callKey = "pyre",
-            callLabel = "Pyre soakers",
+            callLabel = "Pyre",
             required = true,
-            helper = "Use a clear roster rule such as Groups 1+2 or a named melee-heavy team.",
-        },
-        {
-            key = "cremation_players",
-            label = "Cremation Group",
-            kind = "rule",
-            required = true,
-            helper = "These players stay outside Pyre so their fire circles can be used on dead Amani corpses.",
+            compactGroups = true,
+            helper = "Choose actual players or complete current raid groups. No separate Cremation assignment is needed.",
         },
     },
 }
 
 local NEKZALI_HEROIC = {
-    summary = "Set the Pyre soak group and the Cremation group before pull; the Boss Plan only tells players how to execute their assigned role.",
-    sections = { NEKZALI_PYRE_ROLES },
+    summary = "Only the Pyre soak group needs assigning. Fire-circle players are everyone outside that group.",
+    sections = { NEKZALI_PYRE },
 }
 
 local NEKZALI_MYTHIC = {
-    summary = "Set Pyre/Cremation roles plus two fresh Grasping Depths well groups before pull.",
+    summary = "Keep the Heroic Pyre group and add two fresh Grasping Depths well groups.",
     sections = {
-        NEKZALI_PYRE_ROLES,
+        NEKZALI_PYRE,
         {
             key = "well",
-            title = "Grasping Depths Well Rotation",
-            description = "Set two distinct raid-group labels. RLA alternates them because Soul Exhaustion requires fresh players for the next entry.",
+            title = "Grasping Depths Rotation",
+            description = "Use two different groups. RLA alternates them because Soul Exhaustion makes repeat entry unsafe.",
             columns = 2,
             slots = {
                 {
@@ -52,22 +46,24 @@ local NEKZALI_MYTHIC = {
                     label = "Well Group 1",
                     kind = "rotation",
                     callKey = "grasping",
-                    callLabel = "Well group 1",
+                    callLabel = "Well group",
                     rotation = "well",
                     required = true,
                     exclusiveGroup = "well",
-                    helper = "Use a raid-group label such as Groups 1+2. Individual names are not required.",
+                    compactGroups = true,
+                    helper = "Choose the first fresh group that enters the Soulcoil Well.",
                 },
                 {
                     key = "well_b",
                     label = "Well Group 2",
                     kind = "rotation",
                     callKey = "grasping",
-                    callLabel = "Well group 2",
+                    callLabel = "Well group",
                     rotation = "well",
                     required = true,
                     exclusiveGroup = "well",
-                    helper = "Use a different group so the next Grasping entry is fresh.",
+                    compactGroups = true,
+                    helper = "Choose a different fresh group for the next Grasping Depths.",
                 },
             },
         },
@@ -75,31 +71,35 @@ local NEKZALI_MYTHIC = {
 }
 
 local SENTINELS_SPLIT = {
-    summary = "Define two physical-side teams. Team A starts green and Team B starts red; after Stasis the groups stay while tanks swap the bosses.",
+    summary = "Assign two non-overlapping physical sides. Players keep their side after Stasis; tanks swap bosses.",
     sections = {
         {
             key = "split",
             title = "Fixed Raid Sides",
-            description = "These rosters stay on their physical side for the fight. Only which boss is on that side changes after Stasis.",
+            description = "Use actual players or complete current raid groups. Green stays Triangle; red stays Cross.",
             columns = 2,
             slots = {
                 {
                     key = "team_a",
-                    label = "Team A · Green Side",
-                    kind = "rule",
+                    label = "Green Side",
+                    kind = "assignee",
                     callKey = "side_swap",
-                    callLabel = "Team A",
+                    callLabel = "Green",
                     required = true,
-                    helper = "Example: Group 1 in a 10-player raid or Groups 1+2 in a 20-player raid.",
+                    compactGroups = true,
+                    exclusiveGroup = "sentinels_sides",
+                    helper = "Choose the players who remain on the Triangle / green side for the fight.",
                 },
                 {
                     key = "team_b",
-                    label = "Team B · Red Side",
-                    kind = "rule",
+                    label = "Red Side",
+                    kind = "assignee",
                     callKey = "side_swap",
-                    callLabel = "Team B",
+                    callLabel = "Red",
                     required = true,
-                    helper = "Use the remaining players so both physical sides have reliable coverage.",
+                    compactGroups = true,
+                    exclusiveGroup = "sentinels_sides",
+                    helper = "Choose the players who remain on the Cross / red side for the fight.",
                 },
             },
         },
