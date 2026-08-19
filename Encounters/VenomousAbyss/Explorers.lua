@@ -1,13 +1,15 @@
 local _, ns = ...
 local Registry = ns:GetModule("Encounters.Registry")
 
-local function calls(crateAction, crateWarning)
+local function calls(crateAction, crateWarning, crateActionTemplate, crateWarningTemplate)
     return {
         {
             key = "crates",
             ability = "Throw Junk",
             action = crateAction,
             warning = crateWarning,
+            actionTemplate = crateActionTemplate,
+            warningTemplate = crateWarningTemplate,
             voice = "Crates",
             spellIDs = { 1291933 },
             prepareSeconds = 6,
@@ -16,8 +18,8 @@ local function calls(crateAction, crateWarning)
         {
             key = "fish",
             ability = "Final Ascension",
-            action = "Take fish to planned boss",
-            warning = "Fish: take it to the planned boss.",
+            action = "Nama, then Iku, then Gebbo",
+            warning = "Fish: Nama, then Iku, then Gebbo.",
             voice = "Fish",
             spellIDs = { 1292779 },
             prepareSeconds = 8,
@@ -26,8 +28,8 @@ local function calls(crateAction, crateWarning)
         {
             key = "thud",
             ability = "Mighty Thud",
-            action = "Targets to markers; soakers stack",
-            warning = "Thud: targets to markers; soakers stack.",
+            action = "Targets Star/Circle/Diamond; soakers stack",
+            warning = "Thud: targets Star/Circle/Diamond; soakers stack.",
             voice = "Three soak points",
             spellIDs = { 1296092 },
             prepareSeconds = 7,
@@ -46,16 +48,18 @@ Registry:Register({
             explanation = {
                 "Keep all three bosses even and finish them together.",
                 "Crates appear: assigned breaker opens them until fish appears.",
-                "Fish appears: feed the next planned boss before Final Ascension.",
-                "Three players marked: each goes to a different soak marker.",
-                "Assigned soakers stack with their marked player before impact.",
+                "Fish order: Nama, then Iku, then Gebbo.",
+                "Feed the next fish before Final Ascension finishes.",
+                "Three players marked: go to Star, Circle and Diamond.",
+                "Soakers stack with each marked player before impact.",
                 "Fire clears with Frost; Frost clears with Fire.",
-                "Bomb appears: move away, then use a mushroom for the fire wave.",
                 "Icebound Flames starts: interrupt it immediately.",
             },
             calls = calls(
-                "Open next crate",
-                "Crate: open the next one."
+                "Assigned breaker opens next crate",
+                "Crate: assigned breaker open next.",
+                "{{crate_a}} opens next crate",
+                "Crate: {{crate_a}} open next."
             ),
         },
         heroic = {
@@ -64,17 +68,21 @@ Registry:Register({
                 "Spreading fire appears: keep it away from usable space.",
             },
             calls = calls(
-                "Open next crate",
-                "Crate: open the next one."
+                "Next breaker opens crate",
+                "Crate: next breaker open it.",
+                "{{rotation:crates}} opens next crate",
+                "Crate: {{rotation:crates}} open next."
             ),
         },
         mythic = {
             explanation = {
-                "Before a crate is broken, everyone else moves 15+ yards away.",
+                "Before a crate breaks, everyone else moves 15+ yards away.",
             },
             calls = calls(
-                "Clear 15+ yards; then break",
-                "Crate: clear 15+ yards, then break."
+                "Clear 15+ yards; breaker opens",
+                "Crate: clear 15+ yards, then break.",
+                "Clear 15+ yards; {{rotation:crates}} breaks",
+                "Crate: clear 15+ yards; {{rotation:crates}} break."
             ),
         },
     },
