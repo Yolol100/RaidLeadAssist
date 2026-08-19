@@ -47,7 +47,7 @@ Registry:Register({
         normal = {
             explanation = {
                 "Keep all three bosses even and finish them together.",
-                "Crates appear: assigned breaker opens them until fish appears.",
+                "Crates appear: break them until a fish appears.",
                 "Fish order: Nama, then Iku, then Gebbo.",
                 "Feed the next fish before Final Ascension finishes.",
                 "Three players marked: go to Star, Circle and Diamond.",
@@ -57,10 +57,8 @@ Registry:Register({
                 "Icebound Flames starts: interrupt it immediately.",
             },
             calls = calls(
-                "Assigned breaker opens next crate",
-                "Crate: assigned breaker open next.",
-                "{{crate_a}} opens next crate",
-                "Crate: {{crate_a}} open next."
+                "Open crates until fish appears",
+                "Crates: open them until fish appears."
             ),
         },
         heroic = {
@@ -69,10 +67,8 @@ Registry:Register({
                 "Spreading fire appears: keep it away from usable space.",
             },
             calls = calls(
-                "Next breaker opens crate",
-                "Crate: next breaker open it.",
-                "{{rotation:crates}} opens next crate",
-                "Crate: {{rotation:crates}} open next."
+                "Open crates until fish appears",
+                "Crates: open them until fish appears."
             ),
         },
         mythic = {
