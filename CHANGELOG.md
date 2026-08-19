@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.0-beta.57 — 2026-08-19
+
+- Re-review the post-beta.56 BigWigs Ula'tek implementation after upstream added substantial Normal/Heroic/Mythic Encounter Timeline handlers and custom bars on live-launch day.
+- Keep all Ula'tek Raid Lead Assist calls explicitly manual-only instead of promoting newly available bossmod bars before real Retail pull evidence establishes stable timing identities and cadence.
+- Add a controlled-runtime regression that presents an exact BigWigs-style provider timer and proves Normal/Heroic/Mythic Ula'tek still performs zero automatic timer queries, emits no PREPARE/PRESS audio and remains `MANUAL CALLS ONLY`.
+- Pin the new BigWigs Ula'tek source fingerprint and assign the review a new immutable prerelease identity because beta.56 already exists as a versioned tag.
+
 ## 0.9.0-beta.56 — 2026-08-19
 
 - Re-review another late Season 2 day-one upstream movement after beta.55: DBM Coiled Altar now enables preliminary Normal hardcoded timelines in addition to Heroic, while unknown rows still fail closed through `ResumeBlizzardAPI`.
