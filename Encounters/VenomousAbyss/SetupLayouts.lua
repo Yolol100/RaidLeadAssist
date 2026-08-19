@@ -52,7 +52,7 @@ Setup:RegisterLayouts("sentinels", sameForAll(layout(
 
 Setup:RegisterLayouts("explorers", {
     normal = layout(
-        "Place three Mighty Thud soak points and set the crate breaker.",
+        "Place the three Mighty Thud soak points. No roster assignment is required.",
         {
             { key="thud_one", kind="world", icon=1, label="Thud 1", purpose="Star is Mighty Thud soak point 1." },
             { key="thud_two", kind="world", icon=2, label="Thud 2", purpose="Circle is Mighty Thud soak point 2." },
@@ -60,11 +60,11 @@ Setup:RegisterLayouts("explorers", {
         },
         {
             "Use fish order: Nama, then Iku, then Gebbo.",
-            "Assign the crate breaker; fish delivery follows the fixed order.",
+            "Open crates as needed until the next fish appears.",
         }
     ),
     heroic = layout(
-        "Keep the three Thud points and set the Heroic crate rotation.",
+        "Keep the three Thud points. Heroic still needs no fixed crate roster.",
         {
             { key="thud_one", kind="world", icon=1, label="Thud 1", purpose="Star is Mighty Thud soak point 1." },
             { key="thud_two", kind="world", icon=2, label="Thud 2", purpose="Circle is Mighty Thud soak point 2." },
@@ -72,11 +72,11 @@ Setup:RegisterLayouts("explorers", {
         },
         {
             "Use fish order: Nama, then Iku, then Gebbo.",
-            "Assign the crate-breaker rotation.",
+            "Open crates as needed until the next fish appears.",
         }
     ),
     mythic = layout(
-        "Keep the Thud points and crate rotation; Mythic adds 15+ yard crate clearance.",
+        "Keep the Thud points and assign a controlled crate rotation for 15+ yard clearance.",
         {
             { key="thud_one", kind="world", icon=1, label="Thud 1", purpose="Star is Mighty Thud soak point 1." },
             { key="thud_two", kind="world", icon=2, label="Thud 2", purpose="Circle is Mighty Thud soak point 2." },
