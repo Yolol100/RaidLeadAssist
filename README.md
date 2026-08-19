@@ -16,7 +16,7 @@ RLA consumes public **DBM**, **BigWigs** and Blizzard Encounter Timeline timing.
 
 Provider payloads are untrusted runtime input. Secret, malformed, stale or cross-encounter data is rejected/downgraded. Direct bossmod timers must resolve to the verified active encounter. Cross-provider occurrence reconciliation prevents duplicate calls/audio and a successful manual call acknowledges the occurrence so a late provider cannot immediately re-arm it.
 
-The stable release-contract baselines are **DBM 12.1.3** and **BigWigs v419.2**. Current Venomous Abyss BigWigs `master` boss modules were re-reviewed on 2026-08-19 after live-launch source drift; exact fingerprints live in `docs/UPSTREAM_BASELINES.json`.
+The stable release-contract baselines are **DBM 12.1.4** and **BigWigs v419.2**. DBM 12.1.4's Venomous Abyss encounter modules match the reviewed launch-day source. Current Venomous Abyss BigWigs `master` boss modules were re-reviewed on 2026-08-19 after launch-day source drift; exact core, raid-TOC and per-boss fingerprints live in `docs/UPSTREAM_BASELINES.json`.
 
 BigWigs `v419.2` predates the finalized Coiled Altar boss module, so RLA does not assume that a loaded stable BigWigs build can supply every live Venomous Abyss bar. When a bossmod cannot provide a usable matching timer, RLA intentionally falls back to Blizzard Encounter Timeline data for supported calls. Users do not need unreleased bossmod source for RLA to load or for manual calls to remain available.
 
