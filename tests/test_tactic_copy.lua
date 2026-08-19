@@ -26,12 +26,12 @@ for _,enc in ipairs(R:GetOrdered()) do
   end
  end
 end
-assert(R:GetProfile("sentinels","heroic").callsByKey.side_swap.warning == "After Stasis: hold your side while tanks swap the bosses.")
+assert(R:GetProfile("sentinels","heroic").callsByKey.side_swap.warning == "After Stasis: hold sides; tanks swap bosses.")
 assert(R:GetProfile("vashnik","heroic").callsByKey.catalyst.warning == "Green circles: soak every one.")
-assert(R:GetProfile("sszorak","heroic").callsByKey.maelstrom.warning == "Maelstrom: Popper 1, then 2, then 3 pop a saved Cyst on each wind.")
+assert(R:GetProfile("sszorak","heroic").callsByKey.maelstrom.warning == "Maelstrom: Poppers 1-2-3 trigger Cysts on each wind.")
 assert(R:GetProfile("twinfangs","normal").callsByKey.feast.warning == "Feast: fresh 3+ players soak each hit.")
-assert(R:GetProfile("twinfangs","heroic").callsByKey.feast.warning == "Feast: Team A, then Team B, then Team C.")
+assert(R:GetProfile("twinfangs","heroic").callsByKey.feast.warning == "Feast: Team A, then B, then C.")
 assert(R:GetProfile("altar","heroic").callsByKey.intermission.warning:find("Bloodlust",1,true))
-assert(R:GetProfile("altar","heroic").callsByKey.final.warning == "Final phase: keep both bosses even and kill together.")
+assert(R:GetProfile("altar","heroic").callsByKey.final.warning == "Final phase: keep health even; kill together.")
 for _,d in ipairs(C.DIFFICULTY_ORDER) do for _,call in ipairs(R:GetProfile("ulatek",d).calls) do assert(call.timing==false) end end
 print("ok - all eight player briefings and raid calls remain bounded, normally capitalized and action-first")
