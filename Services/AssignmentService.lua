@@ -1,9 +1,9 @@
 local _, ns = ...
 
 local AssignmentRegistry = ns:GetModule("Encounters.AssignmentRegistry")
-local EncounterRegistry = ns:GetModule("Encounters.Registry")
-local EventBus = ns:GetModule("Core.EventBus")
-local Roster = ns:GetModule("Services.RosterService")
+local EncounterRegistry = ns.modules and ns.modules["Encounters.Registry"]
+local EventBus = ns.modules and ns.modules["Core.EventBus"]
+local Roster = ns.modules and ns.modules["Services.RosterService"]
 
 local AssignmentService = {
     database = nil,
@@ -52,7 +52,8 @@ local function parseGroupNumbers(value)
 end
 
 local function currentRosterByGroup()
-    local roster = Roster:GetRoster()
+    local roster = {}
+    if Roster and type(Roster.GetRoster) == "function" then roster = Roster:GetRoster() or {} end
     local byGroup = {}
     for index = 1, #roster do
         local entry = roster[index]
@@ -128,7 +129,6 @@ local function getProfile(database, bossKey, difficultyKey, create)
     end
     if not profile and create then
         profile = {}
-        database.assignments[bossKey] = boss
         boss[difficultyKey] = profile
     end
     return profile
@@ -164,6 +164,10 @@ local function appendFragment(base, fragment, maxLength)
     end
     if #candidate <= maxLength then return candidate, true end
     return base, false
+end
+
+local function emitAssignmentsChanged(bossKey, difficultyKey)
+    if EventBus and type(EventBus.Emit) == "function" then EventBus:Emit("ASSIGNMENTS_CHANGED", bossKey, difficultyKey) end
 end
 
 function AssignmentService:Initialize(database)
@@ -323,7 +327,7 @@ function AssignmentService:ApplyBossDraft(bossKey, difficultyKey, values)
     boss[difficultyKey] = clean
     cleanEmpty(self.database, bossKey, difficultyKey)
     self:ResetRuntime()
-    EventBus:Emit("ASSIGNMENTS_CHANGED", bossKey, difficultyKey)
+    emitAssignmentsChanged(bossKey, difficultyKey)
     return true, clean
 end
 
@@ -333,7 +337,7 @@ function AssignmentService:ResetBoss(bossKey, difficultyKey)
     if type(boss) == "table" then boss[difficultyKey] = nil end
     cleanEmpty(self.database, bossKey, difficultyKey)
     self:ResetRuntime()
-    EventBus:Emit("ASSIGNMENTS_CHANGED", bossKey, difficultyKey)
+    emitAssignmentsChanged(bossKey, difficultyKey)
 end
 
 function AssignmentService:GetMissingRequired(bossKey, difficultyKey, values)
@@ -403,9 +407,9 @@ function AssignmentService:RenderCallTemplate(template, bossKey, difficultyKey, 
     local missing
 
     local rendered = template:gsub("{{rotation:([%w_]+)}}", function(rotation)
-        local value, definition = self:GetRotationValue(bossKey, difficultyKey, callKey, rotation)
+        local value = self:GetRotationValue(bossKey, difficultyKey, callKey, rotation)
         if not value then
-            missing = missing or (definition and definition.label or rotation)
+            missing = missing or rotation
             return ""
         end
         return value
@@ -426,7 +430,7 @@ function AssignmentService:RenderCallTemplate(template, bossKey, difficultyKey, 
 end
 
 function AssignmentService:BuildCallAction(baseAction, bossKey, difficultyKey, callKey)
-    local profile = EncounterRegistry:GetProfile(bossKey, difficultyKey)
+    local profile = EncounterRegistry and EncounterRegistry:GetProfile(bossKey, difficultyKey)
     local call = profile and profile.callsByKey[callKey]
     local template = call and call.actionTemplate or baseAction
     if type(template) == "string" and template:find("{{", 1, true) then
@@ -468,7 +472,7 @@ end
 
 function AssignmentService:BuildCallWarning(baseWarning, bossKey, difficultyKey, callKey)
     if type(baseWarning) ~= "string" or baseWarning == "" then return baseWarning, true end
-    local profile = EncounterRegistry:GetProfile(bossKey, difficultyKey)
+    local profile = EncounterRegistry and EncounterRegistry:GetProfile(bossKey, difficultyKey)
     local call = profile and profile.callsByKey[callKey]
     local template
 
