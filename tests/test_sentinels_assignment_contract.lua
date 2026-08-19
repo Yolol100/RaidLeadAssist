@@ -16,10 +16,10 @@ end
 local ok = Assignments:ApplyBossDraft("sentinels", "heroic", { team_a="Group 1", team_b="Group 2" })
 assert(ok)
 local warning = Assignments:BuildCallWarning(
-    "After Stasis: hold your side while tanks swap the bosses.",
+    "After Stasis: hold sides; tanks swap bosses.",
     "sentinels", "heroic", "side_swap"
 )
-assert(warning == "After Stasis: hold your side while tanks swap the bosses. Team A: Group 1. Team B: Group 2.")
-local breath = Assignments:BuildCallWarning("Green side: kill the slime.", "sentinels", "heroic", "coagulation")
-assert(breath == "Green side: kill the slime.")
+assert(warning == "After Stasis: hold sides; tanks swap bosses. Team A: Group 1. Team B: Group 2.")
+local breath = Assignments:BuildCallWarning("Green side: kill slime.", "sentinels", "heroic", "coagulation")
+assert(breath == "Green side: kill slime.")
 print("ok - Sentinels assignments append readable team context to shared calls")
