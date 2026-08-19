@@ -6,8 +6,8 @@ local function baseCalls(pyreAction, pyreWarning)
         {
             key = "adds",
             ability = "Restless Amani",
-            action = "Kill the Amani before the Well",
-            warning = "Amani adds: kill them before they reach the Well.",
+            action = "Kill Amani before the Well",
+            warning = "Amani: kill them before the Well.",
             voice = "Adds",
             spellIDs = { 1295397, 1297630 },
             prepareSeconds = 7,
@@ -36,8 +36,8 @@ local function baseCalls(pyreAction, pyreWarning)
     calls[#calls + 1] = {
         key = "phase2",
         ability = "Phase 2",
-        action = "Bloodlust and burn the boss",
-        warning = "Phase 2: Bloodlust and burn the boss.",
+        action = "Bloodlust and burn boss",
+        warning = "Phase 2: Bloodlust and burn boss.",
         voice = "Phase two",
         timing = false,
         iconSpellID = 1299673,
@@ -47,21 +47,21 @@ end
 
 local normalCalls = baseCalls(
     "Melee soak together",
-    "Hungering Pyre: melee soak together."
+    "Pyre: melee soak together."
 )
 local heroicCalls = baseCalls(
-    "Called soak group stacks in",
-    "Hungering Pyre: called soak group stack in."
+    "Called group soak together",
+    "Pyre: called group soak together."
 )
 local mythicCalls = baseCalls(
-    "Called soak group stacks in",
-    "Hungering Pyre: called soak group stack in."
+    "Called group soak together",
+    "Pyre: called group soak together."
 )
 table.insert(mythicCalls, 2, {
     key = "grasping",
     ability = "Grasping Depths",
-    action = "Enter, interrupt, kill the Echo, then exit",
-    warning = "Grasping Depths: called well group enter, interrupt, kill the Echo, then exit.",
+    action = "Enter, interrupt, kill Echo, exit",
+    warning = "Grasping: enter, interrupt, kill Echo, exit.",
     voice = "Well group",
     spellIDs = { 1293212 },
     prepareSeconds = 8,
