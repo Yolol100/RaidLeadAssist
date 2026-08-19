@@ -90,8 +90,8 @@
         {
           "ref": "master",
           "path": "Core/BossPrototype.lua",
-          "blobSha": "dfcd2952467c62bad92d95230683799a713be0e9",
-          "reason": "RLA consumes BigWigs Timer/CastTimer/StartBar contracts; direct Timer continues to expose isApproximate while the nil-module Blizzard StartBar bridge does not, so RLA treats that bridge as preview-only"
+          "blobSha": "87aad72f6014978dfe8e9173b9c7e98e62665c19",
+          "reason": "RLA consumes BigWigs Timer/CastTimer/StartBar contracts; the 2026-08-19 19:11 UTC RegisterBossEvent change adds secret-GUID/callback handling outside those timer contracts, which were re-reviewed as unchanged. Direct Timer still exposes isApproximate and the nil-module Blizzard StartBar bridge still does not"
         },
         {
           "ref": "master",
