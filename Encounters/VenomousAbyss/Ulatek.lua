@@ -19,8 +19,8 @@ local function calls(coilAction, coilWarning, eggAction, eggWarning, includeFang
         manualCall(
             "warden",
             "Doomscale Warden",
-            "Kill Warden first; eggs after it dies",
-            "Warden first: kill it; eggs only after it dies.",
+            "Kill Warden before eggs",
+            "Warden: kill first; eggs after it dies.",
             "Warden",
             1298559
         ),
@@ -36,8 +36,8 @@ local function calls(coilAction, coilWarning, eggAction, eggWarning, includeFang
         manualCall(
             "heart",
             "Rage of the Shackled",
-            "Switch and burn the exposed Heart",
-            "Heart exposed: switch and burn it.",
+            "Burn exposed Heart",
+            "Heart exposed: burn it.",
             "Heart",
             1286860
         ),
@@ -47,8 +47,8 @@ local function calls(coilAction, coilWarning, eggAction, eggWarning, includeFang
         result[#result + 1] = manualCall(
             "fangs",
             "Grasping Fangs",
-            "Break one player free at a time",
-            "Fangs: break one player free at a time.",
+            "Break one player at a time",
+            "Fangs: break one player at a time.",
             "Fangs",
             1311611
         )
@@ -59,7 +59,7 @@ local function calls(coilAction, coilWarning, eggAction, eggWarning, includeFang
             "incubation",
             "Toxic Incubation",
             "Each interceptor takes one hit",
-            "Toxic Incubation: each interceptor takes one hit.",
+            "Incubation: each interceptor takes one hit.",
             "Intercept",
             1299759
         )
@@ -69,15 +69,15 @@ local function calls(coilAction, coilWarning, eggAction, eggWarning, includeFang
         "phase3",
         "Ula'tek's Ascension",
         "Bloodlust; move together",
-        "Phase 3: Bloodlust and move together.",
+        "Phase 3: Bloodlust; move together.",
         "Bloodlust",
         1286905
     )
     result[#result + 1] = manualCall(
         "demolish",
         "Demolish",
-        "Move together to the next safe area",
-        "Demolish: move together to the next safe area.",
+        "Move together to safe area",
+        "Demolish: move together to safe area.",
         "Move",
         1301510
     )
@@ -102,9 +102,9 @@ Registry:Register({
             },
             calls = calls(
                 "Stack at Square",
-                "Spectral Coils: stack at Square.",
-                "Handler uses the planned egg after Warden",
-                "Warden dead: handler use the planned egg.",
+                "Coils: stack at Square.",
+                "Handler use planned egg",
+                "Eggs: handler use the planned egg.",
                 false,
                 false
             ),
@@ -117,9 +117,9 @@ Registry:Register({
             },
             calls = calls(
                 "Stack at Square",
-                "Spectral Coils: stack at Square.",
-                "Handler uses the planned egg after Warden",
-                "Warden dead: handler use the planned egg.",
+                "Coils: stack at Square.",
+                "Handler use planned egg",
+                "Eggs: handler use the planned egg.",
                 true,
                 false
             ),
@@ -134,10 +134,10 @@ Registry:Register({
                 "Fang breaks now hit the whole raid: never break multiple together.",
             },
             calls = calls(
-                "Called group stacks at Square",
-                "Spectral Coils: called group stack at Square.",
-                "Use planned side; carriers stay 3+ yards apart",
-                "Eggs: use the planned side; carriers stay 3+ yards apart.",
+                "Called group stack at Square",
+                "Coils: called group stack at Square.",
+                "Planned side; carriers 3+ yards apart",
+                "Eggs: planned side; carriers stay 3+ yards apart.",
                 true,
                 true
             ),
