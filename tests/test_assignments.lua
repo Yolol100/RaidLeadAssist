@@ -34,10 +34,10 @@ assert(#sentinels == 2 and sentinels[1].key == "team_a" and sentinels[2].key == 
 local ok = Assignments:ApplyBossDraft("sentinels", "heroic", { team_a = "Group 1", team_b = "Group 2" })
 assert(ok)
 local sentWarning = Assignments:BuildCallWarning(
-    "After Stasis: hold your side while tanks swap the bosses.",
+    "After Stasis: hold sides; tanks swap bosses.",
     "sentinels", "heroic", "side_swap"
 )
-assert(sentWarning == "After Stasis: hold your side while tanks swap the bosses. Team A: Group 1. Team B: Group 2.")
+assert(sentWarning == "After Stasis: hold sides; tanks swap bosses. Team A: Group 1. Team B: Group 2.")
 assert(not sentWarning:find(" > ", 1, true))
 
 -- Vashnik: current strategy requires no fixed pre-pull roster fields on any difficulty.
@@ -55,7 +55,7 @@ ok = Assignments:ApplyBossDraft("sszorak", "heroic", {
 })
 assert(ok)
 local maelstrom = Assignments:BuildCallWarning(
-    "Maelstrom: Popper 1, then 2, then 3 pop a saved Cyst on each wind.",
+    "Maelstrom: Poppers 1-2-3 trigger Cysts on each wind.",
     "sszorak", "heroic", "maelstrom"
 )
 assert(maelstrom:find("Popper 1: Kilo.", 1, true) and maelstrom:find("Popper 2: Lima.", 1, true) and maelstrom:find("Popper 3: Mike.", 1, true))
@@ -82,7 +82,7 @@ ok = Assignments:ApplyBossDraft("twinfangs", "heroic", {
 })
 assert(ok)
 local feast = Assignments:BuildCallWarning(
-    "Feast: Team A, then Team B, then Team C.",
+    "Feast: Team A, then B, then C.",
     "twinfangs", "heroic", "feast"
 )
 assert(feast:find("Team A: One, Two, Three.", 1, true))
@@ -105,7 +105,7 @@ ok = Assignments:ApplyBossDraft("altar", "heroic", {
 })
 assert(ok)
 local toxic = Assignments:BuildCallWarning(
-    "Green orbs: collectors move them to Triangle.",
+    "Orbs: collectors move them to Triangle.",
     "altar", "heroic", "toxic"
 )
 assert(toxic:find("Collectors: Collectorone, Collectortwo.", 1, true))
@@ -136,7 +136,7 @@ ok = Assignments:ApplyBossDraft("ulatek", "mythic", {
 })
 assert(ok)
 local incubation = Assignments:BuildCallWarning(
-    "Toxic Incubation: each interceptor takes one hit.",
+    "Incubation: each interceptor takes one hit.",
     "ulatek", "mythic", "incubation"
 )
 assert(incubation:find("Interceptors: Tankone", 1, true))
