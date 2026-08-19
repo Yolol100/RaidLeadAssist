@@ -46,8 +46,8 @@
         {
           "ref": "master",
           "path": "DBM-Raids-Midnight/TheVenomousAbyss/TheCoiledAltar.lua",
-          "blobSha": "d933271c9bf23665f4284f69af4d02be823d1bb2",
-          "reason": "Coiled Altar Guillotine, Dreadmarch, Nightfall, Spiritcackle and stage identities; current hardcoded routing can fail closed back to Blizzard"
+          "blobSha": "99a4b7fd2b8b79aac10be011e473527976a82bca",
+          "reason": "Late day-one source expands hardcoded Encounter Timeline routing from Heroic to Normal plus Heroic, while unmatched timelines still call ResumeBlizzardAPI and fall back safely. RLA already binds DBM exactness to active hardcoded authority across all eight encounter IDs."
         },
         {
           "ref": "master",
@@ -102,8 +102,8 @@
         {
           "ref": "master",
           "path": "TheVenomousAbyss/Nekzali.lua",
-          "blobSha": "ddc0ca1049fa6214046bc52f01a501b7d58850ed",
-          "reason": "Day-one P1 Essence Rend routing was corrected for duplicated/cancelled Encounter Timeline rows; RLA does not consume Essence Rend directly and its raidleader identities remain compatible"
+          "blobSha": "9c2fe74b4ac0fb297e8b6716e0d61965747a7ca5",
+          "reason": "Late day-one source adds the missing non-Mythic Phase 2 28-second Possession Barrage routing. RLA does not consume Possession Barrage as a raidleader call identity, so the provider contract remains compatible while this exact source fingerprint is monitored."
         },
         {
           "ref": "master",
