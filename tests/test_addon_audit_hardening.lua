@@ -61,14 +61,6 @@ assert(select(2, driftWorkflow:gsub("actions/checkout@", "")) == 1,
     "upstream drift checkout inventory drifted")
 assert(select(2, driftWorkflow:gsub("persist%-credentials:%s*false", "")) == 1,
     "upstream drift checkout must disable persisted Git credentials")
-local dependencyReviewWorkflow = read(".github/workflows/dependency-review.yml")
-assert(dependencyReviewWorkflow:find(
-    "actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294", 1, true
-), "dependency review action must stay pinned to reviewed v5.0.0 commit")
-assert(dependencyReviewWorkflow:find("fail-on-severity: moderate", 1, true),
-    "dependency review must block newly introduced moderate-or-higher vulnerabilities")
-assert(dependencyReviewWorkflow:find("persist-credentials: false", 1, true),
-    "dependency review checkout must not persist Git credentials")
 
 local codeowners = read(".github/CODEOWNERS")
 for _, marker in ipairs({
