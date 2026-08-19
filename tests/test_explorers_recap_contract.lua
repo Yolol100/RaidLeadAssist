@@ -44,7 +44,7 @@ for _, difficulty in ipairs({ "normal", "heroic", "mythic" }) do
     assert(profile.callsByKey.fish and profile.callsByKey.fish.spellIDs[1] == 1292779)
     assert(profile.callsByKey.fish.prepareSeconds == 8 and profile.callsByKey.fish.pressSeconds == 5)
     assert(profile.callsByKey.thud and profile.callsByKey.thud.spellIDs[1] == 1296092)
-    assert(profile.callsByKey.thud.warning == "Mighty Thud: targets to separate markers; soakers stack in.")
+    assert(profile.callsByKey.thud.warning == "Thud: targets to markers; soakers stack.")
     assert(profile.callsByKey.thud.prepareSeconds == 7 and profile.callsByKey.thud.pressSeconds == 4)
 
     assert(profile.callsByKey.icebound == nil, "Icebound interrupt remains a player reaction, not a duplicate RLA button")
