@@ -1,7 +1,7 @@
 local _, ns = ...
 local Registry = ns:GetModule("Encounters.Registry")
 
-local function manualCall(key, ability, action, warning, voice, iconSpellID)
+local function manualCall(key, ability, action, warning, voice, iconSpellID, actionTemplate, warningTemplate)
     return {
         key = key,
         ability = ability,
@@ -10,12 +10,14 @@ local function manualCall(key, ability, action, warning, voice, iconSpellID)
         voice = voice,
         timing = false,
         iconSpellID = iconSpellID,
+        actionTemplate = actionTemplate,
+        warningTemplate = warningTemplate,
     }
 end
 
-local function calls(coilAction, coilWarning, eggAction, eggWarning, includeFangs, includeMythic)
+local function calls(coilAction, coilWarning, coilActionTemplate, coilWarningTemplate, eggAction, eggWarning, eggActionTemplate, eggWarningTemplate, includeFangs, includeMythic)
     local result = {
-        manualCall("coils", "Spectral Coils", coilAction, coilWarning, "Coils", 1300530),
+        manualCall("coils", "Spectral Coils", coilAction, coilWarning, "Coils", 1300530, coilActionTemplate, coilWarningTemplate),
         manualCall(
             "warden",
             "Doomscale Warden",
@@ -24,7 +26,7 @@ local function calls(coilAction, coilWarning, eggAction, eggWarning, includeFang
             "Warden",
             1298559
         ),
-        manualCall("eggs", "Doomscale Eggs", eggAction, eggWarning, "Eggs", 1299650),
+        manualCall("eggs", "Doomscale Eggs", eggAction, eggWarning, "Eggs", 1299650, eggActionTemplate, eggWarningTemplate),
         manualCall(
             "serpents",
             "Call of the Serpent",
@@ -58,10 +60,12 @@ local function calls(coilAction, coilWarning, eggAction, eggWarning, includeFang
         result[#result + 1] = manualCall(
             "incubation",
             "Toxic Incubation",
-            "Each interceptor takes one hit",
-            "Incubation: each interceptor takes one hit.",
+            "Assigned group intercepts once each",
+            "Incubation: assigned group take one hit each.",
             "Intercept",
-            1299759
+            1299759,
+            "{{incubation_team}} intercept once each",
+            "Incubation: {{incubation_team}} take one hit each."
         )
     end
 
@@ -103,8 +107,12 @@ Registry:Register({
             calls = calls(
                 "Stack at Square",
                 "Coils: stack at Square.",
-                "Handler use planned egg",
-                "Eggs: handler use the planned egg.",
+                nil,
+                nil,
+                "Assigned handler uses egg",
+                "Eggs: assigned handler use planned egg.",
+                "{{egg_handler}} uses planned egg",
+                "Eggs: {{egg_handler}} use planned egg.",
                 false,
                 false
             ),
@@ -118,8 +126,12 @@ Registry:Register({
             calls = calls(
                 "Stack at Square",
                 "Coils: stack at Square.",
-                "Handler use planned egg",
-                "Eggs: handler use the planned egg.",
+                nil,
+                nil,
+                "Assigned handler uses egg",
+                "Eggs: assigned handler use planned egg.",
+                "{{egg_handler}} uses planned egg",
+                "Eggs: {{egg_handler}} use planned egg.",
                 true,
                 false
             ),
@@ -130,14 +142,18 @@ Registry:Register({
                 "Toxic Incubation: assigned interceptors take one hit each.",
                 "Toxic Burn on you: do not intercept another Incubation hit.",
                 "Hardened egg: break its shield before the carrier moves it.",
-                "Egg carriers stay 3+ yards apart and use only the planned side.",
+                "Egg carriers stay 3+ yards apart and use only the called side.",
                 "Fang breaks now hit the whole raid: never break multiple together.",
             },
             calls = calls(
-                "Called group stack at Square",
-                "Coils: called group stack at Square.",
-                "Planned side; carriers 3+ yards apart",
-                "Eggs: planned side; carriers stay 3+ yards apart.",
+                "Assigned group stacks at Square",
+                "Coils: assigned group stack at Square.",
+                "{{rotation:coils}} stack at Square",
+                "Coils: {{rotation:coils}} stack at Square.",
+                "Use called egg side",
+                "Eggs: use called side; carriers stay apart.",
+                "Triangle {{egg_left}}; Cross {{egg_right}}",
+                "Eggs: Triangle {{egg_left}}; Cross {{egg_right}}; use called side.",
                 true,
                 true
             ),
