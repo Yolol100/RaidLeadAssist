@@ -57,6 +57,11 @@ local function createPopover(parent, width, height)
     return panel
 end
 
+local function setStatusColor(status, ok)
+    local color = ok and Theme.colors.success or Theme.colors.error
+    status:SetTextColor(color[1], color[2], color[3], 1)
+end
+
 function ProductivityPanel:SetCallbacks(callbacks)
     self.callbacks = callbacks or {}
 end
@@ -175,17 +180,18 @@ function ProductivityPanel:AttachTiming()
     local reset = ActionButton:Create(panel, { text = "RESET", width = 62, height = 24, fontSize = 8, variant = "secondary" })
     reset:SetPoint("RIGHT", close, "LEFT", -6, 0)
     reset:SetScript("OnClick", function()
-        local ok, message = self.callbacks.resetTimingLead and self.callbacks.resetTimingLead() or false, nil
+        local ok, message = false, "Timing defaults are unavailable."
+        if self.callbacks.resetTimingLead then ok, message = self.callbacks.resetTimingLead() end
         if ok then
             setInputInvalid(prepare, false)
             setInputInvalid(press, false)
             self:RefreshTiming()
             status:SetText(message or "Reset to defaults.")
-            status:SetTextColor(Theme.colors.success[1], Theme.colors.success[2], Theme.colors.success[3], 1)
+            setStatusColor(status, true)
             if SettingsUI.SetStatus then SettingsUI:SetStatus(message or "Default lead windows reset.", "success") end
         else
             status:SetText(message or "Timing defaults are unavailable.")
-            status:SetTextColor(Theme.colors.error[1], Theme.colors.error[2], Theme.colors.error[3], 1)
+            setStatusColor(status, false)
         end
     end)
 
@@ -199,11 +205,11 @@ function ProductivityPanel:AttachTiming()
         if ok then
             self:RefreshTiming()
             status:SetText(message or "Saved.")
-            status:SetTextColor(Theme.colors.success[1], Theme.colors.success[2], Theme.colors.success[3], 1)
+            setStatusColor(status, true)
             if SettingsUI.SetStatus then SettingsUI:SetStatus(message or "Default lead windows saved.", "success") end
         else
             status:SetText(message or "Check PREPARE and PRESS values.")
-            status:SetTextColor(Theme.colors.error[1], Theme.colors.error[2], Theme.colors.error[3], 1)
+            setStatusColor(status, false)
         end
     end)
 
@@ -261,13 +267,15 @@ function ProductivityPanel:AttachPresets()
     })
     personalButton:SetPoint("RIGHT", presetButton, "LEFT", -6, 0)
     personalButton:SetScript("OnClick", function()
-        if self.callbacks.showPersonalAssignments then self.callbacks.showPersonalAssignments() end
+        if self.callbacks.showPersonalAssignments then
+            self.callbacks.showPersonalAssignments(AssignmentUI.currentBossKey, AssignmentUI.currentDifficultyKey)
+        end
         if AssignmentUI.SetStatus then AssignmentUI:SetStatus("Personal assignments printed to chat.", "success") end
     end)
     personalButton:HookScript("OnEnter", function(control)
         GameTooltip:SetOwner(control, "ANCHOR_TOP")
         GameTooltip:SetText("My Tasks", 0.82, 0.86, 0.82, 1)
-        GameTooltip:AddLine("Local read-only view of direct, rotation and raid-group duties for the active plan.", 0.55, 0.63, 0.58, true)
+        GameTooltip:AddLine("Local read-only view of direct, rotation and raid-group duties for the assignment plan currently open here.", 0.55, 0.63, 0.58, true)
         GameTooltip:Show()
     end)
     personalButton:HookScript("OnLeave", function() GameTooltip:Hide() end)
@@ -318,21 +326,23 @@ function ProductivityPanel:AttachPresets()
             ok, message = self.callbacks.deletePreset(name:GetText(), AssignmentUI.currentBossKey, AssignmentUI.currentDifficultyKey)
         end
         status:SetText(message or (ok and "Preset deleted." or "Preset not deleted."))
-        status:SetTextColor((ok and Theme.colors.success or Theme.colors.error)[1], (ok and Theme.colors.success or Theme.colors.error)[2], (ok and Theme.colors.success or Theme.colors.error)[3], 1)
+        setStatusColor(status, ok)
         if ok then self:RefreshPresetPanel() end
     end)
 
     local load = ActionButton:Create(panel, { text = "LOAD", width = 58, height = 24, fontSize = 8, variant = "secondary" })
     load:SetPoint("RIGHT", delete, "LEFT", -6, 0)
     local function loadSelectedPreset()
+        local bossKey = AssignmentUI.currentBossKey
+        local difficultyKey = AssignmentUI.currentDifficultyKey
         local ok, message = false, "Preset load is unavailable."
         if self.callbacks.loadPreset then
-            ok, message = self.callbacks.loadPreset(name:GetText(), AssignmentUI.currentBossKey, AssignmentUI.currentDifficultyKey)
+            ok, message = self.callbacks.loadPreset(name:GetText(), bossKey, difficultyKey)
         end
         status:SetText(message or (ok and "Preset loaded." or "Preset not loaded."))
-        status:SetTextColor((ok and Theme.colors.success or Theme.colors.error)[1], (ok and Theme.colors.success or Theme.colors.error)[2], (ok and Theme.colors.success or Theme.colors.error)[3], 1)
+        setStatusColor(status, ok)
         if ok then
-            AssignmentUI:Load(AssignmentUI.currentBossKey, AssignmentUI.currentDifficultyKey)
+            AssignmentUI:Load(bossKey, difficultyKey)
             self:RefreshPresetPanel()
         end
     end
@@ -353,7 +363,7 @@ function ProductivityPanel:AttachPresets()
     save:SetScript("OnClick", function()
         if AssignmentUI.dirty and not AssignmentUI:SaveCurrent(true) then
             status:SetText("Fix the assignment draft before saving a preset.")
-            status:SetTextColor(Theme.colors.error[1], Theme.colors.error[2], Theme.colors.error[3], 1)
+            setStatusColor(status, false)
             return
         end
         local ok, message = false, "Preset save is unavailable."
@@ -361,7 +371,7 @@ function ProductivityPanel:AttachPresets()
             ok, message = self.callbacks.savePreset(name:GetText(), AssignmentUI.currentBossKey, AssignmentUI.currentDifficultyKey)
         end
         status:SetText(message or (ok and "Preset saved." or "Preset not saved."))
-        status:SetTextColor((ok and Theme.colors.success or Theme.colors.error)[1], (ok and Theme.colors.success or Theme.colors.error)[2], (ok and Theme.colors.success or Theme.colors.error)[3], 1)
+        setStatusColor(status, ok)
         if ok then self:RefreshPresetPanel() end
     end)
 
