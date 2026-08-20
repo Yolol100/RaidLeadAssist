@@ -54,16 +54,25 @@ local Constants = {
     },
 }
 
+local secretPredicate = _G.issecretvalue
+
 local function finite(value)
     return type(value) == "number" and value == value and value > -math.huge and value < math.huge
+end
+
+local function numeric(value)
+    if secretPredicate and secretPredicate(value) then return nil end
+    if type(value) == "number" then return value end
+    if type(value) == "string" then return tonumber(value) end
+    return nil
 end
 
 function Constants.NormalizeTimingLead(value)
     if type(value) ~= "table" then
         return Constants.PREPARE_SECONDS, Constants.PRESS_SECONDS, false
     end
-    local prepare = tonumber(value.prepare)
-    local press = tonumber(value.press)
+    local prepare = numeric(value.prepare)
+    local press = numeric(value.press)
     if not finite(prepare) or not finite(press)
         or prepare < Constants.MIN_PREPARE_SECONDS or prepare > Constants.MAX_PREPARE_SECONDS
         or press < Constants.MIN_PRESS_SECONDS or press > Constants.MAX_PRESS_SECONDS
@@ -78,8 +87,8 @@ function Constants.GetCallTiming(call, timingLead)
         timingLead = _G.RaidLeadAssistDB.timingLead
     end
     local configuredPrepare, configuredPress = Constants.NormalizeTimingLead(timingLead)
-    local prepare = type(call) == "table" and call.prepareSeconds or nil
-    local press = type(call) == "table" and call.pressSeconds or nil
+    local prepare = type(call) == "table" and numeric(call.prepareSeconds) or nil
+    local press = type(call) == "table" and numeric(call.pressSeconds) or nil
     if not finite(prepare) then prepare = configuredPrepare end
     if not finite(press) then press = configuredPress end
 
