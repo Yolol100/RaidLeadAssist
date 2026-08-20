@@ -1,6 +1,8 @@
 local T = assert(loadfile("tests/testlib.lua"))()
 local ns = T.NewNamespace()
+local SECRET = {}
 
+_G.issecretvalue = function(value) return value == SECRET end
 T.Load("Core/Constants.lua", ns)
 local Constants = ns:GetModule("Core.Constants")
 
@@ -39,6 +41,10 @@ local prepare, press, valid = Constants.NormalizeTimingLead({ prepare = 12, pres
 assert(valid and prepare == 12 and press == 5)
 local fallbackPrepare, fallbackPress, invalid = Constants.NormalizeTimingLead({ prepare = 31, press = 1 })
 assert(invalid == false and fallbackPrepare == Constants.PREPARE_SECONDS and fallbackPress == Constants.PRESS_SECONDS)
+local secretPrepare, secretPress, secretValid = Constants.NormalizeTimingLead({ prepare = SECRET, press = 2 })
+assert(secretValid == false and secretPrepare == Constants.PREPARE_SECONDS and secretPress == Constants.PRESS_SECONDS,
+    "secret timing values must fail closed without arithmetic/coercion")
 
 _G.RaidLeadAssistDB = nil
-print("ok - configurable per-user/per-call timing windows and actionable precision gate")
+_G.issecretvalue = nil
+print("ok - configurable per-user/per-call timing windows, secret guards and actionable precision gate")
