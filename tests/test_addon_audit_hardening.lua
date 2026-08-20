@@ -102,8 +102,8 @@ assert(baseline:find("06b08a1d288d961d7efe89d85bb8aca215da8d7e", 1, true),
     "Vashnik DBM day-one Normal/fallback baseline must stay pinned")
 assert(baseline:find("5314afd2931cd3ffc3234790acb7b4eb04816974", 1, true),
     "Twin Fangs DBM post-unlock lifecycle baseline must stay pinned")
-assert(baseline:find("99a4b7fd2b8b79aac10be011e473527976a82bca", 1, true),
-    "Coiled Altar DBM Normal+Heroic hardcoded/fallback baseline must stay pinned")
+assert(baseline:find("af76bc0cc67fc3a971fb6fd1a8b9f654c7d5200a", 1, true),
+    "Coiled Altar DBM evening Normal-stage3 hardcoded/fallback baseline must stay pinned")
 assert(baseline:find("c82ba65249ce3b4d98293c9d299fbf8530fb9cd0", 1, true),
     "Sentinels DBM post-unlock Normal-routing baseline must stay pinned")
 assert(baseline:find("cd0a4de36fefbcd9490df2a26be6322efcd400ce", 1, true),
@@ -116,10 +116,14 @@ assert(baseline:find("9c2fe74b4ac0fb297e8b6716e0d61965747a7ca5", 1, true),
     "Nek'zali BigWigs P2 Possession Barrage baseline must stay pinned")
 assert(baseline:find("9114bf6331598d210e20ffe3716e05842ccb43c6", 1, true),
     "Sentinels BigWigs intermission/reset baseline must stay pinned")
-assert(baseline:find("ca995e7b0fc55414ff1deb59f67e11ae99b242a1", 1, true),
-    "Twin Fangs BigWigs Submerge baseline must stay pinned")
-assert(baseline:find("67d6c66d1abdd47d2404801f8488d6a6468c9d28", 1, true),
-    "Coiled Altar BigWigs live-launch baseline must stay pinned to the reviewed source")
+assert(baseline:find("10d48f51a322d96343f9cfdf48c333eb0f21d6d6", 1, true),
+    "Twin Fangs BigWigs evening Submerge/aura baseline must stay pinned")
+assert(baseline:find("5dfaa8188133c61647fc717151ccf284b9fe1ed4", 1, true),
+    "Coiled Altar BigWigs evening Normal/Heroic mapping baseline must stay pinned")
+assert(baseline:find("6531b296d147499bc45d27f571c86a812274665b", 1, true),
+    "Vashnik BigWigs Normal/Heroic mapping baseline must stay pinned")
+assert(baseline:find("8176b9593c9242b3c5894c6632a4e27882c9c68a", 1, true),
+    "Lost Explorers BigWigs evening duration-routing baseline must stay pinned")
 assert(baseline:find("cce9ace533a7eca701f9a5f7d5151a87cc0fc35b", 1, true),
     "Ula'tek BigWigs post-launch phase-3/custom-bar baseline must stay pinned")
 
