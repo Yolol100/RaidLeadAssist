@@ -123,6 +123,10 @@ local function printPersonalAssignments()
     end
 end
 
+local function printProductivityHelp()
+    ns:Print("Beta.59: /rla my | /rla preset list|save|load|delete <name> | /rla timing lead <prepare> <press> | /rla timing reset")
+end
+
 local function handlePreset(argument)
     local action, name = argument:match("^(%S*)%s*(.-)$")
     action = (action or ""):lower()
@@ -178,6 +182,10 @@ local function install()
             return
         elseif command == "my" then
             printPersonalAssignments()
+            return
+        elseif command == "" or command == "help" then
+            previousSlash(message)
+            printProductivityHelp()
             return
         end
         previousSlash(message)
