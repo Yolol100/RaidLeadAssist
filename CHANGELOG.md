@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.0-beta.59 — 2026-08-20
+
+- Add bounded configurable PREPARE/PRESS lead windows while preserving encounter-specific timing overrides and fail-closed handling for secret, malformed, non-finite or inverted saved values.
+- Add up to eight validated local assignment presets per boss/difficulty plus a compact READY/CHECK control backed by the existing doctor state.
+- Add `/rla my`, a local read-only personal assignment summary that filters the active plan to direct player, rotation and raid-subgroup duties without addon networking or combat-state scanning.
+- Refresh the watched provider evidence after BigWigs added aura metadata accessors to `BossPrototype.lua` and DBM corrected Lost Explorers to register its UNIT_FLAGS handler only in combat; neither change alters RLA's consumed timer-authority contract.
+- Keep Ula'tek manual-only despite current bossmod timer coverage; provider bars still cannot promote PREPARE/PRESS/TTS without separate live evidence.
+- Select the workflow improvements after a public Method Raid Tools feature comparison, but implement them independently; no MRT source, assets, strings or protected implementation details are copied.
+
 ## 0.9.0-beta.58 — 2026-08-20
 
 - Add a deterministic SPDX 2.3 SBOM for the exact runtime-only release ZIP, including per-file hashes, package verification code and the ZIP SHA-256 digest.
