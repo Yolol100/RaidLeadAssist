@@ -1,6 +1,6 @@
 # Audit source register
 
-Review date: 2026-08-19. Changing platform/provider facts must be rechecked before a release claim.
+Review date: 2026-08-20. Changing platform/provider facts must be rechecked before a release claim.
 
 ## Blizzard / WoW
 
@@ -9,9 +9,9 @@ Review date: 2026-08-19. Changing platform/provider facts must be rechecked befo
 - Blizzard current content/update notes: https://worldofwarcraft.blizzard.com/en-us/news
 - WoW API / 12.1 interface and Encounter Timeline reference: https://warcraft.wiki.gg/wiki/Patch_12.1.0/API_changes and https://warcraft.wiki.gg/wiki/Category:API_namespaces/C_EncounterTimeline
 
-Audit implications: addon code stays readable/free of advertising/premium behavior, avoids real-time combat-decision automation, treats secret values fail-closed, validates the Retail interface/API surface and uses the Blizzard timeline only as presentation timing.
+Audit implications: addon code stays readable/free of in-game advertising, premium behavior or donation solicitation, avoids real-time combat-decision automation, treats secret values fail-closed, validates the Retail interface/API surface and uses the Blizzard timeline only as presentation timing. Blizzard's published policy also names excessive chat, unnecessary disk loading and slow frame rates as examples of negative impact, so live performance/soak remains a release gate rather than a source-only claim.
 
-Post-unlock review on 2026-08-19 confirmed the regional Season 2/Venomous Abyss unlock schedule. Blizzard's current official news/content-update surfaces did not expose a verified same-day Venomous Abyss mechanic/timer hotfix during this audit. A contemporaneous Wowhead PTR datamine only changed `Stir the Depths`, `Barbed Bulwark` and `Vile Flood` to be treated as area-of-effect damage for mitigation/Avoidance. Those flags do not alter RLA's raidleader action, assignment or timer identity contract, so no tactic/timing change is encoded from that datamine.
+Post-unlock review confirmed the regional Season 2/Venomous Abyss unlock schedule. No undocumented encounter tuning is encoded merely because a community/datamine source changes; encounter or timing changes require a current authoritative source or reproducible live evidence.
 
 ## GitHub / supply chain
 
@@ -29,13 +29,25 @@ Audit implications: least-privilege workflow permissions, actions pinned to full
 - DBM repository/releases: https://github.com/DeadlyBossMods/DeadlyBossMods
 - BigWigs repository/releases: https://github.com/BigWigsMods/BigWigs
 
-The machine-readable exact reviewed commits/file fingerprints live in `UPSTREAM_BASELINES.json`. The stable release-contract pins are DBM `12.1.4` and BigWigs `v419.2` at this review.
+The machine-readable exact reviewed commits/file fingerprints live in `UPSTREAM_BASELINES.json`. The stable release-contract pins remain DBM `12.1.4` and BigWigs `v419.2`; newer master source is monitored independently so RLA does not require unreleased bossmod builds.
 
-DBM `12.1.4` resolves to commit `88ec781e9b213dbf7d9ca59164a584c2529d9bf9`. After the raid unlocked, DBM `master` moved two commits ahead of that stable tag and changed only Nek'zali and Twin Fangs. The Nek'zali change extends hardcoded Encounter Timeline routing to Normal; the Twin Fangs change likewise adds Normal hardcoded routing plus Submerge lifecycle coverage. The RLA-consumed Amani/Pyre/Grasping and Feast/globule/add/movement timer identities did not change, and `DBM-Core/modules/objects/Timer.lua` plus the Midnight raid TOC remained unchanged. RLA therefore refreshes those two exact master fingerprints and keeps provider parsing semantics unchanged. This distinction matters: stable users remain on 12.1.4, while drift monitoring tracks newer upstream source without requiring unreleased DBM.
+At the 2026-08-20 beta.60 audit snapshot, the watched current source still matches the beta.59 fingerprints that affect RLA: BigWigs `Core/BossPrototype.lua` remains `4d9e26f894455743f66ae87908a043f6f8d6cb2f`, BigWigs `TheVenomousAbyss/Ulatek.lua` remains `cce9ace533a7eca701f9a5f7d5151a87cc0fc35b`, and DBM Lost Explorers remains `cd0a4de36fefbcd9490df2a26be6322efcd400ce`. The reviewed Ula'tek source includes the Phase 3 initial-timer corrections, but RLA still keeps all Ula'tek calls manual-only pending live Retail evidence.
 
-BigWigs `v419.2` remains the latest stable tag found in this review and predates the finalized `TheVenomousAbyss/CoiledAltar.lua` module: that tag still contains the earlier next-build `Crown.lua` placeholder while current `master` has the finalized Coiled Altar module. RLA therefore must not assume that a loaded stable BigWigs installation can provide every Venomous Abyss boss bar. Its provider reconciliation deliberately falls back to Blizzard Encounter Timeline events whenever the active bossmod has no usable matching timer. This is a compatibility/failure-mode requirement, not a recommendation to install unreleased BigWigs source.
+DBM master has advanced its displayed alpha version beyond the stable 12.1.4 pin, but a version-string change alone is not promoted into a provider-contract change. Exact Timer/BossMod and watched encounter files remain the authority for RLA compatibility.
 
-The post-unlock BigWigs recheck found no new watched drift after the beta.52 launch review. `Core/BossPrototype.lua`, the Venomous Abyss raid TOC and all eight watched encounter modules still match the pinned 2026-08-19 fingerprints. The consumed timer/key identities therefore remain compatible at this audit point.
+BigWigs `v419.2` predates some finalized Venomous Abyss source, so RLA must not assume that a loaded stable BigWigs installation supplies every live bar. Its reconciliation deliberately falls back to Blizzard Encounter Timeline events whenever the active bossmod has no usable matching timer. This is a compatibility/failure-mode requirement, not a recommendation to install unreleased BigWigs source.
+
+## Method Raid Tools comparison
+
+- Current Method Raid Tools CurseForge project, reviewed 2026-08-20: https://www.curseforge.com/wow/addons/method-raid-tools
+- Current gallery: https://www.curseforge.com/wow/addons/method-raid-tools/gallery
+- Public v5040 release notes documenting the Reminder assignments page: https://www.curseforge.com/wow/addons/method-raid-tools/files/5870341
+
+Method Raid Tools is used only as a public product/workflow reference. Its current public description includes Notes, Reminders, Raid Check, Timers, Marks Bar, Invite Tools, Raid Attendance, Raid Groups Saver and other broad raid-management modules; Reminder supports timeline/assignment setup, and the gallery exposes a Ready Check window and Marks Bar. Its CurseForge license is All Rights Reserved. RLA therefore copies no MRT source, assets, strings or protected implementation details.
+
+Useful pattern-level lessons retained for RLA are deliberately narrow: readiness belongs with raid control, reminder timing belongs with timing/settings, reusable assignments belong with assignment planning, and a personal assignment projection should be discoverable next to the plan it summarizes. RLA implements those patterns with its own Theme/ActionButton controls and existing service contracts.
+
+Deliberately not adopted: network-synchronized live assignment collaboration, generic raid combat logging, loot/invite/attendance suites, broad raid-inspection/consumable scanning, automarking/protected-action behavior or a generic cooldown suite. Those would materially expand RLA's networking, combat-information, privacy/performance and maintenance surface and are not required for the raid-leader callout product contract.
 
 ## Encounter strategy
 

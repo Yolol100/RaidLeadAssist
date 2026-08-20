@@ -10,13 +10,15 @@ RLA supports eight encounters and 24 Normal/Heroic/Mythic profiles. During a sup
 
 Assignments are configured before combat through `ASSIGN`, Settings or `/rla assignments`. PLAYER/GROUP, ROTATION, RULE and SEQUENCE fields are validated per boss/difficulty. Duplicate/overlapping players and hard group-size constraints are rejected where the tactic requires it. Rotation advances only after the matching manual Raid Warning succeeds.
 
+The assignment window also owns local productivity tools: `PRESETS` stores up to eight validated plans per boss/difficulty and `MY TASKS` prints the current player's direct, rotation and raid-group duties. Presets never add addon networking or live combat scanning; slash equivalents remain available for power users.
+
 ## Timer sources
 
 RLA consumes public **DBM**, **BigWigs** and Blizzard Encounter Timeline timing. Among equally precise usable representations it prefers DBM, then BigWigs, then Blizzard. Exact/native sources may drive PREPARE/PRESS/TTS; approximate bars remain non-actionable previews.
 
 Provider payloads are untrusted runtime input. Secret, malformed, stale or cross-encounter data is rejected/downgraded. Direct bossmod timers must resolve to the verified active encounter. Cross-provider occurrence reconciliation prevents duplicate calls/audio and a successful manual call acknowledges the occurrence so a late provider cannot immediately re-arm it.
 
-The stable release-contract baselines are **DBM 12.1.4** and **BigWigs v419.2**. DBM 12.1.4 remains the stable release pin while current DBM master has only advanced its displayed alpha identity without changing the watched timer/BossMod contracts. Venomous Abyss DBM and BigWigs `master` watch paths were re-reviewed on 2026-08-20; exact core, raid-TOC and per-boss fingerprints live in `docs/UPSTREAM_BASELINES.json`.
+The stable compatibility floor remains **DBM 12.1.4** and **BigWigs v419.2**; those published releases are kept separate from current-source evidence. `docs/UPSTREAM_BASELINES.json` independently pins the exact watched DBM/BigWigs `master` files that were semantically re-reviewed on 2026-08-20. The evening re-review includes DBM's expanded Normal Coiled Altar Stage 3 routing and BigWigs' newer Vashnik, Twin Fangs, Coiled Altar and Lost Explorers mappings. DBM's watched Timer/BossMod contracts and BigWigs' watched BossPrototype timer contracts remain byte-identical, while changed boss files retain the encounter/spell identities RLA consumes.
 
 BigWigs `v419.2` predates the finalized Coiled Altar boss module, so RLA does not assume that a loaded stable BigWigs build can supply every live Venomous Abyss bar. When a bossmod cannot provide a usable matching timer, RLA intentionally falls back to Blizzard Encounter Timeline data for supported calls. Users do not need unreleased bossmod source for RLA to load or for manual calls to remain available.
 
@@ -28,8 +30,15 @@ Provider timer identity is kept separate from display spell identity; for exampl
 
 ## Operational controls
 
-- `/rla timing on|off`: automatic timing toggle.
+The main raid-control panel shows a themed `READY`/`CHECK` control next to Settings. It opens the same read-only doctor diagnostics used by `/rla doctor` rather than creating a second readiness state.
+
+Settings owns the default timing-lead editor beside `AUTO`. Defaults are PREPARE 5s / PRESS 3s, with bounded 2-30s and 1-10s ranges and PREPARE greater than PRESS. Encounter-specific call windows remain authoritative. Timing preferences cannot be changed during an active encounter or combat; the slash fallback follows the same boundary.
+
+- `/rla timing on|off`: automatic timing toggle, pre-pull only.
+- `/rla timing lead <prepare> <press>` / `/rla timing reset`: default lead-window fallbacks, pre-pull only.
 - `/rla assignments`: pre-pull assignment editor.
+- `/rla preset list|save|load|delete <name>`: local preset fallback for the active boss/difficulty.
+- `/rla my`: local personal-assignment fallback.
 - `/rla provider`: read-only provider/timer diagnostics.
 - `/rla doctor`: read-only readiness diagnostics.
 - `AUTO TIMING OFF`: user disabled automatic timing.
@@ -37,18 +46,18 @@ Provider timer identity is kept separate from display spell identity; for exampl
 
 ## SavedVariables and privacy
 
-`RaidLeadAssistDB` schema 5 stores local settings, custom warning text, assignments and frame position. Migration is defensive and a newer unknown schema is preserved rather than blindly downgraded. RLA has no addon networking, telemetry or external storage; see `PRIVACY.md`.
+`RaidLeadAssistDB` schema 6 stores local settings, bounded timing leads, custom warning text, assignments, assignment presets and frame position. Migration is defensive and a newer unknown schema is preserved rather than blindly downgraded. RLA has no addon networking, telemetry or external storage; see `PRIVACY.md`.
 
 ## Architecture and audit evidence
 
 - `docs/ARCHITECTURE.md`: what each layer owns, when it runs, for whom and why.
-- `docs/TEN_OF_TEN_ACCEPTANCE.md`: the **172-check** master audit after beta.58 distribution/supply-chain expansion.
+- `docs/TEN_OF_TEN_ACCEPTANCE.md`: the **172-check** master audit after beta.58 distribution/supply-chain expansion, supplemented by current beta.59/beta.60 regressions.
 - `docs/LIVE_TEST_MATRIX.md`: evidence that can only be collected in the real Retail client.
 - `docs/AUDIT_SOURCES.md`: current Blizzard, GitHub, DBM/BigWigs and encounter source register.
 - `scripts/audit_runtime.py`: TOC/runtime/copy/policy hygiene.
 - `scripts/audit_repository.py`: repository paths/encoding/secrets/module order/combat API/workflow/supply-chain governance.
 
-The repository audit explicitly blocks combat-log decision processing, aura/health/power/cast/position decision APIs, protected action automation, secure-action automation, dynamic code execution and addon networking from the shipped runtime. The single existing `AssignmentIntegration` App extension surface is explicitly documented and its exact patched method set is CI-locked; additional monkey patches fail validation.
+The repository audit explicitly blocks combat-log decision processing, aura/health/power/cast/position decision APIs, protected action automation, secure-action automation, dynamic code execution and addon networking from the shipped runtime. Approved App extension surfaces are explicitly documented and their exact patched method sets are CI-locked; productivity UI uses bounded callbacks instead of adding another App monkey patch.
 
 ## Validation and release
 

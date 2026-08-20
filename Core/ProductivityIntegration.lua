@@ -6,13 +6,11 @@ local EventBus = ns:GetModule("Core.EventBus")
 local Presets = ns:GetModule("Services.AssignmentPresetService")
 local PersonalAssignments = ns:GetModule("Services.PersonalAssignmentService")
 local Encounter = ns:GetModule("Services.EncounterService")
-local ActionButton = ns:GetModule("UI.ActionButton")
-local UI = ns:GetModule("UI.MainFrame")
+local ProductivityUI = ns:GetModule("UI.ProductivityPanel")
 local Readiness = ns:GetModule("Core.ReadinessIntegration")
 local App = ns:GetModule("Core.App")
 
 local Integration = {
-    readinessButton = nil,
     installed = false,
 }
 
@@ -27,76 +25,108 @@ local function canEditPlan()
     return true
 end
 
-local function refreshReadinessButton()
-    local button = Integration.readinessButton
-    if not button or not Readiness or type(Readiness.GetState) ~= "function" then return end
-    local state = Readiness:GetState()
-    button:SetActionText(state.label or "CHECK")
-    button:SetActionVariant(state.ready and "primary" or "secondary")
-    button.readinessState = state
+local function canEditTiming()
+    if Encounter:IsActive() then return false, "Timing preferences are pre-pull only; finish the active encounter first." end
+    if type(InCombatLockdown) == "function" and InCombatLockdown() then
+        return false, "Leave combat before changing timing preferences."
+    end
+    if Database:HasNewerSchema() then
+        return false, "Saved settings use a newer schema; update Raid Lead Assist before changing timing preferences."
+    end
+    return true
 end
 
-local function attachReadinessButton()
-    if Integration.readinessButton or not UI.frame or not UI.frame.settingsButton then return end
-    local button = ActionButton:Create(UI.frame, {
-        text = "CHECK",
-        width = 60,
-        height = 24,
-        fontSize = 9,
-        variant = "secondary",
-    })
-    button:SetPoint("RIGHT", UI.frame.settingsButton, "LEFT", -4, 0)
-    if UI.frame.drag then button:SetFrameLevel(UI.frame.drag:GetFrameLevel() + 1) end
-    button:SetScript("OnClick", function()
-        refreshReadinessButton()
-        App:PrintDoctor()
-    end)
-    button:HookScript("OnEnter", function(control)
-        refreshReadinessButton()
-        local state = control.readinessState or Readiness:GetState()
-        GameTooltip:SetOwner(control, "ANCHOR_TOP")
-        GameTooltip:SetText(state.ready and "Raid plan readiness: READY" or "Raid plan readiness: CHECK", 0.82, 0.86, 0.82, 1)
-        GameTooltip:AddLine(table.concat(state.states or {}, " | "), 0.60, 0.72, 0.64, true)
-        GameTooltip:AddLine("Click for the full doctor report.", 0.55, 0.63, 0.58, true)
-        GameTooltip:Show()
-    end)
-    button:HookScript("OnLeave", function() GameTooltip:Hide() end)
-    Integration.readinessButton = button
-    refreshReadinessButton()
+local function refreshReadiness()
+    if not Readiness or type(Readiness.GetState) ~= "function" then return end
+    ProductivityUI:SetReadinessState(Readiness:GetState())
+end
+
+local function getTimingLead()
+    return Constants.GetCallTiming(nil, App.db and App.db.timingLead)
+end
+
+local function saveTimingLead(prepareText, pressText)
+    local allowed, reason = canEditTiming()
+    if not allowed then return false, reason end
+
+    local prepare, press = tonumber(prepareText), tonumber(pressText)
+    local normalizedPrepare, normalizedPress, valid = Constants.NormalizeTimingLead({ prepare = prepare, press = press })
+    if not valid then
+        return false, ("PREPARE must be %d-%ds, PRESS %d-%ds, and PREPARE must be greater than PRESS."):format(
+            Constants.MIN_PREPARE_SECONDS,
+            Constants.MAX_PREPARE_SECONDS,
+            Constants.MIN_PRESS_SECONDS,
+            Constants.MAX_PRESS_SECONDS
+        )
+    end
+
+    App.db.timingLead = { prepare = normalizedPrepare, press = normalizedPress }
+    return true, ("Default lead windows saved: PREPARE %gs | PRESS %gs."):format(normalizedPrepare, normalizedPress)
+end
+
+local function resetTimingLead()
+    local allowed, reason = canEditTiming()
+    if not allowed then return false, reason end
+    App.db.timingLead = { prepare = Constants.PREPARE_SECONDS, press = Constants.PRESS_SECONDS }
+    return true, ("Default lead windows reset: PREPARE %gs | PRESS %gs."):format(
+        Constants.PREPARE_SECONDS, Constants.PRESS_SECONDS
+    )
 end
 
 local function setTimingLead(argument)
     local mode, rest = argument:match("^(%S+)%s*(.-)$")
     mode = (mode or ""):lower()
     if mode == "reset" then
-        App.db.timingLead = { prepare = Constants.PREPARE_SECONDS, press = Constants.PRESS_SECONDS }
-        ns:Print(("Lead windows reset: PREPARE %.1fs | PRESS %.1fs"):format(
-            App.db.timingLead.prepare, App.db.timingLead.press
-        ))
+        local ok, message = resetTimingLead()
+        ns:Print(message)
+        if ok then ProductivityUI:RefreshTiming() end
         return true
     end
     if mode ~= "lead" then return false end
 
     local prepareText, pressText = rest:match("^(%S+)%s+(%S+)%s*$")
-    local prepare, press = tonumber(prepareText), tonumber(pressText)
-    local normalizedPrepare, normalizedPress, valid = Constants.NormalizeTimingLead({ prepare = prepare, press = press })
-    if not valid then
-        ns:Print(("Lead windows: PREPARE %d-%ds, PRESS %d-%ds, and PREPARE must be greater than PRESS."):format(
-            Constants.MIN_PREPARE_SECONDS,
-            Constants.MAX_PREPARE_SECONDS,
-            Constants.MIN_PRESS_SECONDS,
-            Constants.MAX_PRESS_SECONDS
-        ))
-        return true
-    end
-
-    App.db.timingLead = { prepare = normalizedPrepare, press = normalizedPress }
-    ns:Print(("Lead windows saved: PREPARE %.1fs | PRESS %.1fs"):format(normalizedPrepare, normalizedPress))
+    local ok, message = saveTimingLead(prepareText, pressText)
+    ns:Print(message)
+    if ok then ProductivityUI:RefreshTiming() end
     return true
 end
 
-local function printPresetList()
-    local names = Presets:List(App.activeBossKey, App.activeDifficultyKey)
+local function listPresets(bossKey, difficultyKey)
+    return Presets:List(bossKey, difficultyKey)
+end
+
+local function savePreset(name, bossKey, difficultyKey)
+    local allowed, reason = canEditPlan()
+    if not allowed then return false, reason end
+    local ok, result = Presets:Save(name, bossKey, difficultyKey)
+    if ok then
+        refreshReadiness()
+        return true, "Assignment preset saved: " .. result
+    end
+    return false, "Preset not saved: " .. tostring(result)
+end
+
+local function loadPreset(name, bossKey, difficultyKey)
+    local allowed, reason = canEditPlan()
+    if not allowed then return false, reason end
+    local ok, result = Presets:Load(name, bossKey, difficultyKey)
+    if ok then
+        refreshReadiness()
+        return true, "Assignment preset loaded: " .. result
+    end
+    return false, "Preset not loaded: " .. tostring(result)
+end
+
+local function deletePreset(name, bossKey, difficultyKey)
+    local allowed, reason = canEditPlan()
+    if not allowed then return false, reason end
+    local ok, result = Presets:Delete(name, bossKey, difficultyKey)
+    if ok then return true, "Assignment preset deleted: " .. result end
+    return false, "Preset not deleted: " .. tostring(result)
+end
+
+local function printPresetList(bossKey, difficultyKey)
+    local names = listPresets(bossKey, difficultyKey)
     if #names == 0 then
         ns:Print("Assignment presets: none for this boss/difficulty.")
     else
@@ -104,60 +134,53 @@ local function printPresetList()
     end
 end
 
-local function printPersonalAssignments()
+local function printPersonalAssignments(bossKey, difficultyKey)
+    bossKey = bossKey or App.activeBossKey
+    difficultyKey = difficultyKey or App.activeDifficultyKey
     local playerName, subgroup = PersonalAssignments:ResolvePlayer()
     if not playerName then
         ns:Print("Personal assignments unavailable: player identity is not readable.")
-        return
+        return false
     end
 
-    local lines = PersonalAssignments:GetLines(App.activeBossKey, App.activeDifficultyKey, playerName, subgroup)
+    local lines = PersonalAssignments:GetLines(bossKey, difficultyKey, playerName, subgroup)
     local groupText = subgroup and (" | group " .. subgroup) or ""
     ns:Print("Personal assignments: " .. playerName .. groupText)
     if #lines == 0 then
         ns:Print("No direct player/group assignments for this boss/difficulty.")
-        return
+        return true
     end
     for index = 1, #lines do
         ns:Print(("%d. %s: %s"):format(index, lines[index].label, lines[index].value))
     end
+    return true
 end
 
 local function printProductivityHelp()
-    ns:Print("Beta.59: /rla my | /rla preset list|save|load|delete <name> | /rla timing lead <prepare> <press> | /rla timing reset")
+    ns:Print("Beta.60: use the in-panel READY/CHECK, Settings LEADS and Assignment PRESETS/MY TASKS controls; slash fallbacks: /rla my | /rla preset list|save|load|delete <name> | /rla timing lead <prepare> <press> | /rla timing reset")
 end
 
 local function handlePreset(argument)
     local action, name = argument:match("^(%S*)%s*(.-)$")
     action = (action or ""):lower()
     if action == "list" or action == "" then
-        printPresetList()
+        printPresetList(App.activeBossKey, App.activeDifficultyKey)
         return true
     end
 
-    local allowed, reason = canEditPlan()
-    if not allowed then
-        ns:Print(reason)
-        return true
-    end
-
-    local ok, result
+    local ok, message
     if action == "save" then
-        ok, result = Presets:Save(name, App.activeBossKey, App.activeDifficultyKey)
-        ns:Print(ok and ("Assignment preset saved: " .. result) or ("Preset not saved: " .. tostring(result)))
-        return true
+        ok, message = savePreset(name, App.activeBossKey, App.activeDifficultyKey)
     elseif action == "load" then
-        ok, result = Presets:Load(name, App.activeBossKey, App.activeDifficultyKey)
-        ns:Print(ok and ("Assignment preset loaded: " .. result) or ("Preset not loaded: " .. tostring(result)))
-        refreshReadinessButton()
-        return true
+        ok, message = loadPreset(name, App.activeBossKey, App.activeDifficultyKey)
     elseif action == "delete" then
-        ok, result = Presets:Delete(name, App.activeBossKey, App.activeDifficultyKey)
-        ns:Print(ok and ("Assignment preset deleted: " .. result) or ("Preset not deleted: " .. tostring(result)))
+        ok, message = deletePreset(name, App.activeBossKey, App.activeDifficultyKey)
+    else
+        ns:Print("Preset commands: /rla preset list | save <name> | load <name> | delete <name>")
         return true
     end
-
-    ns:Print("Preset commands: /rla preset list | save <name> | load <name> | delete <name>")
+    ns:Print(message)
+    if ok then ProductivityUI:RefreshPresetPanel() end
     return true
 end
 
@@ -167,7 +190,22 @@ local function install()
     if type(previousSlash) ~= "function" then return end
 
     Presets:Initialize(App.db)
-    attachReadinessButton()
+    ProductivityUI:Attach({
+        onReadiness = function()
+            refreshReadiness()
+            App:PrintDoctor()
+        end,
+        getTimingLead = getTimingLead,
+        saveTimingLead = saveTimingLead,
+        resetTimingLead = resetTimingLead,
+        listPresets = listPresets,
+        savePreset = savePreset,
+        loadPreset = loadPreset,
+        deletePreset = deletePreset,
+        showPersonalAssignments = printPersonalAssignments,
+    })
+    refreshReadiness()
+
     SlashCmdList.RAIDLEADASSIST = function(message)
         local command, argument = "", ""
         if type(message) == "string" then
@@ -175,13 +213,21 @@ local function install()
         end
         command = (command or ""):lower()
         argument = argument or ""
-        if command == "timing" and setTimingLead(argument) then
-            return
+        if command == "timing" then
+            if setTimingLead(argument) then return end
+            local normalized = argument:lower()
+            if normalized == "on" or normalized == "off" then
+                local allowed, reason = canEditTiming()
+                if not allowed then
+                    ns:Print(reason)
+                    return
+                end
+            end
         elseif command == "preset" then
             handlePreset(argument)
             return
         elseif command == "my" then
-            printPersonalAssignments()
+            printPersonalAssignments(App.activeBossKey, App.activeDifficultyKey)
             return
         elseif command == "" or command == "help" then
             previousSlash(message)
@@ -189,6 +235,7 @@ local function install()
             return
         end
         previousSlash(message)
+        if command == "timing" then ProductivityUI:RefreshTiming() end
     end
     Integration.installed = true
 end
@@ -201,7 +248,7 @@ for _, eventName in ipairs({
     "ENCOUNTER_ENDED",
     "ZONE_STATUS_CHANGED",
 }) do
-    EventBus:On(eventName, Integration, function() refreshReadinessButton() end)
+    EventBus:On(eventName, Integration, function() refreshReadiness() end)
 end
 
 local installer = CreateFrame("Frame")

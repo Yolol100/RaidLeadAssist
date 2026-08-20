@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.0-beta.60 — 2026-08-20
+
+- Move beta.59 productivity controls into the canonical themed UI layer: READY/CHECK beside Settings, LEADS beside AUTO, and PRESETS/MY TASKS in the pre-pull Boss Assignments surface.
+- Keep assignment preset and personal-assignment state in their existing Services owners; the UI receives bounded callbacks and does not add another App monkey patch.
+- Make preset and personal-assignment UI follow the boss/difficulty actually open in the Assignment window rather than assuming the main-panel selection.
+- Block timing-lead changes and legacy `/rla timing on|off` changes during an active encounter, in combat or under a newer SavedVariables schema so slash commands cannot alter PREPARE/PRESS behavior mid-pull.
+- Add placement/load-order regressions that require the productivity UI to reuse `UI.Theme`/`UI.ActionButton`, stay clamped/in-context and add no combat/network automation API surface.
+- Keep the public Method Raid Tools comparison at the workflow-pattern level only; no MRT source, assets, strings or protected implementation details are copied, and RLA does not expand into MRT's broader collaboration/logging/loot/inspection/automarking scope.
+- Recheck the current DBM/BigWigs watch points used by beta.59; the reviewed fingerprints remain current at the beta.60 audit snapshot, so no provider mapping change is required.
+
 ## 0.9.0-beta.59 — 2026-08-20
 
 - Add bounded configurable PREPARE/PRESS lead windows while preserving encounter-specific timing overrides and fail-closed handling for secret, malformed, non-finite or inverted saved values.
