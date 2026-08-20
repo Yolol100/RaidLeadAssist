@@ -18,7 +18,7 @@ REQUIRED_FILES = {
     "CHANGELOG.md", "CONTRIBUTING.md", "PRIVACY.md", "README.md", "RaidLeadAssist.toc", "SECURITY.md",
     "docs/ARCHITECTURE.md", "docs/AUDIT_SOURCES.md", "docs/LIVE_TEST_MATRIX.md",
     "docs/TEN_OF_TEN_ACCEPTANCE.md", "docs/STATIC_ANALYSIS.md", "docs/UPSTREAM_BASELINES.json",
-    "scripts/audit_runtime.py", "scripts/audit_repository.py", "scripts/build_release.py",
+    "scripts/audit_runtime.py", "scripts/audit_repository.py", "scripts/build_release.py", "scripts/build_sbom.py",
     "scripts/check_upstream_drift.py", "tests/testlib.lua",
 }
 
@@ -240,6 +240,14 @@ def validate_workflows(files: list[str]) -> None:
         fail("release workflow must verify provenance before publishing")
     if "github.ref == 'refs/heads/main'" not in validate:
         fail("privileged main release jobs must be scoped to refs/heads/main")
+    for marker in (
+        "scripts/build_sbom.py",
+        "SBOM.spdx.json",
+        "sbom-path: dist/SBOM.spdx.json",
+        "gh attestation verify dist/RaidLeadAssist.zip --repo",
+    ):
+        if marker not in validate:
+            fail(f"validation/release workflow missing deterministic SBOM/provenance gate: {marker}")
 
 
 def validate_secrets(files: list[str]) -> None:
@@ -284,7 +292,7 @@ def main() -> int:
     validate_secrets(files)
     print(
         f"ok - repository audit passed ({len(files)} tracked files; {len(entries)} runtime files; "
-        "paths/encoding/secrets/module-order/extensions/combat-API/workflow/test/release governance)"
+        "paths/encoding/secrets/module-order/extensions/combat-API/workflow/test/release/SBOM governance)"
     )
     return 0
 
