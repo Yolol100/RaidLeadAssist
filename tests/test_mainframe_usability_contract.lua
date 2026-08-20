@@ -46,6 +46,10 @@ assert(contains(productivity, 'C_Timer.After(0, install)'),
     "productivity controls should defer until the canonical App initialization has completed")
 assert(contains(productivity, '/rla preset list | save <name> | load <name> | delete <name>'),
     "assignment preset workflow should remain discoverable")
+assert(contains(productivity, 'command == "my"') and contains(productivity, '/rla my'),
+    "personal assignment view should be both implemented and discoverable")
+assert(contains(toc, "Services/PersonalAssignmentService.lua"),
+    "personal assignment service must be part of the audited runtime inventory")
 
 -- These behaviors are canonical now; the runtime should not depend on obsolete enhancement layers.
 assert(not contains(toc, "UI/MainFrameEnhancements.lua"),
@@ -55,4 +59,4 @@ assert(not contains(toc, "Core/TimingStatusIntegration.lua"),
 assert(not contains(toc, "Encounters/VenomousAbyss/UlatekAssignmentPolicy.lua"),
     "Ula'tek assignment policy should live in AssignmentRegistry.lua")
 
-print("ok - raid-leader surface exposes readiness, presets, pre-pull, movement and manual-timing states safely")
+print("ok - raid-leader surface exposes readiness, presets, personal assignments, pre-pull, movement and manual-timing states safely")
