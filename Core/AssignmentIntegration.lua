@@ -14,6 +14,7 @@ local Encounter = ns:GetModule("Services.EncounterService")
 local UI = ns:GetModule("UI.MainFrame")
 local SettingsUI = ns:GetModule("UI.SettingsFrame")
 local AssignmentUI = ns:GetModule("UI.AssignmentFrame")
+local Preview = ns:GetModule("UI.AssignmentPreview")
 local Launchers = ns:GetModule("UI.AssignmentLaunchers")
 local SetupCard = ns:GetModule("UI.SetupCard")
 local App = ns:GetModule("Core.App")
@@ -154,6 +155,43 @@ local function openAssignments()
     AssignmentUI:Open(App.activeBossKey, App.activeDifficultyKey)
 end
 
+local function previewAssignments(bossKey, difficultyKey, values)
+    local valid, result = Assignments:ValidateBossDraft(bossKey, difficultyKey, values)
+    if not valid then
+        ns:Print("Assignment preview blocked: " .. (result and result.message or "invalid assignments."))
+        return false
+    end
+
+    local missing = Assignments:GetMissingRequired(bossKey, difficultyKey, result)
+    if #missing > 0 then
+        ns:Print("Assignment preview blocked; missing required: " .. table.concat(missing, ", "))
+        return false
+    end
+
+    local lines = {}
+    for _, definition in ipairs(Assignments:GetDefinitions(bossKey, difficultyKey)) do
+        local value = result[definition.key]
+        if type(value) == "string" and value ~= "" then
+            local line = definition.label .. ": " .. value .. "."
+            if #line > Assignments.MAX_WARNING_LENGTH then
+                ns:Print("Assignment preview blocked; line exceeds the Raid Warning length budget: " .. definition.label)
+                return false
+            end
+            lines[#lines + 1] = line
+            if #lines >= Assignments.MAX_PLAN_LINES then break end
+        end
+    end
+
+    if #lines == 0 then
+        ns:Print("Assignment preview: no assignments are filled in for this boss and difficulty.")
+        return false
+    end
+
+    ns:Print("Assignment preview (local only; nothing sent to raid chat):")
+    for index = 1, #lines do ns:Print(("%d. %s"):format(index, lines[index])) end
+    return true
+end
+
 local function announceAssignments(bossKey, difficultyKey)
     local lines = Assignments:GetPlanLines(bossKey, difficultyKey)
     if #lines == 0 then
@@ -178,6 +216,7 @@ function App:Initialize(...)
         canOpen = canEditAssignments,
         onAnnounce = announceAssignments,
     })
+    Preview:Attach(AssignmentUI, previewAssignments)
     Launchers:Attach(UI, SettingsUI, openAssignments)
     refreshAssignmentSurface()
     refreshSetupCard(true)
