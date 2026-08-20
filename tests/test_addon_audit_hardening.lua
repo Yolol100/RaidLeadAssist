@@ -112,8 +112,8 @@ assert(baseline:find("bcfbcc0fea3c4e0c06336c0066accd3fdf33b0fc", 1, true),
     "Sszorak DBM post-unlock routing baseline must stay pinned")
 assert(baseline:find("4d9e26f894455743f66ae87908a043f6f8d6cb2f", 1, true),
     "BigWigs BossPrototype callback baseline must stay pinned")
-assert(baseline:find("9c2fe74b4ac0fb297e8b6716e0d61965747a7ca5", 1, true),
-    "Nek'zali BigWigs P2 Possession Barrage baseline must stay pinned")
+assert(baseline:find("74f5521d9ec51d8e60973aaabe30207071b1f75f", 1, true),
+    "Nek'zali BigWigs final aura-only baseline must stay pinned")
 assert(baseline:find("9114bf6331598d210e20ffe3716e05842ccb43c6", 1, true),
     "Sentinels BigWigs intermission/reset baseline must stay pinned")
 assert(baseline:find("10d48f51a322d96343f9cfdf48c333eb0f21d6d6", 1, true),
@@ -124,8 +124,10 @@ assert(baseline:find("6531b296d147499bc45d27f571c86a812274665b", 1, true),
     "Vashnik BigWigs Normal/Heroic mapping baseline must stay pinned")
 assert(baseline:find("8176b9593c9242b3c5894c6632a4e27882c9c68a", 1, true),
     "Lost Explorers BigWigs evening duration-routing baseline must stay pinned")
-assert(baseline:find("cce9ace533a7eca701f9a5f7d5151a87cc0fc35b", 1, true),
-    "Ula'tek BigWigs post-launch phase-3/custom-bar baseline must stay pinned")
+assert(baseline:find("f0e6b961c9801e0450d34a64b8f64cde82d95ffd", 1, true),
+    "Sszorak BigWigs final aura-only baseline must stay pinned")
+assert(baseline:find("2db5f87a85d5868a0800fa63ca4d9ff79f08eec4", 1, true),
+    "Ula'tek BigWigs final aura-only phase-3/custom-bar baseline must stay pinned")
 
 local security = read("SECURITY.md")
 assert(security:find("RaidLeadAssist.toc", 1, true))
