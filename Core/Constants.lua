@@ -23,6 +23,10 @@ local Constants = {
 
     PREPARE_SECONDS = 5,
     PRESS_SECONDS = 3,
+    MIN_PREPARE_SECONDS = 2,
+    MAX_PREPARE_SECONDS = 30,
+    MIN_PRESS_SECONDS = 1,
+    MAX_PRESS_SECONDS = 10,
     MANUAL_CLICK_LOCK_SECONDS = 1.25,
     BRIEFING_CLICK_LOCK_SECONDS = 2.0,
     BRIEFING_LINE_DELAY = 0.50,
@@ -50,20 +54,48 @@ local Constants = {
     },
 }
 
-function Constants.GetCallTiming(call)
+local function finite(value)
+    return type(value) == "number" and value == value and value > -math.huge and value < math.huge
+end
+
+function Constants.NormalizeTimingLead(value)
+    if type(value) ~= "table" then
+        return Constants.PREPARE_SECONDS, Constants.PRESS_SECONDS, false
+    end
+    local prepare = tonumber(value.prepare)
+    local press = tonumber(value.press)
+    if not finite(prepare) or not finite(press)
+        or prepare < Constants.MIN_PREPARE_SECONDS or prepare > Constants.MAX_PREPARE_SECONDS
+        or press < Constants.MIN_PRESS_SECONDS or press > Constants.MAX_PRESS_SECONDS
+        or prepare <= press then
+        return Constants.PREPARE_SECONDS, Constants.PRESS_SECONDS, false
+    end
+    return prepare, press, true
+end
+
+function Constants.GetCallTiming(call, timingLead)
+    local configuredPrepare, configuredPress = Constants.NormalizeTimingLead(timingLead)
     local prepare = type(call) == "table" and call.prepareSeconds or nil
     local press = type(call) == "table" and call.pressSeconds or nil
-    if type(prepare) ~= "number" then prepare = Constants.PREPARE_SECONDS end
-    if type(press) ~= "number" then press = Constants.PRESS_SECONDS end
+    if not finite(prepare) then prepare = configuredPrepare end
+    if not finite(press) then press = configuredPress end
+
+    -- A malformed encounter override must never invert the warning windows.
+    -- Fall back to the validated user/default pair instead of guessing intent.
+    if prepare < Constants.MIN_PREPARE_SECONDS or prepare > Constants.MAX_PREPARE_SECONDS
+        or press < Constants.MIN_PRESS_SECONDS or press > Constants.MAX_PRESS_SECONDS
+        or prepare <= press then
+        return configuredPrepare, configuredPress
+    end
     return prepare, press
 end
 
-function Constants.GetCallState(call, remaining, actionable)
+function Constants.GetCallState(call, remaining, actionable, timingLead)
     if actionable == false or type(remaining) ~= "number" then
         return Constants.CallState.IDLE
     end
 
-    local prepare, press = Constants.GetCallTiming(call)
+    local prepare, press = Constants.GetCallTiming(call, timingLead)
     if remaining <= press then return Constants.CallState.PRESS end
     if remaining <= prepare then return Constants.CallState.PREPARE end
     return Constants.CallState.IDLE
