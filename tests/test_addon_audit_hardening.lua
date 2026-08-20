@@ -92,6 +92,8 @@ assert(baseline:find('"reviewedAt": "2026-08-20"', 1, true), "provider baseline 
 assert(baseline:find('"releaseTag": "12.1.4"', 1, true), "DBM stable release pin must be 12.1.4")
 assert(baseline:find("88ec781e9b213dbf7d9ca59164a584c2529d9bf9", 1, true),
     "DBM 12.1.4 release commit must stay pinned")
+assert(baseline:find("c8039ffb656fabcc2eb8a36c3a60643128487ba9", 1, true),
+    "DBM Timer callback baseline must stay pinned")
 assert(baseline:find("57ba051543cac3612e273bf2f02ca3b7258fa388", 1, true),
     "DBM shared timeline batch-routing baseline must stay pinned")
 assert(baseline:find("a0e89c8e31318fc8e934c94dc030afaeb792767e", 1, true),
@@ -104,10 +106,12 @@ assert(baseline:find("99a4b7fd2b8b79aac10be011e473527976a82bca", 1, true),
     "Coiled Altar DBM Normal+Heroic hardcoded/fallback baseline must stay pinned")
 assert(baseline:find("c82ba65249ce3b4d98293c9d299fbf8530fb9cd0", 1, true),
     "Sentinels DBM post-unlock Normal-routing baseline must stay pinned")
-assert(baseline:find("1c241c906fb1a415c280991e231f086479893aa9", 1, true),
-    "Lost Explorers DBM fallback-authority baseline must stay pinned")
+assert(baseline:find("cd0a4de36fefbcd9490df2a26be6322efcd400ce", 1, true),
+    "Lost Explorers DBM in-combat registration baseline must stay pinned")
 assert(baseline:find("bcfbcc0fea3c4e0c06336c0066accd3fdf33b0fc", 1, true),
     "Sszorak DBM post-unlock routing baseline must stay pinned")
+assert(baseline:find("4d9e26f894455743f66ae87908a043f6f8d6cb2f", 1, true),
+    "BigWigs BossPrototype callback baseline must stay pinned")
 assert(baseline:find("9c2fe74b4ac0fb297e8b6716e0d61965747a7ca5", 1, true),
     "Nek'zali BigWigs P2 Possession Barrage baseline must stay pinned")
 assert(baseline:find("9114bf6331598d210e20ffe3716e05842ccb43c6", 1, true),
