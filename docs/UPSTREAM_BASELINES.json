@@ -102,8 +102,8 @@
         {
           "ref": "master",
           "path": "TheVenomousAbyss/Nekzali.lua",
-          "blobSha": "9c2fe74b4ac0fb297e8b6716e0d61965747a7ca5",
-          "reason": "Non-Mythic Phase 2 Possession Barrage routing remains outside RLA's raidleader call identities; provider contract remains compatible"
+          "blobSha": "74f5521d9ec51d8e60973aaabe30207071b1f75f",
+          "reason": "The 2026-08-20 final aura-only pass adds stack-sound metadata to Hungering Pyre without changing timer/event identities; non-Mythic Possession Barrage remains outside RLA's raidleader call identities."
         },
         {
           "ref": "master",
@@ -115,7 +115,7 @@
           "ref": "master",
           "path": "TheVenomousAbyss/CoiledAltar.lua",
           "blobSha": "5dfaa8188133c61647fc717151ccf284b9fe1ed4",
-          "reason": "2026-08-20 evening source substantially expands Normal/Heroic timeline mappings and changes the Spiritcackle display rename by difficulty. The underlying spell keys for Toxic Deluge, Guillotine, Dreadmarch, Eternal Nightfall, Spiritcackle and Gloombomb remain stable, so RLA's encounter/spell/event identity matching remains compatible."
+          "reason": "2026-08-20 evening source substantially expands Normal/Heroic timeline mappings and changes Spiritcackle display text by difficulty; the final aura-only pass changes sound-on-dose metadata only. The underlying spell keys consumed by RLA remain stable."
         },
         {
           "ref": "master",
@@ -127,25 +127,25 @@
           "ref": "master",
           "path": "TheVenomousAbyss/Explorers.lua",
           "blobSha": "8176b9593c9242b3c5894c6632a4e27882c9c68a",
-          "reason": "2026-08-20 evening source adds additional Shell Spin and Throw Junk duration routes. This improves provider coverage without changing the Lost Explorers mechanic identities consumed by RLA."
+          "reason": "2026-08-20 evening source adds additional Shell Spin and Throw Junk duration routes; the later aura-only stack-sound edit does not alter RLA-consumed timer identities."
         },
         {
           "ref": "master",
           "path": "TheVenomousAbyss/Vashnik.lua",
           "blobSha": "6531b296d147499bc45d27f571c86a812274665b",
-          "reason": "2026-08-20 evening source replaces several Normal/Heroic duration mappings while retaining the same Imbibe, Plague Froth, Dripping Fangs, Adaptive Infection and Malignant Catalyst spell identities. RLA can therefore accept the improved direct bars without changing its call identity contract."
+          "reason": "2026-08-20 evening source replaces several Normal/Heroic duration mappings; the later aura-only metadata edit leaves the Imbibe, Plague Froth, Dripping Fangs, Adaptive Infection and Malignant Catalyst identities unchanged."
         },
         {
           "ref": "master",
           "path": "TheVenomousAbyss/Sszorak.lua",
-          "blobSha": "cea3b7fc007c920a1ddbbb49fa4edf50662d0529",
-          "reason": "Sszorak timer and spell identities remain compatible"
+          "blobSha": "f0e6b961c9801e0450d34a64b8f64cde82d95ffd",
+          "reason": "The 2026-08-20 final aura-only pass changes aura labels/stack-sound metadata; Sszorak timer and spell identities consumed by RLA remain compatible."
         },
         {
           "ref": "master",
           "path": "TheVenomousAbyss/Ulatek.lua",
-          "blobSha": "cce9ace533a7eca701f9a5f7d5151a87cc0fc35b",
-          "reason": "2026-08-20 source fixes Ula'tek phase-3 initial timer handling, enables the live mob ID and adjusts custom-bar completion details. RLA deliberately keeps every Ula'tek raidleader call manual-only, so provider changes cannot promote PREPARE/PRESS/TTS without separate live evidence and a reviewed product decision."
+          "blobSha": "2db5f87a85d5868a0800fa63ca4d9ff79f08eec4",
+          "reason": "2026-08-20 source fixes Ula'tek phase-3 initial timer handling and the final aura-only pass adds stack-sound metadata. RLA deliberately keeps every Ula'tek raidleader call manual-only, so provider changes cannot promote PREPARE/PRESS/TTS without separate live evidence and a reviewed product decision."
         }
       ]
     }
