@@ -74,6 +74,9 @@ function Constants.NormalizeTimingLead(value)
 end
 
 function Constants.GetCallTiming(call, timingLead)
+    if timingLead == nil and type(_G.RaidLeadAssistDB) == "table" then
+        timingLead = _G.RaidLeadAssistDB.timingLead
+    end
     local configuredPrepare, configuredPress = Constants.NormalizeTimingLead(timingLead)
     local prepare = type(call) == "table" and call.prepareSeconds or nil
     local press = type(call) == "table" and call.pressSeconds or nil
