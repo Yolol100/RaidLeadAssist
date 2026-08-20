@@ -4,6 +4,7 @@ local Constants = ns:GetModule("Core.Constants")
 local Database = ns:GetModule("Core.Database")
 local EventBus = ns:GetModule("Core.EventBus")
 local Presets = ns:GetModule("Services.AssignmentPresetService")
+local PersonalAssignments = ns:GetModule("Services.PersonalAssignmentService")
 local Encounter = ns:GetModule("Services.EncounterService")
 local ActionButton = ns:GetModule("UI.ActionButton")
 local UI = ns:GetModule("UI.MainFrame")
@@ -103,6 +104,25 @@ local function printPresetList()
     end
 end
 
+local function printPersonalAssignments()
+    local playerName, subgroup = PersonalAssignments:ResolvePlayer()
+    if not playerName then
+        ns:Print("Personal assignments unavailable: player identity is not readable.")
+        return
+    end
+
+    local lines = PersonalAssignments:GetLines(App.activeBossKey, App.activeDifficultyKey, playerName, subgroup)
+    local groupText = subgroup and (" | group " .. subgroup) or ""
+    ns:Print("Personal assignments: " .. playerName .. groupText)
+    if #lines == 0 then
+        ns:Print("No direct player/group assignments for this boss/difficulty.")
+        return
+    end
+    for index = 1, #lines do
+        ns:Print(("%d. %s: %s"):format(index, lines[index].label, lines[index].value))
+    end
+end
+
 local function handlePreset(argument)
     local action, name = argument:match("^(%S*)%s*(.-)$")
     action = (action or ""):lower()
@@ -155,6 +175,9 @@ local function install()
             return
         elseif command == "preset" then
             handlePreset(argument)
+            return
+        elseif command == "my" then
+            printPersonalAssignments()
             return
         end
         previousSlash(message)
