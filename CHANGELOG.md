@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.0-beta.59 — 2026-08-20
+
+- Add a local-only `PREVIEW` action to the existing Assignments footer, using the same `ActionButton`, theme, spacing and AssignmentFrame ownership instead of a parallel UI or state model.
+- Preview the current unsaved assignment draft only after full boss/difficulty validation and required-field checks, enforcing the same Raid Warning line/plan budgets without saving, advancing rotations or sending raid chat.
+- Keep the Method Raid Tools comparison as feature-pattern research only: no MRT code or live-session/network synchronization is copied, so RLA retains its no-addon-networking/privacy boundary.
+- Add regressions for preview placement/style/idempotency/local-only behavior and for current BigWigs Lost Explorers isolation: `Fling Fish` (1295817) cannot alias RLA's `Final Ascension` (1292779) fish-order call while `Throw Junk` (1291933) remains the crates call.
+- Re-review current BigWigs master on 2026-08-20 after the new Lost Explorers Fling Fish/count-reset change and the unrelated `GetAuraType`/`GetAuraMechanic` core helpers; refresh both watched fingerprints after confirming the RLA timer callback contract and call identities remain compatible. Current DBM master still changes only its displayed 12.1.5 alpha identity beyond the reviewed stable 12.1.4 contract.
+- Add four unique beta.59 acceptance controls on top of the 172-point master contract, bringing the controlled source/release audit universe to 176 unique controls without counting permutations as new checks.
+
 ## 0.9.0-beta.58 — 2026-08-20
 
 - Add a deterministic SPDX 2.3 SBOM for the exact runtime-only release ZIP, including per-file hashes, package verification code and the ZIP SHA-256 digest.
@@ -120,7 +129,7 @@
 
 ## 0.9.0-beta.45 — 2026-08-17
 
-- Rebuild Vashnik around the raid-lead essentials: `KILL ADDS`, staggered Fire add deaths, Shadow swirlies, Siphon stacking, Froth positioning and difficulty-specific Bile/Tumor handling.
+- Rebuild Vashnik around the raid-lead essentials: `KILL ADS`, staggered Fire add deaths, Shadow swirlies, Siphon stacking, Froth positioning and difficulty-specific Bile/Tumor handling.
 - Remove all Vashnik tank calls and keep the pre-pull plan focused on player actions.
 - Lock the requested `FLAME > SHADOW > SHADOW > BLOOD > BLOOD > FLAME` route while stating that every Imbibe actually draws from the two nearest fountains.
 - Correct the source boundary for Exploding Infection: `BIG CIRCLE > MOVE FAR OUT` remains present on Normal, Heroic and Mythic; `SOAK BILE` remains Heroic/Mythic-only.
