@@ -61,10 +61,17 @@ local function isFiniteNumber(value)
     return type(value) == "number" and value == value and value > -math.huge and value < math.huge
 end
 
+local function numeric(value)
+    if Util.IsSecret(value) then return nil end
+    if type(value) == "number" then return value end
+    if type(value) == "string" then return tonumber(value) end
+    return nil
+end
+
 local function normalizeTimingLead(value)
     if type(value) ~= "table" then return Util.CopyDefaults({}, DEFAULTS.timingLead) end
-    local prepare = tonumber(value.prepare)
-    local press = tonumber(value.press)
+    local prepare = numeric(value.prepare)
+    local press = numeric(value.press)
     if not isFiniteNumber(prepare) or not isFiniteNumber(press)
         or prepare < 2 or prepare > 30
         or press < 1 or press > 10
