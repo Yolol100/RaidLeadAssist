@@ -1,5 +1,6 @@
 local _, ns = ...
 
+local Constants = ns:GetModule("Core.Constants")
 local Registry = ns:GetModule("Encounters.Registry")
 local SetupRegistry = ns:GetModule("Encounters.SetupRegistry")
 local Messages = ns:GetModule("Services.MessageService")
@@ -8,6 +9,8 @@ local Setup = ns:GetModule("Services.SetupService")
 local Roster = ns:GetModule("Services.RosterService")
 local Timeline = ns:GetModule("Services.TimelineService")
 local App = ns:GetModule("Core.App")
+
+local Readiness = {}
 
 local function normalizeRosterName(name)
     if type(name) ~= "string" then return nil end
@@ -72,8 +75,8 @@ local function timedProviderCoverage(profile)
     return covered, total
 end
 
-function App:GetReadinessState()
-    local profile = Registry:GetProfile(self.activeBossKey, self.activeDifficultyKey)
+function Readiness:GetState()
+    local profile = Registry:GetProfile(App.activeBossKey, App.activeDifficultyKey)
     if not profile then
         return {
             ready = false,
@@ -92,26 +95,26 @@ function App:GetReadinessState()
         }
     end
 
-    local missingRequired = Assignments:GetMissingRequired(self.activeBossKey, self.activeDifficultyKey)
-    local rosterMissing = assignedPlayersNotInRoster(self.activeBossKey, self.activeDifficultyKey)
-    local customCurrentness = Messages:GetCustomCurrentness(self.activeBossKey, self.activeDifficultyKey)
+    local missingRequired = Assignments:GetMissingRequired(App.activeBossKey, App.activeDifficultyKey)
+    local rosterMissing = assignedPlayersNotInRoster(App.activeBossKey, App.activeDifficultyKey)
+    local customCurrentness = Messages:GetCustomCurrentness(App.activeBossKey, App.activeDifficultyKey)
     local covered, timed = timedProviderCoverage(profile)
-    local setupRequired = SetupRegistry:HasSetup(self.activeBossKey, self.activeDifficultyKey)
-    local setupReady = Setup:IsReady(self.activeBossKey, self.activeDifficultyKey)
-    local worldMarkers, targetMarkers, prepSteps = SetupRegistry:GetCounts(self.activeBossKey, self.activeDifficultyKey)
+    local setupRequired = SetupRegistry:HasSetup(App.activeBossKey, App.activeDifficultyKey)
+    local setupReady = Setup:IsReady(App.activeBossKey, App.activeDifficultyKey)
+    local worldMarkers, targetMarkers, prepSteps = SetupRegistry:GetCounts(App.activeBossKey, App.activeDifficultyKey)
 
     local states = {}
     if #missingRequired > 0 then states[#states + 1] = "CHECK ASSIGNMENTS" end
     if #rosterMissing > 0 then states[#states + 1] = "CHECK ROSTER" end
     if setupRequired and not setupReady then states[#states + 1] = "CHECK SETUP" end
     if customCurrentness == "review" then states[#states + 1] = "CHECK CUSTOM TEXT" end
-    if timed > 0 and self.db.automaticTimingEnabled ~= false and Timeline:GetProviderSummary() == "" then
+    if timed > 0 and App.db.automaticTimingEnabled ~= false and Timeline:GetProviderSummary() == "" then
         states[#states + 1] = "CHECK PROVIDER DRIFT"
     end
 
     local ready = #states == 0
     if ready then
-        states[1] = (timed > 0 and self.db.automaticTimingEnabled ~= false) and "READY TIMED" or "READY MANUAL"
+        states[1] = (timed > 0 and App.db.automaticTimingEnabled ~= false) and "READY TIMED" or "READY MANUAL"
     end
 
     return {
@@ -135,7 +138,7 @@ local originalPrintDoctor = App.PrintDoctor
 function App:PrintDoctor()
     originalPrintDoctor(self)
 
-    local state = self:GetReadinessState()
+    local state = Readiness:GetState()
     ns:Print("Readiness: " .. table.concat(state.states, " | "))
     ns:Print(("Assignments: required=%s | roster-current=%s"):format(
         #state.missingRequired == 0 and "complete" or ("missing " .. #state.missingRequired),
@@ -150,6 +153,8 @@ function App:PrintDoctor()
     ))
     ns:Print("Custom text: " .. state.customCurrentness)
     ns:Print(("Timed provider coverage observed: %d/%d call(s)"):format(state.covered, state.timed))
+    local prepare, press = Constants.GetCallTiming(nil, self.db and self.db.timingLead)
+    ns:Print(("Lead windows: PREPARE %.1fs | PRESS %.1fs"):format(prepare, press))
 end
 
-ns:RegisterModule("Core.ReadinessIntegration", {})
+ns:RegisterModule("Core.ReadinessIntegration", Readiness)
