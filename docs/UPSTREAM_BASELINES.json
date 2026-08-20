@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-08-19",
+  "reviewedAt": "2026-08-20",
   "wowInterface": 120100,
   "raidUnlock": {
     "eu": "2026-08-19",
@@ -17,7 +17,7 @@
           "ref": "master",
           "path": "DBM-Core/modules/objects/Timer.lua",
           "blobSha": "c8039ffb656fabcc2eb8a36c3a60643128487ba9",
-          "reason": "RLA consumes DBM timer callback contracts and authority state; the Timer contract remains compatible after the 2026-08-19 day-one review"
+          "reason": "RLA consumes DBM timer callback contracts and authority state; the Timer contract remains compatible after the 2026-08-20 re-review"
         },
         {
           "ref": "master",
@@ -91,7 +91,7 @@
           "ref": "master",
           "path": "Core/BossPrototype.lua",
           "blobSha": "87aad72f6014978dfe8e9173b9c7e98e62665c19",
-          "reason": "RLA consumes BigWigs Timer/CastTimer/StartBar contracts; the 2026-08-19 19:11 UTC RegisterBossEvent change adds secret-GUID/callback handling outside those timer contracts, which were re-reviewed as unchanged. Direct Timer still exposes isApproximate and the nil-module Blizzard StartBar bridge still does not"
+          "reason": "RLA consumes BigWigs Timer/CastTimer/StartBar contracts; the reviewed RegisterBossEvent secret-GUID/callback handling remains outside those timer contracts. Direct Timer still exposes isApproximate and the nil-module Blizzard StartBar bridge still does not."
         },
         {
           "ref": "master",
@@ -144,8 +144,8 @@
         {
           "ref": "master",
           "path": "TheVenomousAbyss/Ulatek.lua",
-          "blobSha": "b262cf1e1d7af9d5f48c8e4575ac853588ee1e72",
-          "reason": "Current day-one Ula'tek source now contains substantial difficulty-specific Encounter Timeline handlers and custom bars. RLA deliberately keeps every Ula'tek raidleader call manual-only; provider traffic may be observed diagnostically but must not promote PREPARE/PRESS/TTS without separate live evidence and a reviewed product decision."
+          "blobSha": "cce9ace533a7eca701f9a5f7d5151a87cc0fc35b",
+          "reason": "2026-08-20 upstream source fixes Ula'tek phase-3 initial timer handling, enables the live mob ID, adjusts several message/bar completion details and remains custom-timeline based. RLA deliberately keeps every Ula'tek raidleader call manual-only, so these provider changes may be observed diagnostically but cannot promote PREPARE/PRESS/TTS without separate live evidence and a reviewed product decision."
         }
       ]
     }
