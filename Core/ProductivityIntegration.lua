@@ -1,4 +1,4 @@
-local _, ns = ...
+local addonName, ns = ...
 
 local Constants = ns:GetModule("Core.Constants")
 local Database = ns:GetModule("Core.Database")
@@ -7,10 +7,12 @@ local Presets = ns:GetModule("Services.AssignmentPresetService")
 local Encounter = ns:GetModule("Services.EncounterService")
 local ActionButton = ns:GetModule("UI.ActionButton")
 local UI = ns:GetModule("UI.MainFrame")
+local Readiness = ns:GetModule("Core.ReadinessIntegration")
 local App = ns:GetModule("Core.App")
 
 local Integration = {
     readinessButton = nil,
+    installed = false,
 }
 
 local function canEditPlan()
@@ -26,8 +28,8 @@ end
 
 local function refreshReadinessButton()
     local button = Integration.readinessButton
-    if not button or type(App.GetReadinessState) ~= "function" then return end
-    local state = App:GetReadinessState()
+    if not button or not Readiness or type(Readiness.GetState) ~= "function" then return end
+    local state = Readiness:GetState()
     button:SetActionText(state.label or "CHECK")
     button:SetActionVariant(state.ready and "primary" or "secondary")
     button.readinessState = state
@@ -50,7 +52,7 @@ local function attachReadinessButton()
     end)
     button:HookScript("OnEnter", function(control)
         refreshReadinessButton()
-        local state = control.readinessState or App:GetReadinessState()
+        local state = control.readinessState or Readiness:GetState()
         GameTooltip:SetOwner(control, "ANCHOR_TOP")
         GameTooltip:SetText(state.ready and "Raid plan readiness: READY" or "Raid plan readiness: CHECK", 0.82, 0.86, 0.82, 1)
         GameTooltip:AddLine(table.concat(state.states or {}, " | "), 0.60, 0.72, 0.64, true)
@@ -135,20 +137,13 @@ local function handlePreset(argument)
     return true
 end
 
-local originalPrintDoctor = App.PrintDoctor
-function App:PrintDoctor()
-    originalPrintDoctor(self)
-    local prepare, press = Constants.GetCallTiming(nil, self.db and self.db.timingLead)
-    ns:Print(("Lead windows: PREPARE %.1fs | PRESS %.1fs"):format(prepare, press))
-end
+local function install()
+    if Integration.installed or type(App.db) ~= "table" then return end
+    local previousSlash = SlashCmdList and SlashCmdList.RAIDLEADASSIST or nil
+    if type(previousSlash) ~= "function" then return end
 
-local originalInitialize = App.Initialize
-function App:Initialize(...)
-    originalInitialize(self, ...)
-    Presets:Initialize(self.db)
+    Presets:Initialize(App.db)
     attachReadinessButton()
-
-    local previousSlash = SlashCmdList.RAIDLEADASSIST
     SlashCmdList.RAIDLEADASSIST = function(message)
         local command, argument = "", ""
         if type(message) == "string" then
@@ -161,10 +156,10 @@ function App:Initialize(...)
         elseif command == "preset" then
             handlePreset(argument)
             return
-        elseif previousSlash then
-            previousSlash(message)
         end
+        previousSlash(message)
     end
+    Integration.installed = true
 end
 
 for _, eventName in ipairs({
@@ -177,5 +172,17 @@ for _, eventName in ipairs({
 }) do
     EventBus:On(eventName, Integration, function() refreshReadinessButton() end)
 end
+
+local installer = CreateFrame("Frame")
+installer:RegisterEvent("ADDON_LOADED")
+installer:SetScript("OnEvent", function(frame, _, loadedAddon)
+    if loadedAddon ~= addonName then return end
+    frame:UnregisterEvent("ADDON_LOADED")
+    if C_Timer and type(C_Timer.After) == "function" then
+        C_Timer.After(0, install)
+    else
+        install()
+    end
+end)
 
 ns:RegisterModule("Core.ProductivityIntegration", Integration)
