@@ -8,6 +8,7 @@ end
 local mainFrame = read("UI/MainFrame.lua")
 local app = read("Core/App.lua")
 local timeline = read("UI/TimelineBar.lua")
+local productivity = read("Core/ProductivityIntegration.lua")
 local toc = read("RaidLeadAssist.toc")
 
 local function contains(text, needle)
@@ -17,6 +18,12 @@ end
 -- Primary utility controls should not be smaller than the project's compact 24px-equivalent target.
 assert(contains(mainFrame, 'frame.settingsButton:SetSize(62, 26)'),
     "Settings control should use an easier compact hit target")
+assert(contains(productivity, 'width = 60') and contains(productivity, 'height = 24'),
+    "Readiness control should meet the compact hit-target contract")
+assert(contains(productivity, 'state.ready and "READY"') or contains(productivity, 'state.label or "CHECK"'),
+    "Raid readiness should be visible from the main panel rather than doctor-only")
+assert(contains(productivity, 'Click for the full doctor report.'),
+    "readiness status must explain how to open the detailed report")
 
 -- The plan action is only valid before the pull; its label should say so before users click it.
 assert(contains(mainFrame, 'SetText("SEND PRE-PULL PLAN")'),
@@ -34,7 +41,17 @@ assert(contains(app, 'UI.timeline:SetIdle("MANUAL CALLS ONLY")'),
 assert(contains(timeline, 'function TimelineBar:SetIdle(label)'),
     "Timeline idle state should support a contextual label")
 
--- These behaviors are canonical now; the runtime should not depend on late monkey-patch files.
+-- Productivity tools attach after the canonical App bootstrap; they must not race ADDON_LOADED initialization.
+assert(contains(productivity, 'C_Timer.After(0, install)'),
+    "productivity controls should defer until the canonical App initialization has completed")
+assert(contains(productivity, '/rla preset list | save <name> | load <name> | delete <name>'),
+    "assignment preset workflow should remain discoverable")
+assert(contains(productivity, 'command == "my"') and contains(productivity, '/rla my'),
+    "personal assignment view should be both implemented and discoverable")
+assert(contains(toc, "Services/PersonalAssignmentService.lua"),
+    "personal assignment service must be part of the audited runtime inventory")
+
+-- These behaviors are canonical now; the runtime should not depend on obsolete enhancement layers.
 assert(not contains(toc, "UI/MainFrameEnhancements.lua"),
     "Main-frame usability behavior should live in UI/MainFrame.lua")
 assert(not contains(toc, "Core/TimingStatusIntegration.lua"),
@@ -42,4 +59,4 @@ assert(not contains(toc, "Core/TimingStatusIntegration.lua"),
 assert(not contains(toc, "Encounters/VenomousAbyss/UlatekAssignmentPolicy.lua"),
     "Ula'tek assignment policy should live in AssignmentRegistry.lua")
 
-print("ok - raid-leader surface exposes pre-pull, movement, compact target and manual-timing states canonically")
+print("ok - raid-leader surface exposes readiness, presets, personal assignments, pre-pull, movement and manual-timing states safely")

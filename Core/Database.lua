@@ -3,7 +3,7 @@ local _, ns = ...
 local Util = ns:GetModule("Core.Util")
 
 local Database = {
-    SCHEMA_VERSION = 5,
+    SCHEMA_VERSION = 6,
     newerSchemaDetected = false,
 }
 
@@ -36,14 +36,19 @@ local function cloneValue(value, seen)
 end
 
 local DEFAULTS = {
-    schemaVersion = 5,
+    schemaVersion = 6,
     selectedBossKey = "nekzali",
     selectedDifficultyKey = "heroic",
     audioEnabled = true,
     automaticTimingEnabled = true,
+    timingLead = {
+        prepare = 5,
+        press = 3,
+    },
     forceShown = false,
     customMessages = {},
     assignments = {},
+    assignmentPresets = {},
     position = {
         point = "CENTER",
         relativePoint = "CENTER",
@@ -51,6 +56,30 @@ local DEFAULTS = {
         y = 40,
     },
 }
+
+local function isFiniteNumber(value)
+    return type(value) == "number" and value == value and value > -math.huge and value < math.huge
+end
+
+local function numeric(value)
+    if Util.IsSecret(value) then return nil end
+    if type(value) == "number" then return value end
+    if type(value) == "string" then return tonumber(value) end
+    return nil
+end
+
+local function normalizeTimingLead(value)
+    if type(value) ~= "table" then return Util.CopyDefaults({}, DEFAULTS.timingLead) end
+    local prepare = numeric(value.prepare)
+    local press = numeric(value.press)
+    if not isFiniteNumber(prepare) or not isFiniteNumber(press)
+        or prepare < 2 or prepare > 30
+        or press < 1 or press > 10
+        or prepare <= press then
+        return Util.CopyDefaults({}, DEFAULTS.timingLead)
+    end
+    return { prepare = prepare, press = press }
+end
 
 function Database:Initialize()
     local stored = type(RaidLeadAssistDB) == "table" and RaidLeadAssistDB or {}
@@ -79,9 +108,6 @@ function Database:Migrate()
     end
 
     local position = self.data.position
-    local function isFiniteNumber(value)
-        return type(value) == "number" and value == value and value > -math.huge and value < math.huge
-    end
     if not VALID_POINTS[position.point] or not VALID_POINTS[position.relativePoint]
         or not isFiniteNumber(position.x) or not isFiniteNumber(position.y) then
         self.data.position = Util.CopyDefaults({}, DEFAULTS.position)
@@ -91,6 +117,7 @@ function Database:Migrate()
     if type(self.data.automaticTimingEnabled) ~= "boolean" then
         self.data.automaticTimingEnabled = DEFAULTS.automaticTimingEnabled
     end
+    self.data.timingLead = normalizeTimingLead(self.data.timingLead)
     if type(self.data.forceShown) ~= "boolean" then self.data.forceShown = DEFAULTS.forceShown end
     if type(self.data.selectedBossKey) ~= "string" then self.data.selectedBossKey = DEFAULTS.selectedBossKey end
     if not VALID_DIFFICULTIES[self.data.selectedDifficultyKey] then
@@ -98,6 +125,7 @@ function Database:Migrate()
     end
     if type(self.data.customMessages) ~= "table" then self.data.customMessages = {} end
     if type(self.data.assignments) ~= "table" then self.data.assignments = {} end
+    if type(self.data.assignmentPresets) ~= "table" then self.data.assignmentPresets = {} end
 
     if version < 2 then
         self.data.customMessages = type(self.data.customMessages) == "table" and self.data.customMessages or {}
@@ -119,6 +147,11 @@ function Database:Migrate()
 
     if version < 4 then
         self.data.assignments = type(self.data.assignments) == "table" and self.data.assignments or {}
+    end
+
+    if version < 6 then
+        self.data.timingLead = normalizeTimingLead(self.data.timingLead)
+        self.data.assignmentPresets = type(self.data.assignmentPresets) == "table" and self.data.assignmentPresets or {}
     end
 
     if not self.newerSchemaDetected then

@@ -209,11 +209,16 @@ jobs:
           version="$(sed -n 's/^## Version:[[:space:]]*//p' RaidLeadAssist.toc | head -n1)"
           test -n "$version"
           notes="$(mktemp)"
-          awk -v prefix="## ${version} " '
-            index($0, prefix) == 1 { active=1; next }
-            active && /^## / { exit }
-            active { print }
-          ' CHANGELOG.md > "$notes"
+          release_notes="docs/RELEASE-NOTES-${version}.md"
+          if [ -f "$release_notes" ]; then
+            cat "$release_notes" > "$notes"
+          else
+            awk -v prefix="## ${version} " '
+              index($0, prefix) == 1 { active=1; next }
+              active && /^## / { exit }
+              active { print }
+            ' CHANGELOG.md > "$notes"
+          fi
           test -s "$notes"
           if gh release view "$version" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             existing_sha="$(gh api "repos/$GITHUB_REPOSITORY/commits/$version" --jq .sha)"

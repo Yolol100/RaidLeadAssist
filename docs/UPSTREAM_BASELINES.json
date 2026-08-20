@@ -58,8 +58,8 @@
         {
           "ref": "master",
           "path": "DBM-Raids-Midnight/TheVenomousAbyss/TheLostExplorers.lua",
-          "blobSha": "1c241c906fb1a415c280991e231f086479893aa9",
-          "reason": "Fresh Normal evidence rebuilt hardcoded routing; Heroic/Mythic deliberately fall back to Blizzard until equivalent logs exist, so RLA downgrades DBM timing unless DBM_IgnoreBlizzAPI proves hardcoded authority"
+          "blobSha": "cd0a4de36fefbcd9490df2a26be6322efcd400ce",
+          "reason": "2026-08-20 source switches Lost Explorers UNIT_FLAGS registration to RegisterSafeEventsInCombat. The change is encounter-lifecycle registration only; RLA's consumed timer identities and DBM hardcoded-versus-Blizzard authority contract remain unchanged."
         },
         {
           "ref": "master",
@@ -90,8 +90,8 @@
         {
           "ref": "master",
           "path": "Core/BossPrototype.lua",
-          "blobSha": "87aad72f6014978dfe8e9173b9c7e98e62665c19",
-          "reason": "RLA consumes BigWigs Timer/CastTimer/StartBar contracts; the reviewed RegisterBossEvent secret-GUID/callback handling remains outside those timer contracts. Direct Timer still exposes isApproximate and the nil-module Blizzard StartBar bridge still does not."
+          "blobSha": "4d9e26f894455743f66ae87908a043f6f8d6cb2f",
+          "reason": "2026-08-20 source adds GetAuraType/GetAuraMechanic metadata helpers. RLA consumes Timer/CastTimer/StartBar contracts, not those aura helpers; direct Timer still exposes isApproximate and the nil-module Blizzard StartBar bridge still does not."
         },
         {
           "ref": "master",
