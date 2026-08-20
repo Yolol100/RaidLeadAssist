@@ -43,6 +43,7 @@ local function attachReadinessButton()
         variant = "secondary",
     })
     button:SetPoint("RIGHT", UI.frame.settingsButton, "LEFT", -4, 0)
+    if UI.frame.drag then button:SetFrameLevel(UI.frame.drag:GetFrameLevel() + 1) end
     button:SetScript("OnClick", function()
         refreshReadinessButton()
         App:PrintDoctor()
@@ -149,12 +150,16 @@ function App:Initialize(...)
 
     local previousSlash = SlashCmdList.RAIDLEADASSIST
     SlashCmdList.RAIDLEADASSIST = function(message)
-        local command, argument = type(message) == "string" and message:match("^(%S*)%s*(.-)$") or "", ""
+        local command, argument = "", ""
+        if type(message) == "string" then
+            command, argument = message:match("^(%S*)%s*(.-)$")
+        end
         command = (command or ""):lower()
-        if command == "timing" and setTimingLead(argument or "") then
+        argument = argument or ""
+        if command == "timing" and setTimingLead(argument) then
             return
         elseif command == "preset" then
-            handlePreset(argument or "")
+            handlePreset(argument)
             return
         elseif previousSlash then
             previousSlash(message)
