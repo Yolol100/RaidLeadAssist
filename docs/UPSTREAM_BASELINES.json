@@ -90,8 +90,8 @@
         {
           "ref": "master",
           "path": "Core/BossPrototype.lua",
-          "blobSha": "87aad72f6014978dfe8e9173b9c7e98e62665c19",
-          "reason": "RLA consumes BigWigs Timer/CastTimer/StartBar contracts; the reviewed RegisterBossEvent secret-GUID/callback handling remains outside those timer contracts. Direct Timer still exposes isApproximate and the nil-module Blizzard StartBar bridge still does not."
+          "blobSha": "4d9e26f894455743f66ae87908a043f6f8d6cb2f",
+          "reason": "RLA consumes BigWigs Timer/CastTimer/StartBar contracts. The 2026-08-20 GetAuraType/GetAuraMechanic change only adds aura metadata accessors and does not alter those timer callback shapes; Direct Timer still exposes isApproximate and the nil-module Blizzard StartBar bridge still does not."
         },
         {
           "ref": "master",
@@ -126,8 +126,8 @@
         {
           "ref": "master",
           "path": "TheVenomousAbyss/Explorers.lua",
-          "blobSha": "a80d8800e7794947638d3b2899478c78b41bda69",
-          "reason": "Live-launch Lost Explorers timer refinements reviewed; crate, fish and Mighty Thud identities remain compatible"
+          "blobSha": "110250dccc8d7faf0828d1267c41df90f07669e9",
+          "reason": "2026-08-20 source adds a dedicated Fling Fish bar and central count resets around empower transitions. RLA deliberately keys the fish-order raidleader call to Final Ascension (1292779), not Fling Fish (1295817), and a regression proves the new bar cannot alias that call while Throw Junk (1291933) remains mapped to crates."
         },
         {
           "ref": "master",
