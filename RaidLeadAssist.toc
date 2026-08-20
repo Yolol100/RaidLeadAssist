@@ -35,6 +35,7 @@ Services/AudioService.lua
 Services/RosterService.lua
 Services/AssignmentService.lua
 Services/AssignmentPresetService.lua
+Services/PersonalAssignmentService.lua
 Services/SetupService.lua
 Services/Providers/BigWigsProvider.lua
 Services/Providers/DBMProvider.lua
