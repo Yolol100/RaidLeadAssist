@@ -62,6 +62,24 @@ assert(select(2, driftWorkflow:gsub("actions/checkout@", "")) == 1,
 assert(select(2, driftWorkflow:gsub("persist%-credentials:%s*false", "")) == 1,
     "upstream drift checkout must disable persisted Git credentials")
 
+local codeowners = read(".github/CODEOWNERS")
+for _, marker in ipairs({
+    "/.github/CODEOWNERS @Yolol100",
+    "/.github/dependabot.yml @Yolol100",
+    "/.github/workflows/ @Yolol100",
+    "/scripts/ @Yolol100",
+    "/tests/ @Yolol100",
+    "/Services/Providers/ @Yolol100",
+    "/Services/TimelineService.lua @Yolol100",
+    "/RaidLeadAssist.toc @Yolol100",
+    "/SECURITY.md @Yolol100",
+}) do
+    assert(codeowners:find(marker, 1, true), "missing critical CODEOWNER boundary: " .. marker)
+end
+local dependabot = read(".github/dependabot.yml")
+assert(dependabot:find("package%-ecosystem:%s*github%-actions"), "GitHub Actions Dependabot must remain enabled")
+assert(dependabot:find("interval:%s*weekly"), "GitHub Actions Dependabot must remain weekly")
+
 local baseline = read("docs/UPSTREAM_BASELINES.json")
 for _, path in ipairs({
     "BossMod.lua", "Nekzali.lua", "TwinFangs.lua", "CoiledAltar.lua", "Sentinels.lua", "Explorers.lua", "Vashnik.lua", "Sszorak.lua", "Ulatek.lua",
@@ -70,6 +88,7 @@ for _, path in ipairs({
 }) do
     assert(baseline:find(path, 1, true), "missing provider watch: " .. path)
 end
+assert(baseline:find('"reviewedAt": "2026-08-20"', 1, true), "provider baseline review date must stay current")
 assert(baseline:find('"releaseTag": "12.1.4"', 1, true), "DBM stable release pin must be 12.1.4")
 assert(baseline:find("88ec781e9b213dbf7d9ca59164a584c2529d9bf9", 1, true),
     "DBM 12.1.4 release commit must stay pinned")
@@ -97,12 +116,16 @@ assert(baseline:find("ca995e7b0fc55414ff1deb59f67e11ae99b242a1", 1, true),
     "Twin Fangs BigWigs Submerge baseline must stay pinned")
 assert(baseline:find("67d6c66d1abdd47d2404801f8488d6a6468c9d28", 1, true),
     "Coiled Altar BigWigs live-launch baseline must stay pinned to the reviewed source")
-assert(baseline:find("b262cf1e1d7af9d5f48c8e4575ac853588ee1e72", 1, true),
-    "Ula'tek BigWigs live timeline-event/custom-bar baseline must stay pinned")
+assert(baseline:find("cce9ace533a7eca701f9a5f7d5151a87cc0fc35b", 1, true),
+    "Ula'tek BigWigs post-launch phase-3/custom-bar baseline must stay pinned")
 
 local security = read("SECURITY.md")
 assert(security:find("RaidLeadAssist.toc", 1, true))
 assert(security:find("audited runtime files referenced by that TOC", 1, true))
+assert(security:find("Private Vulnerability Reporting", 1, true),
+    "security policy must document the private vulnerability-reporting path without claiming it is enabled")
+assert(security:find("must be verified independently", 1, true),
+    "repository-native security settings must remain evidence-gated")
 assert(not security:find("audited TOC runtime plus README", 1, true))
 
 print("ok - addon audit hardening contracts are locked")
