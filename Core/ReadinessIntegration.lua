@@ -72,12 +72,25 @@ local function timedProviderCoverage(profile)
     return covered, total
 end
 
-local originalPrintDoctor = App.PrintDoctor
-function App:PrintDoctor()
-    originalPrintDoctor(self)
-
+function App:GetReadinessState()
     local profile = Registry:GetProfile(self.activeBossKey, self.activeDifficultyKey)
-    if not profile then return end
+    if not profile then
+        return {
+            ready = false,
+            label = "CHECK",
+            states = { "CHECK PROFILE" },
+            missingRequired = {},
+            rosterMissing = {},
+            customCurrentness = "unknown",
+            covered = 0,
+            timed = 0,
+            setupRequired = false,
+            setupReady = false,
+            worldMarkers = 0,
+            targetMarkers = 0,
+            prepSteps = 0,
+        }
+    end
 
     local missingRequired = Assignments:GetMissingRequired(self.activeBossKey, self.activeDifficultyKey)
     local rosterMissing = assignedPlayersNotInRoster(self.activeBossKey, self.activeDifficultyKey)
@@ -96,24 +109,47 @@ function App:PrintDoctor()
         states[#states + 1] = "CHECK PROVIDER DRIFT"
     end
 
-    if #states == 0 then
+    local ready = #states == 0
+    if ready then
         states[1] = (timed > 0 and self.db.automaticTimingEnabled ~= false) and "READY TIMED" or "READY MANUAL"
     end
 
-    ns:Print("Readiness: " .. table.concat(states, " | "))
+    return {
+        ready = ready,
+        label = ready and "READY" or "CHECK",
+        states = states,
+        missingRequired = missingRequired,
+        rosterMissing = rosterMissing,
+        customCurrentness = customCurrentness,
+        covered = covered,
+        timed = timed,
+        setupRequired = setupRequired,
+        setupReady = setupReady,
+        worldMarkers = worldMarkers,
+        targetMarkers = targetMarkers,
+        prepSteps = prepSteps,
+    }
+end
+
+local originalPrintDoctor = App.PrintDoctor
+function App:PrintDoctor()
+    originalPrintDoctor(self)
+
+    local state = self:GetReadinessState()
+    ns:Print("Readiness: " .. table.concat(state.states, " | "))
     ns:Print(("Assignments: required=%s | roster-current=%s"):format(
-        #missingRequired == 0 and "complete" or ("missing " .. #missingRequired),
-        #rosterMissing == 0 and "yes" or ("no; " .. #rosterMissing .. " assigned player(s) not currently in raid")
+        #state.missingRequired == 0 and "complete" or ("missing " .. #state.missingRequired),
+        #state.rosterMissing == 0 and "yes" or ("no; " .. #state.rosterMissing .. " assigned player(s) not currently in raid")
     ))
-    if #rosterMissing > 0 then ns:Print("Roster review: " .. table.concat(rosterMissing, ", ")) end
+    if #state.rosterMissing > 0 then ns:Print("Roster review: " .. table.concat(state.rosterMissing, ", ")) end
     ns:Print(("Pre-pull setup: %s | world=%d | target=%d | prep=%d"):format(
-        setupRequired and (setupReady and "ready" or "check") or "not required",
-        worldMarkers,
-        targetMarkers,
-        prepSteps
+        state.setupRequired and (state.setupReady and "ready" or "check") or "not required",
+        state.worldMarkers,
+        state.targetMarkers,
+        state.prepSteps
     ))
-    ns:Print("Custom text: " .. customCurrentness)
-    ns:Print(("Timed provider coverage observed: %d/%d call(s)"):format(covered, timed))
+    ns:Print("Custom text: " .. state.customCurrentness)
+    ns:Print(("Timed provider coverage observed: %d/%d call(s)"):format(state.covered, state.timed))
 end
 
 ns:RegisterModule("Core.ReadinessIntegration", {})
