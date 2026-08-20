@@ -10,6 +10,8 @@ RLA supports eight encounters and 24 Normal/Heroic/Mythic profiles. During a sup
 
 Assignments are configured before combat through `ASSIGN`, Settings or `/rla assignments`. PLAYER/GROUP, ROTATION, RULE and SEQUENCE fields are validated per boss/difficulty. Duplicate/overlapping players and hard group-size constraints are rejected where the tactic requires it. Rotation advances only after the matching manual Raid Warning succeeds.
 
+The assignment footer also provides a local-only `PREVIEW` action. It validates the current unsaved draft with the same required-field and Raid Warning size budgets, then prints exactly what would be announced to the local chat frame without saving, advancing rotations or sending anything to raid chat. The preview uses the existing RLA `ActionButton`, theme and AssignmentFrame rather than introducing a parallel UI/state system.
+
 ## Timer sources
 
 RLA consumes public **DBM**, **BigWigs** and Blizzard Encounter Timeline timing. Among equally precise usable representations it prefers DBM, then BigWigs, then Blizzard. Exact/native sources may drive PREPARE/PRESS/TTS; approximate bars remain non-actionable previews.
@@ -17,6 +19,8 @@ RLA consumes public **DBM**, **BigWigs** and Blizzard Encounter Timeline timing.
 Provider payloads are untrusted runtime input. Secret, malformed, stale or cross-encounter data is rejected/downgraded. Direct bossmod timers must resolve to the verified active encounter. Cross-provider occurrence reconciliation prevents duplicate calls/audio and a successful manual call acknowledges the occurrence so a late provider cannot immediately re-arm it.
 
 The stable release-contract baselines are **DBM 12.1.4** and **BigWigs v419.2**. DBM 12.1.4 remains the stable release pin while current DBM master has only advanced its displayed alpha identity without changing the watched timer/BossMod contracts. Venomous Abyss DBM and BigWigs `master` watch paths were re-reviewed on 2026-08-20; exact core, raid-TOC and per-boss fingerprints live in `docs/UPSTREAM_BASELINES.json`.
+
+Current BigWigs master additionally introduced a dedicated Lost Explorers `Fling Fish` bar and central count resets plus unrelated aura metadata accessors in `Core/BossPrototype.lua`. RLA keeps `Fling Fish` (1295817) separate from its fish-order `Final Ascension` (1292779) call and keeps `Throw Junk` (1291933) mapped to crates; beta.59 adds a regression for that exact provider boundary.
 
 BigWigs `v419.2` predates the finalized Coiled Altar boss module, so RLA does not assume that a loaded stable BigWigs build can supply every live Venomous Abyss bar. When a bossmod cannot provide a usable matching timer, RLA intentionally falls back to Blizzard Encounter Timeline data for supported calls. Users do not need unreleased bossmod source for RLA to load or for manual calls to remain available.
 
@@ -43,6 +47,7 @@ Provider timer identity is kept separate from display spell identity; for exampl
 
 - `docs/ARCHITECTURE.md`: what each layer owns, when it runs, for whom and why.
 - `docs/TEN_OF_TEN_ACCEPTANCE.md`: the **172-check** master audit after beta.58 distribution/supply-chain expansion.
+- `docs/BETA59_ACCEPTANCE.md`: four additional unique beta.59 controls for preview ownership/safety and current BigWigs Fling Fish isolation, bringing the controlled audit universe to **176 unique controls**.
 - `docs/LIVE_TEST_MATRIX.md`: evidence that can only be collected in the real Retail client.
 - `docs/AUDIT_SOURCES.md`: current Blizzard, GitHub, DBM/BigWigs and encounter source register.
 - `scripts/audit_runtime.py`: TOC/runtime/copy/policy hygiene.
