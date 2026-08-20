@@ -19,9 +19,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # GitHub-hosted Ubuntu runners can temporarily prefer an unhealthy
-          # Azure mirror. Keep CI deterministic and bounded by falling back to
-          # Ubuntu's canonical archive and using explicit network retries/timeouts.
           if [ -f /etc/apt/apt-mirrors.txt ]; then
             sudo sed -i 's#http://azure.archive.ubuntu.com/ubuntu#https://archive.ubuntu.com/ubuntu#g' /etc/apt/apt-mirrors.txt
           fi
@@ -36,7 +33,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 -m py_compile scripts/build_release.py scripts/check_upstream_drift.py scripts/audit_runtime.py scripts/audit_repository.py
+          python3 -m py_compile scripts/build_release.py scripts/build_sbom.py scripts/check_upstream_drift.py scripts/audit_runtime.py scripts/audit_repository.py
           python3 scripts/check_upstream_drift.py --validate-only
           python3 scripts/audit_runtime.py
           python3 scripts/audit_repository.py
@@ -75,12 +72,22 @@ jobs:
             fi
             printf '%s\n' "$output"
           done
-      - name: Build primary release ZIP
+      - name: Build primary release ZIP and SPDX SBOM
         shell: bash
         run: |
           set -euo pipefail
           python3 scripts/build_release.py --output dist/RaidLeadAssist.zip
+          python3 scripts/build_sbom.py --archive dist/RaidLeadAssist.zip --output dist/SBOM.spdx.json
           sha256sum dist/RaidLeadAssist.zip > dist/RaidLeadAssist.zip.sha256
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          doc = json.loads(Path('dist/SBOM.spdx.json').read_text(encoding='utf-8'))
+          assert doc['spdxVersion'] == 'SPDX-2.3'
+          assert doc['packages'][0]['name'] == 'RaidLeadAssist'
+          assert doc['packages'][0]['filesAnalyzed'] is True
+          assert doc['files']
+          PY
       - name: Upload primary release artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -88,6 +95,7 @@ jobs:
           path: |
             dist/RaidLeadAssist.zip
             dist/RaidLeadAssist.zip.sha256
+            dist/SBOM.spdx.json
           if-no-files-found: error
           retention-days: 90
           compression-level: 0
@@ -99,11 +107,12 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Build independent release ZIP
+      - name: Build independent release ZIP and SPDX SBOM
         shell: bash
         run: |
           set -euo pipefail
           python3 scripts/build_release.py --output dist/RaidLeadAssist.zip
+          python3 scripts/build_sbom.py --archive dist/RaidLeadAssist.zip --output dist/SBOM.spdx.json
           sha256sum dist/RaidLeadAssist.zip > dist/RaidLeadAssist.zip.sha256
       - name: Upload independent release artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -112,6 +121,7 @@ jobs:
           path: |
             dist/RaidLeadAssist.zip
             dist/RaidLeadAssist.zip.sha256
+            dist/SBOM.spdx.json
           if-no-files-found: error
           retention-days: 90
           compression-level: 0
@@ -131,12 +141,13 @@ jobs:
         with:
           name: RaidLeadAssist-repro-${{ github.sha }}
           path: repro
-      - name: Compare release bytes and hashes
+      - name: Compare release bytes, hashes and SBOM
         shell: bash
         run: |
           set -euo pipefail
           cmp primary/RaidLeadAssist.zip repro/RaidLeadAssist.zip
           cmp primary/RaidLeadAssist.zip.sha256 repro/RaidLeadAssist.zip.sha256
+          cmp primary/SBOM.spdx.json repro/SBOM.spdx.json
 
   provenance:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -154,10 +165,15 @@ jobs:
         with:
           name: RaidLeadAssist-primary-${{ github.sha }}
           path: dist
-      - name: Attest verified release ZIP
+      - name: Attest verified release ZIP provenance
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-path: dist/RaidLeadAssist.zip
+      - name: Attest verified release ZIP with SPDX SBOM
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: dist/RaidLeadAssist.zip
+          sbom-path: dist/SBOM.spdx.json
 
   release:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -176,13 +192,14 @@ jobs:
         with:
           name: RaidLeadAssist-primary-${{ github.sha }}
           path: dist
-      - name: Verify release attestation
+      - name: Verify release provenance and SBOM attestations
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           gh attestation verify dist/RaidLeadAssist.zip --repo "$GITHUB_REPOSITORY"
+          gh attestation verify dist/RaidLeadAssist.zip --repo "$GITHUB_REPOSITORY" --predicate-type https://spdx.dev/Document/v2.3
       - name: Create or verify version-locked prerelease
         shell: bash
         env:
@@ -205,5 +222,5 @@ jobs:
               exit 1
             fi
           else
-            gh release create "$version" dist/RaidLeadAssist.zip dist/RaidLeadAssist.zip.sha256 --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "$version" --notes-file "$notes" --prerelease
+            gh release create "$version" dist/RaidLeadAssist.zip dist/RaidLeadAssist.zip.sha256 dist/SBOM.spdx.json --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "$version" --notes-file "$notes" --prerelease
           fi

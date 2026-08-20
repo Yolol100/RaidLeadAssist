@@ -191,8 +191,23 @@ Evidence states: `PASS-CI`, `PASS-LIVE`, `MANUAL TEST NEEDED`, `DRIFT REVIEW`, `
 159. `/rla provider` diagnostics match observed provider traffic without changing behavior.
 160. Every claimed live-ready boss/difficulty/provider combination has evidence in `LIVE_TEST_MATRIX.md`.
 
+## Newly added public-distribution and supply-chain rules
+
+161. The public repository keeps the complete in-game addon source visible and unobfuscated, matching Blizzard's published add-on code-visibility rule.
+162. The CurseForge-ready ZIP has exactly one case-correct root folder, `RaidLeadAssist/`, and contains `RaidLeadAssist/RaidLeadAssist.toc` rather than root-level loose files.
+163. CurseForge Retail game-version/flavor metadata must match the TOC interface before a file is published.
+164. CurseForge release channel must match evidence state: beta/prerelease stays Beta until the live gate is complete; Release is not used to imply unperformed live acceptance.
+165. CurseForge DBM/BigWigs relations remain optional rather than being declared required dependencies, matching `OptionalDeps` runtime behavior.
+166. CurseForge project distribution toggle and project-level license state are owner-reviewed before public distribution; automation does not silently choose legal terms.
+167. The exact runtime-only ZIP has a deterministic SPDX 2.3 SBOM with per-file checksums and a package verification code.
+168. The SBOM is independently generated in both reproducible build jobs and must be byte-identical for the same source SHA.
+169. The exact ZIP receives a separate cryptographic SBOM attestation using the SPDX `https://spdx.dev/Document/v2.3` predicate in addition to SLSA build provenance.
+170. Release creation verifies both SLSA provenance and the SPDX SBOM predicate before publishing ZIP/checksum/SBOM assets.
+171. Branch governance target is PR-only merge with required passing checks, conversation resolution and no routine bypass; any unprotected `main` remains a non-code admin blocker.
+172. Blizzard's realm/player performance policy is treated as a release rule: chat bursts, disk work, frame-time and repeated-pull resource growth must all remain within the live performance gates above.
+
 ## Release gate
 
-`TECHNICALLY GREEN` requires the exact SHA to pass runtime audit, repository audit, Lua 5.1 compile, Luacheck, all `tests/test_*.lua`, baseline validation, deterministic package comparison, SHA-256, artifact upload, provenance and matching versioned release assets.
+`TECHNICALLY GREEN` requires the exact SHA to pass runtime audit, repository audit, Lua 5.1 compile, Luacheck, all `tests/test_*.lua`, baseline validation, deterministic ZIP+SBOM comparison, SHA-256, artifact upload, SLSA provenance, SPDX SBOM attestation and matching versioned release assets.
 
 A full product `10/10` additionally requires every applicable live-only row above to be `PASS-LIVE`. Missing live evidence stays `MANUAL TEST NEEDED`; upstream changes become `DRIFT REVIEW`; confirmed defects are `FAIL`.

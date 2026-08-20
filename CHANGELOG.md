@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.0-beta.58 — 2026-08-20
+
+- Add a deterministic SPDX 2.3 SBOM for the exact runtime-only release ZIP, including per-file hashes, package verification code and the ZIP SHA-256 digest.
+- Build the SBOM independently alongside both release builds and require byte-identical ZIP, checksum and SBOM results before provenance can advance.
+- Bind the verified ZIP to the SPDX document with a dedicated GitHub/Sigstore SBOM attestation in addition to the existing SLSA build-provenance attestation.
+- Verify both attestation predicate types before creating the version-locked prerelease and publish the SBOM as a release asset.
+- Keep the repository license field `NOASSERTION` in the SBOM because choosing a project license remains an explicit owner/legal decision rather than an automated code change.
+- Recheck DBM and BigWigs master on 2026-08-20; both remain at the provider source heads reviewed for beta.57, so no encounter/runtime mapping change is required.
+
 ## 0.9.0-beta.57 — 2026-08-19
 
 - Re-review the post-beta.56 BigWigs Ula'tek implementation after upstream added substantial Normal/Heroic/Mythic Encounter Timeline handlers and custom bars on live-launch day.
@@ -74,7 +83,7 @@
 ## 0.9.0-beta.49 — 2026-08-18
 
 - Integrate the user-provided Ready Check Pull recap sheets for The Twin Fangs and The Coiled Altar and cross-check both against the current Patch 12.1 strategy/Journal evidence plus current DBM/BigWigs encounter modules.
-- Correct Twin Fangs by difficulty: Normal Ravenous Feast is a full-raid three-hit soak with no forced three-team roster, while Heroic/Mythic retain three fresh 3+ teams; document the three-hit Stone Breaker tank set, Ithraz regroup movement and keep the volatile Eternal Venom lethal threshold qualitative.
+- Correct Twin Fangs by difficulty: Normal Ravenous Feast is a full-raid three-hit soak with no forced three-team roster, while Heroic/Mythic retain three fresh 3+ teams; document the three-hit Stone Breaker tank set, Ithraz regroup movement and keep the volatile Eternal Venom lethal thresholds qualitative.
 - Expand The Coiled Altar pre-pull and phase plan with both-end world markers, required 2+ Orb Collectors, Heroic/Mythic Wail coverage, controlled Guillotine movement, ghost/Soul Fragment handling, the selected Ready Check Pull intermission Bloodlust tactic and the synchronized Phase 3 kill.
 - Correct Entombed Sentinels so raid groups hold their physical sides after Stasis while tanks taunt-swap the bosses; RLA now calls `GROUPS HOLD SIDES > BOSSES SWAP` instead of telling raid groups to cross the arena.
 - Remove Vashnik's fixed Bile roster because the current strategy lists no key assignments; keep Malignant Catalyst as the shared `SOAK EVERY GREEN CIRCLE` call and leave dynamic impacts/personal infection execution to bossmods.
@@ -165,7 +174,7 @@
 
 - Make the distributable addon ZIP strictly runtime-only: `RaidLeadAssist.toc` plus the exact Lua files listed by the TOC.
 - Remove `README.md` from the shipped addon package; documentation, tests, audit scripts and GitHub maintenance files remain source-repository assets only.
-- Keep all current runtime modules because the TOC/module-order audit confirms they are part of the active load graph; no runtime file is deleted merely to reduce repository size.
+- Keep all current runtime modules because the TOC/module-order audit confirms they are part of the active load graph; no runtime file is deleted merely to reduce file count.
 - Preserve the full CI/audit/test suite in source control so release cleanup does not weaken verification or future maintenance.
 
 ## 0.9.0-beta.37 — 2026-08-17

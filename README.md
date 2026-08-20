@@ -16,13 +16,13 @@ RLA consumes public **DBM**, **BigWigs** and Blizzard Encounter Timeline timing.
 
 Provider payloads are untrusted runtime input. Secret, malformed, stale or cross-encounter data is rejected/downgraded. Direct bossmod timers must resolve to the verified active encounter. Cross-provider occurrence reconciliation prevents duplicate calls/audio and a successful manual call acknowledges the occurrence so a late provider cannot immediately re-arm it.
 
-The stable release-contract baselines are **DBM 12.1.4** and **BigWigs v419.2**. DBM 12.1.4's Venomous Abyss encounter modules match the reviewed launch-day source. Current Venomous Abyss BigWigs `master` boss modules were re-reviewed on 2026-08-19 after launch-day source drift; exact core, raid-TOC and per-boss fingerprints live in `docs/UPSTREAM_BASELINES.json`.
+The stable release-contract baselines are **DBM 12.1.4** and **BigWigs v419.2**. DBM 12.1.4 remains the stable release pin while current DBM master has only advanced its displayed alpha identity without changing the watched timer/BossMod contracts. Venomous Abyss DBM and BigWigs `master` watch paths were re-reviewed on 2026-08-20; exact core, raid-TOC and per-boss fingerprints live in `docs/UPSTREAM_BASELINES.json`.
 
 BigWigs `v419.2` predates the finalized Coiled Altar boss module, so RLA does not assume that a loaded stable BigWigs build can supply every live Venomous Abyss bar. When a bossmod cannot provide a usable matching timer, RLA intentionally falls back to Blizzard Encounter Timeline data for supported calls. Users do not need unreleased bossmod source for RLA to load or for manual calls to remain available.
 
 ## Ula'tek
 
-Ula'tek remains deliberately **manual-only** on every difficulty. Current DBM source has drycode/timeline mappings and BigWigs has timeline-backed coverage, but neither constitutes stable live-validated exact scheduling. RLA therefore keeps every Ula'tek call `timing=false` pending live Retail proof.
+Ula'tek remains deliberately **manual-only** on every difficulty. Current DBM source has drycode/timeline mappings and BigWigs has timeline-backed coverage. BigWigs' 2026-08-20 source additionally fixes Phase 3 initial-timer handling and related custom-bar details, but this still does not constitute stable live-validated exact scheduling for RLA. Every Ula'tek call therefore remains `timing=false` pending live Retail proof.
 
 Provider timer identity is kept separate from display spell identity; for example the current DBM drycode key used for Toxic Incubation cannot silently replace RLA's UI mechanic identity.
 
@@ -42,7 +42,7 @@ Provider timer identity is kept separate from display spell identity; for exampl
 ## Architecture and audit evidence
 
 - `docs/ARCHITECTURE.md`: what each layer owns, when it runs, for whom and why.
-- `docs/TEN_OF_TEN_ACCEPTANCE.md`: the **160-check** maximum master audit.
+- `docs/TEN_OF_TEN_ACCEPTANCE.md`: the **172-check** master audit after beta.58 distribution/supply-chain expansion.
 - `docs/LIVE_TEST_MATRIX.md`: evidence that can only be collected in the real Retail client.
 - `docs/AUDIT_SOURCES.md`: current Blizzard, GitHub, DBM/BigWigs and encounter source register.
 - `scripts/audit_runtime.py`: TOC/runtime/copy/policy hygiene.
@@ -61,14 +61,14 @@ Every push/PR runs:
 - blocking Luacheck for every TOC runtime file;
 - TOC inventory/metadata checks;
 - every `tests/test_*.lua` behavioral/adversarial regression;
-- two independent release-ZIP builds that must be byte-identical;
-- SHA-256 generation.
+- two independent release-ZIP and SPDX-SBOM builds that must be byte-identical;
+- SHA-256 generation and separate SLSA/SBOM attestation verification for the release ZIP.
 
 The distributable ZIP is runtime-only: `RaidLeadAssist.toc` plus exactly the Lua files listed by that TOC. Repository documentation, tests, audit scripts and maintenance files are deliberately excluded from the addon package, so release cleanup does not require deleting useful verification source from Git.
 
-A successful `main` push additionally uploads the verified ZIP/checksum for 90 days, creates GitHub/Sigstore build provenance and publishes one version-locked prerelease/tag on the exact validated SHA with durable ZIP/checksum assets. Reusing the same version for another SHA fails.
+A successful `main` push additionally uploads the verified ZIP/checksum/SBOM, creates GitHub/Sigstore build provenance and publishes one version-locked prerelease/tag on the exact validated SHA with durable assets. Reusing the same version for another SHA fails.
 
-GitHub currently still reports `main` as unprotected and no repository ruleset is installed; license selection is also an explicit owner/legal choice. Those owner/admin actions are tracked in issue #14 rather than being falsely marked fixed by CI.
+GitHub-native branch protection/rulesets, required CODEOWNER approval, secret scanning/push protection and Private Vulnerability Reporting remain repository-admin evidence rather than source-code claims. License selection is also an explicit owner/legal choice. These owner/admin actions remain external release gates rather than being falsely marked fixed by CI.
 
 ## 10/10 boundary
 

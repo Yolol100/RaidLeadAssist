@@ -1,1 +1,13 @@
 * @Yolol100
+
+/.github/CODEOWNERS @Yolol100
+/.github/dependabot.yml @Yolol100
+/.github/workflows/ @Yolol100
+/scripts/ @Yolol100
+/tests/ @Yolol100
+/Core/ @Yolol100
+/Services/Providers/ @Yolol100
+/Services/TimelineService.lua @Yolol100
+/Encounters/ @Yolol100
+/RaidLeadAssist.toc @Yolol100
+/SECURITY.md @Yolol100
