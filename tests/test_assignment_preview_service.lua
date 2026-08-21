@@ -18,7 +18,8 @@ ns:RegisterModule("Services.AssignmentService", {
         return true, clean
     end,
     GetMissingRequired = function(_, _, _, values)
-        return values.tank == "" or values.tank == nil and { "Tank" } or {}
+        if values.tank == "" or values.tank == nil then return { "Tank" } end
+        return {}
     end,
     GetDefinitions = function() return definitions end,
 })
