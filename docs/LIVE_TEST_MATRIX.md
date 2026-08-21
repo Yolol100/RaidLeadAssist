@@ -1,24 +1,22 @@
 # Live Retail acceptance matrix
 
-Source/CI checks cannot fill these rows. Record evidence on the exact addon SHA/version and current Retail build.
+Source/CI checks cannot fill these rows. Record evidence on the exact addon SHA/version and current Retail build. Repository-only commits may advance `main` without changing the runtime package; live evidence therefore names the installed addon version/SHA rather than assuming that `main` equals the latest release tag.
 
-## 0.9.0-beta.57 release-candidate status — 2026-08-19
+## Current prerelease baseline — 0.9.0-beta.63 — 2026-08-21
 
-The source/release path may be marked `PASS-CI` only after the final beta.57 head passes the full workflow and the online upstream-drift check against the latest 2026-08-19 day-one provider baselines.
-
-The release remains a **prerelease/beta**, not a live-proven stable release. Do not convert any row below to `PASS-LIVE` from guides, source code, screenshots or CI alone.
+The published `0.9.0-beta.63` runtime/release path is `PASS-CI` on its released SHA. The release remains a **prerelease/beta**, not a live-proven stable release. Do not convert any row below to `PASS-LIVE` from guides, source code, screenshots or CI alone.
 
 Known release boundaries:
 
 - DBM 12.1.4 remains the reviewed stable DBM release contract. Current `master` has continued to move after raid unlock. RLA pins the reviewed source fingerprints without requiring unreleased DBM.
-- Current DBM Venomous Abyss modules can switch between reviewed hardcoded Encounter Timeline routing and fail-closed Blizzard fallback. Beta.57 therefore treats DBM timing for all eight raid encounter IDs as exact only while DBM has asserted `DBM_IgnoreBlizzAPI` authority. Once DBM resumes Blizzard, the DBM copy is preview-only until an independently exact direct source is available.
-- Late day-one DBM Coiled Altar now enables preliminary Normal hardcoded timelines in addition to Heroic. Unknown/unmapped timeline rows still call `ResumeBlizzardAPI`, so RLA exactness must continue to follow DBM authority rather than the provider name.
+- Current DBM Venomous Abyss modules can switch between reviewed hardcoded Encounter Timeline routing and fail-closed Blizzard fallback. RLA therefore treats DBM timing for all eight raid encounter IDs as exact only while DBM has asserted `DBM_IgnoreBlizzAPI` authority. Once DBM resumes Blizzard, the DBM copy is preview-only until an independently exact direct source is available.
+- Late day-one DBM Coiled Altar enables preliminary Normal hardcoded timelines in addition to Heroic. Unknown/unmapped timeline rows still call `ResumeBlizzardAPI`, so RLA exactness must continue to follow DBM authority rather than the provider name.
 - DBM's shared `TLBatchTrackLatest` Encounter Timeline de-duplication helper is part of the upstream drift oracle because it can change which public boss bar RLA observes without changing a boss-module call identity.
 - BigWigs v419.2 remains the reviewed stable release baseline and predates multiple live-launch Venomous Abyss fixes present on current `master`.
-- Current BigWigs Ula'tek now contains substantial difficulty-specific Encounter Timeline handling and custom boss bars. Beta.57 deliberately keeps all Ula'tek RLA calls manual-only; source-level provider traffic must not activate PREPARE/PRESS/TTS until live Retail evidence and an explicit product review approve timed support.
+- Current BigWigs Ula'tek contains substantial difficulty-specific Encounter Timeline handling and custom boss bars. RLA deliberately keeps all Ula'tek calls manual-only; source-level provider traffic must not activate PREPARE/PRESS/TTS until live Retail evidence and an explicit product review approve timed support.
 - Direct BigWigs timers preserve the upstream `isApproximate` signal. A BigWigs nil-module `StartBar` produced by the Blizzard bridge does not carry that metadata and is therefore preview-only in RLA.
 - Blizzard Encounter Timeline events explicitly marked `isApproximate=true` are preview-only. They must never become actionable PREPARE/PRESS/TTS timing merely because their source is Blizzard or because a bossmod re-emits the event.
-- Season 2/The Venomous Abyss is open by region; source review can track day-one upstream changes, but encounter plans remain `PASS-LIVE`-pending until reproduced in the raid.
+- Season 2/The Venomous Abyss is open by region; source review can track upstream changes, but encounter plans remain `PASS-LIVE`-pending until reproduced in the raid.
 
 Before promoting beyond beta, record at minimum one clean supported pull/wipe lifecycle per boss on the intended release difficulty, plus the provider/failure combinations below.
 

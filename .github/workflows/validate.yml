@@ -3,9 +3,14 @@ name: Validate source
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: validate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   validation:
@@ -150,7 +155,7 @@ jobs:
           cmp primary/SBOM.spdx.json repro/SBOM.spdx.json
 
   provenance:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     needs: reproducibility-check
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -176,7 +181,7 @@ jobs:
           sbom-path: dist/SBOM.spdx.json
 
   release:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     needs: [reproducibility-check, provenance]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -223,7 +228,7 @@ jobs:
           if gh release view "$version" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             existing_sha="$(gh api "repos/$GITHUB_REPOSITORY/commits/$version" --jq .sha)"
             if [ "$existing_sha" != "$GITHUB_SHA" ]; then
-              echo "Release $version already points to $existing_sha, not $GITHUB_SHA. Bump the version before another main release." >&2
+              echo "Release $version already points to $existing_sha, not $GITHUB_SHA. Bump the version before another release." >&2
               exit 1
             fi
           else

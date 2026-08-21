@@ -1,0 +1,56 @@
+name: Timer/provider problem
+description: Report DBM, BigWigs or Blizzard Encounter Timeline timing/precision behavior.
+title: "[Provider] "
+labels: []
+body:
+  - type: input
+    id: version
+    attributes:
+      label: RLA version / commit
+    validations:
+      required: true
+  - type: input
+    id: encounter
+    attributes:
+      label: Encounter and difficulty
+    validations:
+      required: true
+  - type: dropdown
+    id: provider
+    attributes:
+      label: Provider involved
+      options:
+        - DBM
+        - BigWigs
+        - Blizzard Encounter Timeline
+        - Multiple / reconciliation
+        - Unknown
+    validations:
+      required: true
+  - type: input
+    id: provider_version
+    attributes:
+      label: Provider version / source revision
+  - type: input
+    id: mechanic
+    attributes:
+      label: Mechanic / call identity
+    validations:
+      required: true
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed timer behavior
+      description: Include approximate/exact state, duplicates, pause/resume/cancel behavior and occurrence order where known.
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Redacted `/rla provider` diagnostics
+      description: Remove unrelated character names or private data before posting.
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Source or live evidence
+      description: Link public upstream source/release notes or describe reproducible Retail evidence.

@@ -1,0 +1,56 @@
+name: Bug report
+description: Report a reproducible Raid Lead Assist correctness or UI problem.
+title: "[Bug] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not include credentials, private player data or exploit details. Security-sensitive reports belong in the security reporting path described in SECURITY.md.
+  - type: input
+    id: version
+    attributes:
+      label: RLA version / commit
+      placeholder: 0.9.0-beta.63 or commit SHA
+    validations:
+      required: true
+  - type: input
+    id: wow
+    attributes:
+      label: WoW Retail build / interface
+    validations:
+      required: true
+  - type: input
+    id: context
+    attributes:
+      label: Encounter, difficulty and raid role
+      placeholder: Coiled Altar / Heroic / raid leader
+  - type: input
+    id: providers
+    attributes:
+      label: DBM / BigWigs versions
+      placeholder: none, DBM 12.1.4, BigWigs v419.2, etc.
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: Give the smallest sequence that reproduces the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: errors
+    attributes:
+      label: Lua / taint errors
+      description: Paste only relevant, redacted errors. Remove player names if they are not needed.

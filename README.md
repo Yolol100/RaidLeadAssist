@@ -51,9 +51,10 @@ Settings owns the default timing-lead editor beside `AUTO`. Defaults are PREPARE
 ## Architecture and audit evidence
 
 - `docs/ARCHITECTURE.md`: what each layer owns, when it runs, for whom and why.
-- `docs/TEN_OF_TEN_ACCEPTANCE.md`: the **172-check** master audit after beta.58 distribution/supply-chain expansion, supplemented by current beta.59/beta.60/beta.61/beta.62 regressions.
+- `docs/TEN_OF_TEN_ACCEPTANCE.md`: the **172-check** master audit, supplemented by focused post-audit release regressions.
 - `docs/LIVE_TEST_MATRIX.md`: evidence that can only be collected in the real Retail client.
 - `docs/AUDIT_SOURCES.md`: current Blizzard, GitHub, DBM/BigWigs and encounter source register.
+- `docs/RELEASE_PROCESS.md`: release-versus-repository-only change classification and the deliberate publication flow.
 - `scripts/audit_runtime.py`: TOC/runtime/copy/policy hygiene.
 - `scripts/audit_repository.py`: repository paths/encoding/secrets/module order/combat API/workflow/supply-chain governance.
 
@@ -61,7 +62,7 @@ The repository audit explicitly blocks combat-log decision processing, aura/heal
 
 ## Validation and release
 
-Every push/PR runs:
+Every push and pull request runs:
 
 - upstream-baseline schema validation;
 - runtime and repository master audits;
@@ -70,15 +71,17 @@ Every push/PR runs:
 - blocking Luacheck for every TOC runtime file;
 - TOC inventory/metadata checks;
 - every `tests/test_*.lua` behavioral/adversarial regression;
-- two independent release-ZIP and SPDX-SBOM builds that must be byte-identical;
-- SHA-256 generation and separate SLSA/SBOM attestation verification for the release ZIP.
+- two independent runtime-only ZIP and SPDX-SBOM builds that must be byte-identical;
+- SHA-256 generation for the validated artifact.
 
-The distributable ZIP is runtime-only: `RaidLeadAssist.toc` plus exactly the Lua files listed by that TOC. Repository documentation, tests, audit scripts and maintenance files are deliberately excluded from the addon package, so release cleanup does not require deleting useful verification source from Git.
+Pull-request validation uses workflow concurrency so a superseded PR run is cancelled when a newer commit for the same PR starts. Normal `main` pushes still receive full source/reproducibility validation but do **not** publish a release automatically.
 
-A successful `main` push additionally uploads the verified ZIP/checksum/SBOM, creates GitHub/Sigstore build provenance and publishes one version-locked prerelease/tag on the exact validated SHA with durable assets. Reusing the same version for another SHA fails.
+The distributable ZIP is runtime-only: `RaidLeadAssist.toc` plus exactly the Lua files listed by that TOC. Repository documentation, tests, audit scripts and maintenance files are deliberately excluded from the addon package. Repository-only changes can therefore advance `main` without inventing a new addon version when the runtime package is unchanged.
 
-GitHub-native branch protection/rulesets, required CODEOWNER approval, secret scanning/push protection and Private Vulnerability Reporting remain repository-admin evidence rather than source-code claims. License selection is also an explicit owner/legal choice. These owner/admin actions remain external release gates rather than being falsely marked fixed by CI.
+Release publication is deliberate. From the `main` branch, manually dispatch the **Validate source** workflow only after the TOC version, top changelog entry and optional versioned release notes represent a new immutable addon release. That dispatch rebuilds the exact source, verifies reproducibility, creates GitHub/Sigstore provenance plus the SPDX SBOM attestation, verifies both attestations and creates or verifies the version-locked prerelease/tag. Reusing an existing version for a different SHA fails closed. See `docs/RELEASE_PROCESS.md`.
+
+All third-party Actions are pinned to full commit SHAs and workflows use explicit least-privilege permissions. GitHub-native branch protection/rulesets, required CODEOWNER approval, secret scanning/push protection, Actions policy enforcement and Private Vulnerability Reporting remain repository-admin evidence rather than source-code claims. License selection is also an explicit owner/legal choice. These settings are not reported as enabled until the GitHub repository itself proves them.
 
 ## 10/10 boundary
 
-A source/release can be **TECHNICALLY GREEN** only when every automated gate passes on the exact released SHA. A full product **10/10** additionally requires the applicable live-only checks — real raid pulls, provider combinations, `/reload` recovery, taint, CPU/frame-time, memory soak, UI scaling/accessibility/locales and post-hotfix tactic/timer accuracy — to be recorded as `PASS-LIVE`. Missing live evidence remains `MANUAL TEST NEEDED`.
+A source/release can be **TECHNICALLY GREEN** only when every applicable automated gate passes on the exact source or released SHA. A full product **10/10** additionally requires the applicable live-only checks — real raid pulls, provider combinations, `/reload` recovery, taint, CPU/frame-time, memory soak, UI scaling/accessibility/locales and post-hotfix tactic/timer accuracy — to be recorded as `PASS-LIVE`. Missing live evidence remains `MANUAL TEST NEEDED`.
