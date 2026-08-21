@@ -14,9 +14,12 @@ MIN_BEHAVIOR_TESTS = 35
 
 REQUIRED_FILES = {
     ".editorconfig", ".gitattributes", ".github/CODEOWNERS", ".github/dependabot.yml",
+    ".github/ISSUE_TEMPLATE/bug.yml", ".github/ISSUE_TEMPLATE/config.yml",
+    ".github/ISSUE_TEMPLATE/provider.yml", ".github/ISSUE_TEMPLATE/strategy.yml",
+    ".github/PULL_REQUEST_TEMPLATE.md",
     ".github/workflows/validate.yml", ".github/workflows/upstream-drift.yml", ".luacheckrc",
     "CHANGELOG.md", "CONTRIBUTING.md", "PRIVACY.md", "README.md", "RaidLeadAssist.toc", "SECURITY.md",
-    "docs/ARCHITECTURE.md", "docs/AUDIT_SOURCES.md", "docs/LIVE_TEST_MATRIX.md",
+    "docs/ARCHITECTURE.md", "docs/AUDIT_SOURCES.md", "docs/LIVE_TEST_MATRIX.md", "docs/RELEASE_PROCESS.md",
     "docs/TEN_OF_TEN_ACCEPTANCE.md", "docs/STATIC_ANALYSIS.md", "docs/UPSTREAM_BASELINES.json",
     "scripts/audit_runtime.py", "scripts/audit_repository.py", "scripts/build_release.py", "scripts/build_sbom.py",
     "scripts/check_upstream_drift.py", "tests/testlib.lua",
@@ -236,10 +239,24 @@ def validate_workflows(files: list[str]) -> None:
     for job in ("validation:", "reproducibility:", "reproducibility-check:", "provenance:", "release:"):
         if job not in validate:
             fail(f"validation workflow missing required job: {job[:-1]}")
+    for marker in (
+        "workflow_dispatch:",
+        "concurrency:",
+        "cancel-in-progress: ${{ github.event_name == 'pull_request' }}",
+    ):
+        if marker not in validate:
+            fail(f"validation workflow missing deliberate release/concurrency contract: {marker}")
+    release_condition = "if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'"
+    if validate.count(release_condition) != 2:
+        fail("provenance and release must both require explicit workflow_dispatch from main")
+    if "if: github.event_name == 'push' && github.ref == 'refs/heads/main'" in validate:
+        fail("ordinary main pushes must not publish or attest an addon release")
+    unprivileged = validate.split("\n  provenance:\n", 1)[0]
+    for forbidden in ("id-token: write", "attestations: write", "artifact-metadata: write", "contents: write"):
+        if forbidden in unprivileged:
+            fail(f"ordinary validation/reproducibility jobs must remain read-only: {forbidden}")
     if "gh attestation verify" not in validate:
         fail("release workflow must verify provenance before publishing")
-    if "github.ref == 'refs/heads/main'" not in validate:
-        fail("privileged main release jobs must be scoped to refs/heads/main")
     for marker in (
         "scripts/build_sbom.py",
         "SBOM.spdx.json",
@@ -292,7 +309,7 @@ def main() -> int:
     validate_secrets(files)
     print(
         f"ok - repository audit passed ({len(files)} tracked files; {len(entries)} runtime files; "
-        "paths/encoding/secrets/module-order/extensions/combat-API/workflow/test/release/SBOM governance)"
+        "paths/encoding/secrets/module-order/extensions/combat-API/workflow/test/release/SBOM/governance contract)"
     )
     return 0
 
