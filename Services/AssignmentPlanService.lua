@@ -2,9 +2,9 @@ local _, ns = ...
 
 local Assignments = ns:GetModule("Services.AssignmentService")
 
-local AssignmentPreviewService = {}
+local AssignmentPlanService = {}
 
-function AssignmentPreviewService:BuildLines(bossKey, difficultyKey, values)
+function AssignmentPlanService:BuildLines(bossKey, difficultyKey, values)
     local valid, clean = Assignments:ValidateBossDraft(bossKey, difficultyKey, values)
     if not valid then
         return nil, clean and clean.message or "Invalid assignments."
@@ -33,4 +33,4 @@ function AssignmentPreviewService:BuildLines(bossKey, difficultyKey, values)
     return lines
 end
 
-ns:RegisterModule("Services.AssignmentPreviewService", AssignmentPreviewService)
+ns:RegisterModule("Services.AssignmentPlanService", AssignmentPlanService)

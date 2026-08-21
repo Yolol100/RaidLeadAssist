@@ -45,11 +45,14 @@ ns:RegisterModule("Services.MessageService", {
 ns:RegisterModule("Services.AssignmentService", {
     Initialize = function() end,
     ResetRuntime = function() end,
-    GetPlanLines = function() return { "PLAN" } end,
+    GetValues = function() return { tank = "MainTank" } end,
     IsCallReady = function() return true end,
     BuildCallAction = function(_, action) return action, true end,
     BuildCallWarning = function(_, warning) return warning, true end,
     AdvanceCall = function() end,
+})
+ns:RegisterModule("Services.AssignmentPlanService", {
+    BuildLines = function() return { "PLAN" } end,
 })
 ns:RegisterModule("Services.SetupService", { Initialize = function() end })
 ns:RegisterModule("Services.TimelineService", { AcknowledgeCall = function() end })
@@ -71,6 +74,7 @@ ns:RegisterModule("UI.AssignmentFrame", {
     Open = function() end,
     CloseForEncounter = function() end,
 })
+ns:RegisterModule("UI.AssignmentPreview", { Attach = function() end })
 ns:RegisterModule("UI.AssignmentLaunchers", { Attach = function() end })
 ns:RegisterModule("UI.SetupCard", {})
 

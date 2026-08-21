@@ -10,7 +10,7 @@ RLA supports eight encounters and 24 Normal/Heroic/Mythic profiles. During a sup
 
 Assignments are configured before combat through `ASSIGN`, Settings or `/rla assignments`. PLAYER/GROUP, ROTATION, RULE and SEQUENCE fields are validated per boss/difficulty. Duplicate/overlapping players and hard group-size constraints are rejected where the tactic requires it. Rotation advances only after the matching manual Raid Warning succeeds.
 
-The assignment window also owns local productivity tools: `PRESETS` stores up to eight validated plans per boss/difficulty and `MY TASKS` prints the current player's direct, rotation and raid-group duties. Presets never add addon networking or live combat scanning; slash equivalents remain available for power users.
+The assignment window also owns local planning tools. `PREVIEW` validates the current unsaved draft and prints the exact assignment plan locally without saving it or sending anything to raid chat. `PRESETS` stores up to eight validated plans per boss/difficulty and `MY TASKS` prints the current player's direct, rotation and raid-group duties. Preview and announce share one bounded plan renderer, so the local inspection path cannot drift from the actual pre-pull assignment announcement. None of these tools add addon networking or live combat scanning; slash equivalents remain available for power users where applicable.
 
 ## Timer sources
 
@@ -36,7 +36,7 @@ Settings owns the default timing-lead editor beside `AUTO`. Defaults are PREPARE
 
 - `/rla timing on|off`: automatic timing toggle, pre-pull only.
 - `/rla timing lead <prepare> <press>` / `/rla timing reset`: default lead-window fallbacks, pre-pull only.
-- `/rla assignments`: pre-pull assignment editor.
+- `/rla assignments`: pre-pull assignment editor, including local `PREVIEW` before `ANNOUNCE`.
 - `/rla preset list|save|load|delete <name>`: local preset fallback for the active boss/difficulty.
 - `/rla my`: local personal-assignment fallback.
 - `/rla provider`: read-only provider/timer diagnostics.
@@ -51,13 +51,13 @@ Settings owns the default timing-lead editor beside `AUTO`. Defaults are PREPARE
 ## Architecture and audit evidence
 
 - `docs/ARCHITECTURE.md`: what each layer owns, when it runs, for whom and why.
-- `docs/TEN_OF_TEN_ACCEPTANCE.md`: the **172-check** master audit after beta.58 distribution/supply-chain expansion, supplemented by current beta.59/beta.60 regressions.
+- `docs/TEN_OF_TEN_ACCEPTANCE.md`: the **172-check** master audit after beta.58 distribution/supply-chain expansion, supplemented by current beta.59/beta.60/beta.61 regressions.
 - `docs/LIVE_TEST_MATRIX.md`: evidence that can only be collected in the real Retail client.
 - `docs/AUDIT_SOURCES.md`: current Blizzard, GitHub, DBM/BigWigs and encounter source register.
 - `scripts/audit_runtime.py`: TOC/runtime/copy/policy hygiene.
 - `scripts/audit_repository.py`: repository paths/encoding/secrets/module order/combat API/workflow/supply-chain governance.
 
-The repository audit explicitly blocks combat-log decision processing, aura/health/power/cast/position decision APIs, protected action automation, secure-action automation, dynamic code execution and addon networking from the shipped runtime. Approved App extension surfaces are explicitly documented and their exact patched method sets are CI-locked; productivity UI uses bounded callbacks instead of adding another App monkey patch.
+The repository audit explicitly blocks combat-log decision processing, aura/health/power/cast/position decision APIs, protected action automation, secure-action automation, dynamic code execution and addon networking from the shipped runtime. Approved App extension surfaces are explicitly documented and their exact patched method sets are CI-locked. Assignment preview/announce behavior stays under `Core/AssignmentIntegration.lua` and the shared `Services/AssignmentPlanService.lua`; productivity UI uses bounded callbacks instead of adding another App monkey patch.
 
 ## Validation and release
 
