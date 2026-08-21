@@ -391,7 +391,7 @@ function AssignmentService:RenderCallTemplate(template, bossKey, difficultyKey, 
     local missing
 
     local rendered = template:gsub("{{rotation:([%w_]+)}}", function(rotation)
-        local value = self:GetRotationValue(bossKey, difficultyKey, callKey)
+        local value = self:GetRotationValue(bossKey, difficultyKey, callKey, rotation)
         if not value then
             missing = missing or rotation
             return ""
