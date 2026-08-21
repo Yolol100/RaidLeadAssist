@@ -5,8 +5,11 @@ local Database = ns:GetModule("Core.Database")
 local EventBus = ns:GetModule("Core.EventBus")
 local Presets = ns:GetModule("Services.AssignmentPresetService")
 local PersonalAssignments = ns:GetModule("Services.PersonalAssignmentService")
+local AssignmentPreviewService = ns:GetModule("Services.AssignmentPreviewService")
 local Encounter = ns:GetModule("Services.EncounterService")
 local ProductivityUI = ns:GetModule("UI.ProductivityPanel")
+local AssignmentPreviewUI = ns:GetModule("UI.AssignmentPreview")
+local AssignmentUI = ns:GetModule("UI.AssignmentFrame")
 local Readiness = ns:GetModule("Core.ReadinessIntegration")
 local App = ns:GetModule("Core.App")
 
@@ -156,8 +159,25 @@ local function printPersonalAssignments(bossKey, difficultyKey)
     return true
 end
 
+local function previewAssignments(bossKey, difficultyKey, values)
+    if Encounter:IsActive() then
+        return false, "Assignment preview is pre-pull only."
+    end
+    if type(InCombatLockdown) == "function" and InCombatLockdown() then
+        return false, "Leave combat before previewing the assignment plan."
+    end
+
+    local lines, reason = AssignmentPreviewService:BuildLines(bossKey, difficultyKey, values)
+    if not lines then return false, "Preview blocked: " .. tostring(reason or "invalid assignments.") end
+    if #lines == 0 then return false, "Preview has no filled assignments." end
+
+    ns:Print("Assignment preview (local only; nothing sent to raid chat):")
+    for index = 1, #lines do ns:Print(("%d. %s"):format(index, lines[index])) end
+    return true, ("Previewed %d assignment line%s locally."):format(#lines, #lines == 1 and "" or "s")
+end
+
 local function printProductivityHelp()
-    ns:Print("Beta.60: use the in-panel READY/CHECK, Settings LEADS and Assignment PRESETS/MY TASKS controls; slash fallbacks: /rla my | /rla preset list|save|load|delete <name> | /rla timing lead <prepare> <press> | /rla timing reset")
+    ns:Print("Beta.61: use READY/CHECK, Settings LEADS and Assignment PREVIEW/PRESETS/MY TASKS; slash fallbacks: /rla my | /rla preset list|save|load|delete <name> | /rla timing lead <prepare> <press> | /rla timing reset")
 end
 
 local function handlePreset(argument)
@@ -204,6 +224,7 @@ local function install()
         deletePreset = deletePreset,
         showPersonalAssignments = printPersonalAssignments,
     })
+    AssignmentPreviewUI:Attach(AssignmentUI, previewAssignments)
     refreshReadiness()
 
     SlashCmdList.RAIDLEADASSIST = function(message)
