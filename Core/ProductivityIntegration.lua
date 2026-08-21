@@ -177,7 +177,7 @@ local function previewAssignments(bossKey, difficultyKey, values)
 end
 
 local function printProductivityHelp()
-    ns:Print("Beta.61: use READY/CHECK, Settings LEADS and Assignment PREVIEW/PRESETS/MY TASKS; slash fallbacks: /rla my | /rla preset list|save|load|delete <name> | /rla timing lead <prepare> <press> | /rla timing reset")
+    ns:Print("Productivity: use READY/CHECK, Settings LEADS and Assignment PREVIEW/PRESETS/MY TASKS; slash fallbacks: /rla my | /rla preset list|save|load|delete <name> | /rla timing lead <prepare> <press> | /rla timing reset")
 end
 
 local function handlePreset(argument)
