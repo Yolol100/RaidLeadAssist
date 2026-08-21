@@ -35,17 +35,21 @@ function AssignmentPreview:Attach(assignmentUI, onPreview)
     end)
     button:HookScript("OnLeave", function() GameTooltip:Hide() end)
 
+    -- Keep feedback above the action row so adding PREVIEW does not squeeze
+    -- validation text into a narrow column beside the footer buttons.
     if assignmentUI.status then
         assignmentUI.status:ClearAllPoints()
-        assignmentUI.status:SetPoint("BOTTOMLEFT", 18, 37)
-        assignmentUI.status:SetPoint("RIGHT", -445, 0)
+        assignmentUI.status:SetPoint("BOTTOMLEFT", 18, 63)
+        assignmentUI.status:SetPoint("RIGHT", -18, 0)
         assignmentUI.status:SetJustifyH("LEFT")
+        if assignmentUI.status.SetWordWrap then assignmentUI.status:SetWordWrap(false) end
     end
     if assignmentUI.required then
         assignmentUI.required:ClearAllPoints()
-        assignmentUI.required:SetPoint("BOTTOMLEFT", 18, 18)
-        assignmentUI.required:SetPoint("RIGHT", -445, 0)
+        assignmentUI.required:SetPoint("BOTTOMLEFT", 18, 51)
+        assignmentUI.required:SetPoint("RIGHT", -18, 0)
         assignmentUI.required:SetJustifyH("LEFT")
+        if assignmentUI.required.SetWordWrap then assignmentUI.required:SetWordWrap(false) end
     end
 
     assignmentUI.previewButton = button
