@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.0-beta.63 — 2026-08-21
+
+- Move the full-width assignment footer status/required layout into canonical `UI/AssignmentFrame.lua`; `UI/AssignmentPreview.lua` now only creates and wires the PREVIEW control instead of repositioning elements it does not own.
+- Preserve beta.62 PREVIEW placement, local-only draft inspection, shared PREVIEW/ANNOUNCE plan rendering and all pre-pull/combat/schema safety behavior unchanged.
+- Rename the stale `tests/test_assignment_preview_service.lua` path to `tests/test_assignment_plan_service.lua` so the regression name matches the canonical `Services/AssignmentPlanService.lua` owner.
+- Strengthen regression coverage to require AssignmentFrame ownership of footer feedback and prevent the preview extension from mutating those anchors again.
+
 ## 0.9.0-beta.62 — 2026-08-21
 
 - Remove the obsolete `AssignmentService:GetPlanLines()` implementation now that both PREVIEW and ANNOUNCE use `Services/AssignmentPlanService.lua` as their canonical assignment-plan renderer.
@@ -218,7 +225,7 @@
 - Add a blocking repository audit for path portability, UTF-8/LF hygiene, committed-secret signatures, module dependency order, approved App patch surface, forbidden combat-automation APIs, workflow trigger/injection risks, full-SHA action pinning and behavioral-test inventory.
 - Add `ARCHITECTURE.md`, `AUDIT_SOURCES.md`, `LIVE_TEST_MATRIX.md`, `PRIVACY.md` and `CONTRIBUTING.md` so every subsystem has documented ownership, lifecycle, purpose, evidence boundary and current source provenance.
 - Add `.editorconfig` and `.gitattributes` to keep future source encoding/line endings deterministic across platforms; the new gate found and normalized the pre-existing missing final newline in `Core/App.lua`.
-- Keep Luacheck exceptions narrowly named and documented: one BigWigs callback-shape secondary variable plus the two existing App settings-scope shadowings; every other runtime warning remains blocking.
+- Keep Luacheck exceptions narrowly named and documented: one BigWigs callback-shape secondary-variable exception. `Core/App.lua` has two reviewed local shadowing warnings (`settingsEnabled`/`settingsReason`) created by separate initialization and encounter-end scopes. Any additional warning fails CI unless it is first reviewed and explicitly added here/configured by name.
 - Recheck current stable bossmod releases: DBM remains `12.1.3` and BigWigs remains `v419.2` at this audit.
 - Keep the single `AssignmentIntegration` App extension explicit and machine-locked instead of allowing additional runtime monkey patches to appear silently.
 - Correct the beta.36 historical wording: there are no open pull requests, while owner/admin governance work is tracked in issue #14; no claim is made that the repository has zero open issues.
