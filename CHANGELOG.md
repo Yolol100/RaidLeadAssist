@@ -46,7 +46,7 @@
 
 - Add a deterministic SPDX 2.3 SBOM for the exact runtime-only release ZIP, including per-file hashes, package verification code and the ZIP SHA-256 digest.
 - Build the SBOM independently alongside both release builds and require byte-identical ZIP, checksum and SBOM results before provenance can advance.
-- Bind the verified ZIP to the SPDX document with a dedicated GitHub/Sigstore SBOM attestation in addition to the existing SLS build-provenance attestation.
+- Bind the verified ZIP to the SPDX document with a dedicated GitHub/Sigstore SBOM attestation in addition to the existing SLSA build-provenance attestation.
 - Verify both attestation predicate types before creating the version-locked prerelease and publish the SBOM as a release asset.
 - Keep the repository license field `NOASSERTION` in the SBOM because choosing a project license remains an explicit owner/legal decision rather than an automated code change.
 - Recheck DBM and BigWigs master on 2026-08-20; both remain at the provider source heads reviewed for beta.57, so no encounter/runtime mapping change is required.
@@ -225,7 +225,7 @@
 - Add a blocking repository audit for path portability, UTF-8/LF hygiene, committed-secret signatures, module dependency order, approved App patch surface, forbidden combat-automation APIs, workflow trigger/injection risks, full-SHA action pinning and behavioral-test inventory.
 - Add `ARCHITECTURE.md`, `AUDIT_SOURCES.md`, `LIVE_TEST_MATRIX.md`, `PRIVACY.md` and `CONTRIBUTING.md` so every subsystem has documented ownership, lifecycle, purpose, evidence boundary and current source provenance.
 - Add `.editorconfig` and `.gitattributes` to keep future source encoding/line endings deterministic across platforms; the new gate found and normalized the pre-existing missing final newline in `Core/App.lua`.
-- Keep Luacheck exceptions narrowly named and documented: one BigWigs callback-shape secondary-variable plus the two existing App settings-scope shadowings; every other runtime warning remains blocking.
+- Keep Luacheck exceptions narrowly named and documented: one BigWigs callback-shape secondary variable plus the two existing App settings-scope shadowings; every other runtime warning remains blocking.
 - Recheck current stable bossmod releases: DBM remains `12.1.3` and BigWigs remains `v419.2` at this audit.
 - Keep the single `AssignmentIntegration` App extension explicit and machine-locked instead of allowing additional runtime monkey patches to appear silently.
 - Correct the beta.36 historical wording: there are no open pull requests, while owner/admin governance work is tracked in issue #14; no claim is made that the repository has zero open issues.
