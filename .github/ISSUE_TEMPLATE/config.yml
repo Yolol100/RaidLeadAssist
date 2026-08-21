@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security policy
+    url: https://github.com/Yolol100/RaidLeadAssist/security/policy
+    about: Use the documented private path for security-sensitive reports; do not post exploit details or credentials in a public issue.

@@ -25,10 +25,16 @@ Raid Lead Assist must:
 - never require obfuscated code, external executables, credentials, network calls, advertisements, or paid unlocks in the distributed addon;
 - never derive protected combat actions from hidden/secret values;
 - keep release ZIP contents limited to `RaidLeadAssist.toc` plus the audited runtime files referenced by that TOC;
-- pin GitHub Actions by immutable commit SHA;
+- pin every third-party GitHub Action to an immutable full commit SHA;
+- declare least-privilege `GITHUB_TOKEN` permissions and keep release write permissions scoped to the release job;
+- avoid `pull_request_target`, `repository_dispatch`, `workflow_run` and untrusted pull-request metadata interpolation in privileged workflows;
 - keep `CODEOWNERS` explicit for workflow, release/audit and timer-provider trust boundaries;
-- keep GitHub Actions dependency review enabled through weekly Dependabot updates.
+- keep GitHub Actions dependencies monitored through weekly Dependabot version updates.
 
-Repository-native branch protection/rulesets, required CODEOWNER approval, secret scanning/push protection and Private Vulnerability Reporting are GitHub settings and must be verified independently; source files must not claim those controls are enabled merely because the repository documents them.
+Dependabot version updates and GitHub Dependency Review are different controls. This repository must not claim Dependency Review is enabled merely because `.github/dependabot.yml` exists.
+
+Release publication is a deliberate `workflow_dispatch` from `main`; ordinary pushes and pull requests validate source and reproducibility without receiving release credentials or creating tags/releases.
+
+Repository-native branch protection/rulesets, required CODEOWNER approval, secret scanning/push protection, Actions policy enforcement and Private Vulnerability Reporting are GitHub settings and must be verified independently; source files must not claim those controls are enabled merely because the repository documents them.
 
 A source/CI pass does not prove absence of WoW taint or runtime performance problems. Those remain explicit live acceptance checks.
