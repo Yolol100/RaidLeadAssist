@@ -36,6 +36,7 @@ Services/RosterService.lua
 Services/AssignmentService.lua
 Services/AssignmentPresetService.lua
 Services/PersonalAssignmentService.lua
+Services/AssignmentPreviewService.lua
 Services/SetupService.lua
 Services/Providers/BigWigsProvider.lua
 Services/Providers/DBMProvider.lua
@@ -52,6 +53,7 @@ UI/ConfirmDialog.lua
 UI/AssignmentSlot.lua
 UI/RosterPicker.lua
 UI/AssignmentFrame.lua
+UI/AssignmentPreview.lua
 UI/AssignmentLaunchers.lua
 UI/SettingsFrame.lua
 UI/SentinelsPanel.lua
