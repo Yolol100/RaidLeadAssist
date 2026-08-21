@@ -7,6 +7,7 @@ end
 
 local toc = read("RaidLeadAssist.toc")
 local ui = read("UI/AssignmentPreview.lua")
+local assignmentFrame = read("UI/AssignmentFrame.lua")
 local assignmentCore = read("Core/AssignmentIntegration.lua")
 local productivityCore = read("Core/ProductivityIntegration.lua")
 local assignmentService = read("Services/AssignmentService.lua")
@@ -36,11 +37,14 @@ assert(contains(ui, "assignmentUI:GetDraftValues()"),
     "preview must inspect the current unsaved draft rather than stale saved state")
 assert(contains(ui, "Nothing is sent to raid chat") and contains(ui, "draft is not saved"),
     "preview must clearly communicate its local read-only boundary")
-assert(contains(ui, 'assignmentUI.status:SetPoint("BOTTOMLEFT", 18, 63)')
-    and contains(ui, 'assignmentUI.status:SetPoint("RIGHT", -18, 0)')
-    and contains(ui, 'assignmentUI.required:SetPoint("BOTTOMLEFT", 18, 51)')
-    and contains(ui, 'assignmentUI.required:SetPoint("RIGHT", -18, 0)'),
-    "preview footer feedback must stay full-width above the action row instead of being squeezed beside buttons")
+assert(contains(assignmentFrame, 'self.status:SetPoint("BOTTOMLEFT", 18, 63)')
+    and contains(assignmentFrame, 'self.status:SetPoint("RIGHT", -18, 0)')
+    and contains(assignmentFrame, 'self.required:SetPoint("BOTTOMLEFT", 18, 51)')
+    and contains(assignmentFrame, 'self.required:SetPoint("RIGHT", -18, 0)'),
+    "AssignmentFrame must own the full-width footer feedback layout above the action row")
+assert(not contains(ui, "assignmentUI.status:ClearAllPoints()")
+    and not contains(ui, "assignmentUI.required:ClearAllPoints()"),
+    "preview extension must not mutate footer elements owned by AssignmentFrame")
 
 assert(contains(service, "Assignments:ValidateBossDraft")
     and contains(service, "Assignments:GetMissingRequired"),
@@ -70,4 +74,4 @@ for _, forbidden in ipairs({
     assert(not contains(service, forbidden), "plan service must not add combat/network automation surface: " .. forbidden)
 end
 
-print("ok - assignment preview is in-context, full-width, draft-aware, local-only and owned by assignment integration")
+print("ok - assignment preview is in-context, full-width, draft-aware, local-only and cleanly owned")

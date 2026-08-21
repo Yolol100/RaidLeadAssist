@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.0-beta.63 — 2026-08-21
+
+- Move the full-width assignment footer status/required layout into canonical `UI/AssignmentFrame.lua`; `UI/AssignmentPreview.lua` now only creates and wires the PREVIEW control instead of repositioning elements it does not own.
+- Preserve beta.62 PREVIEW placement, local-only draft inspection, shared PREVIEW/ANNOUNCE plan rendering and all pre-pull/combat/schema safety behavior unchanged.
+- Rename the stale `tests/test_assignment_preview_service.lua` path to `tests/test_assignment_plan_service.lua` so the regression name matches the canonical `Services/AssignmentPlanService.lua` owner.
+- Strengthen regression coverage to require AssignmentFrame ownership of footer feedback and prevent the preview extension from mutating those anchors again.
+
 ## 0.9.0-beta.62 — 2026-08-21
 
 - Remove the obsolete `AssignmentService:GetPlanLines()` implementation now that both PREVIEW and ANNOUNCE use `Services/AssignmentPlanService.lua` as their canonical assignment-plan renderer.
