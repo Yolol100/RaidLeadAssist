@@ -352,23 +352,6 @@ function AssignmentService:GetMissingRequired(bossKey, difficultyKey, values)
     return missing
 end
 
-function AssignmentService:GetPlanLines(bossKey, difficultyKey)
-    local lines = {}
-    local definitions = self:GetDefinitions(bossKey, difficultyKey)
-    for index = 1, #definitions do
-        local definition = definitions[index]
-        local value = self:GetValue(bossKey, difficultyKey, definition.key)
-        if value ~= "" then
-            local line = definition.label .. ": " .. value .. "."
-            if #line <= self.MAX_WARNING_LENGTH then
-                lines[#lines + 1] = line
-                if #lines >= self.MAX_PLAN_LINES then break end
-            end
-        end
-    end
-    return lines
-end
-
 function AssignmentService:GetRotationValue(bossKey, difficultyKey, callKey, rotation)
     local definitions = AssignmentRegistry:GetCallDefinitions(bossKey, difficultyKey, callKey)
     local bucket = {}
@@ -408,7 +391,7 @@ function AssignmentService:RenderCallTemplate(template, bossKey, difficultyKey, 
     local missing
 
     local rendered = template:gsub("{{rotation:([%w_]+)}}", function(rotation)
-        local value = self:GetRotationValue(bossKey, difficultyKey, callKey, rotation)
+        local value = self:GetRotationValue(bossKey, difficultyKey, callKey)
         if not value then
             missing = missing or rotation
             return ""
