@@ -51,7 +51,7 @@ Settings owns the default timing-lead editor beside `AUTO`. Defaults are PREPARE
 ## Architecture and audit evidence
 
 - `docs/ARCHITECTURE.md`: what each layer owns, when it runs, for whom and why.
-- `docs/TEN_OF_TEN_ACCEPTANCE.md`: the **172-check** master audit after beta.58 distribution/supply-chain expansion, supplemented by current beta.59/beta.60/beta.61 regressions.
+- `docs/TEN_OF_TEN_ACCEPTANCE.md`: the **172-check** master audit after beta.58 distribution/supply-chain expansion, supplemented by current beta.59/beta.60/beta.61/beta.62 regressions.
 - `docs/LIVE_TEST_MATRIX.md`: evidence that can only be collected in the real Retail client.
 - `docs/AUDIT_SOURCES.md`: current Blizzard, GitHub, DBM/BigWigs and encounter source register.
 - `scripts/audit_runtime.py`: TOC/runtime/copy/policy hygiene.

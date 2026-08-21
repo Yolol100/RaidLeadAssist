@@ -9,6 +9,7 @@ local toc = read("RaidLeadAssist.toc")
 local ui = read("UI/AssignmentPreview.lua")
 local assignmentCore = read("Core/AssignmentIntegration.lua")
 local productivityCore = read("Core/ProductivityIntegration.lua")
+local assignmentService = read("Services/AssignmentService.lua")
 local service = read("Services/AssignmentPlanService.lua")
 
 local function contains(text, needle)
@@ -47,6 +48,8 @@ assert(contains(service, "Assignments:ValidateBossDraft")
 assert(contains(service, "Assignments.MAX_WARNING_LENGTH")
     and contains(service, "Assignments.MAX_PLAN_LINES"),
     "plan rendering must reuse the existing raid warning and plan budgets")
+assert(not contains(assignmentService, "function AssignmentService:GetPlanLines"),
+    "legacy assignment plan rendering must not coexist with the canonical AssignmentPlanService")
 assert(contains(assignmentCore, "local allowed, reason = canEditAssignments()")
     and contains(assignmentCore, "AssignmentPlan:BuildLines(bossKey, difficultyKey, values)"),
     "preview must retain the canonical pre-pull/combat/schema boundary")
