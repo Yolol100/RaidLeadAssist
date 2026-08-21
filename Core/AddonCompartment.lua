@@ -17,9 +17,9 @@ function RaidLeadAssist_Open(_, buttonName)
     end
 end
 
-function RaidLeadAssist_CompartmentEnter(button)
-    if not button or not GameTooltip then return end
-    GameTooltip:SetOwner(button, "ANCHOR_LEFT")
+function RaidLeadAssist_CompartmentEnter(_, menuButtonFrame)
+    if not menuButtonFrame or not GameTooltip then return end
+    GameTooltip:SetOwner(menuButtonFrame, "ANCHOR_LEFT")
     GameTooltip:SetText("Raid Lead Assist", 0.36, 0.90, 0.58, 1)
     GameTooltip:AddLine("Left-click: show/hide raid controls", 1, 1, 1)
     GameTooltip:AddLine("Right-click: open settings", 0.72, 0.76, 0.72)
