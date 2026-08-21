@@ -2,10 +2,24 @@
 ## Title: Raid Lead Assist
 ## Notes: Manual raid-leader tactical callouts with bossmod and Blizzard timeline support.
 ## Author: RaidLeadAssist Contributors
-## Version: 0.9.0-beta.63
+## Version: 0.9.0-beta.64
 ## SavedVariables: RaidLeadAssistDB
 ## OptionalDeps: DBM-Core, BigWigs
+## Category: Dungeons & Raids
+## Category-deDE: Dungeons & Schlachtzüge
+## Category-esES: Mazmorras y bandas
+## Category-esMX: Calabozos y bandas
+## Category-frFR: Donjons et raids
+## Category-itIT: Spedizioni e incursioni
+## Category-koKR: 던전 및 공격대
+## Category-ptBR: Masmorras e Raides
+## Category-ruRU: Подземелья и рейды
+## Category-zhCN: 地下城和团队副本
+## Category-zhTW: 地城與團隊
 ## X-Category: Raid
+## AddonCompartmentFunc: RaidLeadAssist_Open
+## AddonCompartmentFuncOnEnter: RaidLeadAssist_CompartmentEnter
+## AddonCompartmentFuncOnLeave: RaidLeadAssist_CompartmentLeave
 
 Bootstrap.lua
 Core/Constants.lua
@@ -66,3 +80,4 @@ Core/ReadinessIntegration.lua
 Core/ProductivityIntegration.lua
 Core/ProviderRecoveryIntegration.lua
 Core/SentinelsIntegration.lua
+Core/AddonCompartment.lua
