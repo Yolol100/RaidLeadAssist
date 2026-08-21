@@ -8,12 +8,14 @@ local SetupRegistry = ns:GetModule("Encounters.SetupRegistry")
 local RaidWarning = ns:GetModule("Services.RaidWarningService")
 local Messages = ns:GetModule("Services.MessageService")
 local Assignments = ns:GetModule("Services.AssignmentService")
+local AssignmentPlan = ns:GetModule("Services.AssignmentPlanService")
 local Setup = ns:GetModule("Services.SetupService")
 local Timeline = ns:GetModule("Services.TimelineService")
 local Encounter = ns:GetModule("Services.EncounterService")
 local UI = ns:GetModule("UI.MainFrame")
 local SettingsUI = ns:GetModule("UI.SettingsFrame")
 local AssignmentUI = ns:GetModule("UI.AssignmentFrame")
+local AssignmentPreviewUI = ns:GetModule("UI.AssignmentPreview")
 local Launchers = ns:GetModule("UI.AssignmentLaunchers")
 local SetupCard = ns:GetModule("UI.SetupCard")
 local App = ns:GetModule("Core.App")
@@ -154,8 +156,25 @@ local function openAssignments()
     AssignmentUI:Open(App.activeBossKey, App.activeDifficultyKey)
 end
 
+local function previewAssignments(bossKey, difficultyKey, values)
+    local allowed, reason = canEditAssignments()
+    if not allowed then return false, reason end
+
+    local lines, planReason = AssignmentPlan:BuildLines(bossKey, difficultyKey, values)
+    if not lines then return false, "Preview blocked: " .. tostring(planReason or "invalid assignments.") end
+    if #lines == 0 then return false, "Preview has no filled assignments." end
+
+    ns:Print("Assignment preview (local only; nothing sent to raid chat):")
+    for index = 1, #lines do ns:Print(("%d. %s"):format(index, lines[index])) end
+    return true, ("Previewed %d assignment line%s locally."):format(#lines, #lines == 1 and "" or "s")
+end
+
 local function announceAssignments(bossKey, difficultyKey)
-    local lines = Assignments:GetPlanLines(bossKey, difficultyKey)
+    local lines, reason = AssignmentPlan:BuildLines(bossKey, difficultyKey, Assignments:GetValues(bossKey, difficultyKey))
+    if not lines then
+        ns:Print("Assignment announcement blocked: " .. tostring(reason or "invalid assignments."))
+        return false
+    end
     if #lines == 0 then
         ns:Print("No assignments are filled in for this boss and difficulty.")
         return false
@@ -178,6 +197,7 @@ function App:Initialize(...)
         canOpen = canEditAssignments,
         onAnnounce = announceAssignments,
     })
+    AssignmentPreviewUI:Attach(AssignmentUI, previewAssignments)
     Launchers:Attach(UI, SettingsUI, openAssignments)
     refreshAssignmentSurface()
     refreshSetupCard(true)
