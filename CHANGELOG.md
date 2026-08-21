@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.0-beta.62 — 2026-08-21
+
+- Remove the obsolete `AssignmentService:GetPlanLines()` implementation now that both PREVIEW and ANNOUNCE use `Services/AssignmentPlanService.lua` as their canonical assignment-plan renderer.
+- Keep beta.61 behavior, UI placement, safety boundaries and output unchanged; this cleanup removes the final duplicate formatting path rather than introducing another feature.
+- Add a regression that prevents the legacy duplicate renderer from returning while preserving the existing preview/announce ownership contract.
+
 ## 0.9.0-beta.61 — 2026-08-21
 
 - Add a themed `PREVIEW` control beside `ANNOUNCE` in the pre-pull Boss Assignments footer so the raid leader can validate and inspect the current unsaved assignment draft locally before saving or broadcasting it.
@@ -93,7 +99,7 @@
 - Correct Twin Fangs Normal Ravenous Feast so every hit requires fresh eligible 3+ soakers; Heroic/Mythic retain explicit preassigned three-group rotations while volatile Eternal Venom lethal thresholds remain qualitative.
 - Add/retain source-backed raidleader coordination only: Sszorak Cyst Poppers/Mutilate groups plus Dig In cooldown call, Sentinels fixed physical sides, Lost Explorers fixed Thud markers/fish order, Coiled Altar collector/Wail/Guillotine ownership and Mythic-only Ula'tek rotations.
 - Re-review live-launch provider drift on 2026-08-19: DBM watched modules remain unchanged; changed BigWigs Venomous Abyss master modules are re-pinned after semantic review while the core callback contract remains compatible.
-- Document that BigWigs v419.2 predates the finalized Coiled Altar module and keep Blizzard Encounter Timeline/manual fallback as the expected safe behavior when a stable bossmod lacks a usable bar.
+- Document that BigWigs v419.2 predates the finalized Coiled Altar boss module and keep Blizzard Encounter Timeline/manual fallback as the expected safe behavior when a stable bossmod lacks a usable bar.
 - Keep Ula'tek manual-only and preserve the live-evidence boundary: source/CI can make beta.51 technically green, but Retail pull, taint, performance, provider and UI acceptance still require live evidence.
 - Keep setup confirmation session-scoped and pre-pull-only so `/rla doctor` cannot report stale marker/prep readiness after a reload; add `CHECK SETUP` plus marker/prep counts and regression coverage.
 - Re-verify the runtime-only release boundary: the distributable ZIP contains only `RaidLeadAssist.toc` plus the 53 audited runtime Lua files; repository docs/tests/audit scripts stay in source control and out of the addon package.
