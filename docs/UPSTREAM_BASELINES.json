@@ -84,14 +84,14 @@
     {
       "name": "BigWigs",
       "repository": "BigWigsMods/BigWigs",
-      "releaseTag": "v421.6",
-      "releaseCommit": "113c7f2169e14f5959cd2d45c0d4fc22d6a739ce",
+      "releaseTag": "v422",
+      "releaseCommit": "881cd496a97f5479302ed936ecfe5fb0e50ac71b",
       "watchPaths": [
         {
           "ref": "master",
           "path": "Core/BossPrototype.lua",
           "blobSha": "4d9e26f894455743f66ae87908a043f6f8d6cb2f",
-          "reason": "The public Timer/CastTimer/StartBar contracts remain byte-identical to the previous RLA review. Direct Timer still exposes isApproximate, CastTimer retains its public shape and normal bars keep the optional timeline event ID in the final StartBar slot."
+          "reason": "The v422 release keeps the public Timer/CastTimer/StartBar contract byte-identical to the previous RLA review. Direct Timer still exposes isApproximate, CastTimer retains its public shape and normal bars keep the optional timeline event ID in the final StartBar slot."
         },
         {
           "ref": "master",
@@ -103,49 +103,49 @@
           "ref": "master",
           "path": "TheVenomousAbyss/Nekzali.lua",
           "blobSha": "74f5521d9ec51d8e60973aaabe30207071b1f75f",
-          "reason": "Current BigWigs source retains the reviewed Nek'zali timer surface; provider output is matched by RLA using spell ID before timer name and remains live-gated for encounter precision."
+          "reason": "BigWigs v422 retains the reviewed Nek'zali timer surface; provider output is matched by RLA using spell ID before timer name and remains live-gated for encounter precision."
         },
         {
           "ref": "master",
           "path": "TheVenomousAbyss/TwinFangs.lua",
           "blobSha": "10d48f51a322d96343f9cfdf48c333eb0f21d6d6",
-          "reason": "Current BigWigs source retains the reviewed Twin Fangs timer surface; Ravenous Feast and movement/soak timing remain part of the live provider matrix."
+          "reason": "BigWigs v422 retains the reviewed Twin Fangs timer surface; Ravenous Feast and movement/soak timing remain part of the live provider matrix."
         },
         {
           "ref": "master",
           "path": "TheVenomousAbyss/CoiledAltar.lua",
           "blobSha": "326009d05c5fe91167ad7fb897ea56a91c7f1540",
-          "reason": "Post-v421.6 master adds intermission event handling and corrects the difficulty-specific Spiritcackle rename. RLA matches numeric spell keys before names, so the rename is not a source-level call-selection dependency; intermission/timer lifecycle remains live-gated."
+          "reason": "BigWigs v422 incorporates the Coiled Altar intermission handling and difficulty-specific Spiritcackle display correction reviewed after v421.6. RLA matches numeric spell keys before names, so the rename is not a source-level call-selection dependency; intermission/timer lifecycle remains live-gated."
         },
         {
           "ref": "master",
           "path": "TheVenomousAbyss/Sentinels.lua",
           "blobSha": "9114bf6331598d210e20ffe3716e05842ccb43c6",
-          "reason": "Current source retains the reviewed Sentinels timer/lifecycle surface; Stasis, Miasma and Protovenom behavior remains live-gated."
+          "reason": "BigWigs v422 retains the reviewed Sentinels timer/lifecycle surface; Stasis, Miasma and Protovenom behavior remains live-gated."
         },
         {
           "ref": "master",
           "path": "TheVenomousAbyss/Explorers.lua",
           "blobSha": "8176b9593c9242b3c5894c6632a4e27882c9c68a",
-          "reason": "Current source retains the reviewed Lost Explorers timer surface after prior duration-route updates; exact live behavior remains matrix-tested."
+          "reason": "BigWigs v422 retains the reviewed Lost Explorers timer surface after prior duration-route updates; exact live behavior remains matrix-tested."
         },
         {
           "ref": "master",
           "path": "TheVenomousAbyss/Vashnik.lua",
           "blobSha": "6531b296d147499bc45d27f571c86a812274665b",
-          "reason": "Current source retains the reviewed Vashnik timer surface; RLA's spell-ID-first mapping and encounter-ID guard remain the source contract."
+          "reason": "BigWigs v422 retains the reviewed Vashnik timer surface; RLA's spell-ID-first mapping and encounter-ID guard remain the source contract."
         },
         {
           "ref": "master",
           "path": "TheVenomousAbyss/Sszorak.lua",
           "blobSha": "f0e6b961c9801e0450d34a64b8f64cde82d95ffd",
-          "reason": "Current source retains the reviewed Sszorak timer surface; difficulty-specific live precision remains an acceptance requirement."
+          "reason": "BigWigs v422 retains the reviewed Sszorak timer surface; difficulty-specific live precision remains an acceptance requirement."
         },
         {
           "ref": "master",
           "path": "TheVenomousAbyss/Ulatek.lua",
           "blobSha": "2db5f87a85d5868a0800fa63ca4d9ff79f08eec4",
-          "reason": "Current source contains Ula'tek timing, but RLA deliberately keeps every Ula'tek raidleader call manual-only. Provider changes cannot promote PREPARE/PRESS/TTS without explicit review and live evidence."
+          "reason": "BigWigs v422 contains Ula'tek timing, but RLA deliberately keeps every Ula'tek raidleader call manual-only. Provider changes cannot promote PREPARE/PRESS/TTS without explicit review and live evidence."
         }
       ]
     }
