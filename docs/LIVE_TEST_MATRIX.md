@@ -12,8 +12,9 @@ Current provider baselines for tonight:
 
 - DBM stable: **12.1.5**, release commit `9a3ab9e404312b2515f0143a67a1d8392e9ad6a2`. RLA's 2026-08-21 source review confirms the public DBM Timer callback file used by the provider remained byte-identical to the prior reviewed contract, while DBM's shared Encounter Timeline batching and all eight Venomous Abyss encounter modules changed since 12.1.4. Those changed routes therefore require focused live provider checks below.
 - DBM current `master` is also watched separately because it can advance after the stable release. The exact watched file hashes are stored in `docs/UPSTREAM_BASELINES.json`; do not substitute an unrecorded upstream state for the stable baseline without updating the evidence.
-- BigWigs stable: **v421.6**, release commit `113c7f2169e14f5959cd2d45c0d4fc22d6a739ce`. The public `BigWigs_Timer`, `BigWigs_CastTimer` and normal `BigWigs_StartBar` message contracts remain byte-identical to the previous reviewed RLA contract.
-- Current BigWigs `master` is watched separately. After v421.6 the reviewed relevant change is Coiled Altar intermission handling plus a difficulty-specific Spiritcackle display rename. RLA matches numeric spell IDs before timer names, so that rename is not a source-level call-selection dependency; intermission/lifecycle behavior remains a live gate.
+- BigWigs GitHub stable baseline: **v422**, release commit `881cd496a97f5479302ed936ecfe5fb0e50ac71b`. v422 was published during this audit and was detected by the PR-time online drift gate. Compared with v421.6, RLA's watched core callback contract is unchanged; within the watched Venomous Abyss provider surface only Coiled Altar changed.
+- At the same audit moment CurseForge still displayed **v421.6** as its Retail main file. Record the exact installed BigWigs version. Both v421.6 and v422 have been source-reviewed here, but v422 is the current GitHub release baseline; v422 incorporates the reviewed Coiled Altar intermission/Spiritcackle correction.
+- Current BigWigs `master` is watched separately. RLA matches numeric spell IDs before timer names, so the Spiritcackle display rename is not a source-level call-selection dependency; intermission/lifecycle behavior remains a live gate.
 - Current DBM Venomous Abyss modules can switch between hardcoded Encounter Timeline routing and fail-closed Blizzard fallback. RLA treats DBM timing as exact only while DBM has asserted `DBM_IgnoreBlizzAPI` authority and can actually supply enabled boss timers. After `DBM_ResumeBlizzAPI`, the DBM copy must not remain actionable merely because its provider name is DBM.
 - BigWigs direct timers preserve the upstream `isApproximate` signal. A BigWigs nil-module `StartBar` produced by the Blizzard bridge does not expose that signal and is therefore preview-only in RLA.
 - Blizzard Encounter Timeline events explicitly marked `isApproximate=true` are preview-only. They must never become actionable PREPARE/PRESS/TTS timing merely because their source is Blizzard or because a bossmod re-emits the event.
@@ -31,13 +32,13 @@ Record one evidence line per item with date/time, Retail build, installed RLA SH
 - [ ] Open RLA through its normal UI and AddOn Compartment path; left-click toggles raid controls and right-click opens settings.
 - [ ] With no bossmod active, select one supported encounter and verify manual calls remain usable and no provider failure creates an actionable phantom timer.
 - [ ] With **DBM 12.1.5**, start one supported Normal/Heroic encounter or reproducible provider test path and verify encounter identity, one timer occurrence, PREPARE/PRESS ordering and wipe/reset cleanup.
-- [ ] With **BigWigs v421.6**, repeat the same minimal lifecycle and verify exact/approximate semantics are respected.
+- [ ] With the exact installed **BigWigs v421.6 or v422** build, repeat the same minimal lifecycle and verify exact/approximate semantics are respected. Prefer v422 if that is the installed current GitHub release; record v421.6 explicitly when the distribution client has not yet updated.
 - [ ] With both bossmods enabled where practical, verify duplicate representations collapse to one mechanic occurrence and provider priority does not create double PREPARE/PRESS/TTS.
 - [ ] Verify one Blizzard `isApproximate=true` timeline item cannot drive actionable PREPARE/PRESS/TTS.
 - [ ] Wipe/restart once and confirm no stale timer, call acknowledgement, assignment or provider authority survives into the next pull.
 - [ ] Capture Lua/taint output for the smoke run; any `ADDON_ACTION_BLOCKED`, Lua error, duplicate actionable call or stale next-pull timer is a tonight **NO-GO** until reproduced and fixed.
 
-If the raid tonight includes Nek'zali or Coiled Altar, also execute their current-provider focused rows below because both upstream providers changed live routing around those encounters during the current release window.
+If the raid tonight includes Nek'zali or Coiled Altar, also execute their current-provider focused rows below because provider routing changed around those encounters during the current release window.
 
 ## Environment matrix
 
@@ -47,7 +48,7 @@ Test at minimum:
 
 - 1920x1080, 2560x1440, 3840x2160 and an ultrawide resolution at representative UI scales.
 - English plus at least one non-English client to prove mechanic identity is ID-driven rather than localized-string driven.
-- no bossmod; DBM **12.1.5** only; current DBM source where practical; BigWigs **v421.6** only; current BigWigs source where practical; DBM+BigWigs; Blizzard timeline available with each relevant combination.
+- no bossmod; DBM **12.1.5** only; current DBM source where practical; BigWigs **v422** only when available; installed v421.6 where the distribution client still serves it; current BigWigs source where practical; DBM+BigWigs; Blizzard timeline available with each relevant combination.
 - clean SavedVariables, upgraded historical SavedVariables and intentionally malformed recoverable SavedVariables.
 - raid leader, raid assistant and ordinary member permissions.
 
@@ -74,9 +75,9 @@ For every timed mechanic reproduce the occurrence more than once when practical.
 - Transition from DBM hardcoded authority to Blizzard fallback during the same pull where upstream supports that recovery. Verify no stale exact timer survives the authority release and no replacement/fallback bar is precision-escalated.
 - **DBM 12.1.5 shared batching regression:** reproduce two legitimate overlapping timeline timers with the same rounded duration where practical and verify the current DBM batching change does not cause RLA to drop the surviving legitimate occurrence or emit duplicate PREPARE/PRESS for a superseded event.
 - **Nek'zali / DBM 12.1.5:** verify current live Normal/Heroic routing for Restless Amani, Hungering Pyre, Invoke and Grasping Depths against RLA's registered spell identities. If DBM hits an unmatched state and resumes Blizzard, RLA exactness must drop immediately rather than remaining exact by provider name.
-- **Nek'zali / BigWigs v421.6:** verify the current direct timer identities/counters are mapped to the intended RLA calls and repeated Phase 1/2 occurrences do not leave stale or duplicate timers.
+- **Nek'zali / BigWigs v421.6 or v422:** verify the current direct timer identities/counters are mapped to the intended RLA calls and repeated Phase 1/2 occurrences do not leave stale or duplicate timers.
 - **Coiled Altar / DBM 12.1.5:** exercise current Normal/Heroic routing and at least one phase/intermission transition. Confirm `ResumeBlizzardAPI` removes DBM exact authority and no stale exact timer survives into the fallback representation.
-- **Coiled Altar / BigWigs v421.6:** verify current stable timer lifecycle. If testing post-v421.6 `master`, specifically exercise the updated intermission handling and Spiritcackle display rename; numeric spell-key mapping must continue to select the same RLA mechanic and wipe/reset must clear the bar.
+- **Coiled Altar / BigWigs v422:** specifically exercise the v422 intermission handling and Spiritcackle display correction; numeric spell-key mapping must continue to select the same RLA mechanic and wipe/reset must clear the bar. If only v421.6 is installed from the distribution client, record that exact version and still verify the stable timer lifecycle.
 - Vashnik current DBM source: exercise reviewed live routing and, if reproducible, an unmatched/bad-state timeline transition. Verify duplicate handling does not leave two RLA timers and that `ResumeBlizzardAPI` changes DBM timing to preview-only.
 - Lost Explorers with current DBM source: verify direct supported timers map to the correct mechanic and any Blizzard fallback remains preview-only unless independently exact. Repeat around phase/lifecycle transitions because the 12.1.5 module routing changed materially.
 - DBM current Sentinels: verify Stasis/Miasma/Protovenom identities and an authority release cannot leave stale exact bars.
