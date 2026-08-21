@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.0-beta.61 — 2026-08-21
+
+- Add a themed `PREVIEW` control beside `ANNOUNCE` in the pre-pull Boss Assignments footer so the raid leader can validate and inspect the current unsaved assignment draft locally before saving or broadcasting it.
+- Move preview ownership out of `Core/ProductivityIntegration.lua` and into the canonical assignment domain: `Core/AssignmentIntegration.lua` now owns preview/announce wiring and `Services/AssignmentPlanService.lua` owns their shared bounded line rendering.
+- Make PREVIEW and ANNOUNCE use the same validation, required-field checks, 200-character Raid Warning line budget and 12-line plan budget, eliminating formatting drift between local inspection and the actual assignment briefing.
+- Keep preview local-only and fail-closed: it never saves the draft or sends chat, and the existing pre-pull/combat/newer-schema assignment boundary remains authoritative.
+- Reflow assignment footer feedback above the action row at full width so PREVIEW does not squeeze validation/status text beside the buttons; keep the control on the existing `UI.ActionButton` theme, sizing and spacing system.
+- Extend regression coverage for module order, assignment-domain ownership, shared PREVIEW/ANNOUNCE rendering, local-only safety and the full-width footer layout.
+- Preserve the existing scope boundary: no addon networking, combat-log decision processing, unit-state scanning, protected actions, automarking, loot/invite/attendance features or Method Raid Tools source/assets are introduced.
+
 ## 0.9.0-beta.60 — 2026-08-20
 
 - Move beta.59 productivity controls into the canonical themed UI layer: READY/CHECK beside Settings, LEADS beside AUTO, and PRESETS/MY TASKS in the pre-pull Boss Assignments surface.
