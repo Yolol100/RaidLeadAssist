@@ -20,6 +20,8 @@ for _, locale in ipairs({ "deDE", "esES", "esMX", "frFR", "itIT", "koKR", "ptBR"
 end
 
 assert(source:find('buttonName == "RightButton"', 1, true), "right-click settings route missing")
+assert(source:find("function RaidLeadAssist_CompartmentEnter(_, menuButtonFrame)", 1, true), "modern AddOn Compartment enter signature missing")
+assert(source:find('GameTooltip:SetOwner(menuButtonFrame, "ANCHOR_LEFT")', 1, true), "tooltip must anchor to the actual compartment frame")
 assert(source:find("MainFrame:IsShown()", 1, true), "left-click toggle must use canonical MainFrame")
 assert(source:find("SettingsFrame:Open(App.activeBossKey)", 1, true), "settings route must use canonical guarded SettingsFrame")
 assert(not source:find("SendChatMessage", 1, true), "compartment must not send chat")
