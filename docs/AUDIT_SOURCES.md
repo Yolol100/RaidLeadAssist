@@ -1,6 +1,6 @@
 # Audit source register
 
-Review date: 2026-08-21. Changing platform/provider facts must be rechecked before a release or same-day readiness claim.
+Review date: 2026-08-22. Changing platform/provider facts must be rechecked before a release or same-day readiness claim.
 
 ## Blizzard / WoW
 
@@ -11,7 +11,7 @@ Review date: 2026-08-21. Changing platform/provider facts must be rechecked befo
 
 Audit implications: addon code stays readable/free of in-game advertising, premium behavior or donation solicitation, avoids real-time combat-decision automation, treats secret values fail-closed, validates the Retail interface/API surface and uses the Blizzard timeline only as presentation timing. Blizzard's published policy also names excessive chat, unnecessary disk loading and slow frame rates as examples of negative impact, so live performance/soak remains a release gate rather than a source-only claim.
 
-The 2026-08-21 review reconfirmed Retail interface `120100` / Patch 12.1 as the current target. Patch-level secret/restricted-value rules remain a fail-closed input constraint; source compatibility never authorizes combat-decision scanning that Blizzard has restricted.
+The 2026-08-22 same-day review retains Retail interface `120100` / Patch 12.1 as the current target. Patch-level secret/restricted-value rules remain a fail-closed input constraint; source compatibility never authorizes combat-decision scanning that Blizzard has restricted.
 
 Post-unlock review confirmed the regional Season 2/Venomous Abyss unlock schedule. No undocumented encounter tuning is encoded merely because a community/datamine source changes; encounter or timing changes require a current authoritative source or reproducible live evidence.
 
@@ -26,26 +26,20 @@ Post-unlock review confirmed the regional Season 2/Venomous Abyss unlock schedul
 
 Audit implications: least-privilege workflow permissions, actions pinned to full SHAs, no unsafe PR-event interpolation, dependency monitoring, secret hygiene, protected `main` as an owner/admin action, deterministic artifacts, checksum and provenance.
 
-## Bossmod contracts — refreshed 2026-08-21
+## Bossmod contracts — refreshed 2026-08-22
 
 - DBM repository/releases: https://github.com/DeadlyBossMods/DeadlyBossMods
 - BigWigs repository/releases: https://github.com/BigWigsMods/BigWigs
 
-The machine-readable exact reviewed releases and current-master file fingerprints live in `UPSTREAM_BASELINES.json`. The stable GitHub release-contract pins for the 2026-08-21 evening audit are DBM `12.1.5` (`9a3ab9e404312b2515f0143a67a1d8392e9ad6a2`) and BigWigs `v422` (`881cd496a97f5479302ed936ecfe5fb0e50ac71b`). Current upstream `master` is monitored separately because it can advance after a stable release.
+The machine-readable exact reviewed releases and current-master file fingerprints live in `UPSTREAM_BASELINES.json`. Stable release-contract pins remain DBM `12.1.5` (`9a3ab9e404312b2515f0143a67a1d8392e9ad6a2`) and BigWigs `v422` (`881cd496a97f5479302ed936ecfe5fb0e50ac71b`). The 2026-08-22 readiness refresh detected new post-release `master` drift in both projects and re-reviewed it instead of treating yesterday's green state as current.
 
-The BigWigs release moved from v421.6 to v422 during this audit. The new PR-time online drift gate detected the change and blocked the first audit attempt. Comparing v421.6 to v422 showed nine commits: almost all changed files were loader/localization/aura-maintenance surfaces; within RLA's watched raid-provider surface only `TheVenomousAbyss/CoiledAltar.lua` changed. BigWigs v422 points at the same current upstream state already reviewed for the Coiled Altar intermission handling and difficulty-specific Spiritcackle display correction. The watched `Core/BossPrototype.lua` is unchanged, so the public `BigWigs_Timer`, `BigWigs_CastTimer` and normal `BigWigs_StartBar` contracts did not drift.
+DBM `master` is four commits ahead of the 12.1.5 release at this review. The public `DBM-Core/modules/objects/Timer.lua` callback surface and the watched shared `BossMod.lua` batching fingerprint are unchanged. The raid-module changes are mostly common display aliases/warning presentation. Nek'zali is the important identity change: upstream now uses `1305421` as the canonical Hungering Pyre timer/warning ID rather than `1290679`; RLA already registers both IDs for the same Pyre call. Entombed Sentinels, Twin Fangs, Coiled Altar, Vashnik and Sszorak retain the numeric mechanic identities consumed by RLA, and Lost Explorers only removes a stale commented alias. RLA remains encounter-scoped and spell-ID-first, so these display changes cannot silently select another call.
 
-At the same audit moment CurseForge still displayed v421.6 as its Retail main file, so distribution surfaces may temporarily disagree. RLA therefore records the exact installed bossmod version in live evidence rather than assuming every user receives the same release simultaneously. v421.6 remains a previously reviewed subset; v422 is the current GitHub release baseline used by the upstream drift gate.
+DBM `master` also adds initial Ula'tek Normal hardcoded routing. Upstream explicitly says Stage 2 is incomplete, Stage 3 is unimplemented, and the available Normal kill ended before full evidence. RLA therefore does not treat this as support evidence: every Ula'tek call remains `timing=false`, and no DBM traffic can create PREPARE/PRESS/TTS without a separate product change plus live proof.
 
-DBM `12.1.5` changed shared Encounter Timeline batching/resolver behavior and all eight Venomous Abyss encounter modules relative to the prior 12.1.4 review. The watched `DBM-Core/modules/objects/Timer.lua` file remains byte-identical, so RLA's public `DBM_TimerBegin`/Stop/Update/Pause/Resume/FadeUpdate callback field contract did not drift. RLA does not call DBM's private timeline batching helpers; nevertheless, route/overlap/fallback behavior changed enough that duplicate-timer and authority-release scenarios remain explicit live gates for tonight.
+BigWigs `master` is three commits ahead of v422 at this review. The relevant `Core/BossPrototype.lua` patch changes internal BigWigs/LittleWigs timeline-error reporting and adds a World difficulty label; it does not change `BigWigs_Timer`, `BigWigs_CastTimer`, normal `BigWigs_StartBar` or `isApproximate` callback semantics consumed by RLA. The watched Venomous Abyss encounter files remain at the v422-reviewed fingerprints.
 
-Current DBM Nek'zali source retains the encounter ID and the RLA-consumed Restless Amani, Hungering Pyre and Grasping Depths spell identities while replacing earlier routing with live Normal/Heroic logic. Unmatched states can still return authority to Blizzard. RLA therefore continues to require DBM encounter identity plus active hardcoded authority before treating the DBM representation as exact; provider name alone is insufficient.
-
-BigWigs v422 incorporates the Coiled Altar changes that were previously only on post-v421.6 `master`. RLA matches numeric spell IDs before timer names, so the Spiritcackle display rename cannot by itself select a different registered call when the numeric key is present; live intermission/lifecycle behavior remains a separate gate.
-
-Ula'tek remains deliberately manual-only even though current DBM/BigWigs contain materially more timer/event coverage. Source availability is not evidence that those timings are stable, strategically useful or safe to promote to automatic PREPARE/PRESS/TTS.
-
-The scheduled upstream-drift workflow checks the machine-readable current-master fingerprints twice daily. Baseline changes now also run the same online comparison in pull requests, so a newly reviewed provider baseline cannot be merged without checking it against the actual upstream refs at that moment.
+The scheduled upstream-drift workflow checks the machine-readable current-master fingerprints twice daily. Baseline changes also run the same online comparison in pull requests, so a newly reviewed provider baseline cannot be merged without checking it against the actual upstream refs at that moment.
 
 ## Method Raid Tools comparison
 
@@ -63,7 +57,7 @@ Deliberately not adopted: network-synchronized live assignment collaboration, ge
 
 Encounter-facing copy is checked against current Encounter Journal/live evidence and reputable current raid guides, then remains marked live-pending until reproduced in Retail. Source disagreement never authorizes silently enabling timing or hard-coding volatile thresholds.
 
-The release review uses current Wowhead encounter guides/Journal data, current Raidstrats strategy guidance where useful, current DBM/BigWigs source, Method guides as an additional strategy comparison, and the user-provided Ready Check Pull recap evidence where it was previously supplied. On 2026-08-21 the high-risk public claims were rechecked against currently indexed Patch 12.1 guidance. No source-only review converts an encounter to `PASS-LIVE`.
+The strategy review uses current Wowhead encounter guides/Journal data, current Raidstrats strategy guidance where useful, current DBM/BigWigs source, Method guides as an additional strategy comparison, and the user-provided Ready Check Pull recap evidence where it was previously supplied. The 2026-08-22 provider refresh found timing-provider drift but no new source evidence that justifies silently changing encounter strategy text. No source-only review converts an encounter to `PASS-LIVE`.
 
 A useful volatility example is Twin Fangs `Eternal Venom`: current public guides disagree on the exact lethal-stack presentation, while the Adventure Journal consistently exposes the three-hit Ravenous Feast behavior and the penalty when fewer than three players are struck. RLA therefore deliberately avoids a fixed Eternal Venom threshold in player copy and retains the stable Feast instruction instead.
 
@@ -73,6 +67,7 @@ A useful volatility example is Twin Fangs `Eternal Venom`: current public guides
 - Heroic/Mythic Cremation handling uses persistent Amani corpses; the player with the fire expiration handles the corpse rather than requiring a separate fixed Cremation roster.
 - Mythic Grasping Depths retains fresh Well groups because Soul Exhaustion makes immediate repeat entry unsafe.
 - Current source continues to show the 50% transition/intermission and Phase 2 burn window; exact live cadence remains provider/live evidence, not hard-coded strategy truth.
+- The 2026-08-22 DBM canonical Pyre timer-ID change is already covered by RLA's dual `1305421`/`1290679` identity map and does not alter the player tactic.
 
 ### Entombed Sentinels
 
@@ -121,6 +116,7 @@ A useful volatility example is Twin Fangs `Eternal Venom`: current public guides
 
 ### Ula'tek
 
-- Ula'tek remains the lowest-confidence encounter for automation. Public Patch 12.1 guides now describe the encounter, but the absence of prior public PTR live validation and the rapidly evolving bossmod timing still make source-only automatic timing unjustified.
+- Ula'tek remains the lowest-confidence encounter for automation. Public Patch 12.1 guides now describe the encounter, but the rapidly evolving bossmod routing still makes source-only automatic timing unjustified.
+- DBM's 2026-08-22 Normal routing is explicitly partial/WIP; it is monitoring evidence, not a readiness signal.
 - Normal/Heroic Spectral Coils stays a full-raid Square stack; Mythic alone introduces the assigned Coil rotation and additional egg/incubation ownership in the current plan.
 - Every Ula'tek call remains manual (`timing=false`) until live Retail evidence confirms stable exact public timer identity/cadence. Provider drycode, current guide availability or generic Blizzard timeline coverage alone is insufficient.
