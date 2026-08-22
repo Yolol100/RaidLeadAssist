@@ -93,7 +93,7 @@ for _, path in ipairs({
 }) do
     assert(baseline:find(path, 1, true), "missing provider watch: " .. path)
 end
-assert(baseline:find('"reviewedAt": "2026-08-21"', 1, true), "provider baseline review date must stay current")
+assert(baseline:find('"reviewedAt": "2026-08-22"', 1, true), "provider baseline review date must stay current")
 assert(baseline:find('"releaseTag": "12.1.5"', 1, true), "DBM stable release pin must be 12.1.5")
 assert(baseline:find("9a3ab9e404312b2515f0143a67a1d8392e9ad6a2", 1, true),
     "DBM 12.1.5 release commit must stay pinned")
@@ -101,28 +101,28 @@ assert(baseline:find("c8039ffb656fabcc2eb8a36c3a60643128487ba9", 1, true),
     "DBM Timer callback baseline must stay pinned")
 assert(baseline:find("74528cf69973360f748451aa55d3c6ceed5f0704", 1, true),
     "DBM shared timeline routing baseline must stay pinned")
-assert(baseline:find("75274f407d3a29135adecdd0c52abda0aef3cf68", 1, true),
-    "Nek'zali DBM 12.1.5 routing/fallback baseline must stay pinned")
-assert(baseline:find("b21f6e488c10ebfc09985a15ddfb1472655e500d", 1, true),
-    "Vashnik DBM 12.1.5 routing baseline must stay pinned")
-assert(baseline:find("2789198e9825b995d48bd49fabd9a475f3e23e66", 1, true),
-    "Twin Fangs DBM 12.1.5 lifecycle baseline must stay pinned")
-assert(baseline:find("91913e00ad850dbd21e89c36b91563ca97706007", 1, true),
-    "Coiled Altar DBM 12.1.5 routing/fallback baseline must stay pinned")
-assert(baseline:find("06756c06cac3ef3f9590640bd14dc3b2d55e16c8", 1, true),
-    "Sentinels DBM 12.1.5 routing baseline must stay pinned")
-assert(baseline:find("9a96bdcf6ec53b05fc398dbc0c2d51a0823496ef", 1, true),
-    "Lost Explorers DBM 12.1.5 routing baseline must stay pinned")
-assert(baseline:find("7aae99a569460b7f632cc1735e3ccfe0c33f8ba6", 1, true),
-    "Sszorak DBM 12.1.5 routing baseline must stay pinned")
-assert(baseline:find("1c03fdccc9d440529e30eaf53edd6853976b6d27", 1, true),
-    "Ula'tek DBM 12.1.5 source baseline must stay pinned")
+assert(baseline:find("3935cd4533990cc383f94094b4ff28e4567a0355", 1, true),
+    "Nek'zali post-12.1.5 source baseline must stay pinned")
+assert(baseline:find("f188c280ede3611b12d0c77f03b09c7a7bf014b5", 1, true),
+    "Vashnik post-12.1.5 source baseline must stay pinned")
+assert(baseline:find("c73f36b9e14a9ef9b9781de46b2e86c7db81ba86", 1, true),
+    "Twin Fangs post-12.1.5 source baseline must stay pinned")
+assert(baseline:find("36f1903937a607caac3635df0de68933f1fb9c18", 1, true),
+    "Coiled Altar post-12.1.5 source baseline must stay pinned")
+assert(baseline:find("830181f9d5331d5d82613a30c28c118d1a3c3143", 1, true),
+    "Sentinels post-12.1.5 source baseline must stay pinned")
+assert(baseline:find("7ccd102746225d5112bae03f0f624df79b494eee", 1, true),
+    "Lost Explorers post-12.1.5 source baseline must stay pinned")
+assert(baseline:find("326192f90b68a487b7883f86ca13c36a99c94929", 1, true),
+    "Sszorak post-12.1.5 source baseline must stay pinned")
+assert(baseline:find("e561b9c655e8e0138b4553ebc7a14bc25951665b", 1, true),
+    "Ula'tek WIP Normal-routing source baseline must stay pinned")
 
 assert(baseline:find('"releaseTag": "v422"', 1, true), "BigWigs stable release pin must be v422")
 assert(baseline:find("881cd496a97f5479302ed936ecfe5fb0e50ac71b", 1, true),
     "BigWigs v422 release commit must stay pinned")
-assert(baseline:find("4d9e26f894455743f66ae87908a043f6f8d6cb2f", 1, true),
-    "BigWigs BossPrototype callback baseline must stay pinned")
+assert(baseline:find("27d919c6e16e6f6304e1cdd2b46af0581d5a32eb", 1, true),
+    "BigWigs post-v422 BossPrototype source baseline must stay pinned")
 assert(baseline:find("74f5521d9ec51d8e60973aaabe30207071b1f75f", 1, true),
     "Nek'zali BigWigs v422 baseline must stay pinned")
 assert(baseline:find("9114bf6331598d210e20ffe3716e05842ccb43c6", 1, true),
