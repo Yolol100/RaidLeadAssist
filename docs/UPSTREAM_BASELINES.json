@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-08-20",
+  "reviewedAt": "2026-08-21",
   "wowInterface": 120100,
   "raidUnlock": {
     "eu": "2026-08-19",
@@ -10,142 +10,142 @@
     {
       "name": "DBM",
       "repository": "DeadlyBossMods/DeadlyBossMods",
-      "releaseTag": "12.1.4",
-      "releaseCommit": "88ec781e9b213dbf7d9ca59164a584c2529d9bf9",
+      "releaseTag": "12.1.5",
+      "releaseCommit": "9a3ab9e404312b2515f0143a67a1d8392e9ad6a2",
       "watchPaths": [
         {
           "ref": "master",
           "path": "DBM-Core/modules/objects/Timer.lua",
           "blobSha": "c8039ffb656fabcc2eb8a36c3a60643128487ba9",
-          "reason": "RLA consumes DBM timer callback contracts and authority state; the Timer contract remains byte-identical after the 2026-08-20 evening re-review"
+          "reason": "The DBM 12.1.5 release and current master retain the byte-identical Timer callback surface reviewed by RLA; DBM_TimerBegin/Stop/Update/Pause/Resume/FadeUpdate remain the provider boundary."
         },
         {
           "ref": "master",
           "path": "DBM-Core/modules/objects/BossMod.lua",
-          "blobSha": "57ba051543cac3612e273bf2f02ca3b7258fa388",
-          "reason": "RLA consumes shared Encounter Timeline batch and hardcoded-authority behavior; the watched BossMod contract remains byte-identical after the 2026-08-20 evening re-review"
+          "blobSha": "74528cf69973360f748451aa55d3c6ceed5f0704",
+          "reason": "DBM 12.1.5 changes shared Encounter Timeline batching and resolver lifecycle. RLA does not call those private helpers; it consumes emitted public timer callbacks. Overlap/duplicate behavior remains an explicit live matrix gate."
         },
         {
           "ref": "master",
           "path": "DBM-Raids-Midnight/DBM-Raids-Midnight_Mainline.toc",
           "blobSha": "3917a9aa212b00d11c42727e27bacbf396646ac9",
-          "reason": "Raid module inventory, Retail interface and Venomous Abyss load contract"
+          "reason": "Raid module inventory, Retail interface 120100 compatibility and Venomous Abyss load contract."
         },
         {
           "ref": "master",
           "path": "DBM-Raids-Midnight/TheVenomousAbyss/NekzalitheSoulcoiler.lua",
-          "blobSha": "a0e89c8e31318fc8e934c94dc030afaeb792767e",
-          "reason": "Normal hardcoded routing and fail-closed ResumeBlizzardAPI fallback preserve the RLA-consumed raidleader identities"
+          "blobSha": "75274f407d3a29135adecdd0c52abda0aef3cf68",
+          "reason": "DBM 12.1.5 replaces the former Heroic route with the live Normal/Heroic routing model and preserves explicit ResumeBlizzardAPI fallback on unmatched timeline state. RLA remains callback-driven and spell-ID-first; live Normal/Heroic timing is still required."
         },
         {
           "ref": "master",
           "path": "DBM-Raids-Midnight/TheVenomousAbyss/TheTwinFangs.lua",
-          "blobSha": "5314afd2931cd3ffc3234790acb7b4eb04816974",
-          "reason": "Reviewed routing retains RLA-consumed Feast, add, movement and soak identities with fail-closed Blizzard fallback and Submerge lifecycle coverage"
+          "blobSha": "2789198e9825b995d48bd49fabd9a475f3e23e66",
+          "reason": "DBM 12.1.5 contains live routing updates for Twin Fangs. RLA consumes generic DBM timer output rather than DBM's internal duration router; Feast/add/movement/soak correctness remains covered by the per-encounter live matrix."
         },
         {
           "ref": "master",
           "path": "DBM-Raids-Midnight/TheVenomousAbyss/TheCoiledAltar.lua",
-          "blobSha": "af76bc0cc67fc3a971fb6fd1a8b9f654c7d5200a",
-          "reason": "2026-08-20 evening source expands Normal Stage 3 hardcoded routing and refines phase transitions while retaining the explicit unknown-timer fail-closed Blizzard fallback. RLA already requires active DBM hardcoded authority before DBM timing can be actionable, so the broader coverage does not weaken precision semantics."
+          "blobSha": "91913e00ad850dbd21e89c36b91563ca97706007",
+          "reason": "DBM 12.1.5 substantially extends Coiled Altar live timeline routing while retaining an explicit fail-closed return to Blizzard timing. RLA keeps provider authority and exactness separate from strategy text; phase/intermission timing remains a live acceptance gate."
         },
         {
           "ref": "master",
           "path": "DBM-Raids-Midnight/TheVenomousAbyss/EntombedSentinels.lua",
-          "blobSha": "c82ba65249ce3b4d98293c9d299fbf8530fb9cd0",
-          "reason": "Normal routing remains compatible; Stasis, Miasma and Protovenom identities are unchanged and hardcoded routing can fail closed back to Blizzard"
+          "blobSha": "06756c06cac3ef3f9590640bd14dc3b2d55e16c8",
+          "reason": "DBM 12.1.5 updates Entombed Sentinels routing. RLA consumes the public timer callback surface and keeps encounter identity mandatory; Stasis/Miasma/Protovenom timing is rechecked in live acceptance."
         },
         {
           "ref": "master",
           "path": "DBM-Raids-Midnight/TheVenomousAbyss/TheLostExplorers.lua",
-          "blobSha": "cd0a4de36fefbcd9490df2a26be6322efcd400ce",
-          "reason": "2026-08-20 source switches Lost Explorers UNIT_FLAGS registration to RegisterSafeEventsInCombat. The change is encounter-lifecycle registration only; RLA's consumed timer identities and DBM hardcoded-versus-Blizzard authority contract remain unchanged."
+          "blobSha": "9a96bdcf6ec53b05fc398dbc0c2d51a0823496ef",
+          "reason": "DBM 12.1.5 materially revises Lost Explorers encounter routing. RLA does not depend on DBM's private event-registration logic; public timer identity/lifecycle remains the integration boundary and exact encounter behavior remains live-gated."
         },
         {
           "ref": "master",
           "path": "DBM-Raids-Midnight/TheVenomousAbyss/VashniktheMalignant.lua",
-          "blobSha": "06b08a1d288d961d7efe89d85bb8aca215da8d7e",
-          "reason": "Normal hardcoded routing, duplicate-batch handling and explicit ResumeBlizzardAPI recovery remain compatible with RLA's authority-bound exactness"
+          "blobSha": "b21f6e488c10ebfc09985a15ddfb1472655e500d",
+          "reason": "DBM 12.1.5 revises Vashnik live routing and duplicate handling. RLA remains authority-bound and callback-driven; Imbibe/Plague Froth/Dripping Fangs/Adaptive Infection/Catalyst behavior remains a live matrix check."
         },
         {
           "ref": "master",
           "path": "DBM-Raids-Midnight/TheVenomousAbyss/Sszorak.lua",
-          "blobSha": "bcfbcc0fea3c4e0c06336c0066accd3fdf33b0fc",
-          "reason": "Normal/Heroic routing remains log-confirmed and Mythic routing explicitly extrapolated; RLA keeps exactness authority-bound because hardcoded routing can fail closed back to Blizzard"
+          "blobSha": "7aae99a569460b7f632cc1735e3ccfe0c33f8ba6",
+          "reason": "DBM 12.1.5 updates Sszorak routing. RLA does not promote provider-internal assumptions to strategy truth and still requires live Normal/Heroic/Mythic provider validation."
         },
         {
           "ref": "master",
           "path": "DBM-Raids-Midnight/TheVenomousAbyss/Ulatek.lua",
-          "blobSha": "12b7ef5eedff1cb590b77c3861fdbc86ac95948c",
-          "reason": "Ula'tek remains manual/fail-closed in RLA; upstream timing is monitored without promoting it to a supported timed encounter"
+          "blobSha": "1c03fdccc9d440529e30eaf53edd6853976b6d27",
+          "reason": "Ula'tek remains manual/fail-closed in RLA. The DBM 12.1.5 source change is tracked but cannot make Ula'tek timed/actionable without separate product review and live evidence."
         }
       ]
     },
     {
       "name": "BigWigs",
       "repository": "BigWigsMods/BigWigs",
-      "releaseTag": "v419.2",
-      "releaseCommit": "e3e0d1e7df26c242e00dd7b30d5e1cc51b2bb9e5",
+      "releaseTag": "v422",
+      "releaseCommit": "881cd496a97f5479302ed936ecfe5fb0e50ac71b",
       "watchPaths": [
         {
           "ref": "master",
           "path": "Core/BossPrototype.lua",
           "blobSha": "4d9e26f894455743f66ae87908a043f6f8d6cb2f",
-          "reason": "The watched Timer/CastTimer/StartBar contracts remain byte-identical after the 2026-08-20 evening re-review; direct Timer still exposes isApproximate and the nil-module Blizzard StartBar bridge does not"
+          "reason": "The v422 release keeps the public Timer/CastTimer/StartBar contract byte-identical to the previous RLA review. Direct Timer still exposes isApproximate, CastTimer retains its public shape and normal bars keep the optional timeline event ID in the final StartBar slot."
         },
         {
           "ref": "master",
           "path": "TheVenomousAbyss/BigWigs_TheVenomousAbyss_Mainline.toc",
           "blobSha": "56ccb2131fd53e21588d0746b750eeeb70402b5c",
-          "reason": "Raid module inventory, Retail interface and Venomous Abyss load contract"
+          "reason": "Raid module inventory and Retail interface 120100 Venomous Abyss load contract."
         },
         {
           "ref": "master",
           "path": "TheVenomousAbyss/Nekzali.lua",
           "blobSha": "74f5521d9ec51d8e60973aaabe30207071b1f75f",
-          "reason": "The 2026-08-20 final aura-only pass adds stack-sound metadata to Hungering Pyre without changing timer/event identities; non-Mythic Possession Barrage remains outside RLA's raidleader call identities."
+          "reason": "BigWigs v422 retains the reviewed Nek'zali timer surface; provider output is matched by RLA using spell ID before timer name and remains live-gated for encounter precision."
         },
         {
           "ref": "master",
           "path": "TheVenomousAbyss/TwinFangs.lua",
           "blobSha": "10d48f51a322d96343f9cfdf48c333eb0f21d6d6",
-          "reason": "2026-08-20 evening source adds the Heroic Submerge duration mapping and adjusts aura metadata. Ravenous Feast and the shared movement/timer identities consumed by RLA remain intact; aura metadata is not an RLA timing input."
+          "reason": "BigWigs v422 retains the reviewed Twin Fangs timer surface; Ravenous Feast and movement/soak timing remain part of the live provider matrix."
         },
         {
           "ref": "master",
           "path": "TheVenomousAbyss/CoiledAltar.lua",
-          "blobSha": "5dfaa8188133c61647fc717151ccf284b9fe1ed4",
-          "reason": "2026-08-20 evening source substantially expands Normal/Heroic timeline mappings and changes Spiritcackle display text by difficulty; the final aura-only pass changes sound-on-dose metadata only. The underlying spell keys consumed by RLA remain stable."
+          "blobSha": "326009d05c5fe91167ad7fb897ea56a91c7f1540",
+          "reason": "BigWigs v422 incorporates the Coiled Altar intermission handling and difficulty-specific Spiritcackle display correction reviewed after v421.6. RLA matches numeric spell keys before names, so the rename is not a source-level call-selection dependency; intermission/timer lifecycle remains live-gated."
         },
         {
           "ref": "master",
           "path": "TheVenomousAbyss/Sentinels.lua",
           "blobSha": "9114bf6331598d210e20ffe3716e05842ccb43c6",
-          "reason": "Intermission/reset handling remains compatible; Stasis, Miasma and Protovenom identities are unchanged and backup Blizzard bridge events remain preview-only in RLA"
+          "reason": "BigWigs v422 retains the reviewed Sentinels timer/lifecycle surface; Stasis, Miasma and Protovenom behavior remains live-gated."
         },
         {
           "ref": "master",
           "path": "TheVenomousAbyss/Explorers.lua",
           "blobSha": "8176b9593c9242b3c5894c6632a4e27882c9c68a",
-          "reason": "2026-08-20 evening source adds additional Shell Spin and Throw Junk duration routes; the later aura-only stack-sound edit does not alter RLA-consumed timer identities."
+          "reason": "BigWigs v422 retains the reviewed Lost Explorers timer surface after prior duration-route updates; exact live behavior remains matrix-tested."
         },
         {
           "ref": "master",
           "path": "TheVenomousAbyss/Vashnik.lua",
           "blobSha": "6531b296d147499bc45d27f571c86a812274665b",
-          "reason": "2026-08-20 evening source replaces several Normal/Heroic duration mappings; the later aura-only metadata edit leaves the Imbibe, Plague Froth, Dripping Fangs, Adaptive Infection and Malignant Catalyst identities unchanged."
+          "reason": "BigWigs v422 retains the reviewed Vashnik timer surface; RLA's spell-ID-first mapping and encounter-ID guard remain the source contract."
         },
         {
           "ref": "master",
           "path": "TheVenomousAbyss/Sszorak.lua",
           "blobSha": "f0e6b961c9801e0450d34a64b8f64cde82d95ffd",
-          "reason": "The 2026-08-20 final aura-only pass changes aura labels/stack-sound metadata; Sszorak timer and spell identities consumed by RLA remain compatible."
+          "reason": "BigWigs v422 retains the reviewed Sszorak timer surface; difficulty-specific live precision remains an acceptance requirement."
         },
         {
           "ref": "master",
           "path": "TheVenomousAbyss/Ulatek.lua",
           "blobSha": "2db5f87a85d5868a0800fa63ca4d9ff79f08eec4",
-          "reason": "2026-08-20 source fixes Ula'tek phase-3 initial timer handling and the final aura-only pass adds stack-sound metadata. RLA deliberately keeps every Ula'tek raidleader call manual-only, so provider changes cannot promote PREPARE/PRESS/TTS without separate live evidence and a reviewed product decision."
+          "reason": "BigWigs v422 contains Ula'tek timing, but RLA deliberately keeps every Ula'tek raidleader call manual-only. Provider changes cannot promote PREPARE/PRESS/TTS without explicit review and live evidence."
         }
       ]
     }
