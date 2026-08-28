@@ -92,7 +92,7 @@ Registry:Register({
     key = "ulatek",
     name = "Ula'tek",
     encounterID = 3492,
-    strategyStatus = "12.1 Journal + current Wowhead/Warcraft Wiki + DBM/BigWigs source-reviewed 2026-08-19; final boss was not publicly PTR-tested; live validation required; timing remains manual",
+    strategyStatus = "12.1 Journal + current Wowhead/Warcraft Wiki + DBM/BigWigs source-reviewed 2026-08-28; current bossmod routing is still evolving; live validation required; timing remains manual",
     profiles = {
         normal = {
             explanation = {
