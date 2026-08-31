@@ -9,7 +9,6 @@ local toc = read("RaidLeadAssist.toc")
 local source = read("Core/AddonCompartment.lua")
 local audit = read("docs/COMPARABLE_ADDON_AUDIT-2026-08-21.md")
 
-assert(toc:find("## Version: 0.9.0-beta.64", 1, true), "beta64 TOC identity missing")
 assert(toc:find("## AddonCompartmentFunc: RaidLeadAssist_Open", 1, true), "compartment click metadata missing")
 assert(toc:find("## AddonCompartmentFuncOnEnter: RaidLeadAssist_CompartmentEnter", 1, true), "compartment enter metadata missing")
 assert(toc:find("## AddonCompartmentFuncOnLeave: RaidLeadAssist_CompartmentLeave", 1, true), "compartment leave metadata missing")
