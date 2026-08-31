@@ -20,6 +20,13 @@ local EXACT_CD_TYPES = {
 }
 
 local function timerPrecision(simpleType, fullType)
+    -- A present full type is provenance from DBM's richer callback contract.
+    -- Never let an opaque/secret value bypass the fail-closed precision rule,
+    -- even when the simplified type would otherwise be exact.
+    if fullType ~= nil and (Util.IsSecret(fullType) or type(fullType) ~= "string") then
+        return "approximate"
+    end
+
     if simpleType == "next" or simpleType == "stage" or simpleType == "cast" then
         return "exact"
     end
@@ -27,10 +34,8 @@ local function timerPrecision(simpleType, fullType)
 
     -- DBM 12.1.6+ exposes the true timer class as fullType. Its public simple
     -- type intentionally merges approximate cooldowns and exact next timers.
-    -- Keep legacy callbacks without fullType compatible with the old RLA path,
-    -- but fail closed when an opaque/secret full type is supplied.
+    -- Keep legacy callbacks without fullType compatible with the old RLA path.
     if fullType == nil then return "exact" end
-    if Util.IsSecret(fullType) or type(fullType) ~= "string" then return "approximate" end
     return EXACT_CD_TYPES[fullType] and "exact" or "approximate"
 end
 
