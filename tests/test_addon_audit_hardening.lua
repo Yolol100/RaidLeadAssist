@@ -140,6 +140,32 @@ assert(baseline:find("3c917465baad18138df0e68e71c8f413a67096e7", 1, true),
 assert(baseline:find("4c1f560e09a23191a5164a74884a5cfd3aae760e", 1, true),
     "Ula'tek BigWigs v424.1 baseline must stay pinned")
 
+local app = read("Core/App.lua")
+assert(app:find("Tested bossmod contracts: DBM 12.1.6; BigWigs v424.1", 1, true),
+    "runtime provider diagnostic must track the audited stable contracts")
+
+local readme = read("README.md")
+assert(readme:find("DBM 12.1.6", 1, true), "README DBM contract must track the audited baseline")
+assert(readme:find("BigWigs v424.1", 1, true), "README BigWigs contract must track the audited baseline")
+assert(readme:find("2026-08-31", 1, true), "README provider review date must stay current")
+
+local auditSources = read("docs/AUDIT_SOURCES.md")
+assert(auditSources:find("Review date: 2026-08-31", 1, true), "audit source register must stay current")
+assert(auditSources:find("DBM `12.1.6`", 1, true), "audit source DBM contract must track the baseline")
+assert(auditSources:find("BigWigs `v424.1`", 1, true), "audit source BigWigs contract must track the baseline")
+
+local liveMatrix = read("docs/LIVE_TEST_MATRIX.md")
+assert(liveMatrix:find("0.9.0-beta.65", 1, true), "live matrix must target the current runtime candidate")
+assert(liveMatrix:find("DBM 12.1.6", 1, true), "live matrix DBM contract must track the baseline")
+assert(liveMatrix:find("BigWigs v424.1", 1, true), "live matrix BigWigs contract must track the baseline")
+assert(liveMatrix:find("2026-08-31", 1, true), "live matrix provider review date must stay current")
+
+local toc = read("RaidLeadAssist.toc")
+assert(toc:find("## Version: 0.9.0-beta.65", 1, true), "TOC version must match the current runtime candidate")
+local changelog = read("CHANGELOG.md")
+assert(changelog:find("## 0.9.0-beta.65 — 2026-08-31", 1, true),
+    "changelog must document the current runtime candidate")
+
 local security = read("SECURITY.md")
 assert(security:find("RaidLeadAssist.toc", 1, true))
 assert(security:find("audited runtime files referenced by that TOC", 1, true))
@@ -148,3 +174,5 @@ assert(security:find("Private Vulnerability Reporting", 1, true),
 assert(security:find("must be verified independently", 1, true),
     "repository-native security settings must remain evidence-gated")
 assert(not security:find("audited TOC runtime plus README", 1, true))
+
+print("ok - addon audit hardening contracts")
