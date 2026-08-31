@@ -122,7 +122,7 @@ function App:PrintDoctor()
     ns:Print("Providers: " .. (providers ~= "" and providers or "manual only"))
     local observed = currentTimerTrafficSummary()
     ns:Print("Active timer traffic: " .. (observed ~= "" and observed or "none"))
-    ns:Print("Tested bossmod contracts: DBM 12.1.4; BigWigs v419.2")
+    ns:Print("Tested bossmod contracts: DBM 12.1.6; BigWigs v424.1")
     if encounter and encounter.strategyStatus then ns:Print("Strategy: " .. encounter.strategyStatus) end
 end
 
