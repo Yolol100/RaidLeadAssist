@@ -93,11 +93,11 @@ for _, path in ipairs({
 }) do
     assert(baseline:find(path, 1, true), "missing provider watch: " .. path)
 end
-assert(baseline:find('"reviewedAt": "2026-08-28"', 1, true), "provider baseline review date must stay current")
+assert(baseline:find('"reviewedAt": "2026-08-31"', 1, true), "provider baseline review date must stay current")
 assert(baseline:find('"releaseTag": "12.1.6"', 1, true), "DBM stable release pin must be 12.1.6")
 assert(baseline:find("c08dbfd91a006bad45352ea0d3d1a0cc1bc8367e", 1, true),
     "DBM 12.1.6 release commit must stay pinned")
-assert(baseline:find("c8039ffb656fabcc2eb8a36c3a60643128487ba9", 1, true),
+assert(baseline:find("143e09575c4f98e61da7b8900040a2bcb82d79ec", 1, true),
     "DBM Timer callback baseline must stay pinned")
 assert(baseline:find("a03a3faba696f09eb700bf39c6ada25b9f3d00d3", 1, true),
     "DBM shared boss-module baseline must stay pinned")
@@ -118,27 +118,27 @@ assert(baseline:find("a3c5072cb60d526e5cd9f7fe5e7d34c6d3627b05", 1, true),
 assert(baseline:find("7a60ab6bdacf226538c5b488edaca4088295ae49", 1, true),
     "Ula'tek current Normal/Heroic-routing source baseline must stay pinned")
 
-assert(baseline:find('"releaseTag": "v423.5"', 1, true), "BigWigs stable release pin must be v423.5")
-assert(baseline:find("3e43fde6d5372dccaa40fc6d3f18113b34d7e655", 1, true),
-    "BigWigs v423.5 release commit must stay pinned")
-assert(baseline:find("c9d4d434fea37cf8785a4cc9ff06f34acce662c6", 1, true),
-    "BigWigs post-v423.5 BossPrototype source baseline must stay pinned")
+assert(baseline:find('"releaseTag": "v424.1"', 1, true), "BigWigs stable release pin must be v424.1")
+assert(baseline:find("2f04791c4ac04a13f96757298e407014682d6d12", 1, true),
+    "BigWigs v424.1 release commit must stay pinned")
+assert(baseline:find("d1d2846ddaacf44af341f792c3ed82a5fab6d686", 1, true),
+    "BigWigs current BossPrototype source baseline must stay pinned")
 assert(baseline:find("990fee7abd2928ee0c437fc998b28f3d9774fc9f", 1, true),
-    "Nek'zali BigWigs v423.5 baseline must stay pinned")
+    "Nek'zali BigWigs v424.1 baseline must stay pinned")
 assert(baseline:find("06c97ad137b5a7d956f727e4e2477801efdc4050", 1, true),
-    "Sentinels BigWigs v423.5 baseline must stay pinned")
-assert(baseline:find("650ac80ffb7a750d0eaf837d9ae98bdfd117cd74", 1, true),
-    "Twin Fangs BigWigs v423.5 baseline must stay pinned")
-assert(baseline:find("9d26271a83a69dafe8fd5b31db735221919cd444", 1, true),
-    "Coiled Altar BigWigs v423.5 baseline must stay pinned")
+    "Sentinels BigWigs v424.1 baseline must stay pinned")
+assert(baseline:find("f7eaa1da682a3b02636ac97868aa5807f4cfb158", 1, true),
+    "Twin Fangs BigWigs current baseline must stay pinned")
+assert(baseline:find("58ef05b8dc62335f4f0ad56489d2f36a7b794701", 1, true),
+    "Coiled Altar BigWigs current baseline must stay pinned")
 assert(baseline:find("33fc9cccabee460d16d27f5bc83dade2f2691feb", 1, true),
-    "Vashnik BigWigs v423.5 baseline must stay pinned")
+    "Vashnik BigWigs v424.1 baseline must stay pinned")
 assert(baseline:find("bc9bd703b7a3dad07f9d6864ada922f2e3da6a5e", 1, true),
-    "Lost Explorers BigWigs v423.5 baseline must stay pinned")
+    "Lost Explorers BigWigs v424.1 baseline must stay pinned")
 assert(baseline:find("3c917465baad18138df0e68e71c8f413a67096e7", 1, true),
-    "Sszorak BigWigs v423.5 baseline must stay pinned")
+    "Sszorak BigWigs v424.1 baseline must stay pinned")
 assert(baseline:find("4c1f560e09a23191a5164a74884a5cfd3aae760e", 1, true),
-    "Ula'tek BigWigs v423.5 baseline must stay pinned")
+    "Ula'tek BigWigs v424.1 baseline must stay pinned")
 
 local security = read("SECURITY.md")
 assert(security:find("RaidLeadAssist.toc", 1, true))
@@ -148,5 +148,3 @@ assert(security:find("Private Vulnerability Reporting", 1, true),
 assert(security:find("must be verified independently", 1, true),
     "repository-native security settings must remain evidence-gated")
 assert(not security:find("audited TOC runtime plus README", 1, true))
-
-print("ok - addon audit hardening contracts are locked")
