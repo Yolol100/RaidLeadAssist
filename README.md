@@ -18,15 +18,15 @@ RLA consumes public **DBM**, **BigWigs** and Blizzard Encounter Timeline timing.
 
 Provider payloads are untrusted runtime input. Secret, malformed, stale or cross-encounter data is rejected/downgraded. Direct bossmod timers must resolve to the verified active encounter. Cross-provider occurrence reconciliation prevents duplicate calls/audio and a successful manual call acknowledges the occurrence so a late provider cannot immediately re-arm it.
 
-The stable compatibility floor remains **DBM 12.1.4** and **BigWigs v419.2**; those published releases are kept separate from current-source evidence. `docs/UPSTREAM_BASELINES.json` independently pins the exact watched DBM/BigWigs `master` files that were semantically re-reviewed on 2026-08-20. The evening re-review includes DBM's expanded Normal Coiled Altar Stage 3 routing and BigWigs' newer Vashnik, Twin Fangs, Coiled Altar and Lost Explorers mappings. DBM's watched Timer/BossMod contracts and BigWigs' watched BossPrototype timer contracts remain byte-identical, while changed boss files retain the encounter/spell identities RLA consumes.
+The current semantically reviewed stable provider contracts are **DBM 12.1.6** and **BigWigs v424.1**. `docs/UPSTREAM_BASELINES.json` separately pins those release commits and the exact watched current-`master` files re-reviewed on **2026-08-31**. DBM's post-release Timer change clarified that its simplified callback type can merge precise `next*` timers with approximate cooldown timers; RLA now uses the full timer type when available so those precision classes are not conflated. BigWigs' reviewed current-source changes in `BossPrototype.lua`, Twin Fangs and Coiled Altar do not change the timer callback shapes RLA consumes; they add non-timer core helpers/sorting, Mythic Twin Fangs submerge routing and a Coiled Altar phase-two race fix respectively.
 
-BigWigs `v419.2` predates the finalized Coiled Altar boss module, so RLA does not assume that a loaded stable BigWigs build can supply every live Venomous Abyss bar. When a bossmod cannot provide a usable matching timer, RLA intentionally falls back to Blizzard Encounter Timeline data for supported calls. Users do not need unreleased bossmod source for RLA to load or for manual calls to remain available.
+These versions are the current tested-contract evidence, not a promise that older unreviewed bossmod versions are still compatible. When a bossmod cannot provide a usable matching timer, RLA intentionally falls back to Blizzard Encounter Timeline data for supported calls. Manual calls remain available independently of bossmod timing.
 
 ## Ula'tek
 
-Ula'tek remains deliberately **manual-only** on every difficulty. Current DBM source has drycode/timeline mappings and BigWigs has timeline-backed coverage. BigWigs' 2026-08-20 source additionally fixes Phase 3 initial-timer handling and related custom-bar details, but this still does not constitute stable live-validated exact scheduling for RLA. Every Ula'tek call therefore remains `timing=false` pending live Retail proof.
+Ula'tek remains deliberately **manual-only** on every difficulty. Current DBM and BigWigs source can expose encounter timing, but source availability alone does not constitute stable live-validated exact scheduling for RLA. Every Ula'tek call therefore remains `timing=false` pending live Retail proof.
 
-Provider timer identity is kept separate from display spell identity; for example the current DBM drycode key used for Toxic Incubation cannot silently replace RLA's UI mechanic identity.
+Provider timer identity is kept separate from display spell identity; for example a provider drycode key used for Toxic Incubation cannot silently replace RLA's UI mechanic identity.
 
 ## Operational controls
 

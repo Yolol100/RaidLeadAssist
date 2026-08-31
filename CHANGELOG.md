@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.0-beta.65 — 2026-08-31
+
+- Refresh `/rla doctor` so its tested bossmod-contract line matches the semantically reviewed DBM `12.1.6` and BigWigs `v424.1` baselines.
+- Synchronize the living README, audit-source register and Retail live-test matrix with the 2026-08-31 provider review while preserving dated historical review/release documents.
+- Keep Ula'tek manual-only and retain the existing fail-closed DBM/BigWigs/Blizzard provider boundaries; no new combat automation or provider authority is introduced.
+- Add regression coverage that prevents the runtime provider diagnostic and current operational documentation from silently falling behind the audited provider baseline again.
+
 ## 0.9.0-beta.64 — 2026-08-21
 
 - Add a native WoW AddOn Compartment entry: left-click shows/hides the existing raid-control panel and right-click opens the existing guarded Settings surface.
