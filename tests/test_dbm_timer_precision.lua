@@ -58,4 +58,12 @@ local secret = begin("dbm-secret-fulltype", "cd", SECRET)
 assert(secret and secret.data.precision == "approximate",
     "secret DBM fullType values must fail closed to approximate")
 
+local secretNext = begin("dbm-secret-next-fulltype", "next", SECRET)
+assert(secretNext and secretNext.data.precision == "approximate",
+    "secret fullType must fail closed even when the simple type is next")
+
+local nonStringStage = begin("dbm-nonstring-stage-fulltype", "stage", 12345)
+assert(nonStringStage and nonStringStage.data.precision == "approximate",
+    "non-string fullType must fail closed even when the simple type is stage")
+
 print("ok - DBM full timer type preserves exact next timers without laundering cooldowns")
