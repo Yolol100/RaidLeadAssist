@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-08-28",
+  "reviewedAt": "2026-08-31",
   "wowInterface": 120100,
   "raidUnlock": {
     "eu": "2026-08-19",
@@ -16,8 +16,8 @@
         {
           "ref": "master",
           "path": "DBM-Core/modules/objects/Timer.lua",
-          "blobSha": "c8039ffb656fabcc2eb8a36c3a60643128487ba9",
-          "reason": "The public DBM timer callback surface remains byte-identical to the previously reviewed source. RLA continues to consume DBM_TimerBegin/Stop/Update/Pause/Resume/FadeUpdate and requires a real encounter ID before accepting a timer."
+          "blobSha": "143e09575c4f98e61da7b8900040a2bcb82d79ec",
+          "reason": "Reviewed through DBM master 1f5e1d76. The timer change fixes DBT approximate-prefix rendering by consulting the full timer type because the simplified callback type intentionally merges precise next timers into cd. RLA now consumes DBM_TimerBegin fullType conservatively, so current callback semantics remain compatible and exactness is not inferred from the simplified type alone."
         },
         {
           "ref": "master",
@@ -84,14 +84,14 @@
     {
       "name": "BigWigs",
       "repository": "BigWigsMods/BigWigs",
-      "releaseTag": "v423.5",
-      "releaseCommit": "3e43fde6d5372dccaa40fc6d3f18113b34d7e655",
+      "releaseTag": "v424.1",
+      "releaseCommit": "2f04791c4ac04a13f96757298e407014682d6d12",
       "watchPaths": [
         {
           "ref": "master",
           "path": "Core/BossPrototype.lua",
-          "blobSha": "c9d4d434fea37cf8785a4cc9ff06f34acce662c6",
-          "reason": "Current BigWigs master is pinned after v423.5. RLA remains bounded to public Timer/CastTimer/StartBar messages and real encounter identity rather than private boss-module implementation details."
+          "blobSha": "d1d2846ddaacf44af341f792c3ed82a5fab6d686",
+          "reason": "Reviewed through current BigWigs master. Changes since the prior pin add Mythic Flex difficulty labeling, aura helper API cleanup, and module sort-order helpers; none alter the public BigWigs_Timer, BigWigs_CastTimer, or BigWigs_StartBar callback contract consumed by RLA."
         },
         {
           "ref": "master",
@@ -108,14 +108,14 @@
         {
           "ref": "master",
           "path": "TheVenomousAbyss/TwinFangs.lua",
-          "blobSha": "650ac80ffb7a750d0eaf837d9ae98bdfd117cd74",
-          "reason": "Current BigWigs Twin Fangs source is pinned. RLA keeps direct boss timers encounter-scoped and matches stable identities before names; exact soak and movement timing remains live-gated."
+          "blobSha": "f7eaa1da682a3b02636ac97868aa5807f4cfb158",
+          "reason": "Reviewed the Mythic update that recognizes the 130-second timeline event as Submerge before the existing short-duration routing. RLA consumes the resulting public encounter-scoped BigWigs bars rather than duplicating this private duration heuristic, so no RLA encounter timing constant needs to change."
         },
         {
           "ref": "master",
           "path": "TheVenomousAbyss/CoiledAltar.lua",
-          "blobSha": "9d26271a83a69dafe8fd5b31db735221919cd444",
-          "reason": "Current BigWigs Coiled Altar source is pinned. RLA remains numeric-ID-first and encounter-scoped; intermission and timer lifecycle precision remain live-gated."
+          "blobSha": "58ef05b8dc62335f4f0ad56489d2f36a7b794701",
+          "reason": "Reviewed the phase-two fix that defers handling of a canceled Fangs timeline event by one frame so newly added timers are visible before deciding whether the bar finished or the phase ended early. RLA remains encounter-scoped and consumes BigWigs' resolved public bars, so this upstream race fix requires no duplicated RLA phase logic."
         },
         {
           "ref": "master",
