@@ -7,9 +7,37 @@ DBMProvider.__index = DBMProvider
 
 local ALLOWED_TYPES = {
     cd = true,
+    next = true,
     stage = true,
     cast = true,
 }
+
+local EXACT_CD_TYPES = {
+    next = true,
+    nextcount = true,
+    nextsource = true,
+    nextspecial = true,
+}
+
+local function timerPrecision(simpleType, fullType)
+    -- A present full type is provenance from DBM's richer callback contract.
+    -- Never let an opaque/secret value bypass the fail-closed precision rule,
+    -- even when the simplified type would otherwise be exact.
+    if fullType ~= nil and (Util.IsSecret(fullType) or type(fullType) ~= "string") then
+        return "approximate"
+    end
+
+    if simpleType == "next" or simpleType == "stage" or simpleType == "cast" then
+        return "exact"
+    end
+    if simpleType ~= "cd" then return "approximate" end
+
+    -- DBM 12.1.6+ exposes the true timer class as fullType. Its public simple
+    -- type intentionally merges approximate cooldowns and exact next timers.
+    -- Keep legacy callbacks without fullType compatible with the old RLA path.
+    if fullType == nil then return "exact" end
+    return EXACT_CD_TYPES[fullType] and "exact" or "approximate"
+end
 
 local function isFiniteNumber(value)
     return type(value) == "number" and value == value and value > -math.huge and value < math.huge
@@ -79,9 +107,9 @@ local function canSupplyBossTimers()
     if not _G.DBM then return false end
     if type(DBM.Options) ~= "table" then return true end
 
-    -- DBM 12.1.4/current Timer:Start returns before DBM_TimerBegin when either of
-    -- these global boss-bar switches is enabled. In that mode DBM cannot be
-    -- RLA's timer authority, so Blizzard-derived data must remain available.
+    -- Current DBM Timer:Start returns before DBM_TimerBegin when either of these
+    -- global boss-bar switches is enabled. In that mode DBM cannot be RLA's
+    -- timer authority, so Blizzard-derived data must remain available.
     return DBM.Options.HideDBMBars ~= true
         and DBM.Options.DontShowBossTimers ~= true
 end
@@ -130,7 +158,7 @@ function DBMProvider:Start(sink)
 
     self.sink = sink
 
-    self.onBegin = function(_, id, message, duration, icon, simpleType, spellID, _, modID, _, fade, spellName, _, timerCount, _, _, hasVariance, _, isEnabled)
+    self.onBegin = function(_, id, message, duration, icon, simpleType, spellID, _, modID, _, fade, spellName, _, timerCount, _, fullType, hasVariance, _, isEnabled)
         self:RefreshAuthority()
 
         local timerID = normalizeTimerID(id)
@@ -141,10 +169,8 @@ function DBMProvider:Start(sink)
         if hasVariance == true or isEnabled ~= true then return end
         if not ALLOWED_TYPES[simpleType] then return end
 
-        -- Current DBM exposes self.mod.id in TimerBegin. Resolve that public mod
-        -- identity back to the loaded DBM boss module and require its real
-        -- encounterId. This rejects utility/non-boss DBM timers and prevents a
-        -- direct timer from being interpreted under another RLA encounter.
+        -- Resolve DBM's public mod identity back to a loaded boss module and
+        -- require its real encounterId. This rejects utility/non-boss timers.
         local encounterID = encounterIDForModID(modID)
         if not encounterID then return end
 
@@ -155,7 +181,7 @@ function DBMProvider:Start(sink)
             icon = Util.NormalizeTexture(icon),
             count = normalizeTimerCount(timerCount),
             encounterID = encounterID,
-            precision = "exact",
+            precision = timerPrecision(simpleType, fullType),
             faded = fade == true,
         })
     end
@@ -225,10 +251,6 @@ function DBMProvider:Start(sink)
     DBM:RegisterCallback("DBM_Wipe", self.onReset)
     DBM:RegisterCallback("DBM_Kill", self.onReset)
 
-    -- A reload can happen after DBM has already taken authority over Blizzard's
-    -- Encounter Timeline. Reconstruct the effective public DBM state instead of
-    -- waiting for a callback that may already have happened. Global DBM bar-off
-    -- settings always yield authority back to native Blizzard timing.
     self:RefreshAuthority()
 
     return true
