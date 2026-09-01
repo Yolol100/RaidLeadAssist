@@ -1,0 +1,34 @@
+name: Test upstream drift checker
+
+on:
+  pull_request:
+    paths:
+      - "docs/UPSTREAM_BASELINES.json"
+      - "scripts/check_upstream_drift.py"
+      - "tests/test_upstream_drift.py"
+      - ".github/workflows/upstream-drift-tests.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "docs/UPSTREAM_BASELINES.json"
+      - "scripts/check_upstream_drift.py"
+      - "tests/test_upstream_drift.py"
+      - ".github/workflows/upstream-drift-tests.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Run source drift scenarios
+        run: python3 tests/test_upstream_drift.py
+      - name: Validate current baseline schema
+        run: python3 scripts/check_upstream_drift.py --validate-only
