@@ -14,6 +14,16 @@ local function baseCalls(pyreAction, pyreWarning, pyreActionTemplate, pyreWarnin
             pressSeconds = 4,
         },
         {
+            key = "barrage",
+            ability = "Possession Barrage",
+            action = "Clear boss-to-tank line",
+            warning = "Barrage: clear boss-to-tank line; tank runs out.",
+            voice = "Clear tank line",
+            spellIDs = { 1292036, 1284103 },
+            prepareSeconds = 7,
+            pressSeconds = 4,
+        },
+        {
             key = "echoes",
             ability = "Echoes of Jawae",
             action = "Kill each Echo as it wakes",
@@ -63,7 +73,7 @@ local mythicCalls = baseCalls(
     "{{pyre_soakers}} soak Pyre",
     "Pyre: {{pyre_soakers}} soak together."
 )
-table.insert(mythicCalls, 2, {
+table.insert(mythicCalls, 3, {
     key = "grasping",
     ability = "Grasping Depths",
     action = "Assigned well group enters",
@@ -80,10 +90,11 @@ Registry:Register({
     key = "nekzali",
     name = "Nek'zali the Soulcoiler",
     encounterID = 3470,
-    strategyStatus = "12.1 Journal + current Wowhead/Ready Check Pull + DBM/BigWigs source-reviewed 2026-08-19; player briefing split from raidleader prep; live validation pending",
+    strategyStatus = "12.1 Journal + current DBM/BigWigs source-reviewed 2026-09-02; Possession Barrage line-clear call added; live validation pending",
     profiles = {
         normal = {
             explanation = {
+                "Possession Barrage: tank runs out; everyone else clears the boss-to-tank line so the spirits do not touch them.",
                 "Keep the Soulcoil Well clear; kill Amani before they enter.",
                 "At 50%, kill each Echo as it becomes active.",
                 "Hungering Pyre: melee stay in and soak together.",
@@ -94,6 +105,7 @@ Registry:Register({
         },
         heroic = {
             explanation = {
+                "Possession Barrage: tank runs out; everyone else clears the boss-to-tank line so the spirits do not touch them.",
                 "Hungering Pyre: soak only with your assigned Pyre group.",
                 "Fire circle on you: move onto a dead Amani corpse.",
                 "Stay on the corpse until your fire explodes; keep 4+ yards from others.",
@@ -102,6 +114,7 @@ Registry:Register({
         },
         mythic = {
             explanation = {
+                "Possession Barrage: tank runs out; everyone else clears the boss-to-tank line so the spirits do not touch them.",
                 "When your well group is called, enter the Soulcoil Well.",
                 "Inside: interrupt Soulcoiler's Curse and kill the Drowned Echo.",
                 "Leave after it dies; Soul Exhaustion means do not enter again.",

@@ -40,7 +40,7 @@ assert(integration:find("sentinelsPanel:UpdateHealth", 1, true))
 
 assert(encounter:find('warning = "Green side: kill slime."', 1, true))
 assert(encounter:find('warning = "Red mark: stack together."', 1, true))
-assert(encounter:find('warning = "Stasis: pair to 4; use 1+3 or 2+2."', 1, true))
+assert(encounter:find('warning = "Stasis: spread; find 1+3 or 2+2 partner."', 1, true))
 assert(encounter:find('warning = "After Stasis: hold assigned sides."', 1, true))
 assert(encounter:find('warningTemplate = "After Stasis: {{team_a}} hold green; {{team_b}} hold red."', 1, true))
 assert(encounter:find('warning = "Protovenom: marked players pair together."', 1, true))

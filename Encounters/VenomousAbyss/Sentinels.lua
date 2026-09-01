@@ -6,9 +6,9 @@ local function sharedCalls()
         {
             key = "stasis",
             ability = "Vitriolic Stasis",
-            action = "Pair to 4: 1+3 or 2+2",
-            warning = "Stasis: pair to 4; use 1+3 or 2+2.",
-            voice = "Match to four",
+            action = "Spread; find 1+3 or 2+2 partner",
+            warning = "Stasis: spread; find 1+3 or 2+2 partner.",
+            voice = "Spread and match",
             spellIDs = { 1284588 },
             prepareSeconds = 6,
             pressSeconds = 2,
@@ -114,7 +114,7 @@ Registry:Register({
     key = "sentinels",
     name = "Entombed Sentinels",
     encounterID = 3445,
-    strategyStatus = "12.1 Journal + current Wowhead + DBM/BigWigs source-reviewed 2026-08-19; fixed-side split with difficulty deltas; live validation pending",
+    strategyStatus = "12.1 Journal + current DBM/BigWigs source-reviewed 2026-09-02; Stasis partner call clarified; live validation pending",
     profiles = {
         normal = {
             explanation = {
@@ -122,7 +122,7 @@ Registry:Register({
                 "Keep both bosses 40+ yards apart and their health even.",
                 "Green side: kill the slime, then clear green droplets.",
                 "Red mark on you: stack with your group to split damage.",
-                "Stasis: pair toxin numbers to total exactly four.",
+                "Stasis: spread first, then find the player who makes your toxin total exactly four.",
                 "Use 1+3 or 2+2, then return to your side.",
                 "After Stasis: stay put while tanks swap the bosses.",
             },

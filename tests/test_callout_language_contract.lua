@@ -22,9 +22,9 @@ local Registry = ns:GetModule("Encounters.Registry")
 
 local expectedCalls = {
     nekzali = {
-        normal = { "adds", "echoes", "pyre", "phase2" },
-        heroic = { "adds", "echoes", "pyre", "phase2" },
-        mythic = { "adds", "grasping", "echoes", "pyre", "phase2" },
+        normal = { "adds", "barrage", "echoes", "pyre", "phase2" },
+        heroic = { "adds", "barrage", "echoes", "pyre", "phase2" },
+        mythic = { "adds", "barrage", "grasping", "echoes", "pyre", "phase2" },
     },
     sentinels = {
         normal = { "coagulation", "miasma", "stasis", "side_swap", "balance_stop_breath", "balance_stop_blood", "balance_resume" },
@@ -102,6 +102,22 @@ end
 
 assert(Registry:GetProfile("nekzali", "heroic").callsByKey.flame == nil,
     "Cremation is a personal execution mechanic and must stay out of raidleader buttons")
+
+local barrageProfile = Registry:GetProfile("nekzali", "heroic")
+local barrage = assert(barrageProfile.callsByKey.barrage, "Nek'zali needs the timed Possession Barrage raidleader call")
+assert(barrageProfile.spellMap[1292036] == "barrage", "BigWigs Possession Barrage ID must map to the barrage call")
+assert(barrageProfile.spellMap[1284103] == "barrage", "DBM Possession Barrage ID must map to the barrage call")
+assert(barrage.prepareSeconds == 7 and barrage.pressSeconds == 4,
+    "Possession Barrage should arm the raidleader button before the provider timer expires")
+
+local stasis = assert(Registry:GetProfile("sentinels", "heroic").callsByKey.stasis)
+assert(stasis.prepareSeconds == 6 and stasis.pressSeconds == 2,
+    "Vitriolic Stasis partner call should remain synced to the provider timer")
+assert(stasis.warning:lower():find("spread", 1, true)
+        and stasis.warning:find("1+3", 1, true)
+        and stasis.warning:find("2+2", 1, true),
+    "Vitriolic Stasis warning should tell the raid to spread and find the correct partner")
+
 assert(not Registry:GetProfile("twinfangs", "normal").callsByKey.adds.warning:lower():find("spit", 1, true),
     "Twin Fangs add call should keep personal spit handling in the Boss Plan/bossmod layer")
 
