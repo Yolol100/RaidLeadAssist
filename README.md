@@ -1,5 +1,35 @@
 # Raid Lead Assist
 
+> **Portfolio status:** Flagship · active development · WoW raid-lead addon
+
+## At a glance
+
+Raid Lead Assist is a fail-closed raid-leader callout and assignment panel for The Venomous Abyss. It supports separate Normal, Heroic and Mythic strategy profiles while leaving protected combat decisions to players.
+
+| Area | Evidence |
+| --- | --- |
+| Audience | Raid leaders who need repeatable pre-pull plans and bounded manual callouts |
+| Stack | Lua, WoW Retail APIs and GitHub Actions validation |
+| Coverage | Eight encounters and 24 difficulty-specific profiles |
+| Safety | Unknown encounters, unsupported difficulties and stale or malformed state disable automation |
+| Quality | Validation workflow plus upstream-drift monitoring |
+
+## Quick start
+
+1. Download a validated addon package from GitHub Releases when available.
+2. Extract it into the WoW Retail `Interface/AddOns` directory.
+3. Enable Raid Lead Assist and configure assignments outside combat.
+4. Use preview and preset tools before announcing a plan to raid chat.
+
+## Runtime model
+
+```text
+encounter + difficulty context → validated strategy profile
+                               → pre-pull assignments / manual callouts
+                               → optional bounded timing feedback
+unknown or invalid state       → automatic behavior disabled
+```
+
 Raid Lead Assist (RLA) is a raid-leader callout panel for **The Venomous Abyss** with separate Normal, Heroic and Mythic strategy profiles. It provides pre-pull plans, boss-specific assignments, manual Raid Warning buttons, optional PREPARE/PRESS timing state and TTS/sound feedback.
 
 RLA is deliberately fail-closed: uncertain encounter identity, unsupported difficulty, malformed/secret timing values, stale cross-encounter state or incomplete provider data disable automatic behavior rather than reuse an old profile. It is not a DBM/BigWigs replacement and does not automate protected combat decisions.
@@ -85,3 +115,11 @@ All third-party Actions are pinned to full commit SHAs and workflows use explici
 ## 10/10 boundary
 
 A source/release can be **TECHNICALLY GREEN** only when every applicable automated gate passes on the exact source or released SHA. A full product **10/10** additionally requires the applicable live-only checks — real raid pulls, provider combinations, `/reload` recovery, taint, CPU/frame-time, memory soak, UI scaling/accessibility/locales and post-hotfix tactic/timer accuracy — to be recorded as `PASS-LIVE`. Missing live evidence remains `MANUAL TEST NEEDED`.
+
+## Project status, roadmap and support
+
+Raid Lead Assist is actively maintained against its documented encounter and difficulty contracts. New encounters or automation paths require explicit validation and fail-closed fallback behavior. Report reproducible defects through [GitHub Issues](https://github.com/Yolol100/RaidLeadAssist/issues) without character, account or private raid data.
+
+## License
+
+This repository currently has no open-source license. Reuse, redistribution and derivative works are not permitted without explicit permission from the copyright holder.
