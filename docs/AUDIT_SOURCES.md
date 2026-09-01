@@ -1,6 +1,6 @@
 # Audit source register
 
-Review date: 2026-08-31. Changing platform/provider facts must be rechecked before a release or same-day readiness claim.
+Review date: 2026-09-02. Changing platform/provider facts must be rechecked before a release or same-day readiness claim.
 
 ## Blizzard / WoW
 
@@ -8,10 +8,11 @@ Review date: 2026-08-31. Changing platform/provider facts must be rechecked befo
 - Blizzard, Combat Philosophy and Addon Disarmament in Midnight: https://worldofwarcraft.blizzard.com/en-us/news/24246290/combat-philosophy-and-addon-disarmament-in-midnight
 - Blizzard current content/update notes: https://worldofwarcraft.blizzard.com/en-us/news
 - WoW API / 12.1 interface and Encounter Timeline reference: https://warcraft.wiki.gg/wiki/Patch_12.1.0/API_changes and https://warcraft.wiki.gg/wiki/Category:API_namespaces/C_EncounterTimeline
+- Blizzard generated live Encounter Timeline contract mirror: `Gethe/wow-ui-source` → `Interface/AddOns/Blizzard_APIDocumentationGenerated/EncounterTimelineDocumentation.lua`
 
 Audit implications: addon code stays readable/free of in-game advertising, premium behavior or donation solicitation, avoids real-time combat-decision automation, treats secret values fail-closed, validates the Retail interface/API surface and uses the Blizzard timeline only as presentation timing. Blizzard's published policy also names excessive chat, unnecessary disk loading and slow frame rates as examples of negative impact, so live performance/soak remains a release gate rather than a source-only claim.
 
-The 2026-08-31 same-day review retains Retail interface `120100` / Patch 12.1 as the current target. Patch-level secret/restricted-value rules remain a fail-closed input constraint; source compatibility never authorizes combat-decision scanning that Blizzard has restricted.
+The 2026-09-02 source review retains Retail interface `120100` / Patch 12.1 as the current target. The live generated `EncounterTimelineDocumentation.lua` still exposes the event list/info/state/remaining/elapsed APIs consumed by RLA, and its exact blob is now part of automated upstream-drift monitoring. Patch-level secret/restricted-value rules remain a fail-closed input constraint; source compatibility never authorizes combat-decision scanning that Blizzard has restricted.
 
 Post-unlock review confirmed the regional Season 2/Venomous Abyss unlock schedule. No undocumented encounter tuning is encoded merely because a community/datamine source changes; encounter or timing changes require a current authoritative source or reproducible live evidence.
 
@@ -26,20 +27,22 @@ Post-unlock review confirmed the regional Season 2/Venomous Abyss unlock schedul
 
 Audit implications: least-privilege workflow permissions, actions pinned to full SHAs, no unsafe PR-event interpolation, dependency monitoring, secret hygiene, protected `main` as an owner/admin action, deterministic artifacts, checksum and provenance.
 
-## Bossmod contracts — refreshed 2026-08-31
+## Bossmod contracts — refreshed 2026-09-02
 
 - DBM repository/releases: https://github.com/DeadlyBossMods/DeadlyBossMods
 - BigWigs repository/releases: https://github.com/BigWigsMods/BigWigs
 
-The machine-readable exact reviewed releases and current-master file fingerprints live in `UPSTREAM_BASELINES.json`. Current stable release-contract pins are DBM `12.1.6` (`c08dbfd91a006bad45352ea0d3d1a0cc1bc8367e`) and BigWigs `v424.1` (`2f04791c4ac04a13f96757298e407014682d6d12`). The 2026-08-31 readiness refresh re-reviewed the watched upstream changes instead of treating an earlier green state as current evidence.
+The machine-readable exact reviewed releases and current-master file fingerprints live in `UPSTREAM_BASELINES.json`. Current **source-reviewed** stable release-contract pins are DBM `12.1.8` (`16c154f3a01cb1bbf8b3c4f5f7eeccaa61c44789`) and BigWigs `v424.3` (`6a37cb326c3ce695026b361c2c8cae10e990c12b`). The 2026-09-02 refresh re-reviewed the watched upstream changes instead of treating an earlier green state as current evidence.
 
-DBM's meaningful watched core change is `DBM-Core/modules/objects/Timer.lua`. DBM intentionally simplifies several exact `next*` timer types and approximate cooldown/variance types into the same external `cd` simple type. Current DBM therefore uses the full timer type when deciding whether its own bar should receive the approximate `~` prefix. RLA mirrors that distinction: when the full callback type is available it is authoritative for exact-versus-approximate classification, while malformed/secret metadata still fails closed. The watched Venomous Abyss encounter files retain the reviewed numeric identities consumed by RLA, including the dual Nek'zali Hungering Pyre identities `1305421` and `1290679`.
+DBM's meaningful watched core contract remains `DBM-Core/modules/objects/Timer.lua`. DBM intentionally simplifies several exact `next*` timer types and approximate cooldown/variance types into the same external `cd` simple type. DBM 12.1.8 retains the full timer type used by RLA to distinguish exact from approximate timers and includes a fix for incorrect approximate-prefix handling on next timers. The watched Venomous Abyss changes are concentrated in routing/data, notably expanded Heroic Ula'tek routing/stage data; RLA's Ula'tek product boundary remains manual-only.
 
-Current BigWigs source changed three watched areas after the prior review: `Core/BossPrototype.lua`, Twin Fangs and Coiled Altar. The core changes add aura helpers, module sorting and Mythic Flex display support without changing the `BigWigs_Timer`, `BigWigs_CastTimer`, normal `BigWigs_StartBar` or `isApproximate` callback shapes RLA consumes. Twin Fangs adds Mythic submerge timeline routing, and Coiled Altar delays a Phase 2 state transition one frame to avoid an upstream race. Those changes do not alter RLA's provider callback contract or reviewed mechanic identity mapping.
+BigWigs v424.3 retains the public `BigWigs_Timer`, `BigWigs_CastTimer` and normal `BigWigs_StartBar` callback surface consumed by RLA. The reviewed v424.2 Coiled Altar update fixes the phase-two canceled-Fangs race upstream. RLA consumes the resulting resolved public bars rather than copying that private phase heuristic.
+
+Source review is not live-client proof. The runtime doctor and `LIVE_TEST_MATRIX.md` intentionally retain DBM 12.1.6 and BigWigs v424.1 as the last **live-tested** contracts until fresh Retail evidence is recorded. The source-reviewed 12.1.8/v424.3 baseline therefore authorizes repository compatibility maintenance and monitoring, not a claim that those versions were exercised in a real raid client.
 
 Ula'tek remains manual-only. Current DBM/BigWigs source availability is useful monitoring evidence but does not by itself prove stable live exact timing for RLA. Every Ula'tek call therefore remains `timing=false` until live Retail evidence supports a separate product change.
 
-The scheduled upstream-drift workflow checks the machine-readable current-master fingerprints twice daily. Baseline changes also run the same online comparison in pull requests, so a newly reviewed provider baseline cannot be merged without checking it against the actual upstream refs at that moment.
+The scheduled upstream-drift workflow checks DBM/BigWigs release pins and watched current-master fingerprints twice daily. Baseline changes run the same online comparison in pull requests. A separate focused regression workflow verifies the drift checker itself, including that a changed Blizzard EncounterTimeline blob is treated as blocking drift and a matching blob remains clean.
 
 ## Method Raid Tools comparison
 
@@ -57,7 +60,7 @@ Deliberately not adopted: network-synchronized live assignment collaboration, ge
 
 Encounter-facing copy is checked against current Encounter Journal/live evidence and reputable current raid guides, then remains marked live-pending until reproduced in Retail. Source disagreement never authorizes silently enabling timing or hard-coding volatile thresholds.
 
-The strategy review uses current Wowhead encounter guides/Journal data, current Raidstrats strategy guidance where useful, current DBM/BigWigs source, Method guides as an additional strategy comparison, and the user-provided Ready Check Pull recap evidence where it was previously supplied. The 2026-08-31 provider refresh found provider implementation changes but no new evidence that justifies silently changing encounter strategy text. No source-only review converts an encounter to `PASS-LIVE`.
+The strategy review uses current Wowhead encounter guides/Journal data, current Raidstrats strategy guidance where useful, current DBM/BigWigs source, Method guides as an additional strategy comparison, and the user-provided Ready Check Pull recap evidence where it was previously supplied. The 2026-09-02 provider refresh found provider implementation changes but no new evidence that justifies silently changing encounter strategy text. No source-only review converts an encounter to `PASS-LIVE`.
 
 A useful volatility example is Twin Fangs `Eternal Venom`: current public guides disagree on the exact lethal-stack presentation, while the Adventure Journal consistently exposes the three-hit Ravenous Feast behavior and the penalty when fewer than three players are struck. RLA therefore deliberately avoids a fixed Eternal Venom threshold in player copy and retains the stable Feast instruction instead.
 
