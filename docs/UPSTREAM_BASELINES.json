@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-09-02",
+  "reviewedAt": "2026-09-03",
   "wowInterface": 120100,
   "raidUnlock": {
     "eu": "2026-08-19",
@@ -28,8 +28,8 @@
         {
           "ref": "master",
           "path": "DBM-Raids-Midnight/DBM-Raids-Midnight_Mainline.toc",
-          "blobSha": "da1b756c932c9bc6532baa503960c392dd57ff7e",
-          "reason": "DBM's Midnight raid module still targets Retail interface 120100; the file fingerprint changed with the current release metadata but the load contract remains compatible."
+          "blobSha": "70f45f061b6bfc8353dbc008ecb66fdaf1205824",
+          "reason": "DBM master still targets Retail interface 120100 after the post-12.1.8 raid-module updates; the load contract remains compatible."
         },
         {
           "ref": "master",
@@ -58,8 +58,8 @@
         {
           "ref": "master",
           "path": "DBM-Raids-Midnight/TheVenomousAbyss/TheLostExplorers.lua",
-          "blobSha": "484ed1b02b1195ad6a35e2709a571a43c5e09210",
-          "reason": "Lost Explorers source remains unchanged at the reviewed fingerprint; DBM 12.1.8 also includes routing hardening and RLA still requires encounter-scoped validated timers."
+          "blobSha": "b6d702a3c34d270aa8544c8a4b8eb661330c64e3",
+          "reason": "DBM master added explicit Mythic Lost Explorers stage/timer support on 2026-09-02. Encounter 3497 and the public spell-ID timer identities consumed by RLA remain compatible, so the improvement flows through the existing encounter-scoped DBM callback path without duplicated private stage logic."
         },
         {
           "ref": "master",
@@ -84,14 +84,14 @@
     {
       "name": "BigWigs",
       "repository": "BigWigsMods/BigWigs",
-      "releaseTag": "v424.3",
-      "releaseCommit": "6a37cb326c3ce695026b361c2c8cae10e990c12b",
+      "releaseTag": "v424.5",
+      "releaseCommit": "7b41c3671b856d90c5e80c95ba361bb448a34ed8",
       "watchPaths": [
         {
           "ref": "master",
           "path": "Core/BossPrototype.lua",
           "blobSha": "d1d2846ddaacf44af341f792c3ed82a5fab6d686",
-          "reason": "The public BigWigs_Timer, BigWigs_CastTimer and BigWigs_StartBar callback contract consumed by RLA remains unchanged."
+          "reason": "The public BigWigs_Timer, BigWigs_CastTimer and BigWigs_StartBar callback contract consumed by RLA remains unchanged through v424.5; v424.5 only raises the custom profile-name length limit."
         },
         {
           "ref": "master",
