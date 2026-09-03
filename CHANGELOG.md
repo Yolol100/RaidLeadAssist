@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.0-beta.66 — 2026-09-03
+
+- Re-review the current DBM `12.1.8` release plus post-release Midnight raid master changes and BigWigs `v424.5` against Raid Lead Assist's public timer-provider boundaries.
+- Confirm DBM's new Mythic Lost Explorers routing keeps encounter `3497` and the RLA spell-ID identities for Throw Junk (`1291933`), Final Ascension (`1292779`) and Mighty Thud (`1296092`) compatible with the existing encounter-scoped timeline model.
+- Refresh the DBM master fingerprints for the Midnight raid TOC and Lost Explorers, and move the BigWigs release baseline from `v424.3` to `v424.5`; Blizzard EncounterTimeline remains unchanged.
+- Add focused Lost Explorers regression assertions for the current provider-review date, Mythic DBM review status, encounter identity and the three raid-leader timer identities.
+- Keep provider behavior fail-closed and avoid duplicating DBM's private stage scheduling or BigWigs profile internals; live Retail provider precision remains a separate acceptance gate.
+
 ## 0.9.0-beta.65 — 2026-08-31
 
 - Refresh `/rla doctor` so its tested bossmod-contract line matches the semantically reviewed DBM `12.1.6` and BigWigs `v424.1` baselines.
