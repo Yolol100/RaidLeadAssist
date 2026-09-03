@@ -16,13 +16,14 @@ local Assignments = ns:GetModule("Encounters.AssignmentRegistry")
 local normal = Registry:GetProfile("explorers", "normal")
 local heroic = Registry:GetProfile("explorers", "heroic")
 local mythic = Registry:GetProfile("explorers", "mythic")
-local encounter = Registry:GetEncounter("explorers")
+local encounter = Registry:Get("explorers")
 
 local function plan(profile)
     return table.concat(profile.explanation, "\n")
 end
 
 assert(encounter and encounter.encounterID == 3497, "Lost Explorers encounter identity must stay DBM-compatible")
+assert(Registry:FindByEncounterID(3497) == encounter, "Lost Explorers encounter-ID lookup must resolve the same registry entry")
 assert(encounter.strategyStatus:find("DBM/BigWigs source-reviewed 2026-09-03", 1, true), "current provider review date missing")
 assert(encounter.strategyStatus:find("DBM Mythic timer routing reviewed", 1, true), "Mythic DBM routing review must remain explicit")
 assert(plan(normal):find("Keep all three bosses even", 1, true))
