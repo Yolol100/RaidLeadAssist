@@ -2,31 +2,31 @@
 
 Source/CI checks cannot fill these rows. Record evidence on the exact installed addon SHA/version and current Retail build. Repository-only commits may advance `main` without changing a published package; live evidence therefore names the installed addon version/SHA rather than assuming that `main` equals a release tag.
 
-## Tonight source/runtime candidate — 0.9.0-beta.65 — 2026-08-31
+## Tonight source/runtime candidate — 0.9.0-beta.66 — 2026-09-03
 
-The current source/runtime candidate is `0.9.0-beta.65`. The published `0.9.0-beta.63` remains the last separately evidenced prerelease baseline. Do not describe beta65 as a published/tagged release unless that state is independently verified.
+The current source/runtime candidate is `0.9.0-beta.66`. The published `0.9.0-beta.63` remains the last separately evidenced prerelease baseline. Do not describe beta66 as a published/tagged release unless that state is independently verified.
 
-`PASS-CI` means source/build validation only. `PASS-LIVE` requires the exact installed beta65 candidate to pass the applicable rows below in a real Retail client. Do not convert any row to `PASS-LIVE` from guides, source code, screenshots from another build, upstream source review or CI alone.
+`PASS-CI` means source/build validation only. `PASS-LIVE` requires the exact installed beta66 candidate to pass the applicable rows below in a real Retail client. Do not convert any row to `PASS-LIVE` from guides, source code, screenshots from another build, upstream source review or CI alone.
 
-Current provider baselines for tonight:
+Current provider baselines for live evidence remain those actually exercised on 2026-08-31:
 
-- DBM stable is **12.1.6**, release commit `c08dbfd91a006bad45352ea0d3d1a0cc1bc8367e`. Current reviewed `master` changed the watched Timer implementation so DBM itself distinguishes exact `next*` timers from approximate cooldown-style timers with the full timer type; RLA now applies the same distinction to external callbacks.
+- DBM live-tested stable is **12.1.6**, release commit `c08dbfd91a006bad45352ea0d3d1a0cc1bc8367e`. The source-reviewed baseline is newer, but no source-only review replaces this live evidence.
 - The watched DBM Venomous Abyss encounter files retain the reviewed numeric mechanic identities consumed by RLA. Nek'zali's dual Hungering Pyre identities `1305421`/`1290679` remain intentionally mapped to the same RLA call.
-- BigWigs stable is **v424.1**, release commit `2f04791c4ac04a13f96757298e407014682d6d12`. Current reviewed `master` changes in `Core/BossPrototype.lua` add non-timer helpers/sorting, Twin Fangs adds Mythic submerge routing, and Coiled Altar fixes a Phase 2 state-transition race. The timer callback shapes RLA consumes remain compatible.
-- Exact current-master fingerprints are stored in `docs/UPSTREAM_BASELINES.json` and are checked online in PRs plus twice daily. An unrecorded upstream state is a new `DRIFT REVIEW`, not automatic evidence of compatibility.
+- BigWigs live-tested stable is **v424.1**, release commit `2f04791c4ac04a13f96757298e407014682d6d12`. The source-reviewed baseline is newer, but no source-only review replaces this live evidence.
+- Exact current source-reviewed releases and current-master fingerprints are stored in `docs/UPSTREAM_BASELINES.json` and are checked online in PRs plus twice daily. An unrecorded upstream state is a new `DRIFT REVIEW`, not automatic evidence of compatibility.
 - Current DBM Venomous Abyss modules can switch between hardcoded Encounter Timeline routing and fail-closed Blizzard fallback. RLA treats DBM timing as exact only while DBM has asserted `DBM_IgnoreBlizzAPI` authority and can actually supply enabled boss timers. After `DBM_ResumeBlizzAPI`, the DBM copy must not remain actionable merely because its provider name is DBM.
 - BigWigs direct timers preserve the upstream `isApproximate` signal. A BigWigs nil-module `StartBar` produced by the Blizzard bridge does not expose that signal and is therefore preview-only in RLA.
 - Blizzard Encounter Timeline events explicitly marked `isApproximate=true` are preview-only. They must never become actionable PREPARE/PRESS/TTS timing merely because their source is Blizzard or because a bossmod re-emits the event.
 - Ula'tek remains manual-only in RLA even though current DBM/BigWigs contain encounter timing. Provider availability alone must not promote any Ula'tek call to automatic PREPARE/PRESS/TTS.
 - Season 2/The Venomous Abyss is live by region. Source review can prove contract compatibility, not real pull cadence or encounter correctness; those remain `PASS-LIVE`-pending until reproduced in Retail.
 
-Before using beta65 for a raid, complete at least the short **Tonight smoke gate** plus the relevant boss/provider rows for the encounters you intend to run. Before promoting beyond beta, complete the broader matrix and record at minimum one clean supported pull/wipe lifecycle per claimed boss/difficulty.
+Before using beta66 for a raid, complete at least the short **Tonight smoke gate** plus the relevant boss/provider rows for the encounters you intend to run. Before promoting beyond beta, complete the broader matrix and record at minimum one clean supported pull/wipe lifecycle per claimed boss/difficulty.
 
 ## Tonight smoke gate — minimum before raid use
 
 Record one evidence line per item with date/time, Retail build, installed RLA SHA/version and provider versions.
 
-- [ ] Launch Retail 12.1.x with the exact beta65 candidate and confirm RLA loads without Lua error.
+- [ ] Launch Retail 12.1.x with the exact beta66 candidate and confirm RLA loads without Lua error.
 - [ ] `/reload` once and confirm SavedVariables/UI/provider state reconstructs without error.
 - [ ] Open RLA through its normal UI and AddOn Compartment path; left-click toggles raid controls and right-click opens settings.
 - [ ] With no bossmod active, select one supported encounter and verify manual calls remain usable and no provider failure creates an actionable phantom timer.
@@ -37,7 +37,7 @@ Record one evidence line per item with date/time, Retail build, installed RLA SH
 - [ ] Wipe/restart once and confirm no stale timer, call acknowledgement, assignment or provider authority survives into the next pull.
 - [ ] Capture Lua/taint output for the smoke run; any `ADDON_ACTION_BLOCKED`, Lua error, duplicate actionable call or stale next-pull timer is a **NO-GO** until reproduced and fixed.
 
-If the raid includes Nek'zali, Twin Fangs or Coiled Altar, also execute their current-provider focused rows below because reviewed provider routing or precision behavior changed around those encounters during the current release window. If testing current/unreleased bossmod source, record that exact source SHA and include the current-master checks below.
+If the raid includes Nek'zali, Twin Fangs, Coiled Altar or Lost Explorers, also execute their current-provider focused rows below because reviewed provider routing or precision behavior changed around those encounters during the current release window. If testing current/unreleased bossmod source, record that exact source SHA and include the current-master checks below.
 
 ## Environment matrix
 
@@ -82,13 +82,13 @@ For every timed mechanic reproduce the occurrence more than once when practical.
 - **Coiled Altar / BigWigs v424.1:** exercise phase/intermission handling; numeric spell-key mapping must continue to select the same RLA mechanic and wipe/reset must clear the bar.
 - **Coiled Altar / current BigWigs source:** specifically exercise the Phase 2 transition affected by the upstream next-frame state-3 race fix and verify RLA receives one coherent occurrence without stale or duplicate timer state.
 - Vashnik current DBM source: verify the reviewed numeric identities remain bound to the same RLA calls and an authority release cannot leave a stale exact bar.
-- Lost Explorers with current DBM source: verify direct supported timers map to the correct mechanic and any Blizzard fallback remains preview-only unless independently exact.
+- **Lost Explorers / current DBM source:** verify encounter `3497`, Throw Junk `1291933`, Final Ascension `1292779` and Mighty Thud `1296092` map to the intended RLA mechanics under the new Mythic routing; verify fallback and repeated-stage transitions create no duplicate actionable occurrence.
 - DBM current Sentinels: verify Stasis/Miasma/Protovenom numeric identities remain correct and an authority release cannot leave stale exact bars.
 - BigWigs current Sentinels: verify intermission end/reset does not leave a stale Stasis or backup bridge bar in RLA.
 - DBM current Sszorak: verify Venomous Surge/Raging Crosswinds numeric IDs `1305959`/`1285425` continue to select the intended RLA calls.
 - **Twin Fangs / DBM 12.1.6 + BigWigs v424.1:** verify Ravenous Feast and shared movement timing remain one occurrence across providers and fallback precision follows authority state.
 - **Twin Fangs / current BigWigs source:** exercise the new Mythic submerge timeline route and verify it does not duplicate or misidentify RLA's existing shared movement/call occurrences.
-- **BigWigs current master core:** because post-v424.1 `BossPrototype.lua` changes are non-timer aura/sorting/difficulty helpers, confirm the observed `BigWigs_Timer`/`BigWigs_CastTimer`/`BigWigs_StartBar` callback shapes remain compatible when testing master rather than v424.1.
+- **BigWigs current master core:** confirm the observed `BigWigs_Timer`/`BigWigs_CastTimer`/`BigWigs_StartBar` callback shapes remain compatible when testing current source; source-reviewed v424.5 changes profile-name validation, not RLA's timer boundary.
 - **Current DBM Ula'tek:** provider traffic may be visible in diagnostics, but all RLA Ula'tek calls must remain `MANUAL CALLS ONLY`; no automatic timeline state, PREPARE/PRESS audio or automatic call acknowledgement may occur even while DBM hardcoded authority is active.
 - BigWigs current Ula'tek on Normal, Heroic and Mythic: provider traffic may appear in diagnostics, but the Ula'tek profile must remain `MANUAL CALLS ONLY`; no automatic timeline state, PREPARE/PRESS audio or automatic call acknowledgement may occur.
 - BigWigs current Ula'tek: exercise phase changes, custom Encounter Timeline additions and repeat/wipe lifecycle. Provider timer churn must not silently turn any `timing=false` Ula'tek call into a timed call or carry stale timer state into the next pull.
