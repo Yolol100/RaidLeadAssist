@@ -95,7 +95,7 @@ for _, path in ipairs({
 end
 assert(baseline:find("EncounterTimelineDocumentation.lua", 1, true),
     "Blizzard EncounterTimeline API source must remain drift-watched")
-assert(baseline:find('"reviewedAt": "2026-09-02"', 1, true), "provider baseline review date must stay current")
+assert(baseline:find('"reviewedAt": "2026-09-03"', 1, true), "provider baseline review date must stay current")
 assert(baseline:find('"releaseTag": "12.1.8"', 1, true), "DBM source-reviewed stable release pin must be 12.1.8")
 assert(baseline:find("16c154f3a01cb1bbf8b3c4f5f7eeccaa61c44789", 1, true),
     "DBM 12.1.8 release commit must stay pinned")
@@ -113,16 +113,16 @@ assert(baseline:find("3d7af3cf25ff27b10d0c454effeab3d7593ae6b4", 1, true),
     "Coiled Altar current DBM source baseline must stay pinned")
 assert(baseline:find("7dc8483696f8501cad0d0d7ad45e209373f87e56", 1, true),
     "Sentinels current DBM source baseline must stay pinned")
-assert(baseline:find("484ed1b02b1195ad6a35e2709a571a43c5e09210", 1, true),
+assert(baseline:find("b6d702a3c34d270aa8544c8a4b8eb661330c64e3", 1, true),
     "Lost Explorers current DBM source baseline must stay pinned")
 assert(baseline:find("a3c5072cb60d526e5cd9f7fe5e7d34c6d3627b05", 1, true),
     "Sszorak current DBM source baseline must stay pinned")
 assert(baseline:find("2f9fdaf2a4d6b2d986d18c6ed8eb78464e544939", 1, true),
     "Ula'tek current Heroic-routing source baseline must stay pinned")
 
-assert(baseline:find('"releaseTag": "v424.3"', 1, true), "BigWigs source-reviewed stable release pin must be v424.3")
-assert(baseline:find("6a37cb326c3ce695026b361c2c8cae10e990c12b", 1, true),
-    "BigWigs v424.3 release commit must stay pinned")
+assert(baseline:find('"releaseTag": "v424.5"', 1, true), "BigWigs source-reviewed stable release pin must be v424.5")
+assert(baseline:find("7b41c3671b856d90c5e80c95ba361bb448a34ed8", 1, true),
+    "BigWigs v424.5 release commit must stay pinned")
 assert(baseline:find("d1d2846ddaacf44af341f792c3ed82a5fab6d686", 1, true),
     "BigWigs current BossPrototype source baseline must stay pinned")
 assert(baseline:find("990fee7abd2928ee0c437fc998b28f3d9774fc9f", 1, true),
@@ -148,27 +148,27 @@ assert(app:find("Tested bossmod contracts: DBM 12.1.6; BigWigs v424.1", 1, true)
 
 local readme = read("README.md")
 assert(readme:find("DBM 12.1.8", 1, true), "README source-reviewed DBM contract must track the audited baseline")
-assert(readme:find("BigWigs v424.3", 1, true), "README source-reviewed BigWigs contract must track the audited baseline")
-assert(readme:find("2026-09-02", 1, true), "README provider source-review date must stay current")
+assert(readme:find("BigWigs v424.5", 1, true), "README source-reviewed BigWigs contract must track the audited baseline")
+assert(readme:find("2026-09-03", 1, true), "README provider source-review date must stay current")
 assert(readme:find("live-tested", 1, true), "README must distinguish source review from live-tested evidence")
 
 local auditSources = read("docs/AUDIT_SOURCES.md")
-assert(auditSources:find("Review date: 2026-09-02", 1, true), "audit source register must stay current")
+assert(auditSources:find("Review date: 2026-09-03", 1, true), "audit source register must stay current")
 assert(auditSources:find("DBM `12.1.8`", 1, true), "audit source DBM contract must track the baseline")
-assert(auditSources:find("BigWigs `v424.3`", 1, true), "audit source BigWigs contract must track the baseline")
+assert(auditSources:find("BigWigs `v424.5`", 1, true), "audit source BigWigs contract must track the baseline")
 assert(auditSources:find("EncounterTimelineDocumentation.lua", 1, true),
     "audit source register must document the Blizzard timeline drift watch")
 
 local liveMatrix = read("docs/LIVE_TEST_MATRIX.md")
-assert(liveMatrix:find("0.9.0-beta.65", 1, true), "live matrix must target the current runtime candidate")
+assert(liveMatrix:find("0.9.0-beta.66", 1, true), "live matrix must target the current runtime candidate")
 assert(liveMatrix:find("DBM 12.1.6", 1, true), "live matrix must retain the last live-tested DBM contract")
 assert(liveMatrix:find("BigWigs v424.1", 1, true), "live matrix must retain the last live-tested BigWigs contract")
-assert(liveMatrix:find("2026-08-31", 1, true), "live matrix must retain its actual evidence date")
+assert(liveMatrix:find("2026-08-31", 1, true), "live matrix must retain its actual live evidence date")
 
 local toc = read("RaidLeadAssist.toc")
-assert(toc:find("## Version: 0.9.0-beta.65", 1, true), "TOC version must match the current runtime candidate")
+assert(toc:find("## Version: 0.9.0-beta.66", 1, true), "TOC version must match the current runtime candidate")
 local changelog = read("CHANGELOG.md")
-assert(changelog:find("## 0.9.0-beta.65 — 2026-08-31", 1, true),
+assert(changelog:find("## 0.9.0-beta.66 — 2026-09-03", 1, true),
     "changelog must document the current runtime candidate")
 
 local security = read("SECURITY.md")

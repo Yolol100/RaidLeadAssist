@@ -42,7 +42,7 @@ Registry:Register({
     key = "explorers",
     name = "The Lost Explorers",
     encounterID = 3497,
-    strategyStatus = "12.1 Journal + current Wowhead/Raidstrats + Ready Check Pull recap + DBM/BigWigs source-reviewed 2026-08-19; player briefing split from raidleader prep; live validation pending",
+    strategyStatus = "12.1 Journal + current Wowhead/Raidstrats + Ready Check Pull recap + DBM/BigWigs source-reviewed 2026-09-03; DBM Mythic timer routing reviewed; player briefing split from raidleader prep; live validation pending",
     profiles = {
         normal = {
             explanation = {
