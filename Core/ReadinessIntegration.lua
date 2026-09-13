@@ -30,6 +30,8 @@ local function rosterMap()
 end
 
 local function assignedPlayersNotInRoster(bossKey, difficultyKey)
+    if type(Roster.IsRaidRoster) == "function" and not Roster:IsRaidRoster() then return {} end
+
     local current = rosterMap()
     if next(current) == nil then return {} end
 
