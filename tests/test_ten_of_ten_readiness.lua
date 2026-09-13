@@ -25,6 +25,14 @@ local Registry = ns:GetModule("Encounters.Registry")
 local Assignments = ns:GetModule("Encounters.AssignmentRegistry")
 local difficulties = { "normal", "heroic", "mythic" }
 local encounters = Registry:GetOrdered()
+local ulatekTimed = {
+    waves = true,
+    coils = true,
+    heart = true,
+    serpents = true,
+    bite = true,
+    circling = true,
+}
 
 assert(#encounters == 8, "ten-of-ten readiness requires exactly eight supported Venomous Abyss encounters")
 
@@ -34,6 +42,10 @@ for _, encounter in ipairs(encounters) do
     assert(type(encounter.name) == "string" and encounter.name ~= "", encounter.key .. " requires a display name")
     assert(type(encounter.encounterID) == "number", encounter.key .. " requires a numeric encounter ID")
     assert(type(encounter.strategyStatus) == "string" and encounter.strategyStatus ~= "", encounter.key .. " requires strategy provenance/status")
+    if encounter.key == "ulatek" then
+        assert(encounter.strategyStatus:find("PASS-LIVE pending", 1, true),
+            "Ula'tek selected source/CI timing must remain explicitly gated from PASS-LIVE")
+    end
 
     for _, difficultyKey in ipairs(difficulties) do
         local profile = Registry:GetProfile(encounter.key, difficultyKey)
@@ -57,7 +69,16 @@ for _, encounter in ipairs(encounters) do
             assert(type(call.voice) == "string" and call.voice ~= "", encounter.key .. "/" .. call.key .. " needs voice identity")
 
             if encounter.key == "ulatek" then
-                assert(call.timing == false, "Ula'tek must remain manual-only until live/provider timing is proven")
+                local providerTimed = ulatekTimed[call.key] or (difficultyKey == "mythic" and call.key == "incubation")
+                if providerTimed then
+                    assert(call.timing ~= false,
+                        "reviewed Ula'tek provider-timed call unexpectedly disabled: " .. difficultyKey .. "/" .. call.key)
+                    assert(type(call.spellIDs) == "table" and #call.spellIDs > 0,
+                        "provider-timed Ula'tek call requires a reviewed public spell identity: " .. call.key)
+                else
+                    assert(call.timing == false,
+                        "unreviewed Ula'tek strategy milestone must remain manual: " .. difficultyKey .. "/" .. call.key)
+                end
             end
         end
 
@@ -73,4 +94,4 @@ end
 
 assert(profileCount == 24, "ten-of-ten readiness requires all 24 boss/difficulty profiles")
 
-print("ok - ten-of-ten readiness covers 8 encounters, 24 profiles and the actual runtime assignment override stack")
+print("ok - ten-of-ten readiness covers 8 encounters, 24 profiles, bounded Ula'tek timing and the actual runtime assignment override stack")
