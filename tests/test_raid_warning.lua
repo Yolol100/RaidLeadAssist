@@ -34,9 +34,15 @@ assert(#sent == 0)
 assert(timers[2].canceled == true)
 
 encounterActive = false
-leader = false
+leader = true
 now = now + 1
-assert(Service:Send("manual") == false)
-assert(#sent == 0)
+assert(Service:Send(string.rep("x", 200)) == true, "200-character Raid Warning must remain valid")
+assert(#sent == 1)
+assert(Service:Send(string.rep("x", 201)) == false, "201-character Raid Warning must fail closed before the chat API")
+assert(#sent == 1, "oversized Raid Warning must never reach SendChatMessage")
 
-print("ok - raid warning lifecycle guards")
+leader = false
+assert(Service:Send("manual") == false)
+assert(#sent == 1)
+
+print("ok - raid warning lifecycle and length guards")
