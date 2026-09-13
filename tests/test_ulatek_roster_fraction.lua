@@ -100,4 +100,42 @@ assert(not stillReady, "saved Coil teams must fail closed after the raid grows b
 assert(resizeReason:find("requires at least 8 unique players", 1, true),
     "roster-growth failure must expose the new minimum")
 
-print("ok - Ula'tek Coil teams enforce a dynamic 40% roster floor and reset rotation safely")
+-- Reload/initialization must not destroy a saved plan just because the current roster context changed.
+local saved = {
+    assignments = {
+        ulatek = {
+            heroic = {
+                coil_a = names(1, 4),
+                coil_b = names(5, 8),
+            },
+        },
+    },
+}
+Assignments:Initialize(saved)
+assert(Assignments:GetValue("ulatek", "heroic", "coil_a") == names(1, 4)
+    and Assignments:GetValue("ulatek", "heroic", "coil_b") == names(5, 8),
+    "normalization must preserve syntactically valid saved Coil teams across roster-size changes")
+local reloadReady, reloadReason = Assignments:IsCallReady("ulatek", "heroic", "coils")
+assert(not reloadReady and reloadReason:find("requires at least 8 unique players", 1, true),
+    "preserved saved teams must still fail live readiness against the current larger roster")
+
+-- Relative subgroup plans are also storage syntax, not something initialization may erase from partial context.
+setRoster(1)
+local savedGroups = {
+    assignments = {
+        ulatek = {
+            heroic = {
+                coil_a = "Groups 1+2",
+                coil_b = "Groups 3+4",
+            },
+        },
+    },
+}
+Assignments:Initialize(savedGroups)
+assert(Assignments:GetValue("ulatek", "heroic", "coil_a") == "Groups 1+2"
+    and Assignments:GetValue("ulatek", "heroic", "coil_b") == "Groups 3+4",
+    "initialization must preserve subgroup expressions even when those raid groups are not currently populated")
+local partialReady = Assignments:IsCallReady("ulatek", "heroic", "coils")
+assert(not partialReady, "subgroup plans must still fail closed at use time when the current roster cannot resolve them")
+
+print("ok - Ula'tek Coil teams enforce a dynamic 40% roster floor, preserve saved plans and reset rotation safely")
