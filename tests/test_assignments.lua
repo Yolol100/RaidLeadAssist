@@ -107,34 +107,55 @@ for _, definition in ipairs(Registry:GetDefinitions("twinfangs", "mythic")) do
     assert(not definition.key:find("tainted", 1, true), "Tainted Blood needs no fixed roster assignment")
 end
 
--- Coiled Altar: Normal has no fixed Guillotine team; Heroic adds two 5+ groups.
+-- Coiled Altar: Normal has no fixed Guillotine team; Heroic uses the live 3+ floor.
 assert(#Registry:GetCallDefinitions("altar", "normal", "guillotine") == 0)
 assert(#Registry:GetCallDefinitions("altar", "heroic", "guillotine") == 2)
 ok = Assignments:ApplyBossDraft("altar", "heroic", {
     orb_collectors = "Collectorone, Collectortwo",
-    guillotine_a = "A1, A2, A3, A4, A5",
-    guillotine_b = "B1, B2, B3, B4, B5",
+    guillotine_a = "A1, A2, A3",
+    guillotine_b = "B1, B2, B3",
     wail_kick_a = "Kickerone",
     wail_kick_b = "Kickertwo",
 })
-assert(ok)
+assert(ok, "Heroic Coiled Altar must accept two distinct 3-player Guillotine groups")
 local toxic = Assignments:BuildCallWarning("Orbs: collectors move them to Triangle.", "altar", "heroic", "toxic")
 assert(toxic:find("Collectors: Collectorone, Collectortwo.", 1, true))
 local oneCollector, collectorError = Assignments:ApplyBossDraft("altar", "heroic", {
     orb_collectors = "Collectorone",
-    guillotine_a = "A1, A2, A3, A4, A5",
-    guillotine_b = "B1, B2, B3, B4, B5",
+    guillotine_a = "A1, A2, A3",
+    guillotine_b = "B1, B2, B3",
     wail_kick_a = "Kickerone",
     wail_kick_b = "Kickertwo",
 })
 assert(not oneCollector and collectorError.assignmentKey == "orb_collectors")
+local shortGuillotine, shortGuillotineError = Assignments:ApplyBossDraft("altar", "heroic", {
+    orb_collectors = "Collectorone, Collectortwo",
+    guillotine_a = "A1, A2",
+    guillotine_b = "B1, B2, B3",
+    wail_kick_a = "Kickerone",
+    wail_kick_b = "Kickertwo",
+})
+assert(not shortGuillotine and shortGuillotineError.assignmentKey == "guillotine_a",
+    "Heroic Coiled Altar must reject a Guillotine group below the live 3-player floor")
 
--- Ula'tek: Mythic adds Coil, egg-carrier and 4+ Incubation assignments.
+-- Ula'tek: Normal has no fixed Coil team, while Heroic/Mythic require alternating non-overlapping teams.
+assert(#Registry:GetCallDefinitions("ulatek", "normal", "coils") == 0,
+    "Normal Ula'tek may soak Coils as one raid group")
+local heroicCoils = Registry:GetCallDefinitions("ulatek", "heroic", "coils")
+assert(#heroicCoils == 2 and heroicCoils[1].required and heroicCoils[2].required,
+    "Heroic Ula'tek must expose two required alternating Coil teams")
+local ready, readyReason = Assignments:IsCallReady("ulatek", "heroic", "coils")
+assert(not ready and readyReason:find("Missing:", 1, true),
+    "Heroic Coil call must fail closed until both teams are assigned")
+
 ok = Assignments:ApplyBossDraft("ulatek", "mythic", {
     coil_a = "Alpha, Bravo, Charlie, Delta, Echo",
     coil_b = "Foxtrot, Golf, Hotel, India, Juliet",
     egg_left = "Hunterone",
     egg_right = "Magetwo",
+    bite_melee = "Meleeone, Meleetwo, Meleethree",
+    bite_ranged = "Rangeone, Rangetwo, Rangethree",
+    bite_healer = "Healone, Healtwo, Supportone",
     incubation_team = "Tankone, Tanktwo, Rogueone, Priestone",
 })
 assert(ok)
@@ -143,8 +164,37 @@ local incubation = Assignments:BuildCallWarning(
     "ulatek", "mythic", "incubation"
 )
 assert(incubation:find("Incubation: Tankone, Tanktwo", 1, true))
+local biteWarning = Assignments:BuildCallWarning(
+    "Bite: assigned groups soak; Purge waves out.",
+    "ulatek", "mythic", "bite"
+)
+assert(biteWarning:find("Melee: Meleeone, Meleetwo, Meleethree.", 1, true))
+assert(biteWarning:find("Ranged: Rangeone, Rangetwo, Rangethree.", 1, true))
+assert(biteWarning:find("Healer: Healone, Healtwo, Supportone.", 1, true))
+
+local overlapCoils, overlapCoilsError = Assignments:ApplyBossDraft("ulatek", "heroic", {
+    coil_a = "Alpha, Bravo, Charlie, Delta, Echo",
+    coil_b = "Echo, Foxtrot, Golf, Hotel, India",
+})
+assert(not overlapCoils and overlapCoilsError.assignmentKey == "coil_b",
+    "Ula'tek must reject a player assigned to both alternating Coil teams")
+
+local overlapEggs, overlapEggsError = Assignments:ApplyBossDraft("ulatek", "normal", {
+    egg_left = "Carrierone",
+    egg_right = "Carrierone",
+})
+assert(not overlapEggs and overlapEggsError.assignmentKey == "egg_right",
+    "Ula'tek must reject one player as both side egg carriers")
+
+local overlapBite, overlapBiteError = Assignments:ApplyBossDraft("ulatek", "normal", {
+    bite_melee = "Helperone, Helpertwo",
+    bite_ranged = "Helperone, Helperthree",
+    bite_healer = "Helperfour, Helperfive",
+})
+assert(not overlapBite and overlapBiteError.assignmentKey == "bite_ranged",
+    "Ula'tek must reject overlap across Bite helper sectors")
 
 local invalid, err = Assignments:ApplyBossDraft("sszorak", "heroic", { mutilate_group_1 = "Bad\1Name" })
 assert(not invalid and err and err.assignmentKey == "mutilate_group_1")
 
-print("ok - assignments stay minimal, valid and difficulty-specific")
+print("ok - assignments stay minimal, valid, difficulty-specific and fail closed on final-boss overlap")
