@@ -10,14 +10,14 @@ The current source/runtime candidate is `0.9.0-beta.67`. The published `0.9.0-be
 
 Current provider baselines for live evidence remain those actually exercised on 2026-08-31:
 
-- DBM live-tested stable is **12.1.6**, release commit `c08dbfd91a006bad45352ea0d3d1a0cc1bc8367e`. The source-reviewed baseline is newer, but no source-only review replaces this live evidence.
+- DBM live-tested stable is **12.1.6**, release commit `c08dbfd91a006bad45352ea0d3d1a0cc1bc8367e`. The current source-reviewed stable is **12.1.9**; source review does not replace live evidence.
 - The watched DBM Venomous Abyss encounter files retain the reviewed numeric mechanic identities consumed by RLA. Nek'zali's dual Hungering Pyre identities `1305421`/`1290679` remain intentionally mapped to the same RLA call.
-- BigWigs live-tested stable is **v424.1**, release commit `2f04791c4ac04a13f96757298e407014682d6d12`. The source-reviewed baseline is newer, but no source-only review replaces this live evidence.
+- BigWigs live-tested stable is **v424.1**, release commit `2f04791c4ac04a13f96757298e407014682d6d12`. The current source-reviewed stable is **v424.8**; source review does not replace live evidence.
 - Exact current source-reviewed releases and current-master fingerprints are stored in `docs/UPSTREAM_BASELINES.json` and are checked online in PRs plus twice daily. An unrecorded upstream state is a new `DRIFT REVIEW`, not automatic evidence of compatibility.
 - Current DBM Venomous Abyss modules can switch between hardcoded Encounter Timeline routing and fail-closed Blizzard fallback. RLA treats DBM timing as exact only while DBM has asserted `DBM_IgnoreBlizzAPI` authority and can actually supply enabled boss timers. After `DBM_ResumeBlizzAPI`, the DBM copy must not remain actionable merely because its provider name is DBM.
 - BigWigs direct timers preserve the upstream `isApproximate` signal. A BigWigs nil-module `StartBar` produced by the Blizzard bridge does not expose that signal and is therefore preview-only in RLA.
 - Blizzard Encounter Timeline events explicitly marked `isApproximate=true` are preview-only. They must never become actionable PREPARE/PRESS/TTS timing merely because their source is Blizzard or because a bossmod re-emits the event.
-- Beta67 introduces a bounded Ula'tek timing set from stable public spell identities. This is **source/CI reviewed only** until the exact beta67 package is exercised in Retail. Approximate provider data must remain preview-only and manual milestones must remain manual.
+- Beta67 introduces a bounded Ula'tek timing set from stable public spell identities plus explicit raid-leader assignment layouts. This is **source/CI reviewed only** until the exact beta67 package is exercised in Retail. Approximate provider data must remain preview-only and manual milestones must remain manual.
 - Season 2/The Venomous Abyss is live by region. Source review can prove contract compatibility, not real pull cadence or encounter correctness; those remain `PASS-LIVE`-pending until reproduced in Retail.
 
 Before using beta67 for a raid, complete at least the short **Tonight smoke gate** plus the relevant boss/provider rows for the encounters you intend to run. Before promoting beyond beta, complete the broader matrix and record at minimum one clean supported pull/wipe lifecycle per claimed boss/difficulty.
@@ -92,14 +92,15 @@ For every timed mechanic reproduce the occurrence more than once when practical.
 - **Twin Fangs / DBM 12.1.6 + BigWigs v424.1:** verify Ravenous Feast and shared movement timing remain one occurrence across providers and fallback precision follows authority state.
 - **Twin Fangs / current BigWigs source:** exercise the new Mythic submerge timeline route and verify it does not duplicate or misidentify RLA's existing shared movement/call occurrences.
 - **BigWigs current master core:** confirm the observed `BigWigs_Timer`/`BigWigs_CastTimer`/`BigWigs_StartBar` callback shapes remain compatible when testing current source; source-reviewed v424.8 changes do not widen RLA's timer boundary.
-- **Ula'tek / beta67 Normal with current DBM:** verify exact provider timers for Caustic Waves `1292188`, Spectral Coils `1300530`, Rage of the Shackled `1286860`, Call of the Serpent `1300751`, Serpent's Bite `1295905` and Circling Prey `1301510` select the intended RLA call exactly once per occurrence.
-- **Ula'tek / beta67 Heroic with current DBM:** repeat the selected timer checks and confirm the plan says 40%+ Spectral Coils, three Grasping Fangs targets per side, sequential tether breaks and 7+ yard Volatile Purge separation.
+- **Ula'tek / beta67 Normal with current DBM:** verify exact provider timers for Caustic Waves `1292188`, Spectral Coils `1300530`, Rage of the Shackled `1286860`, Call of the Serpent `1300751`, Serpent's Bite `1295905` and Circling Prey `1301510` select the intended RLA call exactly once per occurrence. Confirm the raid-wide Coil soak still meets 40%+, left/right egg carriers are shown and all three Bite helper sectors are present.
+- **Ula'tek / beta67 Heroic with current DBM:** repeat the selected timer checks; confirm two near-equal Coil teams alternate correctly, each called soak meets 40%+, the same split maps cleanly to left/right Phase 2, left/right egg carriers are clear, three Grasping Fangs targets per side are handled sequentially and all three Bite helper sectors are used before Purge moves 7+ yards out.
 - **Ula'tek / beta67 with current BigWigs:** repeat Normal/Heroic selected-timer checks and verify direct approximate bars stay preview-only, exact bars may become actionable, and Blizzard-bridge copies do not create duplicate PREPARE/PRESS/TTS.
-- **Ula'tek / beta67 Mythic:** verify Toxic Incubation provider key `1299757` resolves to the Incubation call while display spell `1299759` remains UI-only; verify Mythic Coil rotation, egg-carrier assignments and Incubation team remain intact.
-- **Ula'tek / beta67 manual boundaries:** Doomscale Warden, Doomscale Eggs, Grasping Fangs and generic Phase 3 remain manual and never become automatically timed just because a bossmod exposes related traffic.
-- **Ula'tek / beta67 Serpent's Bite:** verify Bite targets have enough time to reach helpers, helper/Purge separation is understandable in the call window, and on Mythic the follow-up Purge waves do not make the call materially early/late.
+- **Ula'tek / beta67 Mythic:** verify Toxic Incubation provider key `1299757` resolves to the Incubation call while display spell `1299759` remains UI-only; verify alternating Coil teams, left/right egg carriers, all three Bite helper sectors, the 4+ Incubation team and safe Purge-wave directions remain intact.
+- **Ula'tek / beta67 manual boundaries:** Doomscale Warden, Doomscale Eggs, Grasping Fangs and generic Phase 3 remain manual and never become automatically timed just because a bossmod exposes related traffic. Confirm the generic Phase 3 call does not force a specific Bloodlust window.
+- **Ula'tek / beta67 assignment safety:** remove one required Heroic Coil team, duplicate a player across Coil teams, duplicate the same egg carrier on both sides and overlap two Bite helper sectors. Each invalid setup must fail closed and must not silently become raid-ready.
+- **Ula'tek / beta67 Serpent's Bite:** verify melee, ranged and healer-target helper sectors are understandable under combat pressure, Bite targets have enough time to reach helpers, the handoff fully clears, Purge carriers move 7+ yards out, and on Mythic the follow-up Purge waves are aimed safely without making the call materially early/late.
 - **Ula'tek / beta67 Caustic Waves:** confirm the live no-swim-under behavior and that the raid-leader call consistently points players toward the safe gap without encouraging an invalid route.
-- **Ula'tek / beta67 lifecycle:** exercise phase changes, custom Encounter Timeline additions, `/reload`, provider switch/fallback, wipe and repull. No timer, acknowledgement or audio state may carry into the next pull.
+- **Ula'tek / beta67 lifecycle:** exercise phase changes, custom Encounter Timeline additions, `/reload`, provider switch/fallback, wipe and repull. No timer, acknowledgement, assignment rotation or audio state may carry into the next pull.
 - permission loss during a scheduled pre-pull briefing.
 - combat starts during briefing.
 - unsupported encounter, Raid Finder/Story/other unsupported difficulty and unknown context.
@@ -110,11 +111,11 @@ For every timed mechanic reproduce the occurrence more than once when practical.
 
 Capture `ADDON_ACTION_BLOCKED`/taint errors, Lua errors, CPU/frame-time and memory before pull, during event bursts and after repeated wipes. Run at least a 20-pull/wipe soak sequence for a representative timed encounter and verify no sustained timer/frame/callback/memory growth.
 
-Verify text remains legible, controls do not overlap, PREPARE/PRESS/CALLED are distinguishable without color, long names do not destroy layout, keyboard focus where supported is usable, and critical actions remain understandable under raid time pressure.
+Verify text remains legible, controls do not overlap, PREPARE/PRESS/CALLED are distinguishable without color, long names do not destroy layout, keyboard focus where supported is usable, and critical actions remain understandable under raid time pressure. Include a short-height/UI-scale pass that forces the combat-call list to scroll, because Ula'tek Mythic has one of the largest call sets.
 
 ## Ula'tek beta67 acceptance gate
 
-The product/tactic review in `docs/FINAL_BOSSES_REVIEW_2026-09-13.md` allows a bounded set of source/CI-reviewed Ula'tek calls to use exact/native public provider timing. That is not a `PASS-LIVE` claim.
+The product/tactic review in `docs/FINAL_BOSSES_REVIEW_2026-09-13.md` allows a bounded set of source/CI-reviewed Ula'tek calls to use exact/native public provider timing and adds explicit raid-leader assignment layouts. That is not a `PASS-LIVE` claim.
 
 For each claimed difficulty require real Retail evidence of:
 
@@ -122,9 +123,11 @@ For each claimed difficulty require real Retail evidence of:
 - no approximate-to-actionable precision escalation;
 - no cross-encounter or stale-pull match;
 - repeated occurrence deduplication with DBM, BigWigs and practical combined-provider scenarios;
+- correct difficulty-specific assignments: Normal raid-wide Coils, Heroic/Mythic alternating Coil teams, left/right egg carriers, three Bite helper sectors, plus Mythic Incubation;
+- correct fail-closed behavior when required assignments are missing or overlapping;
 - correct manual-only behavior for Warden, Eggs, Fangs and generic Phase 3 calls;
 - wipe/repull, `/reload` and provider recovery;
 - current post-hotfix tactic text matching what players actually execute;
 - no taint, Lua errors or material frame-time/memory regression.
 
-Until those rows are recorded against the exact installed beta67 SHA, describe Ula'tek as **selected timing enabled in source/CI; PASS-LIVE pending**.
+Until those rows are recorded against the exact installed beta67 SHA, describe Ula'tek as **selected timing and assignment strategy enabled in source/CI; PASS-LIVE pending**.
