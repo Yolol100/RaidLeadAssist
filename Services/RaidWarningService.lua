@@ -47,6 +47,10 @@ end
 
 function RaidWarningService:SendRaw(text)
     if type(text) ~= "string" or text == "" then return false end
+    if #text > MAX_CHAT_LENGTH then
+        ns:Print(("Raid Warning exceeds %d characters; shorten the call before sending."):format(MAX_CHAT_LENGTH))
+        return false
+    end
     if not C_ChatInfo or type(C_ChatInfo.SendChatMessage) ~= "function" then
         ns:Print("Raid Warning chat API is unavailable.")
         return false
