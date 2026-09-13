@@ -144,7 +144,8 @@ local function parseSelection(value, compactGroups, options)
             else
                 local full, short = normalizeRosterName(token)
                 local canonical = full and byName[full]
-                if canonical == nil and short then canonical = byName[short] end
+                local qualified = token:find("-", 1, true) ~= nil
+                if canonical == nil and short and not qualified then canonical = byName[short] end
                 if canonical == false then canonical = nil end
                 local ok, duplicate = add(token, canonical or full or token:lower(), authoritativeRaid and canonical ~= nil)
                 if not ok then return nil, "contains duplicate player " .. duplicate .. "." end
@@ -541,7 +542,14 @@ function AssignmentService:BuildCallWarning(baseWarning, bossKey, difficultyKey,
         template = call.warningTemplate
     end
 
-    if template then return self:RenderCallTemplate(template, bossKey, difficultyKey, callKey) end
+    if template then
+        local rendered, complete, reason = self:RenderCallTemplate(template, bossKey, difficultyKey, callKey)
+        if complete == false or not rendered then return rendered, complete, reason end
+        if #rendered > self.MAX_WARNING_LENGTH then
+            return nil, false, "Assignment detail exceeds the Raid Warning limit."
+        end
+        return rendered, true
+    end
 
     local result = baseWarning
     local fragments = self:GetCallFragments(bossKey, difficultyKey, callKey)
