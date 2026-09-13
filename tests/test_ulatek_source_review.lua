@@ -64,7 +64,7 @@ assert(heroic.callsByKey.fangs and heroic.callsByKey.fangs.timing == false)
 assert(mythic.callsByKey.fangs and mythic.callsByKey.fangs.timing == false)
 assert(contains(planText("heroic"), "three players per side"))
 assert(contains(planText("heroic"), "sequentially"))
-assert(contains(heroic.callsByKey.fangs.warning, "one tether at a time"))
+assert(contains(heroic.callsByKey.fangs.warning, "break one tether"))
 
 -- Stable public bossmod identities may now drive timing, but no private cooldown schedule is copied.
 for _, profile in ipairs({ normal, heroic, mythic }) do
@@ -80,9 +80,9 @@ for _, profile in ipairs({ normal, heroic, mythic }) do
 end
 
 -- Serpent's Bite is a timed warning for a leech handoff, not a fabricated fixed soak-group assignment.
-assert(contains(normal.callsByKey.bite.warning, "helpers leech within 15s"))
-assert(contains(heroic.callsByKey.bite.warning, "Purge helpers move 7+ yards out"))
-assert(contains(mythic.callsByKey.bite.warning, "dodge its waves"),
+assert(contains(normal.callsByKey.bite.warning, "leech within 15s"))
+assert(contains(heroic.callsByKey.bite.warning, "Purge move 7+ yards out"))
+assert(contains(mythic.callsByKey.bite.warning, "dodge waves"),
     "Mythic Volatile Purge must remind the raid about the emitted Caustic Waves")
 
 -- Mythic Toxic Incubation keeps provider identity separate from the display identity.
