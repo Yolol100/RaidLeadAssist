@@ -26,6 +26,7 @@ for group = 1, 4 do
     end
 end
 ns:RegisterModule("Services.RosterService", {
+    IsRaidRoster = function() return true end,
     GetRoster = function() return roster end,
 })
 
