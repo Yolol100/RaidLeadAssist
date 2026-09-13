@@ -62,10 +62,11 @@ local function currentRosterByGroup()
     local roster = {}
     if Roster and type(Roster.GetRoster) == "function" then roster = Roster:GetRoster() or {} end
     local authoritativeRaid = Roster and type(Roster.IsRaidRoster) == "function" and Roster:IsRaidRoster() == true
-    if not authoritativeRaid then return {}, {}, {}, false end
+    if not authoritativeRaid then return {}, {}, {}, {}, false end
 
     local byGroup = {}
-    local byName = {}
+    local byExactName = {}
+    local byShortName = {}
     for index = 1, #roster do
         local entry = roster[index]
         local group = tonumber(entry.subgroup) or 1
@@ -74,17 +75,17 @@ local function currentRosterByGroup()
 
         local full, short = normalizeRosterName(entry.name)
         if full then
-            byName[full] = full
+            byExactName[full] = full
             if short then
-                if byName[short] == nil then
-                    byName[short] = full
-                elseif byName[short] ~= full then
-                    byName[short] = false
+                if byShortName[short] == nil then
+                    byShortName[short] = full
+                elseif byShortName[short] ~= full then
+                    byShortName[short] = false
                 end
             end
         end
     end
-    return roster, byGroup, byName, true
+    return roster, byGroup, byExactName, byShortName, true
 end
 
 local function parseSelection(value, compactGroups, options)
@@ -96,7 +97,7 @@ local function parseSelection(value, compactGroups, options)
         authoritativeRaid = false,
     }
     local seen = {}
-    local roster, byGroup, byName, authoritativeRaid = currentRosterByGroup()
+    local roster, byGroup, byExactName, byShortName, authoritativeRaid = currentRosterByGroup()
     local hasRoster = #roster > 0
     local allowUnresolvedGroups = options and options.allowUnresolvedGroups == true
     selection.rosterSize = #roster
@@ -143,9 +144,9 @@ local function parseSelection(value, compactGroups, options)
                 end
             else
                 local full, short = normalizeRosterName(token)
-                local canonical = full and byName[full]
+                local canonical = full and byExactName[full]
                 local qualified = token:find("-", 1, true) ~= nil
-                if canonical == nil and short and not qualified then canonical = byName[short] end
+                if canonical == nil and short and not qualified then canonical = byShortName[short] end
                 if canonical == false then canonical = nil end
                 local ok, duplicate = add(token, canonical or full or token:lower(), authoritativeRaid and canonical ~= nil)
                 if not ok then return nil, "contains duplicate player " .. duplicate .. "." end
@@ -414,6 +415,18 @@ function AssignmentService:GetInvalidConfigured(bossKey, difficultyKey)
             end
         end
     end
+    if #invalid > 0 then return invalid end
+
+    local ok, result = self:ValidateBossDraft(bossKey, difficultyKey, self:GetValues(bossKey, difficultyKey))
+    if not ok then
+        local definitionsByKey = definitionMap(bossKey, difficultyKey)
+        local definition = result and result.assignmentKey and definitionsByKey[result.assignmentKey]
+        invalid[#invalid + 1] = {
+            assignmentKey = result and result.assignmentKey or nil,
+            label = definition and definition.label or "Assignments",
+            message = result and result.message or "Assignments are invalid in the current raid.",
+        }
+    end
     return invalid
 end
 
@@ -445,6 +458,11 @@ function AssignmentService:GetRotationValue(bossKey, difficultyKey, callKey, rot
 end
 
 function AssignmentService:IsCallReady(bossKey, difficultyKey, callKey)
+    local planOk, planResult = self:ValidateBossDraft(bossKey, difficultyKey, self:GetValues(bossKey, difficultyKey))
+    if not planOk then
+        return false, planResult and planResult.message or "Assignments are invalid in the current raid."
+    end
+
     local definitions = AssignmentRegistry:GetCallDefinitions(bossKey, difficultyKey, callKey)
     local missing = {}
     for index = 1, #definitions do
