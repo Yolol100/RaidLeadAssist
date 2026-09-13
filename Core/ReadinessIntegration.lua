@@ -19,21 +19,30 @@ local function normalizeRosterName(name)
     return lowered, short
 end
 
-local function rosterMap()
-    local result = {}
+local function rosterMaps()
+    local exact = {}
+    local short = {}
     for _, member in ipairs(Roster:GetRoster()) do
-        local full, short = normalizeRosterName(member.name)
-        if full then result[full] = true end
-        if short then result[short] = true end
+        local full, shortName = normalizeRosterName(member.name)
+        if full then
+            exact[full] = true
+            if shortName then
+                if short[shortName] == nil then
+                    short[shortName] = full
+                elseif short[shortName] ~= full then
+                    short[shortName] = false
+                end
+            end
+        end
     end
-    return result
+    return exact, short
 end
 
 local function assignedPlayersNotInRoster(bossKey, difficultyKey)
     if type(Roster.IsRaidRoster) == "function" and not Roster:IsRaidRoster() then return {} end
 
-    local current = rosterMap()
-    if next(current) == nil then return {} end
+    local exact, shortAliases = rosterMaps()
+    if next(exact) == nil then return {} end
 
     local missing, seen = {}, {}
     local definitions = Assignments:GetDefinitions(bossKey, difficultyKey)
@@ -45,7 +54,13 @@ local function assignedPlayersNotInRoster(bossKey, difficultyKey)
                 -- Group/rule labels remain valid for pre-planning and are not treated as player names.
                 if name ~= "" and not name:find("%s") and not name:find("%+") then
                     local full, short = normalizeRosterName(name)
-                    if full and not current[full] and not current[short] and not seen[full] then
+                    local qualified = name:find("-", 1, true) ~= nil
+                    local current = full and exact[full] == true
+                    if not current and not qualified and short then
+                        local canonical = shortAliases[short]
+                        current = canonical ~= nil and canonical ~= false
+                    end
+                    if full and not current and not seen[full] then
                         seen[full] = true
                         missing[#missing + 1] = name
                     end
