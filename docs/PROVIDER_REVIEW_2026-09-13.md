@@ -38,6 +38,8 @@ Current DBM Midnight source already contains `UnbindingofKithix/Kithix.lua`. RLA
 
 The files `scripts/native_ats_prospecting.py` and `tests/test_native_ats_prospecting.py` are unrelated Webactueel ATS/lead-prospecting code and do not belong in the WoW addon repository. They are removed from the active tree in this maintenance change. Rollback remains available in Git history through commits `6ec40d757cfbded060e3beaaaf38e51325586482` and `1b3850025833193ed41f5822b9ad26355d36bacf`; history is not rewritten.
 
+A focused repository-scope regression test now blocks those two unrelated ATS paths from returning, while the existing addon-audit hardening test pins the current source-reviewed provider baselines separately from historical live-tested evidence.
+
 ## Release classification
 
 This review changes repository maintenance data/documentation and removes unrelated non-runtime files only. It does not change `RaidLeadAssist.toc` or a Lua file loaded by that TOC, so the addon version is not bumped. Source/CI compatibility must still pass on the exact PR head, and current live-tested provider versions remain whatever is recorded in `LIVE_TEST_MATRIX.md` until new Retail evidence is collected.
