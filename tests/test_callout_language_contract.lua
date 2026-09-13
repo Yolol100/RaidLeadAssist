@@ -57,9 +57,9 @@ local expectedCalls = {
         mythic = { "toxic", "guillotine", "dreadmarch", "nightfall", "spiritcackle", "gloombomb", "intermission", "final" },
     },
     ulatek = {
-        normal = { "coils", "warden", "eggs", "serpents", "heart", "phase3", "demolish" },
-        heroic = { "coils", "warden", "eggs", "serpents", "heart", "fangs", "phase3", "demolish" },
-        mythic = { "coils", "warden", "eggs", "serpents", "heart", "fangs", "incubation", "phase3", "demolish" },
+        normal = { "waves", "coils", "heart", "warden", "eggs", "serpents", "phase3", "bite", "circling" },
+        heroic = { "waves", "coils", "heart", "warden", "eggs", "serpents", "fangs", "phase3", "bite", "circling" },
+        mythic = { "waves", "coils", "heart", "warden", "eggs", "serpents", "fangs", "incubation", "phase3", "bite", "circling" },
     },
 }
 
