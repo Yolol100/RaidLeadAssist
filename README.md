@@ -52,11 +52,17 @@ The current **source-reviewed** stable provider contracts are **DBM 12.1.9** and
 
 Source review is deliberately separate from **live-tested** evidence. The current runtime doctor/live matrix still records DBM 12.1.6 and BigWigs v424.1 as the last live-tested contracts until fresh Retail evidence is collected. A newer source-reviewed pin therefore means “contract inspected and CI-compatible”, not “proved in a real raid client”. When a bossmod cannot provide a usable matching timer, RLA intentionally falls back to Blizzard Encounter Timeline data for supported calls. Manual calls remain available independently of bossmod timing.
 
-## Ula'tek
+## Final two bosses
 
-Ula'tek remains deliberately **manual-only** on every difficulty. Current DBM and BigWigs source can expose encounter timing, but source availability alone does not constitute stable live-validated exact scheduling for RLA. Every Ula'tek call therefore remains `timing=false` pending live Retail proof.
+The current tactic/runtime review for **The Coiled Altar** and **Ula'tek** is recorded in `docs/FINAL_BOSSES_REVIEW_2026-09-13.md`.
 
-Provider timer identity is kept separate from display spell identity; for example a provider drycode key used for Toxic Incubation cannot silently replace RLA's UI mechanic identity.
+For The Coiled Altar, Normal/Heroic Guillotine now follows Blizzard's live **3-player minimum** while Heroic keeps alternating assigned teams. Mythic remains on fresh 5+ groups because the 3-player hotfix does not include Mythic. The intermission call keeps the current progression strategy of using Bloodlust during Soulbinding's Zul'jan damage window and staggering fragment interceptions.
+
+Ula'tek is no longer globally manual-only. RLA now permits fail-closed exact/native provider timing for a deliberately limited set of stable public DBM/BigWigs identities: Caustic Waves, Spectral Coils, Rage of the Shackled, Call of the Serpent, Serpent's Bite, Circling Prey and Mythic Toxic Incubation. Approximate provider data remains preview-only; Doomscale Warden, egg choices, Grasping Fangs execution and the generic Phase 3 transition remain manual raid-leader calls.
+
+Provider timer identity stays separate from display spell identity. Mythic Toxic Incubation, for example, matches the reviewed provider timer key `1299757` while the UI can retain display spell `1299759`. Current bossmod source identifies `1301510` as the Circling Prey/platform-break timing identity; the stale Demolish assumption is regression-blocked.
+
+This beta.67 change is **source/CI reviewable but not yet PASS-LIVE**. Real Retail pulls are still required to prove exact Ula'tek lead windows, Coiled Altar repull recovery, taint, performance and current post-hotfix raid execution.
 
 ## Operational controls
 
@@ -84,6 +90,7 @@ Settings owns the default timing-lead editor beside `AUTO`. Defaults are PREPARE
 - `docs/TEN_OF_TEN_ACCEPTANCE.md`: the **172-check** master audit, supplemented by focused post-audit release regressions.
 - `docs/LIVE_TEST_MATRIX.md`: evidence that can only be collected in the real Retail client.
 - `docs/PROVIDER_REVIEW_2026-09-13.md`: current Midnight/DBM/BigWigs provider-drift review, cleanup decision and targeted live-regression gates.
+- `docs/FINAL_BOSSES_REVIEW_2026-09-13.md`: live-hotfix, bossmod, guide/video and RWF review for The Coiled Altar and Ula'tek plus the beta.67 tactic/timing decisions.
 - `docs/AUDIT_SOURCES.md`: source register through its recorded review date; newer provider drift is tracked in the dated provider review above.
 - `docs/RELEASE_PROCESS.md`: release-versus-repository-only change classification and the deliberate publication flow.
 - `scripts/audit_runtime.py`: TOC/runtime/copy/policy hygiene.
