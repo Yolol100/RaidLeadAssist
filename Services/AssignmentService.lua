@@ -65,10 +65,11 @@ local function currentRosterByGroup()
 end
 
 local function parseSelection(value, compactGroups)
-    local selection = { players = {}, unresolvedGroups = false }
+    local selection = { players = {}, unresolvedGroups = false, rosterSize = 0 }
     local seen = {}
     local roster, byGroup = currentRosterByGroup()
     local hasRoster = #roster > 0
+    selection.rosterSize = #roster
 
     local function add(name, key)
         key = key or name:lower()
@@ -245,6 +246,15 @@ function AssignmentService:ValidateDefinitionValue(definition, value)
             end
             if definition.minPlayers and #selection.players < definition.minPlayers then
                 return false, ("requires at least %d unique players; found %d."):format(definition.minPlayers, #selection.players)
+            end
+            if definition.minRaidFraction and selection.rosterSize > 0 then
+                local required = math.ceil(selection.rosterSize * definition.minRaidFraction)
+                if #selection.players < required then
+                    local percent = math.floor((definition.minRaidFraction * 100) + 0.5)
+                    return false, ("requires at least %d unique players (%d%% of the current %d-player group); found %d."):format(
+                        required, percent, selection.rosterSize, #selection.players
+                    )
+                end
             end
         end
     end
