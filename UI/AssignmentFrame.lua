@@ -264,7 +264,7 @@ function AssignmentFrame:EnsureSlot(index)
             self:SetDirty(true)
             self:SetStatus("Roster selection added. Save to apply.", "muted")
             self:RefreshRequiredStatus()
-        end)
+        end, definition and definition.compactGroups == true)
     end)
     slot:SetOnTab(function(control, backwards) self:FocusAdjacentSlot(control, backwards) end)
     self.slotPool[index] = slot
