@@ -83,6 +83,7 @@ function Readiness:GetState()
             label = "CHECK",
             states = { "CHECK PROFILE" },
             missingRequired = {},
+            invalidAssignments = {},
             rosterMissing = {},
             customCurrentness = "unknown",
             covered = 0,
@@ -96,6 +97,7 @@ function Readiness:GetState()
     end
 
     local missingRequired = Assignments:GetMissingRequired(App.activeBossKey, App.activeDifficultyKey)
+    local invalidAssignments = Assignments:GetInvalidConfigured(App.activeBossKey, App.activeDifficultyKey)
     local rosterMissing = assignedPlayersNotInRoster(App.activeBossKey, App.activeDifficultyKey)
     local customCurrentness = Messages:GetCustomCurrentness(App.activeBossKey, App.activeDifficultyKey)
     local covered, timed = timedProviderCoverage(profile)
@@ -104,7 +106,7 @@ function Readiness:GetState()
     local worldMarkers, targetMarkers, prepSteps = SetupRegistry:GetCounts(App.activeBossKey, App.activeDifficultyKey)
 
     local states = {}
-    if #missingRequired > 0 then states[#states + 1] = "CHECK ASSIGNMENTS" end
+    if #missingRequired > 0 or #invalidAssignments > 0 then states[#states + 1] = "CHECK ASSIGNMENTS" end
     if #rosterMissing > 0 then states[#states + 1] = "CHECK ROSTER" end
     if setupRequired and not setupReady then states[#states + 1] = "CHECK SETUP" end
     if customCurrentness == "review" then states[#states + 1] = "CHECK CUSTOM TEXT" end
@@ -122,6 +124,7 @@ function Readiness:GetState()
         label = ready and "READY" or "CHECK",
         states = states,
         missingRequired = missingRequired,
+        invalidAssignments = invalidAssignments,
         rosterMissing = rosterMissing,
         customCurrentness = customCurrentness,
         covered = covered,
@@ -140,10 +143,16 @@ function App:PrintDoctor()
 
     local state = Readiness:GetState()
     ns:Print("Readiness: " .. table.concat(state.states, " | "))
-    ns:Print(("Assignments: required=%s | roster-current=%s"):format(
+    ns:Print(("Assignments: required=%s | live-valid=%s | roster-current=%s"):format(
         #state.missingRequired == 0 and "complete" or ("missing " .. #state.missingRequired),
+        #state.invalidAssignments == 0 and "yes" or ("no; " .. #state.invalidAssignments .. " invalid assignment(s)"),
         #state.rosterMissing == 0 and "yes" or ("no; " .. #state.rosterMissing .. " assigned player(s) not currently in raid")
     ))
+    if #state.invalidAssignments > 0 then
+        local details = {}
+        for index = 1, #state.invalidAssignments do details[index] = state.invalidAssignments[index].message end
+        ns:Print("Assignment review: " .. table.concat(details, " | "))
+    end
     if #state.rosterMissing > 0 then ns:Print("Roster review: " .. table.concat(state.rosterMissing, ", ")) end
     ns:Print(("Pre-pull setup: %s | world=%d | target=%d | prep=%d"):format(
         state.setupRequired and (state.setupReady and "ready" or "check") or "not required",
