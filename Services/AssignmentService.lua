@@ -396,6 +396,26 @@ function AssignmentService:ResetBoss(bossKey, difficultyKey)
     emitAssignmentsChanged(bossKey, difficultyKey)
 end
 
+function AssignmentService:GetInvalidConfigured(bossKey, difficultyKey)
+    local invalid = {}
+    local definitions = self:GetDefinitions(bossKey, difficultyKey)
+    for index = 1, #definitions do
+        local definition = definitions[index]
+        local value = self:GetValue(bossKey, difficultyKey, definition.key)
+        if value ~= "" then
+            local ok, reason = self:ValidateDefinitionValue(definition, value)
+            if not ok then
+                invalid[#invalid + 1] = {
+                    assignmentKey = definition.key,
+                    label = definition.label,
+                    message = definition.label .. " " .. reason,
+                }
+            end
+        end
+    end
+    return invalid
+end
+
 function AssignmentService:GetMissingRequired(bossKey, difficultyKey, values)
     values = values or self:GetValues(bossKey, difficultyKey)
     local missing = {}
