@@ -186,6 +186,13 @@ local overlapEggs, overlapEggsError = Assignments:ApplyBossDraft("ulatek", "norm
 assert(not overlapEggs and overlapEggsError.assignmentKey == "egg_right",
     "Ula'tek must reject one player as both side egg carriers")
 
+local tooManyEggs, tooManyEggsError = Assignments:ApplyBossDraft("ulatek", "normal", {
+    egg_left = "Carrierone, Carriertwo",
+    egg_right = "Carrierthree",
+})
+assert(not tooManyEggs and tooManyEggsError.assignmentKey == "egg_left",
+    "Ula'tek must enforce exactly one Doomscale egg carrier per side")
+
 local overlapBite, overlapBiteError = Assignments:ApplyBossDraft("ulatek", "normal", {
     bite_melee = "Helperone, Helpertwo",
     bite_ranged = "Helperone, Helperthree",
