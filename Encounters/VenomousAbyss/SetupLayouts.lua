@@ -198,33 +198,39 @@ Setup:RegisterLayouts("altar", {
 
 Setup:RegisterLayouts("ulatek", {
     normal = layout(
-        "Give Spectral Coils one fixed soak marker and assign the planned egg handler.",
+        "Mark left/right Phase 2 sides and the shared Coils point; preassign Bite helper sectors.",
         {
-            { key="coils_soak", kind="world", icon=6, label="Coils soak", purpose="Square is the 40%+ raid Spectral Coils soak point." },
+            { key="coils_soak", kind="world", icon=6, label="Coils soak", purpose="Square is the shared Normal Spectral Coils soak point; meet the 40%+ floor." },
+            { key="egg_left", kind="world", icon=4, label="Left side", purpose="Triangle labels the left Phase 2 side and Doomscale egg carrier." },
+            { key="egg_right", kind="world", icon=7, label="Right side", purpose="Cross labels the right Phase 2 side and Doomscale egg carrier." },
         },
         {
-            "Assign the Doomscale Egg handler and choose the planned egg before pull.",
+            "Assign left/right Doomscale egg carriers.",
+            "Assign melee, ranged and healer Serpent's Bite helper groups for Phase 3.",
         }
     ),
     heroic = layout(
-        "Keep the 40%+ raid Coils marker and the same egg handler as Normal.",
+        "Mark left/right sides and pre-split two alternating Coils teams plus three Bite helper sectors.",
         {
-            { key="coils_soak", kind="world", icon=6, label="Coils soak", purpose="Square is the 40%+ raid Spectral Coils soak point." },
+            { key="coils_soak", kind="world", icon=6, label="Coils reference", purpose="Square is the shared Coils reference; the called team must still meet the 40%+ floor." },
+            { key="egg_left", kind="world", icon=4, label="Left side", purpose="Triangle labels Team 1's Phase 2 side and Doomscale egg carrier." },
+            { key="egg_right", kind="world", icon=7, label="Right side", purpose="Cross labels Team 2's Phase 2 side and Doomscale egg carrier." },
         },
         {
-            "Assign the Doomscale Egg handler and choose the planned egg before pull.",
+            "Assign two near-equal alternating Coils/side teams and left/right egg carriers.",
+            "Assign melee, ranged and healer Serpent's Bite helper groups for Phase 3.",
         }
     ),
     mythic = layout(
-        "Mythic needs alternating Coils groups plus left/right egg-side references.",
+        "Mythic keeps alternating Coils teams, left/right egg lanes, Bite helper sectors and Incubation intercepts.",
         {
-            { key="coils_soak", kind="world", icon=6, label="Coils soak", purpose="Square is the Spectral Coils soak point for the called group." },
+            { key="coils_soak", kind="world", icon=6, label="Coils reference", purpose="Square is the Spectral Coils reference for the called team." },
             { key="egg_left", kind="world", icon=4, label="Left eggs", purpose="Triangle labels the planned left egg side." },
             { key="egg_right", kind="world", icon=7, label="Right eggs", purpose="Cross labels the planned right egg side." },
         },
         {
-            "Assign alternating Coils groups and left/right egg carriers.",
-            "Assign a 4+ Toxic Incubation intercept group; call the active egg side.",
+            "Assign alternating Coils teams, left/right egg carriers and three Bite helper groups.",
+            "Assign a 4+ Toxic Incubation intercept group; call safe Purge wave directions.",
         }
     ),
 })
