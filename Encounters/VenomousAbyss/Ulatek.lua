@@ -80,24 +80,28 @@ local function bite(mythic)
         return timedCall(
             "bite",
             "Serpent's Bite",
-            "Meet helpers; Purge out; dodge waves",
-            "Bite: leech; Purge 7+ yards out; dodge waves.",
+            "Assigned Bite groups soak; Purge waves out",
+            "Bite: assigned groups soak; Purge waves out.",
             "Bite",
             { 1295905 },
             8,
-            5
+            5,
+            "{{bite_melee}} / {{bite_ranged}} / {{bite_healer}} soak",
+            "Bite: {{bite_melee}}; {{bite_ranged}}; {{bite_healer}} soak. Purge waves out."
         )
     end
 
     return timedCall(
         "bite",
         "Serpent's Bite",
-        "Meet helpers; Purge helpers move out",
-        "Bite: leech within 15s; Purge move 7+ yards out.",
+        "Assigned Bite groups soak; Purge out",
+        "Bite: assigned groups soak; Purge move out.",
         "Bite",
         { 1295905 },
         8,
-        5
+        5,
+        "{{bite_melee}} / {{bite_ranged}} / {{bite_healer}} soak",
+        "Bite: {{bite_melee}}; {{bite_ranged}}; {{bite_healer}} soak. Purge out."
     )
 end
 
@@ -166,9 +170,9 @@ local function calls(coilCall, eggAction, eggWarning, eggActionTemplate, eggWarn
     result[#result + 1] = manualCall(
         "phase3",
         "Phase 3",
-        "Bloodlust; execute final burn plan",
-        "Phase 3: Bloodlust; execute the final burn plan.",
-        "Bloodlust"
+        "Execute final burn plan",
+        "Phase 3: execute the final burn plan.",
+        "Final phase"
     )
     result[#result + 1] = bite(includeMythic)
     result[#result + 1] = circling
@@ -179,25 +183,25 @@ Registry:Register({
     key = "ulatek",
     name = "Ula'tek",
     encounterID = 3492,
-    strategyStatus = "12.1 live Blizzard hotfixes through 2026-09-10 + current Wowhead/Icy Veins/Method/RWF + DBM 12.1.9/BigWigs v424.8 source-reviewed 2026-09-13; selected exact-ID timing enabled; PASS-LIVE pending",
+    strategyStatus = "12.1 live Blizzard hotfixes through 2026-09-10 + current Wowhead/Icy Veins/Method/Mythic Trap/RWF + DBM 12.1.9/BigWigs v424.8 source-reviewed 2026-09-13; selected exact-ID timing enabled; PASS-LIVE pending",
     profiles = {
         normal = {
             explanation = {
                 "Caustic Waves: use a safe gap and never let a wave touch an egg; swimming underneath no longer works.",
-                "Spectral Coils: stack at least 40% of the raid in the active soak to minimize raid damage.",
+                "Spectral Coils: get at least 40% of the raid into each soak; Normal can move as one raid group.",
                 "Rage of the Shackled exposes the Heart: swap immediately and use the planned damage/healing window.",
-                "Phase 2: split to both side platforms; kill the Warden before using the planned Doomscale egg.",
+                "Phase 2: split left/right; kill each Warden, then assigned side carriers deliver the Doomscale eggs.",
                 "Protect and move eggs safely, kill priority serpent adds and interrupt dangerous add casts.",
-                "Phase 3: Bloodlust; Serpent's Bite targets meet nearby helpers before 15s, then Purge helpers move 7+ yards out.",
+                "Phase 3: use melee, ranged and healer Bite helper groups; fully clear each Bite, then Purge helpers move out.",
                 "Caustic Waves return with gaps: cross through the safe lane and keep remaining eggs protected.",
                 "Circling Prey destroys the current platform: leave it before the platform breaks.",
             },
             calls = calls(
-                coils("Stack 40%+ raid in the active Coil", "Coils: stack 40%+ raid in the active soak."),
-                "Assigned handler uses planned egg",
-                "Eggs: assigned handler use planned egg.",
-                "{{egg_handler}} uses planned egg",
-                "Eggs: {{egg_handler}} use planned egg.",
+                coils("Raid soaks each active Coil", "Coils: raid soak each impact; meet 40%+."),
+                "Side carriers use planned Doomscale eggs",
+                "Eggs: side carriers deliver planned Doomscale eggs.",
+                "Left {{egg_left}}; Right {{egg_right}}",
+                "Eggs: left {{egg_left}}; right {{egg_right}}.",
                 false,
                 false
             ),
@@ -205,32 +209,37 @@ Registry:Register({
         heroic = {
             explanation = {
                 "Caustic Waves: use a safe gap and keep every wave away from eggs; swimming underneath no longer works.",
-                "Spectral Coils: stack at least 40% of the raid in the active soak; current live timing is more consistent after hotfixes.",
+                "Spectral Coils: pre-split into two near-equal teams and alternate soaks; each impact needs at least 40% of the raid.",
                 "Rage of the Shackled exposes the Heart: swap immediately and use the planned damage/healing window.",
-                "Phase 2: split to opposite side platforms; kill the Warden, then use the planned egg.",
+                "Phase 2: the same two teams split left/right; kill Wardens, then assigned side carriers deliver the Doomscale eggs.",
                 "Grasping Fangs targets three players per side: break tethers sequentially and let Blight Vein clear between breaks.",
                 "Protect and move eggs safely, kill priority serpent adds and interrupt dangerous add casts.",
-                "Phase 3: Bloodlust; Serpent's Bite targets meet helpers before 15s, then Purge helpers move 7+ yards out.",
+                "Phase 3: use melee, ranged and healer Bite helper groups; fully clear each Bite, then Purge helpers move out.",
                 "Circling Prey destroys the current platform: leave it before the platform breaks.",
             },
             calls = calls(
-                coils("Stack 40%+ raid in the active Coil", "Coils: stack 40%+ raid in the active soak."),
-                "Assigned handler uses egg",
-                "Eggs: assigned handler use planned egg.",
-                "{{egg_handler}} uses planned egg",
-                "Eggs: {{egg_handler}} use planned egg.",
+                coils(
+                    "Assigned team soaks the active Coil",
+                    "Coils: assigned team soak the active Coil.",
+                    "{{rotation:coils}} soak the active Coil",
+                    "Coils: {{rotation:coils}} soak the active Coil."
+                ),
+                "Side carriers use planned Doomscale eggs",
+                "Eggs: side carriers deliver planned Doomscale eggs.",
+                "Left {{egg_left}}; Right {{egg_right}}",
+                "Eggs: left {{egg_left}}; right {{egg_right}}.",
                 true,
                 false
             ),
         },
         mythic = {
             explanation = {
-                "Spectral Coils: soak only with the assigned team; Soul Constrictor prevents that team from mitigating the next Coil.",
+                "Spectral Coils: alternate assigned teams; Soul Constrictor prevents the previous team from mitigating the next Coil.",
                 "Toxic Incubation: assigned interceptors take one hit each; Toxic Burn players do not intercept another hit.",
                 "Hardened eggs must have their shield broken before the assigned carrier moves them.",
                 "Egg carriers stay 3+ yards apart and use only the called side.",
                 "Grasping Fangs breaks hit the raid: break tethers sequentially and never chain multiple breaks together.",
-                "Phase 3: Bloodlust; Serpent's Bite helpers leech before 15s, move 7+ yards out and handle the Purge waves.",
+                "Phase 3: use melee, ranged and healer Bite helper groups; Purge helpers move out and aim their waves safely.",
                 "Caustic Waves must be crossed through safe gaps; swimming underneath is not a valid route.",
                 "Circling Prey destroys the current platform: leave it before the platform breaks.",
             },
