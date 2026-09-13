@@ -101,10 +101,10 @@ for _, definition in ipairs(altarHeroic) do
     assert(definition.minPlayers == 3)
 end
 
--- Mythic Ula'tek renders Coils rotation, side carriers, three Bite sectors and Incubation.
+-- Mythic Ula'tek renders valid 40%+ Coils rotation, side carriers, three Bite sectors and Incubation.
 ok = A:ApplyBossDraft("ulatek", "mythic", {
-    coil_a = "Group 1",
-    coil_b = "Group 2",
+    coil_a = "Groups 1+2",
+    coil_b = "Groups 3+4",
     egg_left = "G3P1",
     egg_right = "G3P2",
     bite_melee = "G3P3",
@@ -115,10 +115,10 @@ ok = A:ApplyBossDraft("ulatek", "mythic", {
 assert(ok)
 local coils = R:GetProfile("ulatek", "mythic").callsByKey.coils
 local coilsWarning = A:BuildCallWarning(coils.warning, "ulatek", "mythic", "coils")
-assert(coilsWarning == "Coils: Group 1 soak the active Coil.")
+assert(coilsWarning == "Coils: Groups 1+2 soak the active Coil.")
 A:AdvanceCall("ulatek", "mythic", "coils")
 coilsWarning = A:BuildCallWarning(coils.warning, "ulatek", "mythic", "coils")
-assert(coilsWarning == "Coils: Group 2 soak the active Coil.")
+assert(coilsWarning == "Coils: Groups 3+4 soak the active Coil.")
 
 local eggs = R:GetProfile("ulatek", "mythic").callsByKey.eggs
 local eggAction, eggReady = A:BuildCallAction(eggs.action, "ulatek", "mythic", "eggs")
