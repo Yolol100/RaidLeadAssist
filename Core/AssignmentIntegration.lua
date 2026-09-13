@@ -24,6 +24,7 @@ local Integration = {
     setupCard = nil,
     setupExtraHeight = 72,
     setupHeightApplied = false,
+    rosterEventFrame = nil,
 }
 
 local function canEditAssignments()
@@ -187,6 +188,16 @@ local function refreshAssignmentSurface()
     refreshCallAvailability()
 end
 
+local function installRosterEventBridge()
+    if Integration.rosterEventFrame or type(CreateFrame) ~= "function" then return end
+    local frame = CreateFrame("Frame")
+    frame:RegisterEvent("GROUP_ROSTER_UPDATE")
+    frame:SetScript("OnEvent", function()
+        EventBus:Emit("GROUP_ROSTER_UPDATED")
+    end)
+    Integration.rosterEventFrame = frame
+end
+
 local originalInitialize = App.Initialize
 function App:Initialize(...)
     originalInitialize(self, ...)
@@ -199,6 +210,7 @@ function App:Initialize(...)
     })
     AssignmentPreviewUI:Attach(AssignmentUI, previewAssignments)
     Launchers:Attach(UI, SettingsUI, openAssignments)
+    installRosterEventBridge()
     refreshAssignmentSurface()
     refreshSetupCard(true)
 
@@ -299,6 +311,9 @@ end
 
 EventBus:On("ASSIGNMENTS_CHANGED", Integration, function(_, bossKey, difficultyKey)
     if bossKey == App.activeBossKey and difficultyKey == App.activeDifficultyKey then refreshAssignmentSurface() end
+end)
+EventBus:On("GROUP_ROSTER_UPDATED", Integration, function()
+    refreshAssignmentSurface()
 end)
 EventBus:On("ENCOUNTER_STARTED", Integration, refreshForActiveEncounter)
 EventBus:On("ENCOUNTER_RECOVERED", Integration, refreshForActiveEncounter)

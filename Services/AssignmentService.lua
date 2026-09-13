@@ -32,6 +32,13 @@ local function containsControl(value)
     return value:find("[%z\1-\8\11\12\14-\31\127]") ~= nil
 end
 
+local function normalizeRosterName(name)
+    if type(name) ~= "string" or name == "" then return nil, nil end
+    local full = name:lower()
+    local short = full:match("^([^%-]+)")
+    return full, short
+end
+
 local function parseGroupNumbers(value)
     if type(value) ~= "string" then return nil end
     local lower = trim(value):lower()
@@ -54,27 +61,54 @@ end
 local function currentRosterByGroup()
     local roster = {}
     if Roster and type(Roster.GetRoster) == "function" then roster = Roster:GetRoster() or {} end
+    local authoritativeRaid = Roster and type(Roster.IsRaidRoster) == "function" and Roster:IsRaidRoster() == true
+    if not authoritativeRaid then return {}, {}, {}, {}, false end
+
     local byGroup = {}
+    local byExactName = {}
+    local byShortName = {}
     for index = 1, #roster do
         local entry = roster[index]
         local group = tonumber(entry.subgroup) or 1
         byGroup[group] = byGroup[group] or {}
         byGroup[group][#byGroup[group] + 1] = entry.name
+
+        local full, short = normalizeRosterName(entry.name)
+        if full then
+            byExactName[full] = full
+            if short then
+                if byShortName[short] == nil then
+                    byShortName[short] = full
+                elseif byShortName[short] ~= full then
+                    byShortName[short] = false
+                end
+            end
+        end
     end
-    return roster, byGroup
+    return roster, byGroup, byExactName, byShortName, true
 end
 
-local function parseSelection(value, compactGroups)
-    local selection = { players = {}, unresolvedGroups = false }
+local function parseSelection(value, compactGroups, options)
+    local selection = {
+        players = {},
+        unresolvedGroups = false,
+        rosterSize = 0,
+        rosterPlayers = 0,
+        authoritativeRaid = false,
+    }
     local seen = {}
-    local roster, byGroup = currentRosterByGroup()
+    local roster, byGroup, byExactName, byShortName, authoritativeRaid = currentRosterByGroup()
     local hasRoster = #roster > 0
+    local allowUnresolvedGroups = options and options.allowUnresolvedGroups == true
+    selection.rosterSize = #roster
+    selection.authoritativeRaid = authoritativeRaid
 
-    local function add(name, key)
+    local function add(name, key, inCurrentRaid)
         key = key or name:lower()
         if seen[key] then return false, name end
         seen[key] = true
         selection.players[#selection.players + 1] = { name = name, key = key }
+        if inCurrentRaid == true then selection.rosterPlayers = selection.rosterPlayers + 1 end
         return true
     end
 
@@ -87,22 +121,34 @@ local function parseSelection(value, compactGroups)
             if groups then
                 for index = 1, #groups do
                     local group = groups[index]
-                    local members = byGroup[group] or {}
-                    if hasRoster then
-                        if #members == 0 then return nil, "Group " .. group .. " is not present in the current raid." end
-                        for memberIndex = 1, #members do
-                            local member = members[memberIndex]
-                            local ok, duplicate = add(member, member:lower())
-                            if not ok then return nil, "contains duplicate player " .. duplicate .. "." end
-                        end
-                    else
+                    if allowUnresolvedGroups then
                         selection.unresolvedGroups = true
-                        local ok = add("Group " .. group, "@group:" .. group)
+                        local ok = add("Group " .. group, "@group:" .. group, false)
                         if not ok then return nil, "contains duplicate Group " .. group .. "." end
+                    else
+                        local members = byGroup[group] or {}
+                        if hasRoster then
+                            if #members == 0 then return nil, "Group " .. group .. " is not present in the current raid." end
+                            for memberIndex = 1, #members do
+                                local member = members[memberIndex]
+                                local full = normalizeRosterName(member)
+                                local ok, duplicate = add(member, full or member:lower(), true)
+                                if not ok then return nil, "contains duplicate player " .. duplicate .. "." end
+                            end
+                        else
+                            selection.unresolvedGroups = true
+                            local ok = add("Group " .. group, "@group:" .. group, false)
+                            if not ok then return nil, "contains duplicate Group " .. group .. "." end
+                        end
                     end
                 end
             else
-                local ok, duplicate = add(token)
+                local full, short = normalizeRosterName(token)
+                local canonical = full and byExactName[full]
+                local qualified = token:find("-", 1, true) ~= nil
+                if canonical == nil and short and not qualified then canonical = byShortName[short] end
+                if canonical == false then canonical = nil end
+                local ok, duplicate = add(token, canonical or full or token:lower(), authoritativeRaid and canonical ~= nil)
                 if not ok then return nil, "contains duplicate player " .. duplicate .. "." end
             end
         end
@@ -181,6 +227,7 @@ end
 function AssignmentService:NormalizeStored()
     if not self.database then return end
     local stored = self.database.assignments
+    local normalizationOptions = { allowUnresolvedGroups = true, skipRosterRelative = true }
     for bossKey, difficulties in pairs(stored) do
         if type(difficulties) ~= "table" then
             stored[bossKey] = nil
@@ -198,7 +245,7 @@ function AssignmentService:NormalizeStored()
                     local maxAttempts = #self:GetDefinitions(bossKey, difficultyKey) + 1
                     local clean
                     for _ = 1, maxAttempts do
-                        local ok, result = self:ValidateBossDraft(bossKey, difficultyKey, candidate)
+                        local ok, result = self:ValidateBossDraft(bossKey, difficultyKey, candidate, normalizationOptions)
                         if ok then
                             clean = result
                             break
@@ -231,13 +278,13 @@ function AssignmentService:ValidateValue(value)
     return true, normalized
 end
 
-function AssignmentService:ValidateDefinitionValue(definition, value)
+function AssignmentService:ValidateDefinitionValue(definition, value, options)
     local ok, normalized = self:ValidateValue(value)
     if not ok or normalized == "" then return ok, normalized end
 
     local kind = definition and definition.kind or "assignee"
     if kind == "assignee" or kind == "rotation" then
-        local selection, selectionError = parseSelection(normalized, definition and definition.compactGroups == true)
+        local selection, selectionError = parseSelection(normalized, definition and definition.compactGroups == true, options)
         if not selection then return false, selectionError end
         if not selection.unresolvedGroups then
             if definition.exactPlayers and #selection.players ~= definition.exactPlayers then
@@ -245,6 +292,22 @@ function AssignmentService:ValidateDefinitionValue(definition, value)
             end
             if definition.minPlayers and #selection.players < definition.minPlayers then
                 return false, ("requires at least %d unique players; found %d."):format(definition.minPlayers, #selection.players)
+            end
+            if options and options.requireCurrentRaid and selection.authoritativeRaid
+                and selection.rosterPlayers < #selection.players then
+                return false, ("requires every assigned player to be uniquely present in the current raid; found %d of %d."):format(
+                    selection.rosterPlayers, #selection.players
+                )
+            end
+            if definition.minRaidFraction and selection.authoritativeRaid
+                and not (options and options.skipRosterRelative) then
+                local required = math.ceil(selection.rosterSize * definition.minRaidFraction)
+                if selection.rosterPlayers < required then
+                    local percent = math.floor((definition.minRaidFraction * 100) + 0.5)
+                    return false, ("requires at least %d current raid players (%d%% of the current %d-player raid); found %d."):format(
+                        required, percent, selection.rosterSize, selection.rosterPlayers
+                    )
+                end
             end
         end
     end
@@ -273,7 +336,7 @@ function AssignmentService:GetValues(bossKey, difficultyKey)
     return result
 end
 
-function AssignmentService:ValidateBossDraft(bossKey, difficultyKey, values)
+function AssignmentService:ValidateBossDraft(bossKey, difficultyKey, values, options)
     if type(values) ~= "table" then return false, { message = "Assignment values are missing." } end
 
     local definitions = self:GetDefinitions(bossKey, difficultyKey)
@@ -282,14 +345,14 @@ function AssignmentService:ValidateBossDraft(bossKey, difficultyKey, values)
 
     for index = 1, #definitions do
         local definition = definitions[index]
-        local ok, normalized = self:ValidateDefinitionValue(definition, values[definition.key])
+        local ok, normalized = self:ValidateDefinitionValue(definition, values[definition.key], options)
         if not ok then
             return false, { assignmentKey = definition.key, message = definition.label .. " " .. normalized }
         end
         if normalized ~= "" then
             clean[definition.key] = normalized
             if definition.exclusiveGroup then
-                local selection = assert(parseSelection(normalized, definition.compactGroups == true))
+                local selection = assert(parseSelection(normalized, definition.compactGroups == true, options))
                 local bucket = exclusive[definition.exclusiveGroup]
                 if not bucket then
                     bucket = {}
@@ -341,6 +404,38 @@ function AssignmentService:ResetBoss(bossKey, difficultyKey)
     emitAssignmentsChanged(bossKey, difficultyKey)
 end
 
+function AssignmentService:GetInvalidConfigured(bossKey, difficultyKey)
+    local invalid = {}
+    local definitions = self:GetDefinitions(bossKey, difficultyKey)
+    for index = 1, #definitions do
+        local definition = definitions[index]
+        local value = self:GetValue(bossKey, difficultyKey, definition.key)
+        if value ~= "" then
+            local ok, reason = self:ValidateDefinitionValue(definition, value)
+            if not ok then
+                invalid[#invalid + 1] = {
+                    assignmentKey = definition.key,
+                    label = definition.label,
+                    message = definition.label .. " " .. reason,
+                }
+            end
+        end
+    end
+    if #invalid > 0 then return invalid end
+
+    local ok, result = self:ValidateBossDraft(bossKey, difficultyKey, self:GetValues(bossKey, difficultyKey))
+    if not ok then
+        local definitionsByKey = definitionMap(bossKey, difficultyKey)
+        local definition = result and result.assignmentKey and definitionsByKey[result.assignmentKey]
+        invalid[#invalid + 1] = {
+            assignmentKey = result and result.assignmentKey or nil,
+            label = definition and definition.label or "Assignments",
+            message = result and result.message or "Assignments are invalid in the current raid.",
+        }
+    end
+    return invalid
+end
+
 function AssignmentService:GetMissingRequired(bossKey, difficultyKey, values)
     values = values or self:GetValues(bossKey, difficultyKey)
     local missing = {}
@@ -369,6 +464,11 @@ function AssignmentService:GetRotationValue(bossKey, difficultyKey, callKey, rot
 end
 
 function AssignmentService:IsCallReady(bossKey, difficultyKey, callKey)
+    local planOk, planResult = self:ValidateBossDraft(bossKey, difficultyKey, self:GetValues(bossKey, difficultyKey))
+    if not planOk then
+        return false, planResult and planResult.message or "Assignments are invalid in the current raid."
+    end
+
     local definitions = AssignmentRegistry:GetCallDefinitions(bossKey, difficultyKey, callKey)
     local missing = {}
     for index = 1, #definitions do
@@ -377,7 +477,7 @@ function AssignmentService:IsCallReady(bossKey, difficultyKey, callKey)
         if definition.required and value == "" then
             missing[#missing + 1] = definition.label
         elseif value ~= "" then
-            local ok, reason = self:ValidateDefinitionValue(definition, value)
+            local ok, reason = self:ValidateDefinitionValue(definition, value, { requireCurrentRaid = true })
             if not ok then return false, definition.label .. " " .. reason end
         end
     end
@@ -466,7 +566,14 @@ function AssignmentService:BuildCallWarning(baseWarning, bossKey, difficultyKey,
         template = call.warningTemplate
     end
 
-    if template then return self:RenderCallTemplate(template, bossKey, difficultyKey, callKey) end
+    if template then
+        local rendered, complete, reason = self:RenderCallTemplate(template, bossKey, difficultyKey, callKey)
+        if complete == false or not rendered then return rendered, complete, reason end
+        if #rendered > self.MAX_WARNING_LENGTH then
+            return nil, false, "Assignment detail exceeds the Raid Warning limit."
+        end
+        return rendered, true
+    end
 
     local result = baseWarning
     local fragments = self:GetCallFragments(bossKey, difficultyKey, callKey)

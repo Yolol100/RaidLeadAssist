@@ -47,15 +47,32 @@ for _,d in ipairs({"normal","heroic","mythic"}) do
         assert(p.callsByKey[key] and p.callsByKey[key].timing == false)
     end
 end
-assert(R:GetProfile("ulatek","normal").callsByKey.coils.warning == "Coils: stack 40%+ raid in the active soak.")
-assert(R:GetProfile("ulatek","heroic").callsByKey.coils.warning == "Coils: stack 40%+ raid in the active soak.")
-assert(R:GetProfile("ulatek","mythic").callsByKey.coils.warning == "Coils: assigned team soak the active Coil.")
-assert(R:GetProfile("ulatek","mythic").callsByKey.incubation.timing ~= false)
+
+local un = R:GetProfile("ulatek","normal")
+local uh = R:GetProfile("ulatek","heroic")
+local um = R:GetProfile("ulatek","mythic")
+assert(un.callsByKey.coils.warning == "Coils: raid soak each impact; meet 40%+.")
+assert(uh.callsByKey.coils.warning == "Coils: assigned team soak the active Coil.")
+assert(um.callsByKey.coils.warning == "Coils: assigned team soak the active Coil.")
+assert(uh.callsByKey.coils.warningTemplate:find("{{rotation:coils}}",1,true),
+    "Heroic Coil call must render the alternating assigned team")
+assert(um.callsByKey.coils.warningTemplate:find("{{rotation:coils}}",1,true),
+    "Mythic Coil call must render the alternating assigned team")
+assert(um.callsByKey.incubation.timing ~= false)
 assert(text("ulatek","normal"):find("swimming underneath no longer works",1,true))
+assert(text("ulatek","normal"):find("melee, ranged and healer Bite helper groups",1,true))
+assert(text("ulatek","normal"):find("7+ yards out",1,true))
+assert(text("ulatek","heroic"):find("two near-equal teams",1,true))
 assert(text("ulatek","heroic"):find("three players per side",1,true))
-assert(text("ulatek","heroic"):find("Purge helpers move 7+ yards out",1,true))
+assert(text("ulatek","heroic"):find("7+ yards out",1,true))
 assert(text("ulatek","mythic"):find("Soul Constrictor",1,true))
-assert(R:GetProfile("ulatek","normal").callsByKey.circling.spellIDs[1] == 1301510)
-assert(R:GetProfile("ulatek","normal").callsByKey.demolish == nil)
+assert(text("ulatek","mythic"):find("aim their waves safely",1,true))
+assert(un.callsByKey.bite.warning == "Bite: assigned groups soak; Purge move out.")
+assert(uh.callsByKey.bite.warning == "Bite: assigned groups soak; Purge move out.")
+assert(um.callsByKey.bite.warning == "Bite: assigned groups soak; Purge waves out.")
+assert(un.callsByKey.circling.spellIDs[1] == 1301510)
+assert(un.callsByKey.demolish == nil)
+assert(un.callsByKey.phase3.warning == "Phase 3: execute the final burn plan.",
+    "Generic Ula'tek Phase 3 call must not hardcode a disputed Bloodlust window")
 
 print("ok - strategy regressions cover current live hotfixes, difficulty assignments and bounded Ula'tek timing")

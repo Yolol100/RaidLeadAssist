@@ -26,6 +26,7 @@ for group = 1, 4 do
     end
 end
 ns:RegisterModule("Services.RosterService", {
+    IsRaidRoster = function() return true end,
     GetRoster = function() return roster end,
 })
 
@@ -101,20 +102,31 @@ for _, definition in ipairs(altarHeroic) do
     assert(definition.minPlayers == 3)
 end
 
--- Mythic Ula'tek uses real configured groups/carriers in its shared calls.
+-- Mythic Ula'tek renders valid 40%+ Coils rotation, side carriers, three Bite sectors and Incubation.
 ok = A:ApplyBossDraft("ulatek", "mythic", {
-    coil_a = "Group 1",
-    coil_b = "Group 2",
+    coil_a = "Groups 1+2",
+    coil_b = "Groups 3+4",
     egg_left = "G3P1",
     egg_right = "G3P2",
+    bite_melee = "G3P3",
+    bite_ranged = "G3P4",
+    bite_healer = "G3P5",
     incubation_team = "Group 4",
 })
 assert(ok)
 local coils = R:GetProfile("ulatek", "mythic").callsByKey.coils
 local coilsWarning = A:BuildCallWarning(coils.warning, "ulatek", "mythic", "coils")
-assert(coilsWarning == "Coils: Group 1 soak the active Coil.")
+assert(coilsWarning == "Coils: Groups 1+2 soak the active Coil.")
 A:AdvanceCall("ulatek", "mythic", "coils")
 coilsWarning = A:BuildCallWarning(coils.warning, "ulatek", "mythic", "coils")
-assert(coilsWarning == "Coils: Group 2 soak the active Coil.")
+assert(coilsWarning == "Coils: Groups 3+4 soak the active Coil.")
+
+local eggs = R:GetProfile("ulatek", "mythic").callsByKey.eggs
+local eggAction, eggReady = A:BuildCallAction(eggs.action, "ulatek", "mythic", "eggs")
+assert(eggReady and eggAction == "Triangle G3P1; Cross G3P2")
+
+local bite = R:GetProfile("ulatek", "mythic").callsByKey.bite
+local biteWarning, biteReady = A:BuildCallWarning(bite.warning, "ulatek", "mythic", "bite")
+assert(biteReady and biteWarning == "Bite: G3P3; G3P4; G3P5 soak. Purge waves out.")
 
 print("ok - difficulty-specific assignments are roster-aware and render into callouts")

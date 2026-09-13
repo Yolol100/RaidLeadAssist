@@ -8,7 +8,7 @@ This review follows the earlier provider-only review from 2026-09-13 with a prod
 - Runtime candidate after this review: `0.9.0-beta.67`.
 - Stable provider releases rechecked: DBM `12.1.9`, BigWigs `v424.8`.
 - No private DBM/BigWigs cooldown table is copied into RLA. RLA still consumes public provider durations dynamically.
-- Source review and CI can prove identities, matching rules and fail-closed behavior. They cannot prove real Retail timing quality, taint, performance or pull-to-pull encounter behavior. Those remain `PASS-LIVE` gates.
+- Source review and CI can prove identities, matching rules, assignment contracts and fail-closed behavior. They cannot prove real Retail timing quality, taint, performance or pull-to-pull encounter behavior. Those remain `PASS-LIVE` gates.
 
 ## Primary/current sources reviewed
 
@@ -45,41 +45,40 @@ The Coiled Altar public timer identities remain compatible with the existing RLA
 
 Current reviewed files remain those pinned in `docs/UPSTREAM_BASELINES.json`.
 
-BigWigs independently exposes the same encounter-level timing surfaces needed by the selected Ula'tek calls. RLA continues to accept only encounter-scoped provider traffic and only exact/native precision for actionable PREPARE/PRESS state.
+BigWigs independently exposes the encounter-level timing surfaces needed by the selected Ula'tek calls. RLA continues to accept only encounter-scoped provider traffic and only exact/native precision for actionable PREPARE/PRESS state.
 
 ### Strategy / video / progression cross-checks
 
 - Wowhead Ula'tek: https://www.wowhead.com/guide/midnight/raids/venomous-abyss-ulatek-boss-strategy-abilities
 - Icy Veins Ula'tek: https://www.icy-veins.com/wow/ulatek-raid-guide/
 - Method Heroic Ula'tek: https://www.method.gg/guides/the-venomous-abyss/ulatek-heroic
+- Mythic Trap Ula'tek: https://www.mythictrap.com/en/venomous-abyss/ulatek/heroic
+- Viserio Ula'tek assignment reference: https://www.viserio.com/raid/venomous-abyss/ulatek
 - Method Race to World First progression: https://www.method.gg/raidprogress
-- Ula'tek Normal/Heroic video guide (BrettStefani): https://www.youtube.com/watch?v=zqMvD1oy2d0
-- The Coiled Altar Normal/Heroic video coverage (Tactyks): https://www.youtube.com/watch?v=L__7PvkXaoc
 - Wowhead The Coiled Altar: https://www.wowhead.com/guide/midnight/raids/venomous-abyss-coiled-altar-boss-strategy-abilities
 - Method Heroic The Coiled Altar: https://www.method.gg/guides/the-venomous-abyss/the-coiled-altar-heroic
 - Mythic Trap The Coiled Altar: https://www.mythictrap.com/en/venomous-abyss/the-coiled-altar/heroic
-- Ready Check Pull Coiled Altar strategy notes: https://www.patreon.com/readycheckpull/posts/early-access-166803547
 
-Community sources are used here for raid-leader execution patterns, not to override Blizzard mechanic contracts or public bossmod identities.
+Community sources are used for raid-leader execution patterns, not to override Blizzard mechanic contracts or public bossmod identities.
 
 ## The Coiled Altar decision
 
 ### Normal / Heroic Guillotine
 
-The old RLA contract required 5+ soakers. Blizzard's live September 1 hotfix lowers the failure-avoidance minimum to 3 players on Normal/Heroic.
+Blizzard's live September 1 hotfix lowers the failure-avoidance minimum to 3 players on Normal/Heroic.
 
 RLA now:
 
 - says `3+` on Normal;
-- allows two different Heroic Guillotine teams with a `minPlayers = 3` validation floor;
+- validates two different Heroic Guillotine teams at `minPlayers = 3`;
 - preserves alternating Heroic groups because the repeat-hit debuff still makes immediate reuse unsafe;
 - keeps Mythic at fresh `5+` groups because the 3-player hotfix does not include Mythic and the permanent Guillotined contract remains a separate execution model.
 
 ### Intermission / Phase 3
 
-Current progression sources consistently support using the Soulbinding damage-amplification intermission to burn Zul'jan, commonly with Bloodlust, while intercepting only enough fragments to avoid healing the bosses without overwhelming the raid. RLA keeps that existing raid-leader call.
+Current progression sources support using the Soulbinding damage-amplification intermission as a major burn window while intercepting only enough fragments to avoid healing the bosses without overwhelming the raid. Some guides differ on the preferred Bloodlust window, so RLA keeps the existing Coiled Altar intermission plan but does not generalize that preference to Ula'tek.
 
-Phase 3 remains a combined-mechanics execution: line up orbs/ghosts for tank frontals where applicable, preserve space, keep both bosses close in health and finish together.
+Phase 3 remains a combined-mechanics execution: preserve space, keep both bosses close in health and finish together.
 
 ## Ula'tek decision
 
@@ -95,7 +94,7 @@ The earlier provider review did not enable Ula'tek timing. This follow-up has en
 - `circling` — Circling Prey `1301510`
 - Mythic only: `incubation` — provider key `1299757`, display icon `1299759`
 
-This does **not** add hardcoded boss cooldown schedules. It only lets an exact/native, encounter-matched DBM/BigWigs/Blizzard representation drive the already-existing timing state. Approximate bars remain non-actionable previews. Cross-encounter traffic remains rejected.
+This does **not** add hardcoded boss cooldown schedules. It only lets an exact/native, encounter-matched DBM/BigWigs/Blizzard representation drive the existing timing state. Approximate bars remain non-actionable previews. Cross-encounter traffic remains rejected.
 
 ### Calls intentionally kept manual
 
@@ -104,40 +103,54 @@ These remain manual because a stable timer identity is not the same as a useful 
 - Doomscale Warden
 - Doomscale Eggs / chosen egg side
 - Grasping Fangs execution
-- generic Phase 3 / Bloodlust transition
+- generic Phase 3 transition
+
+The generic Phase 3 call intentionally says to execute the raid's final burn plan instead of hardcoding Bloodlust. Current strategy sources do not all place Bloodlust in the same window.
 
 ### Spectral Coils
 
-- Normal/Heroic: raid-leader text now says to put at least 40% of the raid into the active Coil.
-- Heroic does **not** invent Mythic Soul Constrictor rotation assignments.
-- Mythic retains the two assigned Coil groups because Soul Constrictor prevents immediate reuse.
+- Normal: the raid can soak each active Coil as one group, but every impact must still meet the live **40%+** floor.
+- Heroic: current Icy Veins, Method, Mythic Trap and assignment references converge on pre-splitting the raid into two near-equal teams and alternating Coils. RLA therefore assigns `coil_a` / `coil_b` and renders the currently called team into the Coil warning.
+- Mythic: keeps the same alternating-team model and the stricter Soul Constrictor execution.
+
+This is an assignment strategy layer, not a replacement for the underlying Blizzard 40% mechanic. Real Retail validation still has to prove that each configured team actually meets the requirement for the raid size being used.
+
+### Phase 2 sides and Doomscale eggs
+
+All supported difficulties now preassign one mobile egg carrier per side:
+
+- `egg_left` maps to the Triangle / left side;
+- `egg_right` maps to the Cross / right side.
+
+Heroic/Mythic Coil teams map cleanly to the same left/right split so the raid does not need to relearn a second partition during the phase change.
 
 ### Grasping Fangs
 
-Heroic text now reflects the live three-targets-per-side contract. Tethers are broken sequentially so Blight Vein applications do not chain uncontrollably.
+Heroic text reflects the live three-targets-per-side contract. Tethers are broken sequentially so Blight Vein applications do not chain uncontrollably.
 
 ### Serpent's Bite / Volatile Purge
 
-The prior draft idea of fixed three soak groups was rejected during this audit. The encounter mechanic is a leech handoff:
+Current Icy Veins, Method and Mythic Trap strategy converges on three practical helper sectors for Phase 3:
 
-1. Bite targets meet nearby helpers before Surging Fang expires.
-2. A helper leeches the poison.
-3. The helper receives Volatile Purge and moves at least 7 yards from other players before expiration.
-4. On Mythic, the Purge also emits Caustic Waves, so the call explicitly warns about the follow-up waves.
+- melee helpers;
+- ranged helpers;
+- healer-target helpers, supplemented by nearby ranged/short-range DPS rather than healers alone.
 
-No fixed Normal/Heroic Bite roster group is added.
+RLA therefore exposes three required, mutually exclusive assignment groups: `bite_melee`, `bite_ranged` and `bite_healer` on Normal, Heroic and Mythic. The mechanic remains a leech handoff: each Bite is fully cleared through its matching helper sector, then the Purge carrier moves **7+ yards** away. Mythic additionally warns that Purge emits Caustic Waves and those waves must be aimed safely.
 
 ### Circling Prey identity correction
 
-Current DBM/BigWigs source identifies spell `1301510` as the platform-break/Circling Prey timing identity. The stale RLA assumption that treated `1301510` as `Demolish` is removed and regression-tested.
+Current DBM/BigWigs source identifies spell `1301510` as the platform-break/Circling Prey timing identity. The stale RLA assumption that treated `1301510` as `Demolish` remains removed and regression-tested.
 
 ## Regression and release gates added/updated
 
 - The Coiled Altar Normal/Heroic 3-player Guillotine floor is guarded; Mythic 5+ remains guarded separately.
 - Ula'tek selected timed call spell identities are guarded.
 - Ula'tek manual milestones remain explicitly manual.
-- Approximate Ula'tek provider data is preview-only.
-- Cross-encounter provider traffic is rejected.
+- Normal keeps no fixed Coil roster; Heroic/Mythic require two non-overlapping alternating Coil teams.
+- All difficulties require distinct left/right egg carriers and three non-overlapping Bite helper sectors.
+- Assignment overlap, missing required call assignments and stale setup-marker expectations are explicit negative tests.
+- Approximate Ula'tek provider data is preview-only and cross-encounter provider traffic is rejected.
 - Toxic Incubation provider identity remains separate from its display identity.
 - Circling Prey `1301510` is guarded and the stale Demolish call key is forbidden.
 
@@ -145,13 +158,15 @@ Current DBM/BigWigs source identifies spell `1301510` as the platform-break/Circ
 
 `0.9.0-beta.67` can be technically green in source/CI, but it is not a full product `PASS-LIVE` until real Retail evidence covers at least:
 
-1. Normal/Heroic The Coiled Altar Guillotine with 3-player minimum assignments and alternating Heroic groups.
+1. Normal/Heroic The Coiled Altar Guillotine with the live 3-player minimum and alternating Heroic groups.
 2. Coiled Altar wipe during/near intermission, then repull, verifying no stale/duplicate PREPARE/PRESS state.
 3. Ula'tek Normal/Heroic exact Caustic Waves, Spectral Coils, Heart, Call of the Serpent, Serpent's Bite and Circling Prey timers from DBM and BigWigs.
-4. Ula'tek Mythic Toxic Incubation and Spectral Coils rotations.
-5. Ula'tek approximate-provider fallback proving it never becomes actionable.
-6. Ula'tek `/reload`, wipe/repull and provider-switch recovery.
-7. Real-player confirmation that call lead windows are useful and not early/late after current hotfix timing.
-8. Taint, frame-time/CPU, memory and UI-scale/accessibility checks from the existing live matrix.
+4. Ula'tek Normal side carriers plus melee/ranged/healer Bite groups.
+5. Ula'tek Heroic alternating Coil-team calls, left/right side mapping, egg carriers and Bite groups under a real raid size.
+6. Ula'tek Mythic Toxic Incubation, alternating Coils, Bite groups and safe Purge-wave directions.
+7. Ula'tek approximate-provider fallback proving it never becomes actionable.
+8. Ula'tek `/reload`, wipe/repull and provider-switch recovery.
+9. Real-player confirmation that call lead windows are useful and not early/late after current hotfix timing.
+10. Taint, frame-time/CPU, memory and UI-scale/accessibility checks from the live matrix.
 
 Until those are collected, documentation must say **source/CI reviewed, PASS-LIVE pending** rather than “perfect” or “fully live-tested”.

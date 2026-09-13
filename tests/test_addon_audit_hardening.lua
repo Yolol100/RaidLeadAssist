@@ -198,8 +198,12 @@ assert(liveMatrix:find("0.9.0-beta.67", 1, true), "live matrix must target the c
 assert(liveMatrix:find("DBM 12.1.6", 1, true), "live matrix must retain the last live-tested DBM contract")
 assert(liveMatrix:find("BigWigs v424.1", 1, true), "live matrix must retain the last live-tested BigWigs contract")
 assert(liveMatrix:find("2026-08-31", 1, true), "live matrix must retain its actual live evidence date")
-assert(liveMatrix:find("selected timing enabled in source/CI; PASS%-LIVE pending"),
+assert(liveMatrix:find("selected timing and assignment strategy enabled in source/CI; PASS-LIVE pending", 1, true),
     "live matrix must keep beta67 Ula'tek source/CI evidence separate from PASS-LIVE")
+assert(liveMatrix:find("correct difficulty-specific assignments", 1, true),
+    "live matrix must require live validation of the new Ula'tek assignment model")
+assert(liveMatrix:find("fail-closed behavior when required assignments are missing or overlapping", 1, true),
+    "live matrix must require negative live assignment validation")
 
 local toc = read("RaidLeadAssist.toc")
 assert(toc:find("## Version: 0.9.0-beta.67", 1, true), "TOC version must match the current runtime candidate")

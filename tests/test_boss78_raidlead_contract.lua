@@ -52,15 +52,31 @@ local requiredWail=0
 for _,def in ipairs(h) do if def.key:find("wail_kick_",1,true) and def.required then requiredWail=requiredWail+1 end end
 assert(requiredWail == 2)
 
-local un = AR:GetDefinitions("ulatek","normal")
-local uh = AR:GetDefinitions("ulatek","heroic")
-assert(#un == 1 and un[1].key == "egg_handler")
-assert(#uh == 1 and uh[1].key == "egg_handler", "Heroic Ula'tek keeps only the planned egg-handler assignment")
-local um = AR:GetDefinitions("ulatek","mythic")
-local found = {}
-for _,def in ipairs(um) do found[def.key] = true end
-assert(found.coil_a and found.coil_b and found.egg_left and found.egg_right and found.incubation_team,
+local function keysFor(difficulty)
+    local found = {}
+    for _, definition in ipairs(AR:GetDefinitions("ulatek", difficulty)) do found[definition.key] = definition end
+    return found
+end
+
+local un = keysFor("normal")
+assert(un.egg_left and un.egg_right, "Normal Ula'tek needs one Phase 2 egg carrier per side")
+assert(un.bite_melee and un.bite_ranged and un.bite_healer,
+    "Normal Ula'tek needs three Phase 3 Serpent's Bite helper sectors")
+assert(not un.coil_a and not un.coil_b, "Normal may soak Spectral Coils as one raid group")
+
+local uh = keysFor("heroic")
+assert(uh.coil_a and uh.coil_b,
+    "Heroic Ula'tek needs two alternating near-equal Spectral Coils teams")
+assert(uh.egg_left and uh.egg_right,
+    "Heroic Ula'tek needs one Doomscale egg carrier per side")
+assert(uh.bite_melee and uh.bite_ranged and uh.bite_healer,
+    "Heroic Ula'tek needs melee/ranged/healer Serpent's Bite helper sectors")
+
+local um = keysFor("mythic")
+assert(um.coil_a and um.coil_b and um.egg_left and um.egg_right and um.incubation_team,
     "Mythic Ula'tek keeps Coil rotation, egg carriers and Incubation team")
+assert(um.bite_melee and um.bite_ranged and um.bite_healer,
+    "Mythic Ula'tek keeps three Bite helper sectors for Purge wave control")
 
 local normalUlatek = Registry:GetProfile("ulatek","normal")
 assert(normalUlatek.callsByKey.circling and normalUlatek.callsByKey.circling.spellIDs[1] == 1301510,

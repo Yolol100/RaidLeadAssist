@@ -12,7 +12,9 @@ local function slot(key, label, options)
         callLabel = options.callLabel,
         rotation = options.rotation,
         required = options.required == true,
+        exactPlayers = options.exactPlayers,
         minPlayers = options.minPlayers,
+        minRaidFraction = options.minRaidFraction,
         exclusiveGroup = options.exclusiveGroup,
         compactGroups = options.compactGroups == true,
         helper = options.helper,
@@ -98,63 +100,85 @@ local ALTAR_LAYOUTS = {
     },
 }
 
-local ULATEK_EGG_HANDLER = {
-    key = "eggs",
-    title = "Doomscale Egg Handler",
-    description = "Assign who handles the planned egg after the Warden dies.",
-    columns = 1,
-    slots = {
-        slot("egg_handler", "Egg Handler", {
-            callKey = "eggs",
-            callLabel = "Handler",
-            required = true,
-            helper = "This player uses the planned egg only after Warden's Protection is gone.",
-        }),
-    },
-}
-
-local ULATEK_COILS_MYTHIC = {
+local ULATEK_COILS_HARD = {
     key = "coils",
-    title = "Spectral Coils Rotation",
-    description = "Mythic: alternate two different soak groups because Soul Constrictor prevents immediate reuse.",
+    title = "Spectral Coils Teams",
+    description = "Heroic/Mythic: split into two near-equal teams and alternate the active Coil; each impact still needs 40%+ of the raid.",
     columns = 2,
     slots = {
-        slot("coil_a", "Coils Group 1", {
+        slot("coil_a", "Coils Team 1", {
             callKey = "coils",
             callLabel = "Coils",
             rotation = "coils",
             required = true,
+            minRaidFraction = 0.4,
             exclusiveGroup = "coils",
             compactGroups = true,
+            helper = "Use roughly half the raid; validation requires at least 40% of the current roster when roster data is available.",
         }),
-        slot("coil_b", "Coils Group 2", {
+        slot("coil_b", "Coils Team 2", {
             callKey = "coils",
             callLabel = "Coils",
             rotation = "coils",
             required = true,
+            minRaidFraction = 0.4,
             exclusiveGroup = "coils",
             compactGroups = true,
+            helper = "Use roughly half the raid; validation requires at least 40% of the current roster when roster data is available.",
         }),
     },
 }
 
-local ULATEK_EGGS_MYTHIC = {
+local ULATEK_EGG_CARRIERS = {
     key = "eggs",
     title = "Doomscale Egg Carriers",
-    description = "Mythic: assign one carrier per marked side. Use only the side called before pull/pull phase.",
+    description = "Assign one mobile Doomscale egg carrier to each Phase 2 side.",
     columns = 2,
     slots = {
         slot("egg_left", "Triangle / Left Carrier", {
             callKey = "eggs",
-            callLabel = "Triangle",
+            callLabel = "Left",
             required = true,
+            exactPlayers = 1,
             exclusiveGroup = "ulatek_eggs",
         }),
         slot("egg_right", "Cross / Right Carrier", {
             callKey = "eggs",
-            callLabel = "Cross",
+            callLabel = "Right",
             required = true,
+            exactPlayers = 1,
             exclusiveGroup = "ulatek_eggs",
+        }),
+    },
+}
+
+local ULATEK_BITE_GROUPS = {
+    key = "bite",
+    title = "Serpent's Bite Helper Groups",
+    description = "Pre-split Phase 3 into melee, ranged and healer helper groups; each group fully clears its matching Bite before Purge spreads.",
+    columns = 3,
+    slots = {
+        slot("bite_melee", "Melee Bite Group", {
+            callKey = "bite",
+            callLabel = "Melee",
+            required = true,
+            exclusiveGroup = "ulatek_bite",
+            compactGroups = true,
+        }),
+        slot("bite_ranged", "Ranged Bite Group", {
+            callKey = "bite",
+            callLabel = "Ranged",
+            required = true,
+            exclusiveGroup = "ulatek_bite",
+            compactGroups = true,
+        }),
+        slot("bite_healer", "Healer Bite Group", {
+            callKey = "bite",
+            callLabel = "Healer",
+            required = true,
+            exclusiveGroup = "ulatek_bite",
+            compactGroups = true,
+            helper = "Include enough nearby ranged/short-range DPS so the healer-target soak is not healer-only.",
         }),
     },
 }
@@ -177,16 +201,16 @@ local ULATEK_INCUBATION = {
 
 local ULATEK_LAYOUTS = {
     normal = {
-        summary = "Assign one egg handler. Spectral Coils needs at least 40% of the raid but no fixed roster group.",
-        sections = { ULATEK_EGG_HANDLER },
+        summary = "Assign left/right egg carriers and three Serpent's Bite helper groups. Normal Coils can be soaked as one raid group.",
+        sections = { ULATEK_EGG_CARRIERS, ULATEK_BITE_GROUPS },
     },
     heroic = {
-        summary = "Assign one egg handler. Spectral Coils needs at least 40% of the raid; Grasping Fangs is handled sequentially.",
-        sections = { ULATEK_EGG_HANDLER },
+        summary = "Assign two alternating Coils/side teams, left/right egg carriers and three Serpent's Bite helper groups.",
+        sections = { ULATEK_COILS_HARD, ULATEK_EGG_CARRIERS, ULATEK_BITE_GROUPS },
     },
     mythic = {
-        summary = "Assign alternating Coils groups, left/right egg carriers and a 4+ Incubation group.",
-        sections = { ULATEK_COILS_MYTHIC, ULATEK_EGGS_MYTHIC, ULATEK_INCUBATION },
+        summary = "Assign alternating Coils teams, left/right egg carriers, Bite helper groups and a 4+ Incubation group.",
+        sections = { ULATEK_COILS_HARD, ULATEK_EGG_CARRIERS, ULATEK_BITE_GROUPS, ULATEK_INCUBATION },
     },
 }
 

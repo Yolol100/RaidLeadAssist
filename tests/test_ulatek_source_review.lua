@@ -39,26 +39,43 @@ local normal = Registry:GetProfile("ulatek", "normal")
 local heroic = Registry:GetProfile("ulatek", "heroic")
 local mythic = Registry:GetProfile("ulatek", "mythic")
 
--- Blizzard's live hotfix requires 40% of the raid for minimum Spectral Coils damage.
--- Soul Constrictor remains a Mythic rotation mechanic in the current encounter source.
+-- Live strategy uses one raid group on Normal, but two near-equal alternating teams on Heroic/Mythic.
 assert(contains(normal.callsByKey.coils.warning, "40%"))
-assert(contains(heroic.callsByKey.coils.warning, "40%"))
-assert(mythic.callsByKey.coils.warning == "Coils: assigned team soak the active Coil.",
-    "Mythic Spectral Coils uses the assigned alternating group rotation")
-assert(not hasDefinition("heroic", "coil_a") and not hasDefinition("heroic", "coil_b"),
-    "Heroic must not invent the Mythic Soul Constrictor rotation")
+assert(not hasDefinition("normal", "coil_a") and not hasDefinition("normal", "coil_b"),
+    "Normal may soak Spectral Coils as one raid group")
+assert(hasDefinition("heroic", "coil_a") and hasDefinition("heroic", "coil_b"),
+    "Heroic needs two preassigned alternating Spectral Coils teams")
 assert(hasDefinition("mythic", "coil_a") and hasDefinition("mythic", "coil_b"),
-    "Mythic assignment layout keeps Coil rotation groups")
+    "Mythic keeps the alternating Spectral Coils teams")
+assert(heroic.callsByKey.coils.actionTemplate == "{{rotation:coils}} soak the active Coil")
+assert(mythic.callsByKey.coils.actionTemplate == "{{rotation:coils}} soak the active Coil")
+assert(contains(planText("heroic"), "two near-equal teams"))
+assert(contains(planText("heroic"), "40%"))
 
--- Normal/Heroic use one planned egg handler. Mythic adds side-specific carriers.
-assert(hasDefinition("normal", "egg_handler"))
-assert(hasDefinition("heroic", "egg_handler"))
-assert(not hasDefinition("heroic", "egg_left") and not hasDefinition("heroic", "egg_right"),
-    "Heroic must not expose Mythic egg-side assignments")
-assert(hasDefinition("mythic", "egg_left") and hasDefinition("mythic", "egg_right"),
-    "Mythic needs left/right egg carriers for the planned side")
+-- Phase 2 has two sides; current guides recommend one mobile Doomscale egg carrier per side.
+for _, difficulty in ipairs({ "normal", "heroic", "mythic" }) do
+    assert(hasDefinition(difficulty, "egg_left") and hasDefinition(difficulty, "egg_right"),
+        difficulty .. " needs left/right Doomscale egg carriers")
+end
+assert(normal.callsByKey.eggs.actionTemplate == "Left {{egg_left}}; Right {{egg_right}}")
+assert(heroic.callsByKey.eggs.actionTemplate == "Left {{egg_left}}; Right {{egg_right}}")
 
--- Heroic Grasping Fangs now targets three players per side and should be cleared sequentially.
+-- Phase 3 Serpent's Bite uses three preassigned helper sectors: melee, ranged and healer.
+for _, difficulty in ipairs({ "normal", "heroic", "mythic" }) do
+    assert(hasDefinition(difficulty, "bite_melee"))
+    assert(hasDefinition(difficulty, "bite_ranged"))
+    assert(hasDefinition(difficulty, "bite_healer"))
+    local call = Registry:GetProfile("ulatek", difficulty).callsByKey.bite
+    assert(call.actionTemplate:find("bite_melee", 1, true))
+    assert(call.actionTemplate:find("bite_ranged", 1, true))
+    assert(call.actionTemplate:find("bite_healer", 1, true))
+end
+assert(contains(normal.callsByKey.bite.warning, "assigned groups soak"))
+assert(contains(heroic.callsByKey.bite.warning, "Purge move out"))
+assert(contains(mythic.callsByKey.bite.warning, "Purge waves out"),
+    "Mythic Volatile Purge must remind the raid about emitted Caustic Waves")
+
+-- Heroic Grasping Fangs targets three players per side and should be cleared sequentially.
 assert(normal.callsByKey.fangs == nil, "Normal Grasping Fangs stays outside shared raidleader calls")
 assert(heroic.callsByKey.fangs and heroic.callsByKey.fangs.timing == false)
 assert(mythic.callsByKey.fangs and mythic.callsByKey.fangs.timing == false)
@@ -66,7 +83,7 @@ assert(contains(planText("heroic"), "three players per side"))
 assert(contains(planText("heroic"), "sequentially"))
 assert(contains(heroic.callsByKey.fangs.warning, "break one tether"))
 
--- Stable public bossmod identities may now drive timing, but no private cooldown schedule is copied.
+-- Stable public bossmod identities may drive timing, but no private cooldown schedule is copied.
 for _, profile in ipairs({ normal, heroic, mythic }) do
     assertTimedID(profile, "waves", 1292188)
     assertTimedID(profile, "coils", 1300530)
@@ -78,12 +95,6 @@ for _, profile in ipairs({ normal, heroic, mythic }) do
     assert(profile.callsByKey.eggs.timing == false)
     assert(profile.callsByKey.phase3.timing == false)
 end
-
--- Serpent's Bite is a timed warning for a leech handoff, not a fabricated fixed soak-group assignment.
-assert(contains(normal.callsByKey.bite.warning, "leech within 15s"))
-assert(contains(heroic.callsByKey.bite.warning, "Purge move 7+ yards out"))
-assert(contains(mythic.callsByKey.bite.warning, "dodge waves"),
-    "Mythic Volatile Purge must remind the raid about the emitted Caustic Waves")
 
 -- Mythic Toxic Incubation keeps provider identity separate from the display identity.
 assert(mythic.callsByKey.incubation, "Mythic must keep the Toxic Incubation call")
@@ -98,7 +109,6 @@ assert(hasDefinition("mythic", "incubation_team"), "Mythic needs the 4+ Incubati
 assert(normal.callsByKey.circling and normal.callsByKey.circling.spellIDs[1] == 1301510)
 assert(normal.callsByKey.demolish == nil, "stale Demolish identity must stay removed")
 assert(contains(planText("normal"), "swimming underneath no longer works"))
-assert(contains(planText("heroic"), "40%"))
 assert(contains(planText("mythic"), "Soul Constrictor"))
 
-print("ok - Ula'tek live tactics, exact provider identities and manual milestone boundaries guarded")
+print("ok - Ula'tek live group tactics, exact provider identities and manual milestone boundaries guarded")
