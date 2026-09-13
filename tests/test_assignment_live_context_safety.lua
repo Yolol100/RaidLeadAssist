@@ -102,4 +102,44 @@ assert(#Assignments:GetInvalidConfigured("ulatek", "heroic") == 0,
 local repairedReady = Assignments:IsCallReady("ulatek", "heroic", "coils")
 assert(repairedReady, "non-overlapping live Coil teams must restore call readiness")
 
-print("ok - live assignment context revalidates exclusivity and keeps exact/short roster names deterministic")
+-- Call-specific assignees without a percentage floor must still resolve uniquely to the live raid.
+currentRoster = {
+    { name = "Alex-NewRealm", subgroup = 1, role = "DAMAGER" },
+    { name = "Sam-RealmA", subgroup = 1, role = "DAMAGER" },
+    { name = "Sam-RealmB", subgroup = 1, role = "DAMAGER" },
+    { name = "P04", subgroup = 1, role = "DAMAGER" },
+    { name = "P05", subgroup = 1, role = "DAMAGER" },
+    { name = "P06", subgroup = 2, role = "DAMAGER" },
+    { name = "P07", subgroup = 2, role = "DAMAGER" },
+    { name = "P08", subgroup = 2, role = "DAMAGER" },
+    { name = "P09", subgroup = 2, role = "DAMAGER" },
+    { name = "P10", subgroup = 2, role = "DAMAGER" },
+}
+Assignments:Initialize({ assignments = {} })
+applied = Assignments:ApplyBossDraft("ulatek", "normal", {
+    egg_left = "Alex-OldRealm",
+    egg_right = "P04",
+})
+assert(applied, "stale qualified names must remain storable plans rather than being destructively erased")
+local staleEggReady, staleEggReason = Assignments:IsCallReady("ulatek", "normal", "eggs")
+assert(not staleEggReady and staleEggReason:find("uniquely present in the current raid", 1, true),
+    "egg call must fail closed when a qualified assignee belongs to a stale realm")
+
+applied = Assignments:ApplyBossDraft("ulatek", "normal", {
+    egg_left = "Sam",
+    egg_right = "P04",
+})
+assert(applied, "an ambiguous short name may remain in a saved plan for later repair")
+local ambiguousEggReady, ambiguousEggReason = Assignments:IsCallReady("ulatek", "normal", "eggs")
+assert(not ambiguousEggReady and ambiguousEggReason:find("uniquely present in the current raid", 1, true),
+    "egg call must fail closed when an unqualified short name is ambiguous across realms")
+
+applied = Assignments:ApplyBossDraft("ulatek", "normal", {
+    egg_left = "Sam-RealmA",
+    egg_right = "P04",
+})
+assert(applied, "an exact qualified live egg carrier must save")
+local exactEggReady, exactEggReason = Assignments:IsCallReady("ulatek", "normal", "eggs")
+assert(exactEggReady, "exact live egg carriers must restore call readiness: " .. tostring(exactEggReason))
+
+print("ok - live assignment context revalidates exclusivity, identity and current-roster call safety")
