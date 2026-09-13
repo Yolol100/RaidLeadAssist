@@ -84,6 +84,13 @@ function AssignmentRegistry:ValidateLayout(bossKey, difficultyKey, profile)
                 assert(type(definition.minPlayers) == "number" and definition.minPlayers >= 1,
                     "Invalid minPlayers")
             end
+            if definition.minRaidFraction ~= nil then
+                assert(type(definition.minRaidFraction) == "number"
+                    and definition.minRaidFraction > 0 and definition.minRaidFraction <= 1,
+                    "Invalid minRaidFraction")
+                assert(definition.kind == "assignee" or definition.kind == "rotation",
+                    "minRaidFraction requires a roster-like assignment")
+            end
             assert(not (definition.exactPlayers and definition.minPlayers),
                 "Assignment cannot require both exactPlayers and minPlayers")
             if definition.exclusiveGroup ~= nil then
