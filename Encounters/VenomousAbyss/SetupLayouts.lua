@@ -169,7 +169,7 @@ Setup:RegisterLayouts("altar", {
         },
         {
             "Assign 2-3 mobile Orb Collectors and a primary Wail interrupt.",
-            "Normal Guillotine needs any 5+ soakers; no fixed team is required.",
+            "Normal Guillotine needs any 3+ soakers; no fixed team is required.",
         }
     ),
     heroic = layout(
@@ -180,7 +180,7 @@ Setup:RegisterLayouts("altar", {
         },
         {
             "Assign 2-3 mobile Orb Collectors.",
-            "Assign two different 5+ Guillotine groups and at least two Wail kicks.",
+            "Assign two different 3+ Guillotine groups and at least two Wail kicks.",
         }
     ),
     mythic = layout(
@@ -200,16 +200,16 @@ Setup:RegisterLayouts("ulatek", {
     normal = layout(
         "Give Spectral Coils one fixed soak marker and assign the planned egg handler.",
         {
-            { key="coils_soak", kind="world", icon=6, label="Coils soak", purpose="Square is the full-raid Spectral Coils soak point." },
+            { key="coils_soak", kind="world", icon=6, label="Coils soak", purpose="Square is the 40%+ raid Spectral Coils soak point." },
         },
         {
             "Assign the Doomscale Egg handler and choose the planned egg before pull.",
         }
     ),
     heroic = layout(
-        "Keep the full-raid Coils marker and the same egg handler as Normal.",
+        "Keep the 40%+ raid Coils marker and the same egg handler as Normal.",
         {
-            { key="coils_soak", kind="world", icon=6, label="Coils soak", purpose="Square is the full-raid Spectral Coils soak point." },
+            { key="coils_soak", kind="world", icon=6, label="Coils soak", purpose="Square is the 40%+ raid Spectral Coils soak point." },
         },
         {
             "Assign the Doomscale Egg handler and choose the planned egg before pull.",

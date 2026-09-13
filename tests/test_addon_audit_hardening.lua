@@ -153,6 +153,12 @@ assert(readme:find("2026-09-13", 1, true), "README provider source-review date m
 assert(readme:find("live-tested", 1, true), "README must distinguish source review from live-tested evidence")
 assert(readme:find("PROVIDER_REVIEW_2026-09-13.md", 1, true),
     "README must route the current provider review to the dated evidence document")
+assert(readme:find("FINAL_BOSSES_REVIEW_2026-09-13.md", 1, true),
+    "README must route final-boss tactics to the dated product review")
+assert(readme:find("Ula'tek is no longer globally manual-only", 1, true),
+    "README must describe the bounded beta67 Ula'tek timing change")
+assert(readme:find("not yet PASS-LIVE", 1, true),
+    "README must not turn source/CI final-boss evidence into a live-runtime claim")
 
 local providerReview = read("docs/PROVIDER_REVIEW_2026-09-13.md")
 assert(providerReview:find("DBM stable release reviewed: `12.1.9`", 1, true),
@@ -160,9 +166,22 @@ assert(providerReview:find("DBM stable release reviewed: `12.1.9`", 1, true),
 assert(providerReview:find("BigWigs stable release reviewed: `v424.8`", 1, true),
     "current provider review must document BigWigs v424.8")
 assert(providerReview:find("Ula'tek", 1, true) and providerReview:find("manual-only", 1, true),
-    "current provider review must keep Ula'tek manual-only")
+    "the earlier provider-only review must retain its historical manual-only decision")
 assert(providerReview:find("scripts/native_ats_prospecting.py", 1, true),
     "current provider review must retain cleanup evidence and rollback context")
+
+local finalBossReview = read("docs/FINAL_BOSSES_REVIEW_2026-09-13.md")
+for _, marker in ipairs({
+    "0.9.0-beta.67",
+    "3-player minimum",
+    "Spectral Coils requires **40% of the raid**",
+    "Circling Prey / platform break — `1301510`",
+    "Toxic Incubation provider timer — `1299757`",
+    "Approximate bars remain non-actionable previews",
+    "PASS-LIVE",
+}) do
+    assert(finalBossReview:find(marker, 1, true), "missing final-boss review marker: " .. marker)
+end
 
 local auditSources = read("docs/AUDIT_SOURCES.md")
 assert(auditSources:find("Review date: 2026-09-03", 1, true),
@@ -175,15 +194,17 @@ assert(auditSources:find("EncounterTimelineDocumentation.lua", 1, true),
     "audit source register must document the Blizzard timeline drift watch")
 
 local liveMatrix = read("docs/LIVE_TEST_MATRIX.md")
-assert(liveMatrix:find("0.9.0-beta.66", 1, true), "live matrix must target the current runtime candidate")
+assert(liveMatrix:find("0.9.0-beta.67", 1, true), "live matrix must target the current runtime candidate")
 assert(liveMatrix:find("DBM 12.1.6", 1, true), "live matrix must retain the last live-tested DBM contract")
 assert(liveMatrix:find("BigWigs v424.1", 1, true), "live matrix must retain the last live-tested BigWigs contract")
 assert(liveMatrix:find("2026-08-31", 1, true), "live matrix must retain its actual live evidence date")
+assert(liveMatrix:find("selected timing enabled in source/CI; PASS%-LIVE pending"),
+    "live matrix must keep beta67 Ula'tek source/CI evidence separate from PASS-LIVE")
 
 local toc = read("RaidLeadAssist.toc")
-assert(toc:find("## Version: 0.9.0-beta.66", 1, true), "TOC version must match the current runtime candidate")
+assert(toc:find("## Version: 0.9.0-beta.67", 1, true), "TOC version must match the current runtime candidate")
 local changelog = read("CHANGELOG.md")
-assert(changelog:find("## 0.9.0-beta.66 — 2026-09-03", 1, true),
+assert(changelog:find("## 0.9.0-beta.67 — 2026-09-13", 1, true),
     "changelog must document the current runtime candidate")
 
 local security = read("SECURITY.md")

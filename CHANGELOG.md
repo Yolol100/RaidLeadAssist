@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.0-beta.67 — 2026-09-13
+
+- Re-audit the final two Venomous Abyss encounters against live Blizzard hotfixes, current DBM `12.1.9`, BigWigs `v424.8`, current written guides, video guides and Race to World First evidence.
+- Update The Coiled Altar Normal/Heroic Guillotine contract to Blizzard's live 3-player minimum while preserving fresh 5+ Mythic groups and the existing intermission Bloodlust / coordinated final-kill plan.
+- Refresh Ula'tek tactics for the live 40% Spectral Coils requirement, Heroic three-target-per-side Grasping Fangs, current Serpent's Bite leech/Purge handling, Caustic Waves, Heart burn windows and Circling Prey platform breaks.
+- Enable fail-closed automatic timing only for selected Ula'tek mechanics with stable public DBM/BigWigs spell identities; approximate provider data stays preview-only and manual milestones remain manual.
+- Correct spell `1301510` to the current bossmod `Circling Prey` platform-break identity and retain Toxic Incubation provider identity `1299757` separately from display spell `1299759`.
+- Add focused regressions for final-boss tactics, assignment minima, provider identity resolution, approximate/cross-encounter rejection and manual milestone boundaries. Real Retail pulls remain required for `PASS-LIVE` acceptance.
+
 ## 0.9.0-beta.66 — 2026-09-03
 
 - Re-review the current DBM `12.1.8` release plus post-release Midnight raid master changes and BigWigs `v424.5` against Raid Lead Assist's public timer-provider boundaries.

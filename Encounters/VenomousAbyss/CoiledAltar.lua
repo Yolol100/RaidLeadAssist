@@ -37,8 +37,8 @@ local spirit = {
 local intermission = {
     key = "intermission",
     ability = "Soulbinding",
-    action = "Bloodlust; burn Zul'jan; stop fragments",
-    warning = "Intermission: Bloodlust, burn Zul'jan; stop fragments.",
+    action = "Bloodlust; burn Zul'jan; stagger fragment stops",
+    warning = "Intermission: Bloodlust, burn Zul'jan; stagger fragment stops.",
     voice = "Bloodlust",
     timing = false,
 }
@@ -106,20 +106,20 @@ local orbCall = toxic(
 )
 
 local normalGuillotine = guillotine(
-    "5+ soak; raid move 40+ yards",
-    "Guillotine: 5+ soak; raid move 40+ yards."
+    "3+ soak; raid move 40+ yards",
+    "Guillotine: at least 3 soak; raid move 40+ yards."
 )
 local heroicGuillotine = guillotine(
-    "Assigned group soak; raid move",
+    "Assigned 3+ group soak; raid move",
     "Guillotine: assigned group soak; raid move 40+ yards.",
-    "{{rotation:guillotine}} soak; raid move 40+ yards",
-    "Guillotine: {{rotation:guillotine}} soak; raid move 40+ yards."
+    "{{rotation:guillotine}} soak (3+); raid move 40+ yards",
+    "Guillotine: {{rotation:guillotine}} soak (3+); raid move 40+ yards."
 )
 local mythicGuillotine = guillotine(
-    "Fresh group soak; raid move",
-    "Guillotine: fresh group soak; raid move 40+ yards.",
-    "{{rotation:guillotine}} soak; raid move 40+ yards",
-    "Guillotine: {{rotation:guillotine}} soak; raid move 40+ yards."
+    "Fresh 5+ group soak; raid move",
+    "Guillotine: fresh 5+ group soak; raid move 40+ yards.",
+    "{{rotation:guillotine}} soak (5+); raid move 40+ yards",
+    "Guillotine: {{rotation:guillotine}} soak (5+); raid move 40+ yards."
 )
 
 Registry:Register({
@@ -127,36 +127,41 @@ Registry:Register({
     name = "The Coiled Altar",
     encounterID = 3429,
     encounterAliases = { "The Bargained Crown" },
-    strategyStatus = "12.1 Journal + current Wowhead/Raidstrats + Ready Check Pull + DBM/BigWigs source-reviewed 2026-08-19; difficulty-specific Guillotine prep; live validation pending",
+    strategyStatus = "12.1 live Blizzard hotfixes through 2026-09-01 + current Wowhead/Method/Ready Check Pull/Mythic Trap + DBM 12.1.9/BigWigs v424.8 source-reviewed 2026-09-13; live validation pending",
     profiles = {
         normal = {
             explanation = {
-                "Green poison orbs spawn: only collectors touch them and carry them to Triangle.",
-                "Huge axe marks a player: 5+ players stack, then run 40+ yards away.",
+                "Green poison orbs spawn: only collectors touch them and stack them for the tank frontal.",
+                "Guillotine marks a player: at least 3 players soak, then the raid runs 40+ yards from the explosion.",
                 "Possessed player walks toward the edge: break their absorb immediately.",
-                "Ghost fixates you: face it to stop; look away to move it to Cross.",
+                "Ghost fixates you: face it to stop; look away to move it to Cross for the tank frontal.",
                 "Nightfall shield appears: break the shield, then interrupt the boss.",
                 "Soulcoilers spawn: kill them quickly and interrupt Wail of Terror.",
-                "Intermission: Bloodlust; stop fragments one at a time before Zul'jan.",
-                "Final phase: keep both bosses even and kill them together.",
+                "Intermission: Bloodlust and burn Zul'jan; stagger fragment interceptions so raid damage stays healable.",
+                "Final phase: combine both toolkits, keep both bosses even and kill them together.",
             },
             calls = { orbCall, normalGuillotine, dread, night, spirit, intermission, final },
         },
         heroic = {
             explanation = {
-                "Destroyed green orbs now stack raid damage: clear only planned orbs.",
-                "Guillotine gives a repeat-hit debuff: soak only with your assigned group.",
-                "A ghost reaching you re-possesses you: control it until the frontal clears it.",
+                "Destroyed green orbs stack raid damage: clear only planned orbs and do not detonate the pile all at once.",
+                "Guillotine now needs only 3 players to avoid failure damage, but the repeat-hit debuff still requires alternating assigned groups.",
+                "A ghost reaching you re-possesses you: control it until the tank frontal clears it.",
                 "Gloombomb on you: move 15+ yards out, then collect your Soul Fragments.",
+                "Soulcoilers and Eternal Nightfall must be stopped quickly; use the preassigned Wail interrupt order.",
+                "Intermission: Bloodlust and burn Zul'jan while staggering fragment interceptions around healer cooldowns.",
+                "Phase 3 combines orbs, ghosts, Guillotine and shields: preserve space and keep boss health even.",
             },
             calls = { orbCall, heroicGuillotine, dread, night, spirit, intermission, final },
         },
         mythic = {
             explanation = {
-                "Guillotined is permanent: soak only when your fresh group is called.",
+                "Guillotined is permanent: later axes need fresh 5+ players; the 3-player hotfix does not apply to Mythic.",
                 "Mutated venom: only assigned collectors touch it; everyone else stays clear.",
-                "Your fixating ghost is only visible to you: bring it to Cross safely.",
-                "Shielded Soulcoilers: aim Gloombombs into them, then kill them.",
+                "Your fixating ghost is only visible to you: bring it to Cross safely for the tank frontal.",
+                "Shielded Soulcoilers: aim Gloombombs into them, then kill them and maintain the Wail interrupt plan.",
+                "Intermission: Bloodlust, burn Zul'jan and space fragment interceptions because Mythic punishes rapid successive stops.",
+                "Phase 3 combines both phases: line up orbs and ghosts for the frontal and finish both bosses together.",
             },
             calls = {
                 toxic(

@@ -32,8 +32,18 @@ assert(R:GetProfile("sszorak","heroic").callsByKey.maelstrom.warning == "Maelstr
 assert(R:GetProfile("sszorak","normal").callsByKey.dig_in.warning == "Dig In: use damage cooldowns.")
 assert(R:GetProfile("twinfangs","normal").callsByKey.feast.warning == "Feast: fresh 3+ players soak each hit.")
 assert(R:GetProfile("twinfangs","heroic").callsByKey.feast.warning == "Feast: assigned groups soak in order.")
-assert(R:GetProfile("altar","normal").callsByKey.guillotine.warning == "Guillotine: 5+ soak; raid move 40+ yards.")
+assert(R:GetProfile("altar","normal").callsByKey.guillotine.warning == "Guillotine: at least 3 soak; raid move 40+ yards.")
 assert(R:GetProfile("altar","heroic").callsByKey.intermission.warning:find("Bloodlust",1,true))
 assert(R:GetProfile("altar","heroic").callsByKey.final.warning == "Final phase: keep health even; kill together.")
-for _,d in ipairs(C.DIFFICULTY_ORDER) do for _,call in ipairs(R:GetProfile("ulatek",d).calls) do assert(call.timing==false) end end
+for _,d in ipairs(C.DIFFICULTY_ORDER) do
+ local p=R:GetProfile("ulatek",d)
+ for _,key in ipairs({"waves","coils","heart","serpents","bite","circling"}) do
+  assert(p.callsByKey[key] and p.callsByKey[key].timing ~= false, d .. " selected Ula'tek timing call must remain provider-eligible")
+ end
+ for _,key in ipairs({"warden","eggs","phase3"}) do
+  assert(p.callsByKey[key] and p.callsByKey[key].timing == false, d .. " Ula'tek strategy milestone must remain manual")
+ end
+ if d ~= "normal" then assert(p.callsByKey.fangs and p.callsByKey.fangs.timing == false) end
+end
+assert(R:GetProfile("ulatek","mythic").callsByKey.incubation.timing ~= false)
 print("ok - all eight player briefings and raid calls remain bounded, normally capitalized and action-first")

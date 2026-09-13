@@ -46,9 +46,24 @@ local vashnik = Registry:GetLayout("vashnik", "heroic")
 assert(vashnik.markers[1].kind == "target" and vashnik.markers[1].icon == 8, "Vashnik first Fire target must be Skull")
 assert(vashnik.markers[2].kind == "target" and vashnik.markers[2].icon == 7, "Vashnik second Fire target must be Cross")
 
+local altarNormal = Registry:GetLayout("altar", "normal")
+local altarHeroic = Registry:GetLayout("altar", "heroic")
+local altarMythic = Registry:GetLayout("altar", "mythic")
+assert(altarNormal.checks[2]:find("3+ soakers", 1, true),
+    "Normal setup must reflect Blizzard's live 3-player Guillotine minimum")
+assert(altarHeroic.checks[2]:find("two different 3+ Guillotine groups", 1, true),
+    "Heroic setup must match the 3+ assignment validation")
+assert(altarMythic.checks[2]:find("fresh 5+ Guillotine groups", 1, true),
+    "Mythic setup must preserve the separate fresh 5+ contract")
+
+local ulatekNormal = Registry:GetLayout("ulatek", "normal")
 local ulatekHeroic = Registry:GetLayout("ulatek", "heroic")
+assert(ulatekNormal.markers[1].purpose:find("40%+ raid", 1, true),
+    "Normal Ula'tek setup marker must match the live Spectral Coils floor")
 assert(#ulatekHeroic.markers == 1 and ulatekHeroic.markers[1].icon == 6,
-    "Ula'tek Heroic keeps only the full-raid Coils marker")
+    "Ula'tek Heroic keeps only the Coils marker")
+assert(ulatekHeroic.markers[1].purpose:find("40%+ raid", 1, true),
+    "Heroic Ula'tek setup marker must match the live Spectral Coils floor")
 local ulatekMythic = Registry:GetLayout("ulatek", "mythic")
 assert(#ulatekMythic.markers == 3,
     "Ula'tek Mythic adds both egg-side markers to the Coils marker")

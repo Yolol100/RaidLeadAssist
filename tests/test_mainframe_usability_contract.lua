@@ -46,6 +46,20 @@ assert(contains(mainFrame, 'SetText("SEND PRE-PULL PLAN")'),
 assert(contains(mainFrame, 'Shift-drag to move Raid Lead Assist'),
     "Main panel should explain its Shift-drag movement affordance")
 
+-- Large final-boss call lists must remain usable on shorter effective screen heights/UI scales.
+assert(contains(mainFrame, 'CreateFrame("ScrollFrame", nil, frame)'),
+    "combat calls should live in a clipped scroll viewport")
+assert(contains(mainFrame, 'self.callScroll:SetScrollChild(self.callContent)'),
+    "combat-call scroll frame must own a bounded content frame")
+assert(contains(mainFrame, 'self.callScroll:EnableMouseWheel(true)'),
+    "combat-call viewport must be directly scrollable")
+assert(contains(mainFrame, 'UIParent:GetHeight()') and contains(mainFrame, 'parentHeight - 48'),
+    "main panel height must cap itself to the effective UIParent height")
+assert(contains(mainFrame, 'self.callScroll:SetVerticalScroll(0)'),
+    "changing boss/difficulty should reset the call list to its first action")
+assert(contains(mainFrame, 'CallButton:Create(self.callContent)'),
+    "combat buttons must be children of the scroll content rather than escape clipping")
+
 -- Deliberate states must not look like a broken timer integration.
 assert(contains(app, 'UI.timeline:SetIdle("AUTO TIMING OFF")'),
     "Disabled automatic timing should be explicit")
@@ -72,4 +86,4 @@ assert(not contains(toc, "Core/TimingStatusIntegration.lua"),
 assert(not contains(toc, "Encounters/VenomousAbyss/UlatekAssignmentPolicy.lua"),
     "Ula'tek assignment policy should live in AssignmentRegistry.lua")
 
-print("ok - raid-leader surface exposes themed readiness, lead, preset, personal, pre-pull and manual-timing states safely")
+print("ok - raid-leader surface exposes bounded scrolling plus themed readiness, lead, preset, personal, pre-pull and manual-timing states safely")

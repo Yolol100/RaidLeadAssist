@@ -92,11 +92,14 @@ local feast = R:GetProfile("twinfangs", "heroic").callsByKey.feast
 local feastWarning = A:BuildCallWarning(feast.warning, "twinfangs", "heroic", "feast")
 assert(feastWarning == "Feast: Group 1, then Group 2, then Group 3.")
 
--- Normal Altar Guillotine is fixed 5+ execution; Heroic introduces assigned groups.
+-- Normal Altar Guillotine is fixed 3+ execution after the live hotfix; Heroic introduces assigned groups.
 local altarNormal = AR:GetCallDefinitions("altar", "normal", "guillotine")
 local altarHeroic = AR:GetCallDefinitions("altar", "heroic", "guillotine")
 assert(#altarNormal == 0 and #altarHeroic == 2)
-assert(R:GetProfile("altar", "normal").callsByKey.guillotine.warning == "Guillotine: 5+ soak; raid move 40+ yards.")
+assert(R:GetProfile("altar", "normal").callsByKey.guillotine.warning == "Guillotine: at least 3 soak; raid move 40+ yards.")
+for _, definition in ipairs(altarHeroic) do
+    assert(definition.minPlayers == 3)
+end
 
 -- Mythic Ula'tek uses real configured groups/carriers in its shared calls.
 ok = A:ApplyBossDraft("ulatek", "mythic", {
@@ -109,9 +112,9 @@ ok = A:ApplyBossDraft("ulatek", "mythic", {
 assert(ok)
 local coils = R:GetProfile("ulatek", "mythic").callsByKey.coils
 local coilsWarning = A:BuildCallWarning(coils.warning, "ulatek", "mythic", "coils")
-assert(coilsWarning == "Coils: Group 1 stack at Square.")
+assert(coilsWarning == "Coils: Group 1 soak the active Coil.")
 A:AdvanceCall("ulatek", "mythic", "coils")
 coilsWarning = A:BuildCallWarning(coils.warning, "ulatek", "mythic", "coils")
-assert(coilsWarning == "Coils: Group 2 stack at Square.")
+assert(coilsWarning == "Coils: Group 2 soak the active Coil.")
 
 print("ok - difficulty-specific assignments are roster-aware and render into callouts")
