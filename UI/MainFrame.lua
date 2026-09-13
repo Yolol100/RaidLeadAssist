@@ -27,6 +27,11 @@ local function createSectionTitle(parent, text)
     return label
 end
 
+local function calculateCallStackHeight(callCount)
+    if callCount <= 0 then return 0 end
+    return (callCount * Theme.callButtonHeight) + (math.max(0, callCount - 1) * Theme.gap)
+end
+
 local function calculateHeight(callCount)
     local height = 28
     height = height + Theme.dropdownHeight
@@ -34,9 +39,18 @@ local function calculateHeight(callCount)
     height = height + 8 + Theme.timelineHeight
     height = height + 16 + Theme.sectionTitleHeight + 7 + Theme.explanationButtonHeight
     height = height + 16 + Theme.sectionTitleHeight + 7
-    height = height + (callCount * Theme.callButtonHeight)
-    height = height + (math.max(0, callCount - 1) * Theme.gap)
+    height = height + calculateCallStackHeight(callCount)
     return height + Theme.padding
+end
+
+local function calculateVisibleHeight(callCount)
+    local desired = calculateHeight(callCount)
+    local parentHeight = UIParent and UIParent.GetHeight and UIParent:GetHeight()
+    if type(parentHeight) ~= "number" or parentHeight <= 0 then return desired end
+
+    local minimum = calculateHeight(1)
+    local screenCap = math.max(minimum, parentHeight - 48)
+    return math.min(desired, screenCap)
 end
 
 local function setBackdropColor(frame, color)
@@ -98,11 +112,11 @@ end
 function MainFrame:EnsureCallButtons(count)
     while #self.callButtons < count do
         local index = #self.callButtons + 1
-        local button = CallButton:Create(self.frame)
-        button.frame:SetPoint("LEFT", self.dropdown.frame, "LEFT", 0, 0)
-        button.frame:SetPoint("RIGHT", self.dropdown.frame, "RIGHT", 0, 0)
+        local button = CallButton:Create(self.callContent)
+        button.frame:SetPoint("LEFT", self.callContent, "LEFT", 0, 0)
+        button.frame:SetPoint("RIGHT", self.callContent, "RIGHT", 0, 0)
         if index == 1 then
-            button.frame:SetPoint("TOP", self.callTitle, "BOTTOM", 0, -7)
+            button.frame:SetPoint("TOP", self.callContent, "TOP", 0, 0)
         else
             button.frame:SetPoint("TOP", self.callButtons[index - 1].frame, "BOTTOM", 0, -Theme.gap)
         end
@@ -245,6 +259,22 @@ function MainFrame:Initialize(database, callbacks)
     self.callTitle = createSectionTitle(frame, "Combat Call Buttons")
     self.callTitle:SetPoint("TOPLEFT", self.explanationButton.frame, "BOTTOMLEFT", 0, -16)
 
+    self.callScroll = CreateFrame("ScrollFrame", nil, frame)
+    self.callScroll:SetPoint("TOPLEFT", self.callTitle, "BOTTOMLEFT", 0, -7)
+    self.callScroll:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -Theme.padding, Theme.padding)
+    self.callScroll:EnableMouseWheel(true)
+
+    self.callContent = CreateFrame("Frame", nil, self.callScroll)
+    self.callContent:SetWidth(Theme.width - (Theme.padding * 2))
+    self.callContent:SetHeight(Theme.callButtonHeight)
+    self.callScroll:SetScrollChild(self.callContent)
+    self.callScroll:SetScript("OnMouseWheel", function(scrollFrame, delta)
+        local range = scrollFrame:GetVerticalScrollRange() or 0
+        local step = (Theme.callButtonHeight + Theme.gap) * 2
+        local offset = scrollFrame:GetVerticalScroll() - (delta * step)
+        scrollFrame:SetVerticalScroll(math.max(0, math.min(range, offset)))
+    end)
+
     frame:SetScript("OnUpdate", function(_, elapsed)
         self.updateAccumulator = (self.updateAccumulator or 0) + elapsed
         if self.updateAccumulator >= 0.05 then
@@ -292,7 +322,9 @@ function MainFrame:SetEncounter(encounterKey)
         end
     end
 
-    self.frame:SetHeight(calculateHeight(#profile.calls))
+    self.callContent:SetHeight(math.max(Theme.callButtonHeight, calculateCallStackHeight(#profile.calls)))
+    self.callScroll:SetVerticalScroll(0)
+    self.frame:SetHeight(calculateVisibleHeight(#profile.calls))
 end
 
 function MainFrame:SetCallState(callKey, state)
