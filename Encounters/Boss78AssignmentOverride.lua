@@ -38,11 +38,11 @@ local ALTAR_ORBS = {
 local ALTAR_GUILLOTINE_HEROIC = {
     key = "guillotine",
     title = "Guillotine Soak Rotation",
-    description = "Heroic: alternate two different 5+ teams because the repeat-hit debuff makes immediate reuse unsafe.",
+    description = "Heroic: alternate two different 3+ teams; the repeat-hit debuff still makes immediate reuse unsafe.",
     columns = 2,
     slots = {
-        slot("guillotine_a", "Guillotine Group 1", { callKey = "guillotine", callLabel = "Guillotine", rotation = "guillotine", required = true, minPlayers = 5, exclusiveGroup = "guillotine", compactGroups = true }),
-        slot("guillotine_b", "Guillotine Group 2", { callKey = "guillotine", callLabel = "Guillotine", rotation = "guillotine", required = true, minPlayers = 5, exclusiveGroup = "guillotine", compactGroups = true }),
+        slot("guillotine_a", "Guillotine Group 1", { callKey = "guillotine", callLabel = "Guillotine", rotation = "guillotine", required = true, minPlayers = 3, exclusiveGroup = "guillotine", compactGroups = true }),
+        slot("guillotine_b", "Guillotine Group 2", { callKey = "guillotine", callLabel = "Guillotine", rotation = "guillotine", required = true, minPlayers = 3, exclusiveGroup = "guillotine", compactGroups = true }),
     },
 }
 
@@ -85,11 +85,11 @@ local ALTAR_WAIL_HARD = {
 
 local ALTAR_LAYOUTS = {
     normal = {
-        summary = "Assign Orb Collectors and Wail interrupt ownership. Normal Guillotine needs 5+ soakers but no fixed team.",
+        summary = "Assign Orb Collectors and Wail interrupt ownership. Normal Guillotine needs 3+ soakers but no fixed team.",
         sections = { ALTAR_ORBS, ALTAR_WAIL_NORMAL },
     },
     heroic = {
-        summary = "Assign Orb Collectors, two different 5+ Guillotine groups and at least two Wail interrupts.",
+        summary = "Assign Orb Collectors, two different 3+ Guillotine groups and at least two Wail interrupts.",
         sections = { ALTAR_ORBS, ALTAR_GUILLOTINE_HEROIC, ALTAR_WAIL_HARD },
     },
     mythic = {
@@ -177,11 +177,11 @@ local ULATEK_INCUBATION = {
 
 local ULATEK_LAYOUTS = {
     normal = {
-        summary = "Assign one egg handler. Spectral Coils is a full-raid stack and needs no roster group.",
+        summary = "Assign one egg handler. Spectral Coils needs at least 40% of the raid but no fixed roster group.",
         sections = { ULATEK_EGG_HANDLER },
     },
     heroic = {
-        summary = "Keep the Normal egg handler. Heroic adds reactions, but no extra fixed roster assignment.",
+        summary = "Assign one egg handler. Spectral Coils needs at least 40% of the raid; Grasping Fangs is handled sequentially.",
         sections = { ULATEK_EGG_HANDLER },
     },
     mythic = {
