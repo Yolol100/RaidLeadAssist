@@ -6,10 +6,11 @@
 - Update The Coiled Altar Normal/Heroic Guillotine contract to Blizzard's live 3-player minimum while preserving fresh 5+ Mythic groups and the existing intermission Bloodlust / coordinated final-kill plan.
 - Refresh Ula'tek tactics for the live 40% Spectral Coils requirement, Heroic three-target-per-side Grasping Fangs, current Serpent's Bite leech/Purge handling, Caustic Waves, Heart burn windows and Circling Prey platform breaks.
 - Add the current raid-leader assignment model for Ula'tek: Normal keeps one raid-wide Coil soak; Heroic/Mythic use two alternating near-equal Coil teams; all difficulties preassign left/right egg carriers plus melee/ranged/healer Bite helper sectors; Mythic additionally keeps the 4+ Toxic Incubation group.
+- Enforce the Heroic/Mythic Coil minimum dynamically against the current roster: every configured team must contain at least `ceil(raid size × 40%)` unique players when live roster data is available. Saved subgroup plans are preserved across `/reload`/roster-context changes but fail closed at call readiness if the current raid no longer satisfies the requirement.
 - Keep the generic Ula'tek Phase 3 burn call strategy-owned rather than hardcoding Bloodlust because current strategy sources differ on the preferred lust window.
 - Enable fail-closed automatic timing only for selected Ula'tek mechanics with stable public DBM/BigWigs spell identities; approximate provider data stays preview-only and manual milestones remain manual.
 - Correct spell `1301510` to the current bossmod `Circling Prey` platform-break identity and retain Toxic Incubation provider identity `1299757` separately from display spell `1299759`.
-- Add focused regressions for final-boss tactics, assignment minima, missing/overlapping Ula'tek groups, provider identity resolution, approximate/cross-encounter rejection, setup markers and manual milestone boundaries. Real Retail pulls remain required for `PASS-LIVE` acceptance.
+- Add focused regressions for final-boss tactics, static and roster-relative assignment minima, raid-size changes, saved-plan normalization, rotation reset, missing/overlapping Ula'tek groups, provider identity resolution, approximate/cross-encounter rejection, setup markers and manual milestone boundaries. Real Retail pulls remain required for `PASS-LIVE` acceptance.
 
 ## 0.9.0-beta.66 — 2026-09-03
 
