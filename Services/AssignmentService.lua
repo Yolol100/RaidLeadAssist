@@ -62,6 +62,8 @@ local function currentRosterByGroup()
     local roster = {}
     if Roster and type(Roster.GetRoster) == "function" then roster = Roster:GetRoster() or {} end
     local authoritativeRaid = Roster and type(Roster.IsRaidRoster) == "function" and Roster:IsRaidRoster() == true
+    if not authoritativeRaid then return {}, {}, {}, false end
+
     local byGroup = {}
     local byName = {}
     for index = 1, #roster do
@@ -82,7 +84,7 @@ local function currentRosterByGroup()
             end
         end
     end
-    return roster, byGroup, byName, authoritativeRaid
+    return roster, byGroup, byName, true
 end
 
 local function parseSelection(value, compactGroups, options)
@@ -129,7 +131,7 @@ local function parseSelection(value, compactGroups, options)
                             for memberIndex = 1, #members do
                                 local member = members[memberIndex]
                                 local full = normalizeRosterName(member)
-                                local ok, duplicate = add(member, full or member:lower(), authoritativeRaid)
+                                local ok, duplicate = add(member, full or member:lower(), true)
                                 if not ok then return nil, "contains duplicate player " .. duplicate .. "." end
                             end
                         else
