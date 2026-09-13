@@ -9,11 +9,15 @@ local function safeName(value)
     return value
 end
 
+function RosterService:IsRaidRoster()
+    return type(IsInRaid) == "function" and IsInRaid() == true
+end
+
 function RosterService:GetRoster()
     local result = {}
     local count = type(GetNumGroupMembers) == "function" and GetNumGroupMembers() or 0
 
-    if type(IsInRaid) == "function" and IsInRaid() and type(GetRaidRosterInfo) == "function" then
+    if self:IsRaidRoster() and type(GetRaidRosterInfo) == "function" then
         for index = 1, count do
             local name, _, subgroup, _, className, classFileName, _, _, _, role = GetRaidRosterInfo(index)
             name = safeName(name)
