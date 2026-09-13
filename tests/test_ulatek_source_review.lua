@@ -28,20 +28,25 @@ local function hasDefinition(difficultyKey, key)
     return false
 end
 
+local function assertTimedID(profile, key, spellID)
+    local call = assert(profile.callsByKey[key], "missing Ula'tek call: " .. key)
+    assert(call.timing ~= false, key .. " must be eligible for fail-closed provider timing")
+    assert(type(call.spellIDs) == "table" and call.spellIDs[1] == spellID,
+        key .. " must keep the reviewed provider spell identity")
+end
+
 local normal = Registry:GetProfile("ulatek", "normal")
 local heroic = Registry:GetProfile("ulatek", "heroic")
 local mythic = Registry:GetProfile("ulatek", "mythic")
 
--- Ula'tek was not publicly PTR-tested. Current guide/wiki consensus places
--- Soul Constrictor and Mass Gestation on Mythic, so Heroic stays conservative
--- until live Retail evidence resolves the conflicting Journal/NPC presentation.
-assert(normal.callsByKey.coils.warning == "Coils: stack at Square.")
-assert(heroic.callsByKey.coils.warning == "Coils: stack at Square.",
-    "Heroic must keep the full-raid Coils instruction until live evidence proves a rotation")
-assert(mythic.callsByKey.coils.warning == "Coils: assigned group stack at Square.",
+-- Blizzard's live hotfix requires 40% of the raid for minimum Spectral Coils damage.
+-- Soul Constrictor remains a Mythic rotation mechanic in the current encounter source.
+assert(contains(normal.callsByKey.coils.warning, "40%"))
+assert(contains(heroic.callsByKey.coils.warning, "40%"))
+assert(mythic.callsByKey.coils.warning == "Coils: assigned team soak the active Coil.",
     "Mythic Spectral Coils uses the assigned alternating group rotation")
 assert(not hasDefinition("heroic", "coil_a") and not hasDefinition("heroic", "coil_b"),
-    "Heroic must not invent Mythic Coil rotation assignments")
+    "Heroic must not invent the Mythic Soul Constrictor rotation")
 assert(hasDefinition("mythic", "coil_a") and hasDefinition("mythic", "coil_b"),
     "Mythic assignment layout keeps Coil rotation groups")
 
@@ -53,39 +58,47 @@ assert(not hasDefinition("heroic", "egg_left") and not hasDefinition("heroic", "
 assert(hasDefinition("mythic", "egg_left") and hasDefinition("mythic", "egg_right"),
     "Mythic needs left/right egg carriers for the planned side")
 
--- Heroic additions stay limited to the source-backed Fang/Viper/Birthling reactions.
+-- Heroic Grasping Fangs now targets three players per side and should be cleared sequentially.
 assert(normal.callsByKey.fangs == nil, "Normal Grasping Fangs stays outside shared raidleader calls")
-assert(heroic.callsByKey.fangs, "Heroic requires a shared Grasping Fangs call")
-assert(mythic.callsByKey.fangs, "Mythic retains the shared Grasping Fangs call")
-assert(contains(planText("heroic"), "Grasping Fangs"))
-assert(contains(planText("heroic"), "Petrifying Sting"))
-assert(contains(planText("heroic"), "Birthlings"))
-assert(not contains(planText("heroic"), "Coil group"),
-    "Heroic delta must not contain the Mythic Coil rotation")
+assert(heroic.callsByKey.fangs and heroic.callsByKey.fangs.timing == false)
+assert(mythic.callsByKey.fangs and mythic.callsByKey.fangs.timing == false)
+assert(contains(planText("heroic"), "three players per side"))
+assert(contains(planText("heroic"), "sequentially"))
+assert(contains(heroic.callsByKey.fangs.warning, "one tether at a time"))
 
--- Mythic adds Incubation, hardened egg handling and Coil/egg-side coordination.
-assert(mythic.callsByKey.incubation, "Mythic must keep the Toxic Incubation call")
-assert(mythic.callsByKey.incubation.warning == "Incubation: assigned group take one hit each.")
-assert(hasDefinition("mythic", "incubation_team"), "Mythic needs the 4+ Incubation team")
-assert(contains(planText("mythic"), "Toxic Incubation"))
-assert(contains(planText("mythic"), "Hardened egg"))
-assert(contains(planText("mythic"), "Egg carriers stay 3+ yards"))
-
--- Correct display identities and the phase-3 movement identity remain guarded.
-assert(mythic.callsByKey.eggs.iconSpellID == 1299650,
-    "Hardened Eggs must use the Hardened spell identity")
-assert(mythic.callsByKey.incubation.iconSpellID == 1299759,
-    "Toxic Incubation must use the Toxic Incubation display spell identity")
-assert(mythic.callsByKey.eggs.iconSpellID ~= 1292188)
-assert(mythic.callsByKey.incubation.iconSpellID ~= 1302982)
-assert(normal.callsByKey.demolish and normal.callsByKey.demolish.iconSpellID == 1301510,
-    "1301510 is Demolish, not Circling Prey")
-assert(normal.callsByKey.circling == nil, "stale Circling Prey call identity must stay removed")
-
-for _, difficultyKey in ipairs({ "normal", "heroic", "mythic" }) do
-    for _, call in ipairs(Registry:GetProfile("ulatek", difficultyKey).calls) do
-        assert(call.timing == false, difficultyKey .. " Ula'tek call unexpectedly enabled automatic timing")
-    end
+-- Stable public bossmod identities may now drive timing, but no private cooldown schedule is copied.
+for _, profile in ipairs({ normal, heroic, mythic }) do
+    assertTimedID(profile, "waves", 1292188)
+    assertTimedID(profile, "coils", 1300530)
+    assertTimedID(profile, "heart", 1286860)
+    assertTimedID(profile, "serpents", 1300751)
+    assertTimedID(profile, "bite", 1295905)
+    assertTimedID(profile, "circling", 1301510)
+    assert(profile.callsByKey.warden.timing == false)
+    assert(profile.callsByKey.eggs.timing == false)
+    assert(profile.callsByKey.phase3.timing == false)
 end
 
-print("ok - Ula'tek conservative difficulty split, concise callouts, identities and manual timing guarded")
+-- Serpent's Bite is a timed warning for a leech handoff, not a fabricated fixed soak-group assignment.
+assert(contains(normal.callsByKey.bite.warning, "helpers leech within 15s"))
+assert(contains(heroic.callsByKey.bite.warning, "Purge helpers move 7+ yards out"))
+assert(contains(mythic.callsByKey.bite.warning, "dodge its waves"),
+    "Mythic Volatile Purge must remind the raid about the emitted Caustic Waves")
+
+-- Mythic Toxic Incubation keeps provider identity separate from the display identity.
+assert(mythic.callsByKey.incubation, "Mythic must keep the Toxic Incubation call")
+assert(mythic.callsByKey.incubation.timing ~= false)
+assert(mythic.callsByKey.incubation.spellIDs[1] == 1299757,
+    "Toxic Incubation must match the stable DBM/BigWigs provider timer identity")
+assert(mythic.callsByKey.incubation.iconSpellID == 1299759,
+    "Toxic Incubation UI must keep the display spell identity")
+assert(hasDefinition("mythic", "incubation_team"), "Mythic needs the 4+ Incubation team")
+
+-- Live hotfixes and current bossmods identify 1301510 as Circling Prey/platform break.
+assert(normal.callsByKey.circling and normal.callsByKey.circling.spellIDs[1] == 1301510)
+assert(normal.callsByKey.demolish == nil, "stale Demolish identity must stay removed")
+assert(contains(planText("normal"), "swimming underneath no longer works"))
+assert(contains(planText("heroic"), "40%"))
+assert(contains(planText("mythic"), "Soul Constrictor"))
+
+print("ok - Ula'tek live tactics, exact provider identities and manual milestone boundaries guarded")
