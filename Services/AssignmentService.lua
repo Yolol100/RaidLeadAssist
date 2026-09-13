@@ -32,6 +32,13 @@ local function containsControl(value)
     return value:find("[%z\1-\8\11\12\14-\31\127]") ~= nil
 end
 
+local function normalizeRosterName(name)
+    if type(name) ~= "string" or name == "" then return nil, nil end
+    local full = name:lower()
+    local short = full:match("^([^%-]+)")
+    return full, short
+end
+
 local function parseGroupNumbers(value)
     if type(value) ~= "string" then return nil end
     local lower = trim(value):lower()
@@ -54,29 +61,51 @@ end
 local function currentRosterByGroup()
     local roster = {}
     if Roster and type(Roster.GetRoster) == "function" then roster = Roster:GetRoster() or {} end
+    local authoritativeRaid = Roster and type(Roster.IsRaidRoster) == "function" and Roster:IsRaidRoster() == true
     local byGroup = {}
+    local byName = {}
     for index = 1, #roster do
         local entry = roster[index]
         local group = tonumber(entry.subgroup) or 1
         byGroup[group] = byGroup[group] or {}
         byGroup[group][#byGroup[group] + 1] = entry.name
+
+        local full, short = normalizeRosterName(entry.name)
+        if full then
+            byName[full] = full
+            if short then
+                if byName[short] == nil then
+                    byName[short] = full
+                elseif byName[short] ~= full then
+                    byName[short] = false
+                end
+            end
+        end
     end
-    return roster, byGroup
+    return roster, byGroup, byName, authoritativeRaid
 end
 
 local function parseSelection(value, compactGroups, options)
-    local selection = { players = {}, unresolvedGroups = false, rosterSize = 0 }
+    local selection = {
+        players = {},
+        unresolvedGroups = false,
+        rosterSize = 0,
+        rosterPlayers = 0,
+        authoritativeRaid = false,
+    }
     local seen = {}
-    local roster, byGroup = currentRosterByGroup()
+    local roster, byGroup, byName, authoritativeRaid = currentRosterByGroup()
     local hasRoster = #roster > 0
     local allowUnresolvedGroups = options and options.allowUnresolvedGroups == true
     selection.rosterSize = #roster
+    selection.authoritativeRaid = authoritativeRaid
 
-    local function add(name, key)
+    local function add(name, key, inCurrentRaid)
         key = key or name:lower()
         if seen[key] then return false, name end
         seen[key] = true
         selection.players[#selection.players + 1] = { name = name, key = key }
+        if inCurrentRaid == true then selection.rosterPlayers = selection.rosterPlayers + 1 end
         return true
     end
 
@@ -91,7 +120,7 @@ local function parseSelection(value, compactGroups, options)
                     local group = groups[index]
                     if allowUnresolvedGroups then
                         selection.unresolvedGroups = true
-                        local ok = add("Group " .. group, "@group:" .. group)
+                        local ok = add("Group " .. group, "@group:" .. group, false)
                         if not ok then return nil, "contains duplicate Group " .. group .. "." end
                     else
                         local members = byGroup[group] or {}
@@ -99,18 +128,23 @@ local function parseSelection(value, compactGroups, options)
                             if #members == 0 then return nil, "Group " .. group .. " is not present in the current raid." end
                             for memberIndex = 1, #members do
                                 local member = members[memberIndex]
-                                local ok, duplicate = add(member, member:lower())
+                                local full = normalizeRosterName(member)
+                                local ok, duplicate = add(member, full or member:lower(), authoritativeRaid)
                                 if not ok then return nil, "contains duplicate player " .. duplicate .. "." end
                             end
                         else
                             selection.unresolvedGroups = true
-                            local ok = add("Group " .. group, "@group:" .. group)
+                            local ok = add("Group " .. group, "@group:" .. group, false)
                             if not ok then return nil, "contains duplicate Group " .. group .. "." end
                         end
                     end
                 end
             else
-                local ok, duplicate = add(token)
+                local full, short = normalizeRosterName(token)
+                local canonical = full and byName[full]
+                if canonical == nil and short then canonical = byName[short] end
+                if canonical == false then canonical = nil end
+                local ok, duplicate = add(token, canonical or full or token:lower(), authoritativeRaid and canonical ~= nil)
                 if not ok then return nil, "contains duplicate player " .. duplicate .. "." end
             end
         end
@@ -255,13 +289,13 @@ function AssignmentService:ValidateDefinitionValue(definition, value, options)
             if definition.minPlayers and #selection.players < definition.minPlayers then
                 return false, ("requires at least %d unique players; found %d."):format(definition.minPlayers, #selection.players)
             end
-            if definition.minRaidFraction and selection.rosterSize > 0
+            if definition.minRaidFraction and selection.authoritativeRaid
                 and not (options and options.skipRosterRelative) then
                 local required = math.ceil(selection.rosterSize * definition.minRaidFraction)
-                if #selection.players < required then
+                if selection.rosterPlayers < required then
                     local percent = math.floor((definition.minRaidFraction * 100) + 0.5)
-                    return false, ("requires at least %d unique players (%d%% of the current %d-player group); found %d."):format(
-                        required, percent, selection.rosterSize, #selection.players
+                    return false, ("requires at least %d current raid players (%d%% of the current %d-player raid); found %d."):format(
+                        required, percent, selection.rosterSize, selection.rosterPlayers
                     )
                 end
             end
