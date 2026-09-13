@@ -89,6 +89,8 @@ setRoster(1)
 local preplan = Assignments:ValidateDefinitionValue(heroicCoils[1],
     "Future01, Future02, Future03, Future04")
 assert(preplan, "future raid names must remain pre-plannable outside an authoritative raid roster")
+local groupPreplan = Assignments:ValidateDefinitionValue(heroicCoils[1], "Groups 1+2")
+assert(groupPreplan, "future raid subgroup plans must remain pre-plannable while solo or in a party")
 
 authoritativeRaid = true
 setRoster(20)
