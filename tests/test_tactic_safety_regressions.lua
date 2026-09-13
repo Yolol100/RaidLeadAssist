@@ -14,11 +14,17 @@ for _,d in ipairs({"heroic","mythic"}) do
     assert(R:GetProfile("twinfangs",d).callsByKey.feast.warning == "Feast: assigned groups soak in order.")
 end
 
+-- Coiled Altar follows Blizzard's live Normal/Heroic 3-player Guillotine minimum,
+-- while Mythic keeps the separate permanent-debuff fresh 5+ execution.
 assert(text("altar","normal"):find("Green poison orbs spawn",1,true))
 assert(text("altar","normal"):find("only collectors touch them",1,true))
-assert(text("altar","normal"):find("5+ players stack",1,true))
-assert(text("altar","heroic"):find("Guillotine gives a repeat-hit debuff",1,true))
-assert(R:GetProfile("altar","normal").callsByKey.guillotine.warning == "Guillotine: 5+ soak; raid move 40+ yards.")
+assert(text("altar","normal"):find("at least 3 players soak",1,true))
+assert(text("altar","heroic"):find("needs only 3 players",1,true))
+assert(text("altar","heroic"):find("repeat-hit debuff",1,true))
+assert(text("altar","mythic"):find("fresh 5+ players",1,true))
+assert(R:GetProfile("altar","normal").callsByKey.guillotine.warning == "Guillotine: at least 3 soak; raid move 40+ yards.")
+assert(R:GetProfile("altar","heroic").callsByKey.guillotine.action == "Assigned 3+ group soak; raid move")
+assert(R:GetProfile("altar","mythic").callsByKey.guillotine.action == "Fresh 5+ group soak; raid move")
 assert(R:GetProfile("altar","normal").callsByKey.intermission.warning:find("Bloodlust",1,true))
 assert(not R:GetProfile("altar","normal").callsByKey.final.warning:find("Bloodlust",1,true))
 
@@ -30,10 +36,26 @@ end
 for _,d in ipairs({"heroic","mythic"}) do
     assert(R:GetProfile("vashnik",d).callsByKey.catalyst.warning == "Catalyst: soak every circle.")
 end
-for _,d in ipairs({"normal","heroic","mythic"}) do
-    for _,call in ipairs(R:GetProfile("ulatek",d).calls) do assert(call.timing==false) end
-end
-assert(R:GetProfile("ulatek","heroic").callsByKey.coils.warning == "Coils: stack at Square.")
-assert(R:GetProfile("ulatek","mythic").callsByKey.coils.warning == "Coils: assigned group stack at Square.")
 
-print("ok - strategy regressions cover fixed execution, difficulty assignments and conservative Ula'tek split")
+-- Ula'tek enables only the reviewed exact-ID set; strategy/transition milestones remain manual.
+for _,d in ipairs({"normal","heroic","mythic"}) do
+    local p = R:GetProfile("ulatek",d)
+    for _,key in ipairs({"waves","coils","heart","serpents","bite","circling"}) do
+        assert(p.callsByKey[key] and p.callsByKey[key].timing ~= false)
+    end
+    for _,key in ipairs({"warden","eggs","phase3"}) do
+        assert(p.callsByKey[key] and p.callsByKey[key].timing == false)
+    end
+end
+assert(R:GetProfile("ulatek","normal").callsByKey.coils.warning == "Coils: stack 40%+ raid in the active soak.")
+assert(R:GetProfile("ulatek","heroic").callsByKey.coils.warning == "Coils: stack 40%+ raid in the active soak.")
+assert(R:GetProfile("ulatek","mythic").callsByKey.coils.warning == "Coils: assigned team soak the active Coil.")
+assert(R:GetProfile("ulatek","mythic").callsByKey.incubation.timing ~= false)
+assert(text("ulatek","normal"):find("swimming underneath no longer works",1,true))
+assert(text("ulatek","heroic"):find("three players per side",1,true))
+assert(text("ulatek","heroic"):find("Purge helpers move 7+ yards out",1,true))
+assert(text("ulatek","mythic"):find("Soul Constrictor",1,true))
+assert(R:GetProfile("ulatek","normal").callsByKey.circling.spellIDs[1] == 1301510)
+assert(R:GetProfile("ulatek","normal").callsByKey.demolish == nil)
+
+print("ok - strategy regressions cover current live hotfixes, difficulty assignments and bounded Ula'tek timing")
