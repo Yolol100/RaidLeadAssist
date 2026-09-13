@@ -83,6 +83,30 @@ local mixedNames, mixedReason = Assignments:ValidateDefinitionValue(heroicCoils[
 assert(not mixedNames and mixedReason:find("found 7", 1, true),
     "only actual current raid members may count toward the live 40% floor")
 
+-- Fully-qualified names must exact-match the current realm; short fallback is only for unqualified names.
+currentRoster = {
+    { name = "Same-NewRealm", subgroup = 1, role = "DAMAGER" },
+    { name = "P02", subgroup = 1, role = "DAMAGER" },
+    { name = "P03", subgroup = 1, role = "DAMAGER" },
+    { name = "P04", subgroup = 1, role = "DAMAGER" },
+    { name = "P05", subgroup = 1, role = "DAMAGER" },
+    { name = "P06", subgroup = 2, role = "DAMAGER" },
+    { name = "P07", subgroup = 2, role = "DAMAGER" },
+    { name = "P08", subgroup = 2, role = "DAMAGER" },
+    { name = "P09", subgroup = 2, role = "DAMAGER" },
+    { name = "P10", subgroup = 2, role = "DAMAGER" },
+}
+local wrongRealm, wrongRealmReason = Assignments:ValidateDefinitionValue(heroicCoils[1],
+    "Same-OldRealm, P02, P03, P04")
+assert(not wrongRealm and wrongRealmReason:find("found 3", 1, true),
+    "a qualified stale realm name must not count as the current same-short-name player")
+local exactRealm = Assignments:ValidateDefinitionValue(heroicCoils[1],
+    "Same-NewRealm, P02, P03, P04")
+assert(exactRealm, "the exact current qualified realm name must count")
+local uniqueShort = Assignments:ValidateDefinitionValue(heroicCoils[1],
+    "Same, P02, P03, P04")
+assert(uniqueShort, "an unqualified unique short name may resolve to the current qualified roster name")
+
 -- Outside an authoritative raid, percentage validation must not corrupt pre-planning.
 authoritativeRaid = false
 setRoster(1)
@@ -164,4 +188,4 @@ assert(Assignments:GetValue("ulatek", "heroic", "coil_a") == "Groups 1+2"
 local partialReady = Assignments:IsCallReady("ulatek", "heroic", "coils")
 assert(not partialReady, "subgroup plans must still fail closed at use time when the authoritative raid cannot resolve them")
 
-print("ok - Ula'tek Coil teams enforce an authoritative 40% raid floor, preserve preplans and reset rotation safely")
+print("ok - Ula'tek Coil teams enforce an authoritative 40% raid floor, realm-safe membership, preplans and rotation reset")
