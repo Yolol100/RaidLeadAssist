@@ -293,6 +293,12 @@ function AssignmentService:ValidateDefinitionValue(definition, value, options)
             if definition.minPlayers and #selection.players < definition.minPlayers then
                 return false, ("requires at least %d unique players; found %d."):format(definition.minPlayers, #selection.players)
             end
+            if options and options.requireCurrentRaid and selection.authoritativeRaid
+                and selection.rosterPlayers < #selection.players then
+                return false, ("requires every assigned player to be uniquely present in the current raid; found %d of %d."):format(
+                    selection.rosterPlayers, #selection.players
+                )
+            end
             if definition.minRaidFraction and selection.authoritativeRaid
                 and not (options and options.skipRosterRelative) then
                 local required = math.ceil(selection.rosterSize * definition.minRaidFraction)
@@ -471,7 +477,7 @@ function AssignmentService:IsCallReady(bossKey, difficultyKey, callKey)
         if definition.required and value == "" then
             missing[#missing + 1] = definition.label
         elseif value ~= "" then
-            local ok, reason = self:ValidateDefinitionValue(definition, value)
+            local ok, reason = self:ValidateDefinitionValue(definition, value, { requireCurrentRaid = true })
             if not ok then return false, definition.label .. " " .. reason end
         end
     end
