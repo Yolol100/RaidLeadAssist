@@ -34,8 +34,8 @@ end
 local waves = timedCall(
     "waves",
     "Caustic Waves",
-    "Find safe gap; keep waves off eggs",
-    "Caustic Waves: find the safe gap; keep waves off eggs.",
+    "Use safe gap; keep waves off eggs",
+    "Caustic Waves: use the safe gap; keep waves off eggs.",
     "Waves",
     { 1292188 },
     7,
@@ -56,25 +56,12 @@ local heart = timedCall(
 local serpents = timedCall(
     "serpents",
     "Call of the Serpent",
-    "Kill serpent adds fast",
-    "Serpent adds: kill them fast.",
+    "Kill priority serpent adds; stop casts",
+    "Serpent adds: kill priority adds and stop dangerous casts.",
     "Adds",
     { 1300751 },
     6,
     3
-)
-
-local bite = timedCall(
-    "bite",
-    "Serpent's Bite",
-    "Three assigned groups fully soak",
-    "Serpent's Bite: fully soak all three targets, then spread.",
-    "Soak",
-    { 1295905 },
-    8,
-    5,
-    "Melee {{bite_melee}}; Ranged {{bite_ranged}}; Healer {{bite_healer}}",
-    "Serpent's Bite: Melee {{bite_melee}}; Ranged {{bite_ranged}}; Healer {{bite_healer}}. Fully soak, then spread."
 )
 
 local circling = timedCall(
@@ -87,6 +74,32 @@ local circling = timedCall(
     8,
     5
 )
+
+local function bite(mythic)
+    if mythic then
+        return timedCall(
+            "bite",
+            "Serpent's Bite",
+            "Targets meet helpers; Purge out; dodge waves",
+            "Serpent's Bite: helpers leech; Purge 7+ yards out, then dodge its waves.",
+            "Bite",
+            { 1295905 },
+            8,
+            5
+        )
+    end
+
+    return timedCall(
+        "bite",
+        "Serpent's Bite",
+        "Targets meet helpers; Purge helpers move out",
+        "Serpent's Bite: helpers leech within 15s; Purge helpers move 7+ yards out.",
+        "Bite",
+        { 1295905 },
+        8,
+        5
+    )
+end
 
 local function coils(action, warning, actionTemplate, warningTemplate)
     return timedCall(
@@ -139,8 +152,8 @@ local function calls(coilCall, eggAction, eggWarning, eggActionTemplate, eggWarn
         result[#result + 1] = manualCall(
             "fangs",
             "Grasping Fangs",
-            "Break controlled pairs; wait for Blight Vein",
-            "Fangs: break controlled pairs; wait for Blight Vein to clear.",
+            "Break one tether at a time; wait for Blight Vein",
+            "Fangs: break one tether at a time; wait for Blight Vein to clear.",
             "Fangs",
             1311611
         )
@@ -153,11 +166,11 @@ local function calls(coilCall, eggAction, eggWarning, eggActionTemplate, eggWarn
     result[#result + 1] = manualCall(
         "phase3",
         "Phase 3",
-        "Execute final burn plan; move together",
-        "Phase 3: execute the burn plan; move together.",
-        "Final phase"
+        "Bloodlust; execute final burn plan",
+        "Phase 3: Bloodlust; execute the final burn plan.",
+        "Bloodlust"
     )
-    result[#result + 1] = bite
+    result[#result + 1] = bite(includeMythic)
     result[#result + 1] = circling
     return result
 end
@@ -166,21 +179,21 @@ Registry:Register({
     key = "ulatek",
     name = "Ula'tek",
     encounterID = 3492,
-    strategyStatus = "12.1 live Blizzard hotfixes through 2026-09-10 + current Icy Veins/Ready Check Pull + DBM 12.1.9/BigWigs v424.8 source-reviewed 2026-09-13; selected exact-ID timing enabled; PASS-LIVE pending",
+    strategyStatus = "12.1 live Blizzard hotfixes through 2026-09-10 + current Wowhead/Icy Veins/Method/RWF + DBM 12.1.9/BigWigs v424.8 source-reviewed 2026-09-13; selected exact-ID timing enabled; PASS-LIVE pending",
     profiles = {
         normal = {
             explanation = {
-                "Caustic Waves: use the safe gap and never let a wave touch an egg.",
-                "Spectral Coils: stack enough players in the active soak; full-raid soaking is safe on Normal.",
-                "Rage of the Shackled exposes the Heart: swap immediately and burn the damage window.",
+                "Caustic Waves: use a safe gap and never let a wave touch an egg; swimming underneath no longer works.",
+                "Spectral Coils: stack at least 40% of the raid in the active soak to minimize raid damage.",
+                "Rage of the Shackled exposes the Heart: swap immediately and use the planned damage/healing window.",
                 "Phase 2: split to both side platforms; kill the Warden before using the planned Doomscale egg.",
-                "Collect eggs safely, kill spawned serpents quickly and interrupt dangerous add casts.",
-                "Phase 3: use three Serpent's Bite soak groups; stay in each circle until the soak completes, then spread.",
-                "Caustic Waves return with gaps: move through a safe lane instead of trying to pass underneath.",
-                "Circling Prey destroys the current platform: rotate off it before it breaks.",
+                "Protect and move eggs safely, kill priority serpent adds and interrupt dangerous add casts.",
+                "Phase 3: Bloodlust; Serpent's Bite targets meet nearby helpers before 15s, then Purge helpers move 7+ yards out.",
+                "Caustic Waves return with gaps: cross through the safe lane and keep remaining eggs protected.",
+                "Circling Prey destroys the current platform: leave it before the platform breaks.",
             },
             calls = calls(
-                coils("Stack in the active Coil", "Coils: stack in the active soak."),
+                coils("Stack 40%+ raid in the active Coil", "Coils: stack at least 40% of the raid in the active soak."),
                 "Assigned handler uses planned egg",
                 "Eggs: assigned handler use planned egg.",
                 "{{egg_handler}} uses planned egg",
@@ -191,22 +204,17 @@ Registry:Register({
         },
         heroic = {
             explanation = {
-                "Caustic Waves: use the safe gap and keep every wave away from eggs.",
-                "Spectral Coils: alternate the two assigned teams; at least 40% of the raid is needed for minimum damage.",
-                "Rage of the Shackled exposes the Heart: swap immediately and burn the damage window.",
+                "Caustic Waves: use a safe gap and keep every wave away from eggs; swimming underneath no longer works.",
+                "Spectral Coils: stack at least 40% of the raid in the active soak; current live timing is more consistent after hotfixes.",
+                "Rage of the Shackled exposes the Heart: swap immediately and use the planned damage/healing window.",
                 "Phase 2: split to opposite side platforms; kill the Warden, then use the planned egg.",
-                "Grasping Fangs targets three players per side: break controlled pairs and let Blight Vein clear between breaks.",
-                "Intermission: continue the alternating Coil teams while collecting eggs and preparing for the platform split.",
-                "Phase 3: fully soak all three Serpent's Bite targets with assigned groups, then spread for Volatile Purge.",
-                "Circling Prey destroys the current platform: rotate off it before it breaks.",
+                "Grasping Fangs targets three players per side: break tethers sequentially and let Blight Vein clear between breaks.",
+                "Protect and move eggs safely, kill priority serpent adds and interrupt dangerous add casts.",
+                "Phase 3: Bloodlust; Serpent's Bite targets meet helpers before 15s, then Purge helpers move 7+ yards out.",
+                "Circling Prey destroys the current platform: leave it before the platform breaks.",
             },
             calls = calls(
-                coils(
-                    "Assigned team soaks the active Coil",
-                    "Coils: assigned team soak the active Coil.",
-                    "{{rotation:coils}} soak the active Coil",
-                    "Coils: {{rotation:coils}} soak the active Coil."
-                ),
+                coils("Stack 40%+ raid in the active Coil", "Coils: stack at least 40% of the raid in the active soak."),
                 "Assigned handler uses egg",
                 "Eggs: assigned handler use planned egg.",
                 "{{egg_handler}} uses planned egg",
@@ -217,14 +225,14 @@ Registry:Register({
         },
         mythic = {
             explanation = {
-                "Spectral Coils: soak only with the assigned team; Soul Constrictor blocks immediate repeat soaking.",
-                "Toxic Incubation: assigned interceptors take one hit each; Toxic Burn players do not take another hit.",
+                "Spectral Coils: soak only with the assigned team; Soul Constrictor prevents that team from mitigating the next Coil.",
+                "Toxic Incubation: assigned interceptors take one hit each; Toxic Burn players do not intercept another hit.",
                 "Hardened eggs must have their shield broken before the assigned carrier moves them.",
                 "Egg carriers stay 3+ yards apart and use only the called side.",
-                "Grasping Fangs breaks hit the raid: break controlled pairs and never chain multiple breaks together.",
-                "Phase 3: fully soak all three Serpent's Bite targets, then spread for Volatile Purge.",
+                "Grasping Fangs breaks hit the raid: break tethers sequentially and never chain multiple breaks together.",
+                "Phase 3: Bloodlust; Serpent's Bite helpers leech before 15s, move 7+ yards out and handle the Purge waves.",
                 "Caustic Waves must be crossed through safe gaps; swimming underneath is not a valid route.",
-                "Circling Prey destroys the current platform: rotate off it before it breaks.",
+                "Circling Prey destroys the current platform: leave it before the platform breaks.",
             },
             calls = calls(
                 coils(
