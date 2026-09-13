@@ -64,11 +64,12 @@ local function currentRosterByGroup()
     return roster, byGroup
 end
 
-local function parseSelection(value, compactGroups)
+local function parseSelection(value, compactGroups, options)
     local selection = { players = {}, unresolvedGroups = false, rosterSize = 0 }
     local seen = {}
     local roster, byGroup = currentRosterByGroup()
     local hasRoster = #roster > 0
+    local allowUnresolvedGroups = options and options.allowUnresolvedGroups == true
     selection.rosterSize = #roster
 
     local function add(name, key)
@@ -88,18 +89,24 @@ local function parseSelection(value, compactGroups)
             if groups then
                 for index = 1, #groups do
                     local group = groups[index]
-                    local members = byGroup[group] or {}
-                    if hasRoster then
-                        if #members == 0 then return nil, "Group " .. group .. " is not present in the current raid." end
-                        for memberIndex = 1, #members do
-                            local member = members[memberIndex]
-                            local ok, duplicate = add(member, member:lower())
-                            if not ok then return nil, "contains duplicate player " .. duplicate .. "." end
-                        end
-                    else
+                    if allowUnresolvedGroups then
                         selection.unresolvedGroups = true
                         local ok = add("Group " .. group, "@group:" .. group)
                         if not ok then return nil, "contains duplicate Group " .. group .. "." end
+                    else
+                        local members = byGroup[group] or {}
+                        if hasRoster then
+                            if #members == 0 then return nil, "Group " .. group .. " is not present in the current raid." end
+                            for memberIndex = 1, #members do
+                                local member = members[memberIndex]
+                                local ok, duplicate = add(member, member:lower())
+                                if not ok then return nil, "contains duplicate player " .. duplicate .. "." end
+                            end
+                        else
+                            selection.unresolvedGroups = true
+                            local ok = add("Group " .. group, "@group:" .. group)
+                            if not ok then return nil, "contains duplicate Group " .. group .. "." end
+                        end
                     end
                 end
             else
@@ -182,6 +189,7 @@ end
 function AssignmentService:NormalizeStored()
     if not self.database then return end
     local stored = self.database.assignments
+    local normalizationOptions = { allowUnresolvedGroups = true, skipRosterRelative = true }
     for bossKey, difficulties in pairs(stored) do
         if type(difficulties) ~= "table" then
             stored[bossKey] = nil
@@ -199,7 +207,7 @@ function AssignmentService:NormalizeStored()
                     local maxAttempts = #self:GetDefinitions(bossKey, difficultyKey) + 1
                     local clean
                     for _ = 1, maxAttempts do
-                        local ok, result = self:ValidateBossDraft(bossKey, difficultyKey, candidate)
+                        local ok, result = self:ValidateBossDraft(bossKey, difficultyKey, candidate, normalizationOptions)
                         if ok then
                             clean = result
                             break
@@ -232,13 +240,13 @@ function AssignmentService:ValidateValue(value)
     return true, normalized
 end
 
-function AssignmentService:ValidateDefinitionValue(definition, value)
+function AssignmentService:ValidateDefinitionValue(definition, value, options)
     local ok, normalized = self:ValidateValue(value)
     if not ok or normalized == "" then return ok, normalized end
 
     local kind = definition and definition.kind or "assignee"
     if kind == "assignee" or kind == "rotation" then
-        local selection, selectionError = parseSelection(normalized, definition and definition.compactGroups == true)
+        local selection, selectionError = parseSelection(normalized, definition and definition.compactGroups == true, options)
         if not selection then return false, selectionError end
         if not selection.unresolvedGroups then
             if definition.exactPlayers and #selection.players ~= definition.exactPlayers then
@@ -247,7 +255,8 @@ function AssignmentService:ValidateDefinitionValue(definition, value)
             if definition.minPlayers and #selection.players < definition.minPlayers then
                 return false, ("requires at least %d unique players; found %d."):format(definition.minPlayers, #selection.players)
             end
-            if definition.minRaidFraction and selection.rosterSize > 0 then
+            if definition.minRaidFraction and selection.rosterSize > 0
+                and not (options and options.skipRosterRelative) then
                 local required = math.ceil(selection.rosterSize * definition.minRaidFraction)
                 if #selection.players < required then
                     local percent = math.floor((definition.minRaidFraction * 100) + 0.5)
@@ -283,7 +292,7 @@ function AssignmentService:GetValues(bossKey, difficultyKey)
     return result
 end
 
-function AssignmentService:ValidateBossDraft(bossKey, difficultyKey, values)
+function AssignmentService:ValidateBossDraft(bossKey, difficultyKey, values, options)
     if type(values) ~= "table" then return false, { message = "Assignment values are missing." } end
 
     local definitions = self:GetDefinitions(bossKey, difficultyKey)
@@ -292,14 +301,14 @@ function AssignmentService:ValidateBossDraft(bossKey, difficultyKey, values)
 
     for index = 1, #definitions do
         local definition = definitions[index]
-        local ok, normalized = self:ValidateDefinitionValue(definition, values[definition.key])
+        local ok, normalized = self:ValidateDefinitionValue(definition, values[definition.key], options)
         if not ok then
             return false, { assignmentKey = definition.key, message = definition.label .. " " .. normalized }
         end
         if normalized ~= "" then
             clean[definition.key] = normalized
             if definition.exclusiveGroup then
-                local selection = assert(parseSelection(normalized, definition.compactGroups == true))
+                local selection = assert(parseSelection(normalized, definition.compactGroups == true, options))
                 local bucket = exclusive[definition.exclusiveGroup]
                 if not bucket then
                     bucket = {}
