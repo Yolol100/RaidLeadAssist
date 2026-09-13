@@ -95,51 +95,51 @@ for _, path in ipairs({
 end
 assert(baseline:find("EncounterTimelineDocumentation.lua", 1, true),
     "Blizzard EncounterTimeline API source must remain drift-watched")
-assert(baseline:find('"reviewedAt": "2026-09-03"', 1, true), "provider baseline review date must stay current")
-assert(baseline:find('"releaseTag": "12.1.8"', 1, true), "DBM source-reviewed stable release pin must be 12.1.8")
-assert(baseline:find("16c154f3a01cb1bbf8b3c4f5f7eeccaa61c44789", 1, true),
-    "DBM 12.1.8 release commit must stay pinned")
-assert(baseline:find("143e09575c4f98e61da7b8900040a2bcb82d79ec", 1, true),
+assert(baseline:find('"reviewedAt": "2026-09-13"', 1, true), "provider baseline review date must stay current")
+assert(baseline:find('"releaseTag": "12.1.9"', 1, true), "DBM source-reviewed stable release pin must be 12.1.9")
+assert(baseline:find("f2aa0876ef91a6c80d48bde620bed58402bd8878", 1, true),
+    "DBM 12.1.9 release commit must stay pinned")
+assert(baseline:find("f60f91c1316d8b43adfba07bcdff067acd9b74af", 1, true),
     "DBM Timer callback baseline must stay pinned")
-assert(baseline:find("a03a3faba696f09eb700bf39c6ada25b9f3d00d3", 1, true),
+assert(baseline:find("52fd0a9aaf0ddac138034d433005f6fe5b42c812", 1, true),
     "DBM shared boss-module baseline must stay pinned")
 assert(baseline:find("1d0929c17f7979984fe68b13cd94322e1815f761", 1, true),
     "Nek'zali current DBM source baseline must stay pinned")
-assert(baseline:find("9f49ebd546fd507cbc83a18cb95d1530aa556c73", 1, true),
+assert(baseline:find("ea3b45f901efa58a8955b1674342a3b80cb60bb3", 1, true),
     "Vashnik current DBM source baseline must stay pinned")
-assert(baseline:find("5a23305ff25835a807fa0d625bc613378af93c6a", 1, true),
+assert(baseline:find("c0786819f9474b01f53810f32dacbe7626d204f0", 1, true),
     "Twin Fangs current DBM source baseline must stay pinned")
-assert(baseline:find("3d7af3cf25ff27b10d0c454effeab3d7593ae6b4", 1, true),
+assert(baseline:find("3bcd4e36ae515e1f1bb4991226aa3b26d3cf10e8", 1, true),
     "Coiled Altar current DBM source baseline must stay pinned")
-assert(baseline:find("7dc8483696f8501cad0d0d7ad45e209373f87e56", 1, true),
+assert(baseline:find("dd2b3f5377c6ca670b797621f62f076941bec06b", 1, true),
     "Sentinels current DBM source baseline must stay pinned")
-assert(baseline:find("b6d702a3c34d270aa8544c8a4b8eb661330c64e3", 1, true),
+assert(baseline:find("8356b32cd076f557292f6087539464e9448126a2", 1, true),
     "Lost Explorers current DBM source baseline must stay pinned")
 assert(baseline:find("a3c5072cb60d526e5cd9f7fe5e7d34c6d3627b05", 1, true),
     "Sszorak current DBM source baseline must stay pinned")
 assert(baseline:find("2f9fdaf2a4d6b2d986d18c6ed8eb78464e544939", 1, true),
     "Ula'tek current Heroic-routing source baseline must stay pinned")
 
-assert(baseline:find('"releaseTag": "v424.5"', 1, true), "BigWigs source-reviewed stable release pin must be v424.5")
-assert(baseline:find("7b41c3671b856d90c5e80c95ba361bb448a34ed8", 1, true),
-    "BigWigs v424.5 release commit must stay pinned")
-assert(baseline:find("d1d2846ddaacf44af341f792c3ed82a5fab6d686", 1, true),
+assert(baseline:find('"releaseTag": "v424.8"', 1, true), "BigWigs source-reviewed stable release pin must be v424.8")
+assert(baseline:find("8177bf9d06f2f1b6c51b54bf8da330a39e4c3651", 1, true),
+    "BigWigs v424.8 release commit must stay pinned")
+assert(baseline:find("4c9aea8bebb365878ac298d166dadf21e4e807ce", 1, true),
     "BigWigs current BossPrototype source baseline must stay pinned")
-assert(baseline:find("990fee7abd2928ee0c437fc998b28f3d9774fc9f", 1, true),
+assert(baseline:find("01b5f12872ad9abfe165cbb77ea2f00dccba7002", 1, true),
     "Nek'zali BigWigs current baseline must stay pinned")
-assert(baseline:find("06c97ad137b5a7d956f727e4e2477801efdc4050", 1, true),
+assert(baseline:find("4ecb9e02052022626df84c5f19e7f716dd6b5f74", 1, true),
     "Sentinels BigWigs current baseline must stay pinned")
-assert(baseline:find("f7eaa1da682a3b02636ac97868aa5807f4cfb158", 1, true),
+assert(baseline:find("727c7760366f8ae77278412c9acd8437b15a5b93", 1, true),
     "Twin Fangs BigWigs current baseline must stay pinned")
-assert(baseline:find("58ef05b8dc62335f4f0ad56489d2f36a7b794701", 1, true),
+assert(baseline:find("3ab07136ce8bce7eeb870b90d1f70410a5e4ed54", 1, true),
     "Coiled Altar BigWigs current baseline must stay pinned")
-assert(baseline:find("33fc9cccabee460d16d27f5bc83dade2f2691feb", 1, true),
+assert(baseline:find("fe00dfe004d9603ff0837b219267a52c6092c4ef", 1, true),
     "Vashnik BigWigs current baseline must stay pinned")
-assert(baseline:find("bc9bd703b7a3dad07f9d6864ada922f2e3da6a5e", 1, true),
+assert(baseline:find("e00ac888c416c227f0b2463ce15089b08e61caa2", 1, true),
     "Lost Explorers BigWigs current baseline must stay pinned")
-assert(baseline:find("3c917465baad18138df0e68e71c8f413a67096e7", 1, true),
+assert(baseline:find("6ee0b32ced6c574aa9319907973820e526b3065f", 1, true),
     "Sszorak BigWigs current baseline must stay pinned")
-assert(baseline:find("4c1f560e09a23191a5164a74884a5cfd3aae760e", 1, true),
+assert(baseline:find("7982e9cdac7364edae2efa282df59b541f387da1", 1, true),
     "Ula'tek BigWigs current baseline must stay pinned")
 
 local app = read("Core/App.lua")
@@ -147,15 +147,30 @@ assert(app:find("Tested bossmod contracts: DBM 12.1.6; BigWigs v424.1", 1, true)
     "runtime doctor must keep the last live-tested contracts until new live Retail evidence exists")
 
 local readme = read("README.md")
-assert(readme:find("DBM 12.1.8", 1, true), "README source-reviewed DBM contract must track the audited baseline")
-assert(readme:find("BigWigs v424.5", 1, true), "README source-reviewed BigWigs contract must track the audited baseline")
-assert(readme:find("2026-09-03", 1, true), "README provider source-review date must stay current")
+assert(readme:find("DBM 12.1.9", 1, true), "README source-reviewed DBM contract must track the audited baseline")
+assert(readme:find("BigWigs v424.8", 1, true), "README source-reviewed BigWigs contract must track the audited baseline")
+assert(readme:find("2026-09-13", 1, true), "README provider source-review date must stay current")
 assert(readme:find("live-tested", 1, true), "README must distinguish source review from live-tested evidence")
+assert(readme:find("PROVIDER_REVIEW_2026-09-13.md", 1, true),
+    "README must route the current provider review to the dated evidence document")
+
+local providerReview = read("docs/PROVIDER_REVIEW_2026-09-13.md")
+assert(providerReview:find("DBM stable release reviewed: `12.1.9`", 1, true),
+    "current provider review must document DBM 12.1.9")
+assert(providerReview:find("BigWigs stable release reviewed: `v424.8`", 1, true),
+    "current provider review must document BigWigs v424.8")
+assert(providerReview:find("Ula'tek", 1, true) and providerReview:find("manual-only", 1, true),
+    "current provider review must keep Ula'tek manual-only")
+assert(providerReview:find("scripts/native_ats_prospecting.py", 1, true),
+    "current provider review must retain cleanup evidence and rollback context")
 
 local auditSources = read("docs/AUDIT_SOURCES.md")
-assert(auditSources:find("Review date: 2026-09-03", 1, true), "audit source register must stay current")
-assert(auditSources:find("DBM `12.1.8`", 1, true), "audit source DBM contract must track the baseline")
-assert(auditSources:find("BigWigs `v424.5`", 1, true), "audit source BigWigs contract must track the baseline")
+assert(auditSources:find("Review date: 2026-09-03", 1, true),
+    "dated audit source register must retain its recorded review date")
+assert(auditSources:find("DBM `12.1.8`", 1, true),
+    "dated audit source register must preserve the provider state it actually reviewed")
+assert(auditSources:find("BigWigs `v424.5`", 1, true),
+    "dated audit source register must preserve the provider state it actually reviewed")
 assert(auditSources:find("EncounterTimelineDocumentation.lua", 1, true),
     "audit source register must document the Blizzard timeline drift watch")
 

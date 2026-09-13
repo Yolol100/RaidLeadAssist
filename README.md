@@ -48,7 +48,7 @@ RLA consumes public **DBM**, **BigWigs** and Blizzard Encounter Timeline timing.
 
 Provider payloads are untrusted runtime input. Secret, malformed, stale or cross-encounter data is rejected/downgraded. Direct bossmod timers must resolve to the verified active encounter. Cross-provider occurrence reconciliation prevents duplicate calls/audio and a successful manual call acknowledges the occurrence so a late provider cannot immediately re-arm it.
 
-The current **source-reviewed** stable provider contracts are **DBM 12.1.8** and **BigWigs v424.5**. `docs/UPSTREAM_BASELINES.json` pins those release commits plus the exact watched current-`master` files re-reviewed on **2026-09-03**, and also pins Blizzard's live generated `EncounterTimelineDocumentation.lua`. DBM's post-12.1.8 master now includes explicit Mythic Lost Explorers routing while retaining encounter `3497` and the public timer identities RLA consumes. BigWigs v424.5 retains the public timer callback surface; its current release only raises the allowed custom profile-name length and does not change RLA's callback contract.
+The current **source-reviewed** stable provider contracts are **DBM 12.1.9** and **BigWigs v424.8**. `docs/UPSTREAM_BASELINES.json` pins those releases plus the exact watched current-`master` files re-reviewed on **2026-09-13**, while Blizzard's live generated Encounter Timeline contract remains unchanged. DBM's recent Venomous Abyss changes concentrate on Lost Explorers routing, Sentinels/Coiled Altar recovery and Vashnik warning handling; BigWigs v424.8 includes Venomous Abyss aura updates and a Mythic Sszorak Venomous Surge special case. RLA continues to consume resolved public timer durations rather than copying private bossmod schedules; see `docs/PROVIDER_REVIEW_2026-09-13.md`.
 
 Source review is deliberately separate from **live-tested** evidence. The current runtime doctor/live matrix still records DBM 12.1.6 and BigWigs v424.1 as the last live-tested contracts until fresh Retail evidence is collected. A newer source-reviewed pin therefore means “contract inspected and CI-compatible”, not “proved in a real raid client”. When a bossmod cannot provide a usable matching timer, RLA intentionally falls back to Blizzard Encounter Timeline data for supported calls. Manual calls remain available independently of bossmod timing.
 
@@ -83,7 +83,8 @@ Settings owns the default timing-lead editor beside `AUTO`. Defaults are PREPARE
 - `docs/ARCHITECTURE.md`: what each layer owns, when it runs, for whom and why.
 - `docs/TEN_OF_TEN_ACCEPTANCE.md`: the **172-check** master audit, supplemented by focused post-audit release regressions.
 - `docs/LIVE_TEST_MATRIX.md`: evidence that can only be collected in the real Retail client.
-- `docs/AUDIT_SOURCES.md`: current Blizzard, GitHub, DBM/BigWigs and encounter source register.
+- `docs/PROVIDER_REVIEW_2026-09-13.md`: current Midnight/DBM/BigWigs provider-drift review, cleanup decision and targeted live-regression gates.
+- `docs/AUDIT_SOURCES.md`: source register through its recorded review date; newer provider drift is tracked in the dated provider review above.
 - `docs/RELEASE_PROCESS.md`: release-versus-repository-only change classification and the deliberate publication flow.
 - `scripts/audit_runtime.py`: TOC/runtime/copy/policy hygiene.
 - `scripts/audit_repository.py`: repository paths/encoding/secrets/module order/combat API/workflow/supply-chain governance.
