@@ -35,7 +35,7 @@ local waves = timedCall(
     "waves",
     "Caustic Waves",
     "Use safe gap; keep waves off eggs",
-    "Caustic Waves: use the safe gap; keep waves off eggs.",
+    "Waves: use safe gap; keep waves off eggs.",
     "Waves",
     { 1292188 },
     7,
@@ -80,8 +80,8 @@ local function bite(mythic)
         return timedCall(
             "bite",
             "Serpent's Bite",
-            "Targets meet helpers; Purge out; dodge waves",
-            "Serpent's Bite: helpers leech; Purge 7+ yards out, then dodge its waves.",
+            "Meet helpers; Purge out; dodge waves",
+            "Bite: leech; Purge 7+ yards out; dodge waves.",
             "Bite",
             { 1295905 },
             8,
@@ -92,8 +92,8 @@ local function bite(mythic)
     return timedCall(
         "bite",
         "Serpent's Bite",
-        "Targets meet helpers; Purge helpers move out",
-        "Serpent's Bite: helpers leech within 15s; Purge helpers move 7+ yards out.",
+        "Meet helpers; Purge helpers move out",
+        "Bite: leech within 15s; Purge move 7+ yards out.",
         "Bite",
         { 1295905 },
         8,
@@ -152,8 +152,8 @@ local function calls(coilCall, eggAction, eggWarning, eggActionTemplate, eggWarn
         result[#result + 1] = manualCall(
             "fangs",
             "Grasping Fangs",
-            "Break one tether at a time; wait for Blight Vein",
-            "Fangs: break one tether at a time; wait for Blight Vein to clear.",
+            "Break one tether; wait for Blight Vein",
+            "Fangs: break one tether; wait for Blight Vein.",
             "Fangs",
             1311611
         )
@@ -193,7 +193,7 @@ Registry:Register({
                 "Circling Prey destroys the current platform: leave it before the platform breaks.",
             },
             calls = calls(
-                coils("Stack 40%+ raid in the active Coil", "Coils: stack at least 40% of the raid in the active soak."),
+                coils("Stack 40%+ raid in the active Coil", "Coils: stack 40%+ raid in the active soak."),
                 "Assigned handler uses planned egg",
                 "Eggs: assigned handler use planned egg.",
                 "{{egg_handler}} uses planned egg",
@@ -214,7 +214,7 @@ Registry:Register({
                 "Circling Prey destroys the current platform: leave it before the platform breaks.",
             },
             calls = calls(
-                coils("Stack 40%+ raid in the active Coil", "Coils: stack at least 40% of the raid in the active soak."),
+                coils("Stack 40%+ raid in the active Coil", "Coils: stack 40%+ raid in the active soak."),
                 "Assigned handler uses egg",
                 "Eggs: assigned handler use planned egg.",
                 "{{egg_handler}} uses planned egg",
