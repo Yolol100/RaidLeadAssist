@@ -16,8 +16,8 @@ local expected = {
         warnings = { "KILL ADDS", "DEBUFF — GO TO THE SIDE", "BURN CORPSES", "MELEE + TANK — SOAK" },
     },
     sentinels = {
-        explanation = { "{{GROUP_SPLIT:RED:GREEN}}" },
-        warnings = { "GREEN — SOAK DROPLETS", "GREEN — KILL BLOB", "GREEN — DODGE RETURN LINES", "RED — GROUP SOAK", "STASIS — 1+3 / 2+2" },
+        explanation = { "{{GROUP_SPLIT:RED:GREEN}}", "AFTER STASIS — RAID HOLDS SIDES; TANKS SWAP BOSSES" },
+        warnings = { "GREEN — SOAK DROPLETS", "GREEN — KILL BLOB", "GREEN — DODGE RETURN LINES", "RED — GROUP SOAK, DROP BLOOD OUT", "STASIS — 1+3 / 2+2" },
     },
     explorers = {
         explanation = { "GEBBO → NAMA → IKU" },
