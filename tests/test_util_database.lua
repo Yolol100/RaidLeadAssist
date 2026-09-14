@@ -18,6 +18,7 @@ RaidLeadAssistDB = {
     selectedDifficultyKey = "impossible",
     audioEnabled = "yes",
     automaticTimingEnabled = "yes",
+    uiScale = "bad",
     timingLead = { prepare = "bad", press = 99 },
     forceShown = "yes",
     customMessages = "invalid",
@@ -37,6 +38,7 @@ assert(data.selectedBossKey == "nekzali", "known fields from a newer schema shou
 assert(data.selectedDifficultyKey == "heroic", "invalid difficulty should fail back to Heroic")
 assert(data.audioEnabled == true and data.automaticTimingEnabled == true and data.forceShown == false,
     "invalid booleans should be normalized")
+assert(data.uiScale == 1, "malformed UI scale must fail closed to 100 percent")
 assert(data.timingLead.prepare == 5 and data.timingLead.press == 3,
     "malformed lead windows must fail closed to the proven defaults")
 assert(type(data.customMessages) == "table", "invalid custom message storage should be normalized")
@@ -54,11 +56,12 @@ RaidLeadAssistDB = {
 }
 Database:Initialize()
 data = Database:Get()
-assert(data.schemaVersion == 6, "schema 5 must upgrade to schema 6")
+assert(data.schemaVersion == 7, "schema 5 must upgrade through schema 7")
+assert(data.uiScale == 1, "older settings should gain the default UI scale")
 assert(data.timingLead.prepare == 11 and data.timingLead.press == 4,
     "valid lead settings must survive schema migration")
 assert(type(data.assignmentPresets) == "table" and type(data.assignmentPresets.retained) == "table",
-    "schema 6 must preserve preset storage for service-level validation")
+    "schema migration must preserve preset storage for service-level validation")
 assert(data.position.point == "CENTER" and data.position.x == 0 and data.position.y == 40,
     "non-finite saved frame coordinates must fail closed to the default position")
 
@@ -74,9 +77,10 @@ RaidLeadAssistDB = {
 }
 Database:Initialize()
 data = Database:Get()
-assert(data.schemaVersion == 6, "v2 settings should migrate to schema 6")
+assert(data.schemaVersion == 7, "v2 settings should migrate to schema 7")
 assert(data.selectedDifficultyKey == "heroic", "v2 settings should default to Heroic")
 assert(data.automaticTimingEnabled == true, "older settings should default automatic timing on")
+assert(data.uiScale == 1, "older settings should gain safe UI scale defaults")
 assert(data.timingLead.prepare == 5 and data.timingLead.press == 3, "older settings should gain safe lead-window defaults")
 assert(data.customMessages.nekzali.heroic.explanation[1] == "OLD HEROIC PLAN", "old explanation should migrate under Heroic")
 assert(data.customMessages.nekzali.heroic.calls.adds == "OLD HEROIC CALL", "old call should migrate under Heroic")
@@ -90,16 +94,27 @@ RaidLeadAssistDB = {
 }
 Database:Initialize()
 data = Database:Get()
-assert(data.schemaVersion == 6 and data.automaticTimingEnabled == false,
-    "schema 4 must preserve an explicit timing preference while migrating to schema 6")
+assert(data.schemaVersion == 7 and data.automaticTimingEnabled == false,
+    "schema 4 must preserve an explicit timing preference while migrating")
 
 RaidLeadAssistDB = {
     schemaVersion = 6,
+    uiScale = 1.5,
     timingLead = { prepare = 3, press = 3 },
 }
 Database:Initialize()
 data = Database:Get()
+assert(data.schemaVersion == 7, "schema 6 must upgrade to schema 7")
+assert(data.uiScale == 1.10, "oversized UI scale must clamp to 110 percent")
 assert(data.timingLead.prepare == 5 and data.timingLead.press == 3,
     "equal/inverted lead windows must never survive normalization")
 
-print("ok - util/database secret, schema, difficulty, assignment, preset, timing, and finite-position guards")
+RaidLeadAssistDB = {
+    schemaVersion = 7,
+    uiScale = 0.2,
+}
+Database:Initialize()
+data = Database:Get()
+assert(data.uiScale == 0.70, "undersized UI scale must clamp to 70 percent")
+
+print("ok - util/database secret, schema, difficulty, assignment, preset, timing, scale, and finite-position guards")
