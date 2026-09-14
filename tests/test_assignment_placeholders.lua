@@ -75,13 +75,18 @@ local invalid, err = A:ApplyBossDraft("nekzali", "mythic", {
 assert(not invalid and err.assignmentKey == "pyre_soakers")
 assert(err.message:find("not present", 1, true))
 
--- Lost Explorers Heroic uses the fixed Gebbo -> Nama -> Iku fish strategy, with no fish owner placeholder.
+-- Lost Explorers Heroic uses fixed sequential fish calls; neither difficulty has a fish-owner placeholder.
 for _, difficulty in ipairs({ "heroic", "mythic" }) do
     for _, definition in ipairs(AR:GetDefinitions("explorers", difficulty)) do
-        assert(definition.callKey ~= "fish")
+        assert(definition.callKey ~= "fish" and not definition.callKey:find("^fish_"))
     end
-    assert(R:GetProfile("explorers", difficulty).callsByKey.fish.warning == "FISH NOW → GEBBO > NAMA > IKU")
 end
+local explorersHeroic = R:GetProfile("explorers", "heroic")
+assert(explorersHeroic.callsByKey.fish_gebbo.warning == "FISH NOW → GEBBO")
+assert(explorersHeroic.callsByKey.fish_nama.warning == "FISH NOW → NAMA")
+assert(explorersHeroic.callsByKey.fish_iku.warning == "FISH NOW → IKU")
+assert(table.concat(explorersHeroic.callsByKey.fish_gebbo.sequenceKeys, ",") == "fish_gebbo,fish_nama,fish_iku")
+assert(R:GetProfile("explorers", "mythic").callsByKey.fish.warning == "Fish: use the planned Mythic target.")
 
 -- Vashnik Heroic and Mythic do not require fixed player roster fields.
 for _, difficulty in ipairs({ "heroic", "mythic" }) do
