@@ -40,6 +40,13 @@ local function hasAnyValue(values)
     return false
 end
 
+local function safeAssignmentScale(database)
+    local requested = math.max(0.70, math.min(1.10, tonumber(database.uiScale) or 1))
+    local widthScale = (UIParent:GetWidth() - 32) / 720
+    local heightScale = (UIParent:GetHeight() - 32) / 620
+    return math.max(0.70, math.min(requested, widthScale, heightScale, 1.10))
+end
+
 function AssignmentFrame:SetStatus(text, kind)
     if not self.status then return end
     self.status:SetText(text or "")
@@ -68,44 +75,70 @@ function AssignmentFrame:RefreshDifficultyTabs()
     end
 end
 
+function AssignmentFrame:UpdateFrameHeight(contentHeight)
+    if not self.frame then return end
+    local desired = math.max(350, math.min(620, (tonumber(contentHeight) or 1) + 250))
+    self.frame:SetHeight(desired)
+    self.frame:SetScale(safeAssignmentScale(self.database))
+end
+
 function AssignmentFrame:Initialize(database, callbacks)
     if self.frame then return end
     self.database = database
     self.callbacks = callbacks or {}
 
     local frame = CreateFrame("Frame", "RaidLeadAssistAssignmentFrame", UIParent, "BackdropTemplate")
-    frame:SetSize(760, 680)
+    frame:SetSize(720, 620)
     frame:SetPoint("CENTER")
     frame:SetFrameStrata("DIALOG")
     frame:SetClampedToScreen(true)
+    frame:SetMovable(true)
+    frame:EnableMouse(true)
     frame:SetBackdrop({ bgFile = Theme.texture, edgeFile = Theme.texture, edgeSize = 1 })
     setBackdrop(frame, Theme.colors.backgroundSolid)
     frame:SetBackdropBorderColor(Theme.colors.border[1], Theme.colors.border[2], Theme.colors.border[3], 1)
-    local safeScale = math.min(1, (UIParent:GetWidth() - 40) / 760, (UIParent:GetHeight() - 40) / 680)
-    frame:SetScale(math.max(0.72, safeScale))
+    frame:SetScale(safeAssignmentScale(database))
     frame:Hide()
+
+    local drag = CreateFrame("Button", nil, frame)
+    drag:SetPoint("TOPLEFT", 0, 0)
+    drag:SetPoint("TOPRIGHT", 0, 0)
+    drag:SetHeight(36)
+    drag:RegisterForDrag("LeftButton")
+    drag:SetScript("OnDragStart", function() frame:StartMoving() end)
+    drag:SetScript("OnDragStop", function() frame:StopMovingOrSizing() end)
+    drag:SetScript("OnEnter", function(button)
+        GameTooltip:SetOwner(button, "ANCHOR_TOP")
+        GameTooltip:SetText("Drag to move Boss Assignments", 0.82, 0.86, 0.82, 1)
+        GameTooltip:Show()
+    end)
+    drag:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    frame.drag = drag
 
     local eyebrow = frame:CreateFontString(nil, "OVERLAY")
     eyebrow:SetFont(Theme.font, 10, "OUTLINE")
-    eyebrow:SetPoint("TOPLEFT", 18, -14)
+    eyebrow:SetPoint("TOPLEFT", 16, -13)
     eyebrow:SetText("RAID LEAD ASSIST · PRE-PULL")
     eyebrow:SetTextColor(Theme.colors.venom[1], Theme.colors.venom[2], Theme.colors.venom[3], 1)
 
     local title = frame:CreateFontString(nil, "OVERLAY")
     title:SetFont(Theme.font, 17, "OUTLINE")
-    title:SetPoint("TOPLEFT", eyebrow, "BOTTOMLEFT", 0, -6)
+    title:SetPoint("TOPLEFT", eyebrow, "BOTTOMLEFT", 0, -5)
     title:SetText("Boss Assignments")
     title:SetTextColor(1, 1, 1, 1)
 
     local subtitle = frame:CreateFontString(nil, "OVERLAY")
     subtitle:SetFont(Theme.font, 9, "OUTLINE")
-    subtitle:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -5)
-    subtitle:SetText("Each boss shows only the jobs its tactic needs. Dynamic targets use pre-pull rules, not live decisions.")
+    subtitle:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -4)
+    subtitle:SetPoint("RIGHT", -16, 0)
+    subtitle:SetJustifyH("LEFT")
+    subtitle:SetText("Only jobs this tactic needs are shown. Dynamic targets use pre-pull rules.")
     subtitle:SetTextColor(Theme.colors.muted[1], Theme.colors.muted[2], Theme.colors.muted[3], 1)
 
     local close = CreateFrame("Button", nil, frame)
     close:SetSize(32, 32)
-    close:SetPoint("TOPRIGHT", -8, -8)
+    close:SetPoint("TOPRIGHT", -7, -7)
+    close:SetFrameLevel(drag:GetFrameLevel() + 1)
     close.text = close:CreateFontString(nil, "OVERLAY")
     close.text:SetAllPoints()
     close.text:SetFont(Theme.font, 14, "OUTLINE")
@@ -113,12 +146,12 @@ function AssignmentFrame:Initialize(database, callbacks)
     close:SetScript("OnClick", function() self:RequestClose() end)
 
     self.bossDropdown = Dropdown:Create(frame)
-    self.bossDropdown.frame:SetPoint("TOPLEFT", 18, -82)
-    self.bossDropdown.frame:SetPoint("TOPRIGHT", -18, -82)
+    self.bossDropdown.frame:SetPoint("TOPLEFT", 16, -80)
+    self.bossDropdown.frame:SetPoint("TOPRIGHT", -16, -80)
     self.bossDropdown.menu:SetPoint("TOPLEFT", self.bossDropdown.frame, "BOTTOMLEFT", 0, -2)
     self.bossDropdown.menu:SetPoint("TOPRIGHT", self.bossDropdown.frame, "BOTTOMRIGHT", 0, -2)
 
-    local tabWidth = (724 - 12) / 3
+    local tabWidth = (688 - 12) / 3
     local previous
     for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
         local info = Constants.DIFFICULTIES[difficultyKey]
@@ -137,38 +170,39 @@ function AssignmentFrame:Initialize(database, callbacks)
 
     self.summary = frame:CreateFontString(nil, "OVERLAY")
     self.summary:SetFont(Theme.font, 9, "OUTLINE")
-    self.summary:SetPoint("TOPLEFT", self.difficultyTabs.normal, "BOTTOMLEFT", 2, -10)
-    self.summary:SetPoint("RIGHT", -20, 0)
+    self.summary:SetPoint("TOPLEFT", self.difficultyTabs.normal, "BOTTOMLEFT", 2, -9)
+    self.summary:SetPoint("RIGHT", -18, 0)
     self.summary:SetJustifyH("LEFT")
     self.summary:SetTextColor(Theme.colors.muted[1], Theme.colors.muted[2], Theme.colors.muted[3], 1)
 
     local scroll = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
-    scroll:SetPoint("TOPLEFT", 18, -157)
-    scroll:SetPoint("BOTTOMRIGHT", -36, 76)
+    scroll:SetPoint("TOPLEFT", 16, -154)
+    scroll:SetPoint("BOTTOMRIGHT", -34, 74)
 
     local content = CreateFrame("Frame", nil, scroll)
-    content:SetWidth(700)
+    content:SetWidth(662)
     content:SetHeight(1)
     scroll:SetScrollChild(content)
     self.content = content
+    self.scroll = scroll
 
     self.status = frame:CreateFontString(nil, "OVERLAY")
     self.status:SetFont(Theme.font, 9, "OUTLINE")
-    self.status:SetPoint("BOTTOMLEFT", 18, 63)
-    self.status:SetPoint("RIGHT", -18, 0)
+    self.status:SetPoint("BOTTOMLEFT", 16, 61)
+    self.status:SetPoint("RIGHT", -16, 0)
     self.status:SetJustifyH("LEFT")
     self.status:SetWordWrap(false)
 
     self.required = frame:CreateFontString(nil, "OVERLAY")
     self.required:SetFont(Theme.font, 8, "OUTLINE")
-    self.required:SetPoint("BOTTOMLEFT", 18, 51)
-    self.required:SetPoint("RIGHT", -18, 0)
+    self.required:SetPoint("BOTTOMLEFT", 16, 49)
+    self.required:SetPoint("RIGHT", -16, 0)
     self.required:SetJustifyH("LEFT")
     self.required:SetWordWrap(false)
     self.required:SetTextColor(Theme.colors.muted[1], Theme.colors.muted[2], Theme.colors.muted[3], 1)
 
     self.resetButton = ActionButton:Create(frame, { text = "CLEAR DRAFT", width = 96, height = 30, fontSize = 9, variant = "secondary" })
-    self.resetButton:SetPoint("BOTTOMRIGHT", -18, 18)
+    self.resetButton:SetPoint("BOTTOMRIGHT", -16, 16)
     self.resetButton:SetScript("OnClick", function() self:ResetCurrent() end)
 
     self.saveButton = ActionButton:Create(frame, { text = "SAVE", width = 88, height = 30, fontSize = 9, variant = "primary" })
@@ -325,11 +359,13 @@ function AssignmentFrame:BuildLayout()
         section:ClearAllPoints()
         section:SetPoint("TOPLEFT", 0, 0)
         section:SetPoint("RIGHT", self.content, "RIGHT", 0, 0)
-        section:SetHeight(92)
+        section:SetHeight(78)
         section.title:SetText("No fixed assignments needed")
-        section.description:SetText("Use the normal Boss Plan and combat call buttons for this difficulty.")
+        section.description:SetText("Use the Boss Plan and combat call buttons for this difficulty.")
         section:Show()
-        self.content:SetHeight(100)
+        self.content:SetHeight(86)
+        self.scroll:SetVerticalScroll(0)
+        self:UpdateFrameHeight(86)
         self.announceButton:SetActionEnabled(false)
         return
     end
@@ -350,7 +386,7 @@ function AssignmentFrame:BuildLayout()
 
         local columns = math.max(1, math.min(4, definition.columns or 1))
         local gap = 8
-        local usable = 680
+        local usable = 642
         local width = (usable - ((columns - 1) * gap)) / columns
         for localIndex = 1, #definition.slots do
             slotIndex = slotIndex + 1
@@ -372,6 +408,8 @@ function AssignmentFrame:BuildLayout()
     end
 
     self.content:SetHeight(math.max(1, y))
+    self.scroll:SetVerticalScroll(0)
+    self:UpdateFrameHeight(y)
 end
 
 function AssignmentFrame:Load(bossKey, difficultyKey)
