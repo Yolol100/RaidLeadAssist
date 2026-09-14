@@ -5,43 +5,39 @@ _G.issecretvalue = function() return false end
 T.Load("Core/Constants.lua", ns)
 T.Load("Core/Util.lua", ns)
 T.Load("Encounters/Registry.lua", ns)
-T.Load("Encounters/AssignmentRegistry.lua", ns)
-T.Load("Encounters/Boss12AssignmentOverride.lua", ns)
-T.Load("Encounters/Boss34AssignmentOverride.lua", ns)
-T.Load("Encounters/VenomousAbyss/Nekzali.lua", ns)
-T.Load("Encounters/VenomousAbyss/Sentinels.lua", ns)
-T.Load("Encounters/VenomousAbyss/Explorers.lua", ns)
-T.Load("Encounters/VenomousAbyss/Vashnik.lua", ns)
-T.Load("Services/AssignmentService.lua", ns)
+for _, file in ipairs({"Nekzali.lua","Sentinels.lua","Explorers.lua","Vashnik.lua"}) do
+    T.Load("Encounters/VenomousAbyss/" .. file, ns)
+end
+local Registry = ns:GetModule("Encounters.Registry")
 
-local Encounters = ns:GetModule("Encounters.Registry")
-local AssignmentRegistry = ns:GetModule("Encounters.AssignmentRegistry")
-local Assignments = ns:GetModule("Services.AssignmentService")
-Assignments:Initialize({ assignments = {} })
+local expected = {
+    nekzali = {
+        explanation = { "BL START" },
+        warnings = { "KILL ADDS", "DEBUFF — GO TO THE SIDE", "BURN CORPSES", "MELEE + TANK — SOAK" },
+    },
+    sentinels = {
+        explanation = { "{{GROUP_SPLIT:RED:GREEN}}" },
+        warnings = { "GREEN — SOAK DROPLETS", "GREEN — KILL BLOB", "GREEN — DODGE RETURN LINES", "RED — GROUP SOAK", "STASIS — 1+3 / 2+2" },
+    },
+    explorers = {
+        explanation = { "GEBBO → NAMA → IKU" },
+        warnings = { "FISH NOW → GEBBO", "FISH NOW → NAMA", "FISH NOW → IKU", "USE MUSHROOM FOR WAVE", "SOAK MARKS", "SPREAD FIRE/FROST — CLEAR WITH OPPOSITE" },
+    },
+    vashnik = {
+        explanation = { "PURPLE + ORANGE ONLY — BL ON PULL" },
+        warnings = { "KILL ADDS", "STAGGER DISPELS", "DODGE CROSS", "SOAK BILE" },
+    },
+}
 
-local heroicNek = Encounters:GetProfile("nekzali", "heroic")
-assert(heroicNek.callsByKey.pyre.warning == "Pyre: assigned group soak; everyone else out.")
-assert(heroicNek.callsByKey.phase2.warning == "Phase 2: Bloodlust; burn before full energy.")
-assert(#AssignmentRegistry:GetDefinitions("nekzali", "heroic") == 1)
-assert(#AssignmentRegistry:GetDefinitions("nekzali", "mythic") == 3)
-
-local ok = Assignments:ApplyBossDraft("sentinels", "heroic", { team_a = "Group 1", team_b = "Group 2" })
-assert(ok)
-local sentinelsCall = Encounters:GetProfile("sentinels", "heroic").callsByKey.side_swap
-assert(Assignments:BuildCallWarning(sentinelsCall.warning, "sentinels", "heroic", "side_swap") ==
-    "After Stasis: Group 1 green; Group 2 red; tanks swap bosses.")
-
-local explorers = Encounters:GetProfile("explorers", "normal")
-assert(explorers.callsByKey.crates.warning == "Crates: break until fish appears.")
-assert(explorers.callsByKey.fish.warning == "Fish: feed Nama, then Iku, then Gebbo.")
-assert(#AssignmentRegistry:GetDefinitions("explorers", "normal") == 0)
-assert(#AssignmentRegistry:GetDefinitions("explorers", "heroic") == 0)
-assert(#AssignmentRegistry:GetDefinitions("explorers", "mythic") == 3)
-
-for _, difficulty in ipairs({ "normal", "heroic", "mythic" }) do
-    local profile = Encounters:GetProfile("vashnik", difficulty)
-    assert(profile.callsByKey.siphon.warning == "Blood circle: several teammates stack for healing.")
-    assert(#AssignmentRegistry:GetDefinitions("vashnik", difficulty) == 0)
+for bossKey, contract in pairs(expected) do
+    assert(Registry:GetProfile(bossKey, "normal") == nil, bossKey .. " Normal profile must be removed")
+    local profile = assert(Registry:GetProfile(bossKey, "heroic"))
+    assert(table.concat(profile.explanation, "\n") == table.concat(contract.explanation, "\n"))
+    assert(#profile.calls == #contract.warnings, bossKey .. " Heroic call count drifted")
+    for index = 1, #contract.warnings do
+        assert(profile.calls[index].warning == contract.warnings[index], bossKey .. " Heroic call order/text drifted at " .. index)
+    end
+    assert(Registry:GetProfile(bossKey, "mythic"), bossKey .. " Mythic profile must remain supported")
 end
 
-print("ok - bosses 1-4 raid warnings and assignment ownership match the tactic alignment pass")
+print("ok - bosses 1-4 Heroic tactics are exact, Normal is removed and Mythic remains separate")

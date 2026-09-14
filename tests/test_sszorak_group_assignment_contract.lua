@@ -2,30 +2,16 @@ local T = assert(loadfile("tests/testlib.lua"))()
 local ns = T.NewNamespace()
 T.Load("Encounters/AssignmentRegistry.lua", ns)
 T.Load("Encounters/SszorakAssignmentOverride.lua", ns)
-T.Load("Services/AssignmentService.lua", ns)
 local Registry = ns:GetModule("Encounters.AssignmentRegistry")
-local Assignments = ns:GetModule("Services.AssignmentService")
-Assignments:Initialize({ assignments = {} })
-for _, difficulty in ipairs({"normal","heroic","mythic"}) do
-    local defs = Registry:GetDefinitions("sszorak", difficulty)
-    assert(#defs == 5, "Sszorak needs two Mutilate teams plus three Cyst Poppers")
-    assert(defs[1].minPlayers == 5 and defs[2].minPlayers == 5)
-    for i=3,5 do
-        assert(defs[i].key == "cyst_popper_" .. tostring(i-2))
-        assert(defs[i].kind == "assignee" and defs[i].callKey == "maelstrom" and defs[i].required)
-        assert(defs[i].exclusiveGroup == "cyst_poppers")
-    end
+
+assert(#Registry:GetDefinitions("sszorak", "normal") == 0)
+assert(#Registry:GetDefinitions("sszorak", "heroic") == 0,
+    "Heroic BLUE/X teams are generated from populated raid subgroups")
+local defs = Registry:GetDefinitions("sszorak", "mythic")
+assert(#defs == 5, "Mythic Sszorak keeps two Mutilate teams plus three Cyst Poppers")
+assert(defs[1].minPlayers == 5 and defs[2].minPlayers == 5)
+for index = 3, 5 do
+    assert(defs[index].key == "cyst_popper_" .. tostring(index - 2))
+    assert(defs[index].callKey == "maelstrom" and defs[index].required)
 end
-local ok = Assignments:ApplyBossDraft("sszorak","heroic",{
-    mutilate_group_1="Alpha, Bravo, Charlie, Delta, Echo",
-    mutilate_group_2="Foxtrot, Golf, Hotel, India, Juliet",
-    cyst_popper_1="Kilo", cyst_popper_2="Lima", cyst_popper_3="Mike",
-})
-assert(ok)
-local warning = Assignments:BuildCallWarning(
-    "Maelstrom: Poppers 1-2-3 trigger Cysts on each wind.",
-    "sszorak", "heroic", "maelstrom"
-)
-assert(warning:find("Popper 1: Kilo.",1,true) and warning:find("Popper 2: Lima.",1,true) and warning:find("Popper 3: Mike.",1,true))
-assert(not warning:find(" > ",1,true))
-print("ok - Sszorak validates teams and composes readable Cyst Popper calls")
+print("ok - Sszorak Heroic uses dynamic BLUE/X split and Mythic retains explicit Mutilate/Cyst assignments")

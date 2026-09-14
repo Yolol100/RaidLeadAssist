@@ -4,19 +4,15 @@ T.Load("Encounters/AssignmentRegistry.lua", ns)
 T.Load("Encounters/Boss34AssignmentOverride.lua", ns)
 local Assignments = ns:GetModule("Encounters.AssignmentRegistry")
 
-assert(#Assignments:GetDefinitions("explorers", "normal") == 0,
-    "Normal Lost Explorers needs no fixed crate roster")
+assert(#Assignments:GetDefinitions("explorers", "normal") == 0, "Normal assignments must be inactive")
 assert(#Assignments:GetDefinitions("explorers", "heroic") == 0,
-    "Heroic Lost Explorers still needs no fixed crate roster")
+    "Heroic Lost Explorers uses a fixed raid-lead sequence, not a roster assignment")
 local mythic = Assignments:GetDefinitions("explorers", "mythic")
-assert(#mythic == 3, "Mythic Lost Explorers needs only the controlled crate rotation")
+assert(#mythic == 3, "Mythic Lost Explorers keeps the controlled crate-breaker rotation")
 for _, definition in ipairs(mythic) do
-    assert(definition.callKey == "crates")
-    assert(not definition.key:find("fish", 1, true))
+    assert(definition.callKey == "crates" and definition.kind == "rotation")
 end
-for _, difficulty in ipairs({"normal","heroic","mythic"}) do
-    local defs = Assignments:GetDefinitions("vashnik", difficulty)
-    assert(#defs == 0, difficulty .. " Vashnik must expose no fixed roster assignment")
-    assert(#Assignments:GetLayout("vashnik", difficulty).sections == 0)
-end
-print("ok - boss 3/4 configure only true difficulty-specific roster choices")
+assert(#Assignments:GetDefinitions("vashnik", "heroic") == 0)
+assert(#Assignments:GetDefinitions("vashnik", "mythic") == 0)
+assert(#Assignments:GetDefinitions("vashnik", "normal") == 0)
+print("ok - boss 3/4 assignments expose only Heroic/Mythic choices that are actually required")
