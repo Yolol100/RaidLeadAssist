@@ -53,14 +53,15 @@ assert(mythic.callsByKey.coils.actionTemplate == "{{rotation:coils}} soak the ac
 assert(contains(planText("heroic"), "two near-equal teams"))
 assert(contains(planText("heroic"), "40%"))
 
--- Phase 2 keeps one mobile Doomscale egg carrier per side.
+-- Phase 2 keeps one mobile Doomscale egg carrier per side; marker wording differs by difficulty.
 for _, difficulty in ipairs({ "heroic", "mythic" }) do
     assert(hasDefinition(difficulty, "egg_left") and hasDefinition(difficulty, "egg_right"),
         difficulty .. " needs left/right Doomscale egg carriers")
     local call = Registry:GetProfile("ulatek", difficulty).callsByKey.eggs
     assert(call and call.timing == false)
-    assert(call.actionTemplate == "Left {{egg_left}}; Right {{egg_right}}")
 end
+assert(heroic.callsByKey.eggs.actionTemplate == "Left {{egg_left}}; Right {{egg_right}}")
+assert(mythic.callsByKey.eggs.actionTemplate == "Triangle {{egg_left}}; Cross {{egg_right}}")
 
 -- Phase 3 Serpent's Bite uses three preassigned helper sectors.
 for _, difficulty in ipairs({ "heroic", "mythic" }) do
