@@ -48,6 +48,8 @@ assert(#sent == 1, "oversized Raid Warning must never reach SendChatMessage")
 leader = false
 assert(Service:Send("manual") == false)
 assert(#sent == 1)
+assert(Service:SendRaw("bypass") == false, "raw Raid Warning helper must not bypass permission checks")
+assert(#sent == 1, "permission failure through SendRaw must never reach chat")
 
 leader = true
 splitValue = nil

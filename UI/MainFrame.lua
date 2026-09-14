@@ -231,7 +231,8 @@ function MainFrame:Initialize(database, callbacks)
     self.dropdown.menu:SetPoint("TOPLEFT", self.dropdown.frame, "BOTTOMLEFT", 0, -2)
     self.dropdown.menu:SetPoint("TOPRIGHT", self.dropdown.frame, "BOTTOMRIGHT", 0, -2)
 
-    local tabWidth = (Theme.width - (Theme.padding * 2) - (Theme.difficultyTabGap * 2)) / 3
+    local difficultyCount = #Constants.DIFFICULTY_ORDER
+    local tabWidth = (Theme.width - (Theme.padding * 2) - (Theme.difficultyTabGap * math.max(0, difficultyCount - 1))) / difficultyCount
     local previousTab
     for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
         local info = Constants.DIFFICULTIES[difficultyKey]
@@ -263,7 +264,7 @@ function MainFrame:Initialize(database, callbacks)
 
     self.timeline = TimelineBar:Create(frame)
     self.timeline.frame:SetHeight(Theme.timelineHeight)
-    self.timeline.frame:SetPoint("TOPLEFT", self.difficultyTabs.normal, "BOTTOMLEFT", 0, -8)
+    self.timeline.frame:SetPoint("TOPLEFT", self.difficultyTabs.heroic, "BOTTOMLEFT", 0, -8)
     self.timeline.frame:SetPoint("TOPRIGHT", self.difficultyTabs.mythic, "BOTTOMRIGHT", 0, -8)
 
     self.explanationTitle = createSectionTitle(frame, "Boss Plan")

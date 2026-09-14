@@ -151,7 +151,8 @@ function AssignmentFrame:Initialize(database, callbacks)
     self.bossDropdown.menu:SetPoint("TOPLEFT", self.bossDropdown.frame, "BOTTOMLEFT", 0, -2)
     self.bossDropdown.menu:SetPoint("TOPRIGHT", self.bossDropdown.frame, "BOTTOMRIGHT", 0, -2)
 
-    local tabWidth = (688 - 12) / 3
+    local difficultyCount = #Constants.DIFFICULTY_ORDER
+    local tabWidth = (688 - (6 * math.max(0, difficultyCount - 1))) / difficultyCount
     local previous
     for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
         local info = Constants.DIFFICULTIES[difficultyKey]
@@ -170,7 +171,7 @@ function AssignmentFrame:Initialize(database, callbacks)
 
     self.summary = frame:CreateFontString(nil, "OVERLAY")
     self.summary:SetFont(Theme.font, 9, "OUTLINE")
-    self.summary:SetPoint("TOPLEFT", self.difficultyTabs.normal, "BOTTOMLEFT", 2, -9)
+    self.summary:SetPoint("TOPLEFT", self.difficultyTabs.heroic, "BOTTOMLEFT", 2, -9)
     self.summary:SetPoint("RIGHT", -18, 0)
     self.summary:SetJustifyH("LEFT")
     self.summary:SetTextColor(Theme.colors.muted[1], Theme.colors.muted[2], Theme.colors.muted[3], 1)

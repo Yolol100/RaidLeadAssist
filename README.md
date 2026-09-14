@@ -4,13 +4,13 @@
 
 ## At a glance
 
-Raid Lead Assist is a fail-closed raid-leader callout and assignment panel for The Venomous Abyss. It supports separate Normal, Heroic and Mythic strategy profiles while leaving protected combat decisions to players.
+Raid Lead Assist is a fail-closed raid-leader callout and assignment panel for The Venomous Abyss. It supports separate Heroic and Mythic strategy profiles while leaving protected combat decisions to players.
 
 | Area | Evidence |
 | --- | --- |
 | Audience | Raid leaders who need repeatable pre-pull plans and bounded manual callouts |
 | Stack | Lua, WoW Retail APIs and GitHub Actions validation |
-| Coverage | Eight encounters and 24 difficulty-specific profiles |
+| Coverage | Eight encounters and 16 Heroic/Mythic profiles |
 | Safety | Unknown encounters, unsupported difficulties and stale or malformed state disable automatic guidance |
 | Quality | Validation workflow plus upstream-drift monitoring |
 
@@ -31,7 +31,7 @@ encounter + difficulty context -> validated strategy profile
 unknown or invalid state       -> automatic guidance disabled
 ```
 
-Raid Lead Assist (RLA) is a raid-leader callout panel for **The Venomous Abyss** with separate Normal, Heroic and Mythic strategy profiles. It provides pre-pull plans, boss-specific assignments, manual Raid Warning buttons and optional timing/audio guidance.
+Raid Lead Assist (RLA) is a raid-leader callout panel for **The Venomous Abyss** with separate Heroic and Mythic strategy profiles. It provides pre-pull plans, boss-specific assignments, manual Raid Warning buttons and optional timing/audio guidance.
 
 Automatic guidance is deliberately narrow. A timer must resolve to a stable numeric spell identity owned by the selected call and must already be exact/native and actionable. RLA then exposes one normalized current mechanic at a time using `WAIT -> SOON -> PRESS NOW -> LATE`. `LATE` is bounded to a one-second grace window. Localized/name-only matches, wrong IDs, approximate bars, faded bars, stale state and malformed input do not become actionable guidance.
 
@@ -41,7 +41,7 @@ RLA is fail-closed: uncertain encounter identity, unsupported difficulty, malfor
 
 ## Encounter, calls and assignments
 
-RLA supports eight encounters and 24 Normal/Heroic/Mythic profiles. During a supported encounter WoW's encounter/difficulty context locks the active profile. Unknown encounters and unsupported difficulties disable calls/timing. Pre-pull plans cannot be sent during an active encounter.
+RLA supports eight encounters and 16 Heroic/Mythic profiles. During a supported encounter WoW's encounter/difficulty context locks the active profile. Unknown encounters and unsupported difficulties disable calls/timing. Pre-pull plans cannot be sent during an active encounter.
 
 Assignments are configured before combat through `ASSIGN`, Settings or `/rla assignments`. PLAYER/GROUP, ROTATION, RULE and SEQUENCE fields are validated per boss/difficulty. Duplicate/overlapping players and hard group-size constraints are rejected where the tactic requires it. Rotation advances only after the matching manual Raid Warning succeeds.
 
@@ -63,7 +63,7 @@ Source review is separate from **live-tested** evidence. The runtime doctor/live
 
 The tactic/runtime review for **The Coiled Altar** and **Ula'tek** is recorded in `docs/FINAL_BOSSES_REVIEW_2026-09-13.md`.
 
-For The Coiled Altar, Normal/Heroic Guillotine follows Blizzard's live **3-player minimum** while Heroic keeps alternating assigned teams. Mythic remains on fresh 5+ groups because the 3-player hotfix does not include Mythic. The intermission call keeps the current progression strategy of using Bloodlust during Soulbinding's Zul'jan damage window and staggering fragment interceptions.
+For The Coiled Altar, Heroic Guillotine follows Blizzard's live **3-player minimum** with alternating assigned teams. Mythic remains on fresh 5+ groups because the 3-player hotfix does not include Mythic. The intermission call keeps the current progression strategy of using Bloodlust during Soulbinding's Zul'jan damage window and staggering fragment interceptions.
 
 Ula'tek is no longer globally manual-only. RLA permits fail-closed exact/native provider timing for a deliberately limited set of stable public DBM/BigWigs identities: Caustic Waves, Spectral Coils, Rage of the Shackled, Call of the Serpent, Serpent's Bite, Circling Prey and Mythic Toxic Incubation. Approximate provider data remains non-actionable; Doomscale Warden, egg choices, Grasping Fangs execution and the generic Phase 3 transition remain manual raid-leader calls.
 
