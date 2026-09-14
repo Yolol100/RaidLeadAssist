@@ -48,8 +48,10 @@ local Constants = {
 
     CallState = {
         IDLE = "IDLE",
+        WAIT = "WAIT",
         PREPARE = "PREPARE",
         PRESS = "PRESS",
+        LATE = "LATE",
         CALLED = "CALLED",
     },
 }
@@ -102,6 +104,8 @@ function Constants.GetCallTiming(call, timingLead)
     return prepare, press
 end
 
+-- Legacy call-state helper retained for compatibility with existing consumers.
+-- It intentionally has no WAIT/LATE presentation state.
 function Constants.GetCallState(call, remaining, actionable, timingLead)
     if actionable == false or type(remaining) ~= "number" then
         return Constants.CallState.IDLE
@@ -111,6 +115,28 @@ function Constants.GetCallState(call, remaining, actionable, timingLead)
     if remaining <= press then return Constants.CallState.PRESS end
     if remaining <= prepare then return Constants.CallState.PREPARE end
     return Constants.CallState.IDLE
+end
+
+-- Phase 4 guidance state uses signed remaining time. Automatic guidance is only
+-- allowed for an already-verified actionable timer. Far-away mechanics are WAIT,
+-- the prepare window is presented as SOON, the press window as PRESS NOW, and a
+-- just-missed occurrence stays visibly LATE only for the bounded expiry grace.
+function Constants.GetGuidanceState(call, signedRemaining, actionable, timingLead)
+    if actionable ~= true or not finite(signedRemaining) then
+        return Constants.CallState.IDLE
+    end
+
+    if signedRemaining < 0 then
+        if signedRemaining >= -Constants.TIMER_EXPIRY_GRACE_SECONDS then
+            return Constants.CallState.LATE
+        end
+        return Constants.CallState.IDLE
+    end
+
+    local prepare, press = Constants.GetCallTiming(call, timingLead)
+    if signedRemaining <= press then return Constants.CallState.PRESS end
+    if signedRemaining <= prepare then return Constants.CallState.PREPARE end
+    return Constants.CallState.WAIT
 end
 
 ns:RegisterModule("Core.Constants", Constants)
