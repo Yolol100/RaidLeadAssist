@@ -4,7 +4,7 @@ This pass aligns the first four Venomous Abyss encounter surfaces with the exist
 
 ## Nek'zali
 
-- Normal Pyre now states the full execution split in the raidleader call: melee soak, ranged stay out.
+- Heroic Pyre now states the full execution split in the raidleader call: melee soak, ranged stay out.
 - Heroic/Mythic Pyre calls render the assigned soak group and explicitly keep everyone else out.
 - The Phase 2 call keeps the chosen Bloodlust strategy but adds the existing burn-before-full-energy condition.
 - Assignment ownership is unchanged: Heroic/Mythic require the Pyre group; Mythic additionally requires two distinct rotating Well groups.
@@ -12,16 +12,16 @@ This pass aligns the first four Venomous Abyss encounter surfaces with the exist
 ## Entombed Sentinels
 
 - Stasis now says to pair toxins to exactly four.
-- The normal plan explicitly retains healing the weaker boss during Stasis.
+- The Heroic plan explicitly retains healing the weaker boss during Stasis.
 - The post-Stasis call now combines the fixed physical side assignment with the tank boss swap, so the raid does not interpret “hold sides” as “hold bosses.”
 - Assignment ownership is unchanged: two required, non-overlapping physical side groups on every difficulty.
 
 ## The Lost Explorers
 
-- Normal/Heroic crate calls now use “break” consistently with the player plan.
+- Heroic crate calls now use “break” consistently with the player plan.
 - Final Ascension now explicitly says to feed Nama, then Iku, then Gebbo rather than only naming the order.
 - Mythic keeps the controlled crate-breaker rotation and the 15+ yard clear-before-break boundary.
-- Normal/Heroic remain assignment-free; Mythic retains two required breakers plus an optional third rotation slot.
+- Heroic remains assignment-free; Mythic retains two required breakers plus an optional third rotation slot.
 
 ## Vashnik the Malignant
 

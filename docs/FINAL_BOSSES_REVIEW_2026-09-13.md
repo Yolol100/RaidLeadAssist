@@ -63,13 +63,13 @@ Community sources are used for raid-leader execution patterns, not to override B
 
 ## The Coiled Altar decision
 
-### Normal / Heroic Guillotine
+### Heroic Guillotine (RLA runtime; Normal source context only)
 
 Blizzard's live September 1 hotfix lowers the failure-avoidance minimum to 3 players on Normal/Heroic.
 
 RLA now:
 
-- says `3+` on Normal;
+- does not expose a Normal runtime profile;
 - validates two different Heroic Guillotine teams at `minPlayers = 3`;
 - preserves alternating Heroic groups because the repeat-hit debuff still makes immediate reuse unsafe;
 - keeps Mythic at fresh `5+` groups because the 3-player hotfix does not include Mythic and the permanent Guillotined contract remains a separate execution model.
@@ -109,7 +109,7 @@ The generic Phase 3 call intentionally says to execute the raid's final burn pla
 
 ### Spectral Coils
 
-- Normal: the raid can soak each active Coil as one group, but every impact must still meet the live **40%+** floor.
+- Heroic: alternating Coil teams must still meet the live **40%+** floor on every impact.
 - Heroic: current Icy Veins, Method, Mythic Trap and assignment references converge on pre-splitting the raid into two near-equal teams and alternating Coils. RLA therefore assigns `coil_a` / `coil_b` and renders the currently called team into the Coil warning.
 - Mythic: keeps the same alternating-team model and the stricter Soul Constrictor execution.
 
@@ -136,7 +136,7 @@ Current Icy Veins, Method and Mythic Trap strategy converges on three practical 
 - ranged helpers;
 - healer-target helpers, supplemented by nearby ranged/short-range DPS rather than healers alone.
 
-RLA therefore exposes three required, mutually exclusive assignment groups: `bite_melee`, `bite_ranged` and `bite_healer` on Normal, Heroic and Mythic. The mechanic remains a leech handoff: each Bite is fully cleared through its matching helper sector, then the Purge carrier moves **7+ yards** away. Mythic additionally warns that Purge emits Caustic Waves and those waves must be aimed safely.
+RLA therefore exposes three required, mutually exclusive assignment groups: `bite_melee`, `bite_ranged` and `bite_healer` on Heroic and Mythic. The mechanic remains a leech handoff: each Bite is fully cleared through its matching helper sector, then the Purge carrier moves **7+ yards** away. Mythic additionally warns that Purge emits Caustic Waves and those waves must be aimed safely.
 
 ### Circling Prey identity correction
 
@@ -144,10 +144,10 @@ Current DBM/BigWigs source identifies spell `1301510` as the platform-break/Circ
 
 ## Regression and release gates added/updated
 
-- The Coiled Altar Normal/Heroic 3-player Guillotine floor is guarded; Mythic 5+ remains guarded separately.
+- The Coiled Altar Heroic 3-player Guillotine floor is guarded; Mythic 5+ remains guarded separately.
 - Ula'tek selected timed call spell identities are guarded.
 - Ula'tek manual milestones remain explicitly manual.
-- Normal keeps no fixed Coil roster; Heroic/Mythic require two non-overlapping alternating Coil teams.
+- Heroic/Mythic require two non-overlapping alternating Coil teams.
 - All difficulties require distinct left/right egg carriers and three non-overlapping Bite helper sectors.
 - Assignment overlap, missing required call assignments and stale setup-marker expectations are explicit negative tests.
 - Approximate Ula'tek provider data is preview-only and cross-encounter provider traffic is rejected.
@@ -158,10 +158,10 @@ Current DBM/BigWigs source identifies spell `1301510` as the platform-break/Circ
 
 `0.9.0-beta.67` can be technically green in source/CI, but it is not a full product `PASS-LIVE` until real Retail evidence covers at least:
 
-1. Normal/Heroic The Coiled Altar Guillotine with the live 3-player minimum and alternating Heroic groups.
+1. Heroic The Coiled Altar Guillotine with the live 3-player minimum and alternating Heroic groups.
 2. Coiled Altar wipe during/near intermission, then repull, verifying no stale/duplicate PREPARE/PRESS state.
-3. Ula'tek Normal/Heroic exact Caustic Waves, Spectral Coils, Heart, Call of the Serpent, Serpent's Bite and Circling Prey timers from DBM and BigWigs.
-4. Ula'tek Normal side carriers plus melee/ranged/healer Bite groups.
+3. Ula'tek Heroic/Mythic exact Caustic Waves, Spectral Coils, Heart, Call of the Serpent, Serpent's Bite and Circling Prey timers from DBM and BigWigs.
+4. Ula'tek Heroic/Mythic side carriers plus melee/ranged/healer Bite groups.
 5. Ula'tek Heroic alternating Coil-team calls, left/right side mapping, egg carriers and Bite groups under a real raid size.
 6. Ula'tek Mythic Toxic Incubation, alternating Coils, Bite groups and safe Purge-wave directions.
 7. Ula'tek approximate-provider fallback proving it never becomes actionable.
