@@ -85,11 +85,11 @@ local mythicCalls = {
     {
         key = "side_swap",
         ability = "After Stasis",
-        action = "Swap sides after Stasis",
-        warning = "After Stasis: swap sides.",
-        actionTemplate = "{{team_a}} / {{team_b}} swap sides",
-        warningTemplate = "After Stasis: {{team_a}} / {{team_b}} swap sides.",
-        voice = "Swap sides",
+        action = "Hold sides; tanks swap bosses",
+        warning = "After Stasis: hold sides; tanks swap bosses.",
+        actionTemplate = "{{team_a}} / {{team_b}} hold sides; tanks swap bosses",
+        warningTemplate = "After Stasis: {{team_a}} / {{team_b}} hold sides; tanks swap bosses.",
+        voice = "Tanks swap bosses",
         timing = false,
         uiGroup = "shared",
     },
@@ -119,7 +119,7 @@ Registry:Register({
         mythic = {
             explanation = {
                 "Split into two balanced sides and keep both bosses 40+ yards apart.",
-                "Swap sides after Stasis so the opposite Mark can fall off.",
+                "After Stasis players hold their physical sides while tanks swap bosses.",
                 "Protovenom on you: find another Protovenom-marked player and pair safely.",
             },
             calls = mythicCalls,
