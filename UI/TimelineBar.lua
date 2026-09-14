@@ -47,14 +47,22 @@ function TimelineBar:Create(parent)
     frame.label = frame:CreateFontString(nil, "OVERLAY")
     frame.label:SetFont(Theme.font, 11, "OUTLINE")
     frame.label:SetPoint("LEFT", frame.iconFrame, "RIGHT", 8, 0)
-    frame.label:SetPoint("RIGHT", -58, 0)
+    frame.label:SetPoint("RIGHT", -132, 0)
     frame.label:SetJustifyH("LEFT")
     frame.label:SetTextColor(1, 1, 1, 1)
     frame.label:SetText("NO LINKED TIMER")
 
+    frame.state = frame:CreateFontString(nil, "OVERLAY")
+    frame.state:SetFont(Theme.font, 9, "OUTLINE")
+    frame.state:SetPoint("RIGHT", -52, 0)
+    frame.state:SetWidth(72)
+    frame.state:SetJustifyH("RIGHT")
+    frame.state:SetText("")
+
     frame.time = frame:CreateFontString(nil, "OVERLAY")
     frame.time:SetFont(Theme.font, 14, "OUTLINE")
     frame.time:SetPoint("RIGHT", -8, 0)
+    frame.time:SetWidth(38)
     frame.time:SetJustifyH("RIGHT")
     frame.time:SetText("--")
 
@@ -108,18 +116,36 @@ function TimelineBar:SetState(state)
     self.state = state
 
     if state == Constants.CallState.PRESS then
-        self.frame:SetStatusBarColor(Theme.colors.teal[1], Theme.colors.teal[2], Theme.colors.teal[3], 0.90)
-        self.frame:SetBackdropBorderColor(Theme.colors.teal[1], Theme.colors.teal[2], Theme.colors.teal[3], 1)
+        self.frame:SetStatusBarColor(Theme.colors.success[1], Theme.colors.success[2], Theme.colors.success[3], 0.92)
+        self.frame:SetBackdropBorderColor(Theme.colors.success[1], Theme.colors.success[2], Theme.colors.success[3], 1)
+        self.frame.state:SetTextColor(Theme.colors.success[1], Theme.colors.success[2], Theme.colors.success[3], 1)
+        self.frame.state:SetText("PRESS NOW")
     elseif state == Constants.CallState.PREPARE then
-        self.frame:SetStatusBarColor(
-            Theme.colors.venomBright[1], Theme.colors.venomBright[2], Theme.colors.venomBright[3], 0.88
-        )
-        self.frame:SetBackdropBorderColor(Theme.colors.venom[1], Theme.colors.venom[2], Theme.colors.venom[3], 1)
+        self.frame:SetStatusBarColor(Theme.colors.warning[1], Theme.colors.warning[2], Theme.colors.warning[3], 0.78)
+        self.frame:SetBackdropBorderColor(Theme.colors.warning[1], Theme.colors.warning[2], Theme.colors.warning[3], 1)
+        self.frame.state:SetTextColor(Theme.colors.warning[1], Theme.colors.warning[2], Theme.colors.warning[3], 1)
+        self.frame.state:SetText("SOON")
+    elseif state == Constants.CallState.LATE then
+        self.frame:SetStatusBarColor(Theme.colors.error[1], Theme.colors.error[2], Theme.colors.error[3], 0.72)
+        self.frame:SetBackdropBorderColor(Theme.colors.error[1], Theme.colors.error[2], Theme.colors.error[3], 1)
+        self.frame.state:SetTextColor(Theme.colors.error[1], Theme.colors.error[2], Theme.colors.error[3], 1)
+        self.frame.state:SetText("LATE")
+    elseif state == Constants.CallState.WAIT then
+        self.frame:SetStatusBarColor(Theme.colors.surfaceRaised[1], Theme.colors.surfaceRaised[2], Theme.colors.surfaceRaised[3], 0.90)
+        self.frame:SetBackdropBorderColor(Theme.colors.muted[1], Theme.colors.muted[2], Theme.colors.muted[3], 0.85)
+        self.frame.state:SetTextColor(Theme.colors.muted[1], Theme.colors.muted[2], Theme.colors.muted[3], 1)
+        self.frame.state:SetText("WAIT")
+    elseif state == Constants.CallState.CALLED then
+        self.frame:SetStatusBarColor(Theme.colors.called[1], Theme.colors.called[2], Theme.colors.called[3], 0.90)
+        self.frame:SetBackdropBorderColor(Theme.colors.borderStrong[1], Theme.colors.borderStrong[2], Theme.colors.borderStrong[3], 1)
+        self.frame.state:SetTextColor(Theme.colors.muted[1], Theme.colors.muted[2], Theme.colors.muted[3], 1)
+        self.frame.state:SetText("CALLED")
     else
         self.frame:SetStatusBarColor(
             Theme.colors.venomDark[1], Theme.colors.venomDark[2], Theme.colors.venomDark[3], 0.82
         )
         self.frame:SetBackdropBorderColor(0.22, 0.36, 0.27, 1)
+        self.frame.state:SetText("")
     end
 end
 
