@@ -18,7 +18,7 @@ local db = {
             },
         },
         sszorak = {
-            heroic = {
+            mythic = {
                 mutilate_group_1 = "Alpha, Bravo, Charlie, Delta, alpha",
                 mutilate_group_2 = "Foxtrot, Golf, Hotel, India, Juliet",
                 cyst_popper_1 = "Kilo",
@@ -27,7 +27,7 @@ local db = {
             },
         },
         sentinels = {
-            heroic = {
+            mythic = {
                 team_a = "Group 1",
                 team_b = "Group 2",
             },
@@ -51,18 +51,18 @@ Assignments:Initialize(db)
 
 assert(db.assignments.legacyboss == nil,
     "unknown persisted bosses must fail closed instead of reaching the assignment registry")
-assert(Assignments:GetValue("sszorak", "heroic", "mutilate_group_1") == "",
+assert(Assignments:GetValue("sszorak", "mythic", "mutilate_group_1") == "",
     "persisted duplicate players must be removed during initialization")
-assert(Assignments:GetValue("sszorak", "heroic", "mutilate_group_2") == "Foxtrot, Golf, Hotel, India, Juliet",
-    "valid persisted Mutilate assignments must survive neighboring corruption")
-assert(Assignments:GetValue("sszorak", "heroic", "cyst_popper_1") == "Kilo")
-assert(Assignments:GetValue("sszorak", "heroic", "cyst_popper_2") == "Lima")
-assert(Assignments:GetValue("sszorak", "heroic", "cyst_popper_3") == "Mike")
+assert(Assignments:GetValue("sszorak", "mythic", "mutilate_group_2") == "Foxtrot, Golf, Hotel, India, Juliet",
+    "valid persisted Mythic Mutilate assignments must survive neighboring corruption")
+assert(Assignments:GetValue("sszorak", "mythic", "cyst_popper_1") == "Kilo")
+assert(Assignments:GetValue("sszorak", "mythic", "cyst_popper_2") == "Lima")
+assert(Assignments:GetValue("sszorak", "mythic", "cyst_popper_3") == "Mike")
 
-assert(Assignments:GetValue("sentinels", "heroic", "team_a") == "Group 1",
-    "current fixed-side Team A must survive initialization")
-assert(Assignments:GetValue("sentinels", "heroic", "team_b") == "Group 2",
-    "current fixed-side Team B must survive initialization")
+assert(Assignments:GetValue("sentinels", "mythic", "team_a") == "Group 1",
+    "current Mythic fixed-side Team A must survive initialization")
+assert(Assignments:GetValue("sentinels", "mythic", "team_b") == "Group 2",
+    "current Mythic fixed-side Team B must survive initialization")
 
 assert(Assignments:GetValue("twinfangs", "heroic", "feast_team_a") == "One, Two, Three",
     "the first valid exclusive Feast assignment should be preserved")
@@ -74,4 +74,4 @@ assert(Assignments:GetValue("twinfangs", "heroic", "feast_team_c") == "Six, Seve
 assert(Assignments:GetValue("vashnik", "heroic", "bile_team") == "",
     "retired Vashnik fixed-roster fields must be removed from persisted data")
 
-print("ok - persisted assignments use runtime overrides; unknown, stale and unsafe fields fail closed")
+print("ok - persisted Heroic/Mythic assignments keep valid fields while unknown, stale and unsafe fields fail closed")
