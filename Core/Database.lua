@@ -3,7 +3,7 @@ local _, ns = ...
 local Util = ns:GetModule("Core.Util")
 
 local Database = {
-    SCHEMA_VERSION = 6,
+    SCHEMA_VERSION = 7,
     newerSchemaDetected = false,
 }
 
@@ -36,11 +36,12 @@ local function cloneValue(value, seen)
 end
 
 local DEFAULTS = {
-    schemaVersion = 6,
+    schemaVersion = 7,
     selectedBossKey = "nekzali",
     selectedDifficultyKey = "heroic",
     audioEnabled = true,
     automaticTimingEnabled = true,
+    uiScale = 1,
     timingLead = {
         prepare = 5,
         press = 3,
@@ -81,6 +82,12 @@ local function normalizeTimingLead(value)
     return { prepare = prepare, press = press }
 end
 
+local function normalizeUIScale(value)
+    local scale = numeric(value)
+    if not isFiniteNumber(scale) then return DEFAULTS.uiScale end
+    return math.max(0.70, math.min(1.10, scale))
+end
+
 function Database:Initialize()
     local stored = type(RaidLeadAssistDB) == "table" and RaidLeadAssistDB or {}
     local storedVersion = tonumber(stored.schemaVersion) or 0
@@ -117,6 +124,7 @@ function Database:Migrate()
     if type(self.data.automaticTimingEnabled) ~= "boolean" then
         self.data.automaticTimingEnabled = DEFAULTS.automaticTimingEnabled
     end
+    self.data.uiScale = normalizeUIScale(self.data.uiScale)
     self.data.timingLead = normalizeTimingLead(self.data.timingLead)
     if type(self.data.forceShown) ~= "boolean" then self.data.forceShown = DEFAULTS.forceShown end
     if type(self.data.selectedBossKey) ~= "string" then self.data.selectedBossKey = DEFAULTS.selectedBossKey end
@@ -152,6 +160,10 @@ function Database:Migrate()
     if version < 6 then
         self.data.timingLead = normalizeTimingLead(self.data.timingLead)
         self.data.assignmentPresets = type(self.data.assignmentPresets) == "table" and self.data.assignmentPresets or {}
+    end
+
+    if version < 7 then
+        self.data.uiScale = normalizeUIScale(self.data.uiScale)
     end
 
     if not self.newerSchemaDetected then

@@ -37,8 +37,8 @@ local function calculateHeight(callCount)
     height = height + Theme.dropdownHeight
     height = height + 7 + Theme.difficultyTabHeight
     height = height + 8 + Theme.timelineHeight
-    height = height + 16 + Theme.sectionTitleHeight + 7 + Theme.explanationButtonHeight
-    height = height + 16 + Theme.sectionTitleHeight + 7
+    height = height + 14 + Theme.sectionTitleHeight + 6 + Theme.explanationButtonHeight
+    height = height + 14 + Theme.sectionTitleHeight + 6
     height = height + calculateCallStackHeight(callCount)
     return height + Theme.padding
 end
@@ -48,13 +48,28 @@ local function calculateVisibleHeight(callCount)
     local parentHeight = UIParent and UIParent.GetHeight and UIParent:GetHeight()
     if type(parentHeight) ~= "number" or parentHeight <= 0 then return desired end
 
+    local scale = MainFrame.database and tonumber(MainFrame.database.uiScale) or 1
+    scale = math.max(0.70, math.min(1.10, scale))
     local minimum = calculateHeight(1)
-    local screenCap = math.max(minimum, parentHeight - 48)
+    local screenCap = math.max(minimum, (parentHeight - 48) / scale)
     return math.min(desired, screenCap)
 end
 
 local function setBackdropColor(frame, color)
     frame:SetBackdropColor(color[1], color[2], color[3], color[4] or 1)
+end
+
+local function clampUIScale(value)
+    return math.max(0.70, math.min(1.10, value))
+end
+
+function MainFrame:SetUIScale(scale)
+    if not self.frame or not self.database then return end
+    scale = clampUIScale(tonumber(scale) or 1)
+    scale = math.floor((scale * 20) + 0.5) / 20
+    self.database.uiScale = scale
+    self.frame:SetScale(scale)
+    if self.currentEncounter then self:SetEncounter(self.currentEncounter.key) end
 end
 
 function MainFrame:SetSettingsEnabled(enabled, reason)
@@ -133,11 +148,12 @@ function MainFrame:Initialize(database, callbacks)
     local frame = CreateFrame("Frame", "RaidLeadAssistMainFrame", UIParent, "BackdropTemplate")
     frame:SetWidth(Theme.width)
     frame:SetBackdrop({ bgFile = Theme.texture, edgeFile = Theme.texture, edgeSize = 1 })
-    frame:SetBackdropColor(0.02, 0.05, 0.04, 0.78)
-    frame:SetBackdropBorderColor(0.10, 0.18, 0.13, 0.88)
+    frame:SetBackdropColor(Theme.colors.backgroundSolid[1], Theme.colors.backgroundSolid[2], Theme.colors.backgroundSolid[3], 0.94)
+    frame:SetBackdropBorderColor(Theme.colors.border[1], Theme.colors.border[2], Theme.colors.border[3], 0.95)
     frame:SetClampedToScreen(true)
     frame:SetMovable(true)
     frame:EnableMouse(true)
+    frame:SetScale(clampUIScale(tonumber(database.uiScale) or 1))
 
     local position = database.position
     frame:SetPoint(position.point, UIParent, position.relativePoint, position.x, position.y)
@@ -147,8 +163,9 @@ function MainFrame:Initialize(database, callbacks)
     frame.drag:SetPoint("TOPRIGHT", 0, 0)
     frame.drag:SetHeight(24)
     frame.drag:RegisterForDrag("LeftButton")
+    frame.drag:EnableMouseWheel(true)
     frame.drag:SetScript("OnDragStart", function()
-        if IsShiftKeyDown() then frame:StartMoving() end
+        frame:StartMoving()
     end)
     frame.drag:SetScript("OnDragStop", function()
         frame:StopMovingOrSizing()
@@ -158,9 +175,14 @@ function MainFrame:Initialize(database, callbacks)
         database.position.x = x
         database.position.y = y
     end)
+    frame.drag:SetScript("OnMouseWheel", function(_, delta)
+        if not IsControlKeyDown() then return end
+        self:SetUIScale((tonumber(database.uiScale) or 1) + (delta > 0 and 0.05 or -0.05))
+    end)
     frame.drag:SetScript("OnEnter", function(button)
         GameTooltip:SetOwner(button, "ANCHOR_TOP")
-        GameTooltip:SetText("Shift-drag to move Raid Lead Assist", 0.82, 0.86, 0.82, 1)
+        GameTooltip:SetText("Drag to move Raid Lead Assist", 0.82, 0.86, 0.82, 1)
+        GameTooltip:AddLine(("Ctrl + mouse wheel to resize (%d%%)"):format(math.floor((database.uiScale or 1) * 100 + 0.5)), 0.55, 0.63, 0.58, true)
         GameTooltip:Show()
     end)
     frame.drag:SetScript("OnLeave", function()
@@ -245,11 +267,11 @@ function MainFrame:Initialize(database, callbacks)
     self.timeline.frame:SetPoint("TOPRIGHT", self.difficultyTabs.mythic, "BOTTOMRIGHT", 0, -8)
 
     self.explanationTitle = createSectionTitle(frame, "Boss Plan")
-    self.explanationTitle:SetPoint("TOPLEFT", self.timeline.frame, "BOTTOMLEFT", 0, -16)
+    self.explanationTitle:SetPoint("TOPLEFT", self.timeline.frame, "BOTTOMLEFT", 0, -14)
 
     self.explanationButton = CallButton:Create(frame)
     self.explanationButton.frame:SetHeight(Theme.explanationButtonHeight)
-    self.explanationButton.frame:SetPoint("TOPLEFT", self.explanationTitle, "BOTTOMLEFT", 0, -7)
+    self.explanationButton.frame:SetPoint("TOPLEFT", self.explanationTitle, "BOTTOMLEFT", 0, -6)
     self.explanationButton.frame:SetPoint("RIGHT", self.dropdown.frame, "RIGHT", 0, 0)
     self.explanationButton.frame.name:SetText("SEND PRE-PULL PLAN")
     self.explanationButton.frame:SetScript("OnClick", function()
@@ -257,10 +279,10 @@ function MainFrame:Initialize(database, callbacks)
     end)
 
     self.callTitle = createSectionTitle(frame, "Combat Call Buttons")
-    self.callTitle:SetPoint("TOPLEFT", self.explanationButton.frame, "BOTTOMLEFT", 0, -16)
+    self.callTitle:SetPoint("TOPLEFT", self.explanationButton.frame, "BOTTOMLEFT", 0, -14)
 
     self.callScroll = CreateFrame("ScrollFrame", nil, frame)
-    self.callScroll:SetPoint("TOPLEFT", self.callTitle, "BOTTOMLEFT", 0, -7)
+    self.callScroll:SetPoint("TOPLEFT", self.callTitle, "BOTTOMLEFT", 0, -6)
     self.callScroll:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -Theme.padding, Theme.padding)
     self.callScroll:EnableMouseWheel(true)
 
