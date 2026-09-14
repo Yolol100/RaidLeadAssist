@@ -47,22 +47,23 @@ App.activeBossKey = "nekzali"
 App.activeDifficultyKey = "heroic"
 App.db = { selectedDifficultyKey = "heroic" }
 
-assert(App:SelectDifficulty("normal", false) == false,
-    "manual difficulty changes must be blocked while Settings is open")
+assert(App:SelectDifficulty("mythic", false) == false,
+    "manual supported difficulty changes must be blocked while Settings is open")
 assert(App.activeDifficultyKey == "heroic" and App.db.selectedDifficultyKey == "heroic",
     "blocked difficulty changes must leave active and persisted context unchanged")
 assert(selectedDifficulty == nil and timelineEncounter == nil and resetCount == 0,
     "blocked difficulty changes must have no downstream side effects")
 assert(uiDifficulty == "heroic", "UI must be restored to the active difficulty after a blocked change")
+assert(App:SelectDifficulty("normal", false) == false, "Normal must be rejected as unsupported")
 
 settingsShown = false
-assert(App:SelectDifficulty("normal", false) == true)
-assert(App.activeDifficultyKey == "normal" and App.db.selectedDifficultyKey == "normal")
-assert(selectedDifficulty == "normal" and timelineEncounter == "nekzali" and resetCount == 1)
+assert(App:SelectDifficulty("mythic", false) == true)
+assert(App.activeDifficultyKey == "mythic" and App.db.selectedDifficultyKey == "mythic")
+assert(selectedDifficulty == "mythic" and timelineEncounter == "nekzali" and resetCount == 1)
 
 settingsShown = true
-assert(App:SelectDifficulty("mythic", true) == true,
+assert(App:SelectDifficulty("heroic", true) == true,
     "automatic encounter difficulty selection must bypass the editor lock")
-assert(App.activeDifficultyKey == "mythic" and App.db.selectedDifficultyKey == "mythic")
+assert(App.activeDifficultyKey == "heroic" and App.db.selectedDifficultyKey == "heroic")
 
-print("ok - settings lock prevents cross-difficulty draft drift")
+print("ok - settings lock prevents cross-difficulty draft drift for Heroic/Mythic and rejects Normal")
