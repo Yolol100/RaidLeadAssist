@@ -42,7 +42,7 @@ for _, difficulty in ipairs({ "normal", "heroic", "mythic" }) do
     assert(profile.callsByKey.crates and profile.callsByKey.crates.spellIDs[1] == 1291933)
     assert(profile.callsByKey.crates.prepareSeconds == 6 and profile.callsByKey.crates.pressSeconds == 3)
     assert(profile.callsByKey.fish and profile.callsByKey.fish.spellIDs[1] == 1292779)
-    assert(profile.callsByKey.fish.warning == "Fish: Nama, then Iku, then Gebbo.")
+    assert(profile.callsByKey.fish.warning == "Fish: feed Nama, then Iku, then Gebbo.")
     assert(profile.callsByKey.fish.prepareSeconds == 8 and profile.callsByKey.fish.pressSeconds == 5)
     assert(profile.callsByKey.thud and profile.callsByKey.thud.spellIDs[1] == 1296092)
     assert(profile.callsByKey.thud.warning == "Thud: targets Star/Circle/Diamond; soakers stack.")
@@ -57,6 +57,8 @@ for _, difficulty in ipairs({ "normal", "heroic", "mythic" }) do
     assert(profile.callsByKey.tankswap == nil)
 end
 
+assert(Registry:GetProfile("explorers", "normal").callsByKey.crates.warning == "Crates: break until fish appears.")
+assert(Registry:GetProfile("explorers", "heroic").callsByKey.crates.warning == "Crates: break until fish appears.")
 assert(Registry:MatchCall("explorers", "normal", 1291933, nil).key == "crates")
 assert(Registry:MatchCall("explorers", "normal", 1292779, nil).key == "fish")
 assert(Registry:MatchCall("explorers", "normal", 1296092, nil).key == "thud")
