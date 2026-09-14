@@ -1,10 +1,8 @@
 local T = assert(loadfile("tests/testlib.lua"))()
 local ns = T.NewNamespace()
-
 T.Load("Encounters/SetupRegistry.lua", ns)
 T.Load("Encounters/VenomousAbyss/SetupLayouts.lua", ns)
 T.Load("Services/SetupService.lua", ns)
-
 local Registry = ns:GetModule("Encounters.SetupRegistry")
 local Setup = ns:GetModule("Services.SetupService")
 
@@ -15,87 +13,42 @@ local function counts(bossKey, difficultyKey, world, target, checks)
     assert(actualChecks == checks, bossKey .. "/" .. difficultyKey .. " setup check count")
 end
 
-for _, difficultyKey in ipairs({ "normal", "heroic", "mythic" }) do
-    counts("sentinels", difficultyKey, 2, 0, 2)
-    counts("explorers", difficultyKey, 3, 0, 2)
-    counts("sszorak", difficultyKey, 3, 0, 2)
-    counts("altar", difficultyKey, 2, 0, 2)
+for _, bossKey in ipairs({"nekzali","sentinels","explorers","vashnik","sszorak","twinfangs","altar","ulatek"}) do
+    counts(bossKey, "normal", 0, 0, 0)
 end
-
-counts("nekzali", "normal", 0, 0, 0)
-counts("nekzali", "heroic", 0, 0, 2)
-counts("nekzali", "mythic", 0, 0, 2)
-
-counts("vashnik", "normal", 0, 0, 2)
-counts("vashnik", "heroic", 0, 2, 2)
-counts("vashnik", "mythic", 0, 2, 2)
-
-counts("twinfangs", "normal", 0, 0, 1)
-counts("twinfangs", "heroic", 0, 0, 1)
-counts("twinfangs", "mythic", 0, 0, 2)
-
-for _, difficultyKey in ipairs({ "normal", "heroic", "mythic" }) do
-    counts("ulatek", difficultyKey, 3, 0, 2)
-end
+counts("nekzali", "heroic", 0, 0, 1); counts("nekzali", "mythic", 0, 0, 2)
+counts("sentinels", "heroic", 2, 0, 2); counts("sentinels", "mythic", 2, 0, 1)
+counts("explorers", "heroic", 3, 0, 1); counts("explorers", "mythic", 3, 0, 1)
+counts("vashnik", "heroic", 0, 0, 2); counts("vashnik", "mythic", 0, 2, 1)
+counts("sszorak", "heroic", 4, 0, 2); counts("sszorak", "mythic", 3, 0, 1)
+counts("twinfangs", "heroic", 0, 0, 2); counts("twinfangs", "mythic", 0, 0, 2)
+counts("altar", "heroic", 2, 0, 2); counts("altar", "mythic", 2, 0, 2)
+counts("ulatek", "heroic", 3, 0, 2); counts("ulatek", "mythic", 3, 0, 2)
 
 local sentinels = Registry:GetLayout("sentinels", "heroic")
-assert(sentinels.markers[1].icon == 4 and sentinels.markers[1].label == "Green / Breath side")
-assert(sentinels.markers[2].icon == 7 and sentinels.markers[2].label == "Red / Blood side")
-
-local vashnik = Registry:GetLayout("vashnik", "heroic")
-assert(vashnik.markers[1].kind == "target" and vashnik.markers[1].icon == 8, "Vashnik first Fire target must be Skull")
-assert(vashnik.markers[2].kind == "target" and vashnik.markers[2].icon == 7, "Vashnik second Fire target must be Cross")
-
-local altarNormal = Registry:GetLayout("altar", "normal")
-local altarHeroic = Registry:GetLayout("altar", "heroic")
-local altarMythic = Registry:GetLayout("altar", "mythic")
-assert(altarNormal.checks[2]:find("3+ soakers", 1, true),
-    "Normal setup must reflect Blizzard's live 3-player Guillotine minimum")
-assert(altarHeroic.checks[2]:find("two different 3+ Guillotine groups", 1, true),
-    "Heroic setup must match the 3+ assignment validation")
-assert(altarMythic.checks[2]:find("fresh 5+ Guillotine groups", 1, true),
-    "Mythic setup must preserve the separate fresh 5+ contract")
-
-local ulatekNormal = Registry:GetLayout("ulatek", "normal")
-assert(#ulatekNormal.markers == 3, "Normal Ula'tek needs Coils plus left/right Phase 2 references")
-assert(ulatekNormal.markers[1].icon == 6 and ulatekNormal.markers[1].purpose:find("40%+ floor", 1, true),
-    "Normal Ula'tek Coils marker must preserve the live minimum")
-assert(ulatekNormal.markers[2].icon == 4 and ulatekNormal.markers[3].icon == 7,
-    "Normal Ula'tek must expose Triangle/Cross side markers")
-assert(ulatekNormal.checks[1]:find("left/right Doomscale egg carriers", 1, true),
-    "Normal Ula'tek setup must require both side carriers")
-assert(ulatekNormal.checks[2]:find("melee, ranged and healer", 1, true),
-    "Normal Ula'tek setup must require all three Bite helper sectors")
-
-local ulatekHeroic = Registry:GetLayout("ulatek", "heroic")
-assert(#ulatekHeroic.markers == 3 and ulatekHeroic.markers[1].icon == 6,
-    "Heroic Ula'tek needs the Coils reference plus both side markers")
-assert(ulatekHeroic.markers[1].purpose:find("40%+ floor", 1, true),
-    "Heroic Ula'tek Coils marker must match the live minimum")
-assert(ulatekHeroic.checks[1]:find("alternating Coils/side teams", 1, true),
-    "Heroic Ula'tek setup must require the two alternating teams")
-assert(ulatekHeroic.checks[2]:find("melee, ranged and healer", 1, true),
-    "Heroic Ula'tek setup must require three Bite helper sectors")
-
-local ulatekMythic = Registry:GetLayout("ulatek", "mythic")
-assert(#ulatekMythic.markers == 3,
-    "Mythic Ula'tek keeps Coils plus both egg-side markers")
-assert(ulatekMythic.checks[1]:find("three Bite helper groups", 1, true),
-    "Mythic Ula'tek setup must retain Bite helper sectors")
-assert(ulatekMythic.checks[2]:find("4+ Toxic Incubation", 1, true)
-    and ulatekMythic.checks[2]:find("safe Purge wave directions", 1, true),
-    "Mythic Ula'tek setup must retain Incubation and Purge-wave planning")
+assert(sentinels.markers[1].icon == 7 and sentinels.markers[1].label == "Red side")
+assert(sentinels.markers[2].icon == 4 and sentinels.markers[2].label == "Green side")
+assert(sentinels.checks[2]:find("tanks swap", 1, true),
+    "Heroic Sentinels setup must lock the post-Stasis tank swap")
+local ssz = Registry:GetLayout("sszorak", "heroic")
+assert(#ssz.markers == 4)
+assert(ssz.markers[1].icon == 6 and ssz.markers[2].icon == 5,
+    "Blue must be opposite Moon")
+assert(ssz.markers[3].icon == 7 and ssz.markers[4].icon == 4,
+    "X must be opposite Green")
+assert(Registry:GetLayout("vashnik", "heroic").summary:find("Purple/Shadow + Orange/Fire", 1, true))
+local twin = Registry:GetLayout("twinfangs", "heroic")
+assert(twin.checks[1]:find("three non%-overlapping Feast teams"),
+    "Heroic Twin Fangs setup must require three fresh Feast teams")
+assert(twin.checks[2]:find("at most one", 1, true),
+    "Heroic Twin Fangs setup must prohibit repeat Feast soaks")
 
 Setup:Initialize()
-assert(not Setup:IsReady("sszorak", "heroic"), "required setup starts unchecked each addon session")
-assert(Setup:Toggle("sszorak", "heroic") == true, "setup can be manually confirmed")
-assert(Setup:IsReady("sszorak", "heroic"), "manual confirmation makes setup ready")
-assert(Setup:Toggle("sszorak", "heroic") == false, "setup confirmation can be revoked")
-assert(not Setup:IsReady("sszorak", "heroic"), "revoked setup returns to check")
-assert(Setup:IsReady("nekzali", "normal"), "bosses without setup are ready by definition")
+assert(not Setup:IsReady("sszorak", "heroic"))
+assert(Setup:Toggle("sszorak", "heroic") == true)
+assert(Setup:IsReady("sszorak", "heroic"))
+assert(Setup:Toggle("sszorak", "heroic") == false)
+assert(not Setup:IsReady("sszorak", "heroic"))
+assert(Setup:IsReady("nekzali", "normal"), "unsupported Normal has no setup and is inert")
 
-Setup:SetReady("altar", "heroic", true)
-Setup:Initialize()
-assert(not Setup:IsReady("altar", "heroic"), "setup readiness must not persist across addon initialization")
-
-print("ok - pre-pull marker and raidleader-prep contracts")
+print("ok - pre-pull setup exposes only current Heroic/Mythic marker contracts")

@@ -116,30 +116,30 @@ currentRoster = {
     { name = "P10", subgroup = 2, role = "DAMAGER" },
 }
 Assignments:Initialize({ assignments = {} })
-applied = Assignments:ApplyBossDraft("ulatek", "normal", {
+applied = Assignments:ApplyBossDraft("ulatek", "heroic", {
     egg_left = "Alex-OldRealm",
     egg_right = "P04",
 })
 assert(applied, "stale qualified names must remain storable plans rather than being destructively erased")
-local staleEggReady, staleEggReason = Assignments:IsCallReady("ulatek", "normal", "eggs")
+local staleEggReady, staleEggReason = Assignments:IsCallReady("ulatek", "heroic", "eggs")
 assert(not staleEggReady and staleEggReason:find("uniquely present in the current raid", 1, true),
     "egg call must fail closed when a qualified assignee belongs to a stale realm")
 
-applied = Assignments:ApplyBossDraft("ulatek", "normal", {
+applied = Assignments:ApplyBossDraft("ulatek", "heroic", {
     egg_left = "Sam",
     egg_right = "P04",
 })
 assert(applied, "an ambiguous short name may remain in a saved plan for later repair")
-local ambiguousEggReady, ambiguousEggReason = Assignments:IsCallReady("ulatek", "normal", "eggs")
+local ambiguousEggReady, ambiguousEggReason = Assignments:IsCallReady("ulatek", "heroic", "eggs")
 assert(not ambiguousEggReady and ambiguousEggReason:find("uniquely present in the current raid", 1, true),
     "egg call must fail closed when an unqualified short name is ambiguous across realms")
 
-applied = Assignments:ApplyBossDraft("ulatek", "normal", {
+applied = Assignments:ApplyBossDraft("ulatek", "heroic", {
     egg_left = "Sam-RealmA",
     egg_right = "P04",
 })
 assert(applied, "an exact qualified live egg carrier must save")
-local exactEggReady, exactEggReason = Assignments:IsCallReady("ulatek", "normal", "eggs")
+local exactEggReady, exactEggReason = Assignments:IsCallReady("ulatek", "heroic", "eggs")
 assert(exactEggReady, "exact live egg carriers must restore call readiness: " .. tostring(exactEggReason))
 
 print("ok - live assignment context revalidates exclusivity, identity and current-roster call safety")

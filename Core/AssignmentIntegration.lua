@@ -49,7 +49,7 @@ local function callContextSafety()
 
     local liveDifficulty = Encounter:GetDifficultyKey()
     if not liveDifficulty or liveDifficulty ~= App.activeDifficultyKey then
-        return false, "Active encounter difficulty is not a verified Normal, Heroic, or Mythic profile; Raid Warning plans and calls are disabled."
+        return false, "Active encounter difficulty is not a verified Heroic or Mythic profile; Raid Warning plans and calls are disabled."
     end
 
     if not Registry:GetProfile(App.activeBossKey, liveDifficulty) then

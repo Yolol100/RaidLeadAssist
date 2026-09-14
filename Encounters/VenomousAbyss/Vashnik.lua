@@ -14,29 +14,62 @@ local function timedCall(key, ability, action, warning, voice, spellIDs, prepare
     }
 end
 
-local function manualCall(key, ability, action, warning, voice)
-    return { key=key, ability=ability, action=action, warning=warning, voice=voice, timing=false }
+local function manualCall(key, ability, action, warning, voice, iconSpellID)
+    return {
+        key = key,
+        ability = ability,
+        action = action,
+        warning = warning,
+        voice = voice,
+        timing = false,
+        iconSpellID = iconSpellID,
+    }
 end
 
-local killAdds = timedCall(
+local killAddsHeroic = timedCall(
+    "imbibe", "Imbibe",
+    "KILL ADDS",
+    "KILL ADDS",
+    "Kill adds", { 1283164 }, 8, 5
+)
+local staggerDispelsHeroic = manualCall(
+    "stagger_dispels", "Exploding Infection",
+    "STAGGER DISPELS",
+    "STAGGER DISPELS",
+    "Stagger dispels", 1295166
+)
+local dodgeCrossHeroic = timedCall(
+    "froth", "Plague Froth",
+    "DODGE CROSS",
+    "DODGE CROSS",
+    "Dodge cross", { 1281907 }, 6, 3
+)
+local soakBileHeroic = timedCall(
+    "catalyst", "Malignant Catalyst",
+    "SOAK BILE",
+    "SOAK BILE",
+    "Soak bile", { 1282525, 1282509 }, 7, 4
+)
+
+local killAddsMythic = timedCall(
     "imbibe", "Imbibe",
     "Kill fountain adds before center",
     "Fountain adds: kill them before center.",
     "Kill adds", { 1283164 }, 8, 5
 )
-local fireStagger = manualCall(
+local fireStaggerMythic = manualCall(
     "fire_stagger", "Burning Venoms",
     "Skull, wait, then Cross",
     "Fire adds: Skull, wait, then Cross.",
     "Stagger fire adds"
 )
-local siphon = manualCall(
+local siphonMythic = manualCall(
     "siphon", "Siphoning Infection",
     "Stack several in Blood circle",
     "Blood circle: several teammates stack for healing.",
     "Stack blood circle"
 )
-local catalyst = timedCall(
+local catalystMythic = timedCall(
     "catalyst", "Malignant Catalyst",
     "Soak every Catalyst circle",
     "Catalyst: soak every circle.",
@@ -48,47 +81,37 @@ local frothMythic = timedCall(
     "Froth: aim one wave through Tumor.",
     "Aim at tumors", { 1281907 }, 6, 3
 )
-local killTumors = manualCall(
+local killTumorsMythic = manualCall(
     "tumors", "Malignant Tumors",
     "Kill exposed Tumor",
     "Tumor exposed: switch and kill.",
     "Kill tumors"
 )
 
-local function normalCalls() return { killAdds, siphon } end
-local function heroicCalls() return { killAdds, fireStagger, siphon, catalyst } end
-local function mythicCalls() return { killAdds, fireStagger, siphon, catalyst, frothMythic, killTumors } end
-
 Registry:Register({
     key = "vashnik",
     name = "Vashnik the Malignant",
     encounterID = 3455,
-    strategyStatus = "12.1 Journal + current Wowhead + Ready Check Pull + DBM/BigWigs source-reviewed 2026-08-19; fixed fountain-pair route; live validation pending",
+    strategyStatus = "Heroic uses the current 2026-09 permanent Shadow/Purple + Fire/Orange simple strategy; old Blood/Red Heroic route removed; Mythic mechanics remain separate; PASS-LIVE pending",
     profiles = {
-        normal = {
-            explanation = {
-                "Fountain order: Flame+Shadow, Shadow+Blood, then Blood+Flame.",
-                "Fountain adds spawn: kill them before they reach the center.",
-                "Fire debuff on you: run far away before it explodes.",
-                "Blood circle on you: several teammates stack in it so you can be healed.",
-                "Shadow debuff on you: spread and keep moving from eruptions.",
-                "Froth circle on you: spread and aim its waves into clear space.",
-            },
-            calls = normalCalls(),
-        },
         heroic = {
-            explanation = {
-                "Fire adds are Skull then Cross: kill Skull, wait, then Cross.",
-                "Catalyst circles appear: at least one player soaks each circle.",
-            },
-            calls = heroicCalls(),
+            explanation = { "PURPLE + ORANGE ONLY — BL ON PULL" },
+            calls = { killAddsHeroic, staggerDispelsHeroic, dodgeCrossHeroic, soakBileHeroic },
         },
         mythic = {
             explanation = {
+                "Use the current Mythic fountain plan; do not inherit the Heroic Purple/Orange simplification automatically.",
                 "Froth near a Tumor: aim one wave through the Tumor.",
                 "Tumor loses its shield: switch and kill it immediately.",
             },
-            calls = mythicCalls(),
+            calls = {
+                killAddsMythic,
+                fireStaggerMythic,
+                siphonMythic,
+                catalystMythic,
+                frothMythic,
+                killTumorsMythic,
+            },
         },
     },
 })

@@ -1,41 +1,92 @@
 local _, ns = ...
 local Registry = ns:GetModule("Encounters.Registry")
 
-local function baseCalls(pyreAction, pyreWarning, pyreActionTemplate, pyreWarningTemplate)
-    local calls = {
-        {
-            key = "adds",
-            ability = "Restless Amani",
-            action = "Kill Amani before the Well",
-            warning = "Amani: kill them before the Well.",
-            voice = "Adds",
-            spellIDs = { 1295397, 1297630 },
-            prepareSeconds = 7,
-            pressSeconds = 4,
-        },
-        {
-            key = "echoes",
-            ability = "Echoes of Jawae",
-            action = "Kill each Echo as it wakes",
-            warning = "Echoes: kill each one as it wakes.",
-            voice = "Echoes",
-            timing = false,
-            iconSpellID = 1289696,
-        },
-        {
-            key = "pyre",
-            ability = "Hungering Pyre",
-            action = pyreAction,
-            warning = pyreWarning,
-            actionTemplate = pyreActionTemplate,
-            warningTemplate = pyreWarningTemplate,
-            voice = "Pyre",
-            spellIDs = { 1305421, 1290679 },
-            prepareSeconds = 8,
-            pressSeconds = 5,
-        },
-    }
-    calls[#calls + 1] = {
+local heroicCalls = {
+    {
+        key = "adds",
+        ability = "Restless Amani",
+        action = "KILL ADDS",
+        warning = "KILL ADDS",
+        voice = "Kill adds",
+        spellIDs = { 1295397, 1297630 },
+        prepareSeconds = 7,
+        pressSeconds = 4,
+    },
+    {
+        key = "rend",
+        ability = "Essence Rend",
+        action = "DEBUFF — GO TO THE SIDE",
+        warning = "DEBUFF — GO TO THE SIDE",
+        voice = "Debuff side",
+        timing = false,
+        iconSpellID = 1287427,
+    },
+    {
+        key = "burn_corpses",
+        ability = "Corpse Burn",
+        action = "BURN CORPSES",
+        warning = "BURN CORPSES",
+        voice = "Burn corpses",
+        timing = false,
+        iconSpellID = 1305421,
+    },
+    {
+        key = "pyre",
+        ability = "Hungering Pyre",
+        action = "MELEE + TANK — SOAK",
+        warning = "MELEE + TANK — SOAK",
+        voice = "Melee tank soak",
+        spellIDs = { 1305421, 1290679 },
+        prepareSeconds = 8,
+        pressSeconds = 5,
+    },
+}
+
+local mythicCalls = {
+    {
+        key = "adds",
+        ability = "Restless Amani",
+        action = "Kill Amani before the Well",
+        warning = "Amani: kill them before the Well.",
+        voice = "Adds",
+        spellIDs = { 1295397, 1297630 },
+        prepareSeconds = 7,
+        pressSeconds = 4,
+    },
+    {
+        key = "grasping",
+        ability = "Grasping Depths",
+        action = "Assigned well group enters",
+        warning = "Grasping: assigned well group enter.",
+        actionTemplate = "{{rotation:well}} enter the Well",
+        warningTemplate = "Grasping: {{rotation:well}} enter; interrupt and kill Echo.",
+        voice = "Well group",
+        spellIDs = { 1293212 },
+        prepareSeconds = 8,
+        pressSeconds = 5,
+    },
+    {
+        key = "echoes",
+        ability = "Echoes of Jawae",
+        action = "Kill each Echo as it wakes",
+        warning = "Echoes: kill each one as it wakes.",
+        voice = "Echoes",
+        timing = false,
+        iconSpellID = 1289696,
+    },
+    {
+        key = "pyre",
+        ability = "Hungering Pyre",
+        action = "Assigned group soaks; everyone else out",
+        warning = "Pyre: assigned group soak; everyone else out.",
+        actionTemplate = "{{pyre_soakers}} soak; everyone else out",
+        warningTemplate = "Pyre: {{pyre_soakers}} soak; everyone else out.",
+        voice = "Pyre",
+        spellIDs = { 1305421, 1290679 },
+        prepareSeconds = 8,
+        pressSeconds = 5,
+    },
+    {
         key = "phase2",
         ability = "Phase 2",
         action = "Bloodlust; burn before full energy",
@@ -43,61 +94,17 @@ local function baseCalls(pyreAction, pyreWarning, pyreActionTemplate, pyreWarnin
         voice = "Phase two",
         timing = false,
         iconSpellID = 1299673,
-    }
-    return calls
-end
-
-local normalCalls = baseCalls(
-    "Melee soak; ranged stay out",
-    "Pyre: melee soak; ranged stay out."
-)
-local heroicCalls = baseCalls(
-    "Assigned group soaks; everyone else out",
-    "Pyre: assigned group soak; everyone else out.",
-    "{{pyre_soakers}} soak; everyone else out",
-    "Pyre: {{pyre_soakers}} soak; everyone else out."
-)
-local mythicCalls = baseCalls(
-    "Assigned group soaks; everyone else out",
-    "Pyre: assigned group soak; everyone else out.",
-    "{{pyre_soakers}} soak; everyone else out",
-    "Pyre: {{pyre_soakers}} soak; everyone else out."
-)
-table.insert(mythicCalls, 2, {
-    key = "grasping",
-    ability = "Grasping Depths",
-    action = "Assigned well group enters",
-    warning = "Grasping: assigned well group enter.",
-    actionTemplate = "{{rotation:well}} enter the Well",
-    warningTemplate = "Grasping: {{rotation:well}} enter; interrupt and kill Echo.",
-    voice = "Well group",
-    spellIDs = { 1293212 },
-    prepareSeconds = 8,
-    pressSeconds = 5,
-})
+    },
+}
 
 Registry:Register({
     key = "nekzali",
     name = "Nek'zali the Soulcoiler",
     encounterID = 3470,
-    strategyStatus = "12.1 Journal + current Wowhead/Ready Check Pull + DBM/BigWigs source-reviewed 2026-08-19; player briefing split from raidleader prep; live validation pending",
+    strategyStatus = "Heroic raid-lead profile refreshed against current 2026-09 guides; Mythic well/Pyre assignments retained separately; exact-ID timing only; PASS-LIVE pending",
     profiles = {
-        normal = {
-            explanation = {
-                "Keep the Soulcoil Well clear; kill Amani before they enter.",
-                "At 50%, kill each Echo as it becomes active.",
-                "Hungering Pyre: melee stay in and soak together.",
-                "Ranged stay outside and spread for their fire circles.",
-                "Phase 2: Bloodlust and burn before full energy.",
-            },
-            calls = normalCalls,
-        },
         heroic = {
-            explanation = {
-                "Hungering Pyre: soak only with your assigned Pyre group; everyone else stays out.",
-                "Fire circle on you: move onto a dead Amani corpse.",
-                "Stay on the corpse until your fire explodes; keep 4+ yards from others.",
-            },
+            explanation = { "BL START" },
             calls = heroicCalls,
         },
         mythic = {

@@ -16,11 +16,12 @@ T.Load("Encounters/SszorakAssignmentOverride.lua", ns)
 T.Load("Encounters/TwinFangsAssignmentOverride.lua", ns)
 T.Load("Encounters/Boss78AssignmentOverride.lua", ns)
 
+local Constants = ns:GetModule("Core.Constants")
 local Registry = ns:GetModule("Encounters.Registry")
 local Assignments = ns:GetModule("Encounters.AssignmentRegistry")
 
 for _, bossKey in ipairs(Assignments:GetBossKeys()) do
-    for _, difficultyKey in ipairs({ "normal", "heroic", "mythic" }) do
+    for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
         local profile = Registry:GetProfile(bossKey, difficultyKey)
         assert(profile, "missing encounter profile for assignment template: " .. bossKey .. "/" .. difficultyKey)
         for _, definition in ipairs(Assignments:GetDefinitions(bossKey, difficultyKey)) do
@@ -38,4 +39,5 @@ for _, bossKey in ipairs(Assignments:GetBossKeys()) do
     end
 end
 
-print("ok - every assignment call binding exists in its boss/difficulty profile")
+assert(Assignments:GetDefinitions("altar", "normal")[1] == nil, "Normal assignments must not be active")
+print("ok - every Heroic/Mythic assignment call binding exists and Normal is inactive")

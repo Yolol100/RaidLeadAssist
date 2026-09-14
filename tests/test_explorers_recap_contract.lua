@@ -9,46 +9,46 @@ T.Load("Encounters/Registry.lua", ns)
 T.Load("Encounters/VenomousAbyss/Explorers.lua", ns)
 
 local Registry = ns:GetModule("Encounters.Registry")
-
 local function plan(difficulty)
-    return table.concat(Registry:GetProfile("explorers", difficulty).explanation, "\n")
+    local profile = assert(Registry:GetProfile("explorers", difficulty))
+    return table.concat(profile.explanation, "\n")
 end
-
 local function contains(value, needle)
     return string.find(value, needle, 1, true) ~= nil
 end
 
-local normal = plan("normal")
-assert(contains(normal, "Keep all three bosses even"))
-assert(contains(normal, "Crates appear"))
-assert(contains(normal, "Fish order: Nama, then Iku, then Gebbo"))
-assert(contains(normal, "Three players marked"))
-assert(contains(normal, "Star, Circle and Diamond"))
-assert(contains(normal, "pair Fire with Frost and drop them together"))
-assert(contains(normal, "step into the opposite elemental patch"))
-assert(contains(normal, "Icebound Flames starts"))
+assert(Registry:GetProfile("explorers", "normal") == nil,
+    "Normal Lost Explorers profile must remain retired")
 
-local heroic = plan("heroic")
-assert(contains(heroic, "Keep Nama away"))
-assert(contains(heroic, "Spreading fire appears"))
-assert(not contains(heroic, "Fish order"), "Heroic should only contain changes from Normal")
+local heroic = assert(Registry:GetProfile("explorers", "heroic"))
+assert(plan("heroic") == "GEBBO → NAMA → IKU")
+assert(#heroic.calls == 6)
+assert(heroic.callsByKey.fish_gebbo and heroic.callsByKey.fish_gebbo.spellIDs[1] == 1292779)
+assert(heroic.callsByKey.fish_gebbo.sequenceKey == "fish")
+assert(table.concat(heroic.callsByKey.fish_gebbo.sequenceKeys, ",") == "fish_gebbo,fish_nama,fish_iku")
+assert(heroic.callsByKey.fish_nama and heroic.callsByKey.fish_nama.timing == false)
+assert(heroic.callsByKey.fish_iku and heroic.callsByKey.fish_iku.timing == false)
+assert(heroic.callsByKey.thud and heroic.callsByKey.thud.spellIDs[1] == 1296092)
+assert(heroic.callsByKey.mushroom and heroic.callsByKey.mushroom.timing == false)
+assert(heroic.callsByKey.elements and heroic.callsByKey.elements.timing == false)
+assert(heroic.callsByKey.crates == nil,
+    "Heroic crate breaking is not a separate raid-lead timer/button in the current plan")
 
-local mythic = plan("mythic")
-assert(contains(mythic, "15+ yards away"))
-assert(not contains(mythic, "Keep Nama away"), "Mythic should only contain changes from Heroic")
+local mythic = assert(Registry:GetProfile("explorers", "mythic"))
+local mythicPlan = plan("mythic")
+assert(contains(mythicPlan, "15+ yards away"))
+assert(contains(mythicPlan, "planned Mythic fish target"))
+assert(#mythic.calls == 3)
+assert(mythic.callsByKey.crates and mythic.callsByKey.crates.spellIDs[1] == 1291933)
+assert(mythic.callsByKey.crates.prepareSeconds == 6 and mythic.callsByKey.crates.pressSeconds == 3)
+assert(mythic.callsByKey.fish and mythic.callsByKey.fish.spellIDs[1] == 1292779)
+assert(mythic.callsByKey.fish.prepareSeconds == 8 and mythic.callsByKey.fish.pressSeconds == 5)
+assert(mythic.callsByKey.thud and mythic.callsByKey.thud.spellIDs[1] == 1296092)
+assert(mythic.callsByKey.thud.prepareSeconds == 7 and mythic.callsByKey.thud.pressSeconds == 4)
 
-for _, difficulty in ipairs({ "normal", "heroic", "mythic" }) do
+for _, difficulty in ipairs({ "heroic", "mythic" }) do
     local profile = Registry:GetProfile("explorers", difficulty)
-    assert(profile.callsByKey.crates and profile.callsByKey.crates.spellIDs[1] == 1291933)
-    assert(profile.callsByKey.crates.prepareSeconds == 6 and profile.callsByKey.crates.pressSeconds == 3)
-    assert(profile.callsByKey.fish and profile.callsByKey.fish.spellIDs[1] == 1292779)
-    assert(profile.callsByKey.fish.warning == "Fish: feed Nama, then Iku, then Gebbo.")
-    assert(profile.callsByKey.fish.prepareSeconds == 8 and profile.callsByKey.fish.pressSeconds == 5)
-    assert(profile.callsByKey.thud and profile.callsByKey.thud.spellIDs[1] == 1296092)
-    assert(profile.callsByKey.thud.warning == "Thud: targets Star/Circle/Diamond; soakers stack.")
-    assert(profile.callsByKey.thud.prepareSeconds == 7 and profile.callsByKey.thud.pressSeconds == 4)
-
-    assert(profile.callsByKey.icebound == nil, "Icebound interrupt remains a player reaction, not a duplicate RLA button")
+    assert(profile.callsByKey.icebound == nil, "Icebound interrupt remains player/bossmod-owned")
     assert(profile.callsByKey.shell == nil)
     assert(profile.callsByKey.blink == nil)
     assert(profile.callsByKey.volley == nil)
@@ -57,10 +57,11 @@ for _, difficulty in ipairs({ "normal", "heroic", "mythic" }) do
     assert(profile.callsByKey.tankswap == nil)
 end
 
-assert(Registry:GetProfile("explorers", "normal").callsByKey.crates.warning == "Crates: break until fish appears.")
-assert(Registry:GetProfile("explorers", "heroic").callsByKey.crates.warning == "Crates: break until fish appears.")
-assert(Registry:MatchCall("explorers", "normal", 1291933, nil).key == "crates")
-assert(Registry:MatchCall("explorers", "normal", 1292779, nil).key == "fish")
-assert(Registry:MatchCall("explorers", "normal", 1296092, nil).key == "thud")
+assert(Registry:MatchCall("explorers", "heroic", 1292779, nil).key == "fish_gebbo")
+assert(Registry:MatchCall("explorers", "heroic", 1296092, nil).key == "thud")
+assert(Registry:MatchCall("explorers", "mythic", 1291933, nil).key == "crates")
+assert(Registry:MatchCall("explorers", "mythic", 1292779, nil).key == "fish")
+assert(Registry:MatchCall("explorers", "mythic", 1296092, nil).key == "thud")
 
-print("ok - Lost Explorers fixed strategy and shared calls stay aligned")
+_G.issecretvalue = nil
+print("ok - Lost Explorers Heroic fish sequence and Mythic timed recap stay aligned")

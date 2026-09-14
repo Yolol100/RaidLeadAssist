@@ -111,10 +111,21 @@ assert(data.timingLead.prepare == 5 and data.timingLead.press == 3,
 
 RaidLeadAssistDB = {
     schemaVersion = 7,
+    selectedDifficultyKey = "normal",
+    customMessages = { nekzali = { normal = { calls = { adds = "stale" } }, heroic = { calls = { adds = "keep" } } } },
+    assignments = { nekzali = { normal = { old = "stale" }, heroic = { current = "keep" } } },
+    assignmentPresets = { nekzali = { normal = { old = {} }, heroic = { current = {} } } },
     uiScale = 0.2,
 }
 Database:Initialize()
 data = Database:Get()
 assert(data.uiScale == 0.70, "undersized UI scale must clamp to 70 percent")
+assert(data.selectedDifficultyKey == "heroic", "retired Normal selection must migrate to Heroic")
+assert(data.customMessages.nekzali.normal == nil and data.customMessages.nekzali.heroic ~= nil,
+    "retired Normal custom messages must be purged without deleting Heroic data")
+assert(data.assignments.nekzali.normal == nil and data.assignments.nekzali.heroic ~= nil,
+    "retired Normal assignments must be purged without deleting Heroic data")
+assert(data.assignmentPresets.nekzali.normal == nil and data.assignmentPresets.nekzali.heroic ~= nil,
+    "retired Normal presets must be purged without deleting Heroic data")
 
-print("ok - util/database secret, schema, difficulty, assignment, preset, timing, scale, and finite-position guards")
+print("ok - util/database secret, schema, Heroic/Mythic difficulty, assignment, preset, timing, scale, and finite-position guards")

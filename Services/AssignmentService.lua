@@ -13,7 +13,7 @@ local AssignmentService = {
     MAX_PLAN_LINES = 12,
 }
 
-local VALID_DIFFICULTIES = { normal = true, heroic = true, mythic = true }
+local VALID_DIFFICULTIES = { heroic = true, mythic = true }
 
 local function trim(value)
     if type(value) ~= "string" then return "" end
@@ -37,6 +37,14 @@ local function normalizeRosterName(name)
     local full = name:lower()
     local short = full:match("^([^%-]+)")
     return full, short
+end
+
+local function validProfile(bossKey, difficultyKey)
+    if type(bossKey) ~= "string" or not VALID_DIFFICULTIES[difficultyKey] then return false end
+    if EncounterRegistry and type(EncounterRegistry.GetProfile) == "function" then
+        return EncounterRegistry:GetProfile(bossKey, difficultyKey) ~= nil
+    end
+    return true
 end
 
 local function parseGroupNumbers(value)
@@ -233,7 +241,7 @@ function AssignmentService:NormalizeStored()
             stored[bossKey] = nil
         else
             for difficultyKey, values in pairs(difficulties) do
-                if not VALID_DIFFICULTIES[difficultyKey] or type(values) ~= "table" then
+                if not validProfile(bossKey, difficultyKey) or type(values) ~= "table" then
                     difficulties[difficultyKey] = nil
                 else
                     local allowed = definitionMap(bossKey, difficultyKey)
@@ -316,11 +324,12 @@ function AssignmentService:ValidateDefinitionValue(definition, value, options)
 end
 
 function AssignmentService:GetDefinitions(bossKey, difficultyKey)
+    if not validProfile(bossKey, difficultyKey) then return {} end
     return AssignmentRegistry:GetDefinitions(bossKey, difficultyKey)
 end
 
 function AssignmentService:GetValue(bossKey, difficultyKey, assignmentKey)
-    if not self.database then return "" end
+    if not self.database or not validProfile(bossKey, difficultyKey) then return "" end
     local profile = getProfile(self.database, bossKey, difficultyKey, false)
     local value = profile and profile[assignmentKey]
     return type(value) == "string" and value or ""
@@ -337,6 +346,9 @@ function AssignmentService:GetValues(bossKey, difficultyKey)
 end
 
 function AssignmentService:ValidateBossDraft(bossKey, difficultyKey, values, options)
+    if not validProfile(bossKey, difficultyKey) then
+        return false, { message = "Unknown boss or difficulty." }
+    end
     if type(values) ~= "table" then return false, { message = "Assignment values are missing." } end
 
     local definitions = self:GetDefinitions(bossKey, difficultyKey)
@@ -405,6 +417,10 @@ function AssignmentService:ResetBoss(bossKey, difficultyKey)
 end
 
 function AssignmentService:GetInvalidConfigured(bossKey, difficultyKey)
+    if not validProfile(bossKey, difficultyKey) then
+        return { { label = "Assignments", message = "Unknown boss or difficulty." } }
+    end
+
     local invalid = {}
     local definitions = self:GetDefinitions(bossKey, difficultyKey)
     for index = 1, #definitions do
@@ -448,6 +464,7 @@ function AssignmentService:GetMissingRequired(bossKey, difficultyKey, values)
 end
 
 function AssignmentService:GetRotationValue(bossKey, difficultyKey, callKey, rotation)
+    if not validProfile(bossKey, difficultyKey) then return nil end
     local definitions = AssignmentRegistry:GetCallDefinitions(bossKey, difficultyKey, callKey)
     local bucket = {}
     for index = 1, #definitions do
@@ -487,6 +504,7 @@ end
 
 function AssignmentService:RenderCallTemplate(template, bossKey, difficultyKey, callKey)
     if type(template) ~= "string" or template == "" then return template, true end
+    if not validProfile(bossKey, difficultyKey) then return nil, false, "Unknown boss or difficulty." end
     local definitions = definitionMap(bossKey, difficultyKey)
     local missing
 
@@ -524,6 +542,7 @@ function AssignmentService:BuildCallAction(baseAction, bossKey, difficultyKey, c
 end
 
 function AssignmentService:GetCallFragments(bossKey, difficultyKey, callKey)
+    if not validProfile(bossKey, difficultyKey) then return {} end
     local definitions = AssignmentRegistry:GetCallDefinitions(bossKey, difficultyKey, callKey)
     if #definitions == 0 then return {} end
 
@@ -556,6 +575,7 @@ end
 
 function AssignmentService:BuildCallWarning(baseWarning, bossKey, difficultyKey, callKey)
     if type(baseWarning) ~= "string" or baseWarning == "" then return baseWarning, true end
+    if not validProfile(bossKey, difficultyKey) then return nil, false, "Unknown boss or difficulty." end
     local profile = EncounterRegistry and EncounterRegistry:GetProfile(bossKey, difficultyKey)
     local call = profile and profile.callsByKey[callKey]
     local template
@@ -586,6 +606,7 @@ function AssignmentService:BuildCallWarning(baseWarning, bossKey, difficultyKey,
 end
 
 function AssignmentService:AdvanceCall(bossKey, difficultyKey, callKey)
+    if not validProfile(bossKey, difficultyKey) then return end
     local definitions = AssignmentRegistry:GetCallDefinitions(bossKey, difficultyKey, callKey)
     local seen = {}
     for index = 1, #definitions do

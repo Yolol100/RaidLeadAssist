@@ -2,6 +2,11 @@ local _, ns = ...
 
 local AssignmentRegistry = ns:GetModule("Encounters.AssignmentRegistry")
 
+local HEROIC = {
+    summary = "Heroic BLUE/X teams are generated from the actually populated raid subgroups when the pre-pull briefing is sent.",
+    sections = {},
+}
+
 local function teamSlot(key, label, helper)
     return {
         key = key,
@@ -31,8 +36,8 @@ local function popperSlot(key, label, helper)
     }
 end
 
-local SSZORAK_GROUP_LAYOUT = {
-    summary = "Assign two different 5+ Mutilate teams and one Cyst Popper per Maelstrom wind.",
+local MYTHIC = {
+    summary = "Mythic keeps two different 5+ Mutilate teams and one Cyst Popper per Maelstrom wind.",
     sections = {
         {
             key = "mutilate",
@@ -59,7 +64,6 @@ local SSZORAK_GROUP_LAYOUT = {
 }
 
 AssignmentRegistry:RegisterLayouts("sszorak", {
-    normal = SSZORAK_GROUP_LAYOUT,
-    heroic = SSZORAK_GROUP_LAYOUT,
-    mythic = SSZORAK_GROUP_LAYOUT,
+    heroic = HEROIC,
+    mythic = MYTHIC,
 })

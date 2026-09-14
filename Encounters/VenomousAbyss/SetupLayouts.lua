@@ -1,236 +1,78 @@
 local _, ns = ...
-
 local Setup = ns:GetModule("Encounters.SetupRegistry")
 
 local function layout(summary, markers, checks)
-    return {
-        summary = summary,
-        markers = markers or {},
-        checks = checks or {},
-    }
-end
-
-local function sameForAll(profile)
-    return { normal = profile, heroic = profile, mythic = profile }
+    return { summary=summary, markers=markers or {}, checks=checks or {} }
 end
 
 Setup:RegisterLayouts("nekzali", {
-    normal = layout(
-        "Normal needs no fixed raidleader markers or assignments.",
-        {},
-        {}
-    ),
-    heroic = layout(
-        "Assign only the Heroic Pyre soak group before pull.",
-        {},
-        {
-            "Set the Pyre soak group; everyone else stays outside for fire circles.",
-            "Fire-circle players burn dead Amani corpses with their expiration.",
-        }
-    ),
-    mythic = layout(
-        "Keep the Pyre group and add two fresh Grasping Depths groups.",
-        {},
-        {
-            "Set the Pyre soak group.",
-            "Set two different well groups for alternating Grasping Depths entries.",
-        }
-    ),
+    heroic=layout("Heroic uses BL on pull and no fixed roster assignment.", {}, {"Melee+tank handle the called Pyre soak; ranged remain outside."}),
+    mythic=layout("Keep the Mythic Pyre group and two fresh Grasping Depths groups.", {}, {"Set the Pyre soak group.", "Set two different well groups for alternating Grasping Depths entries."}),
 })
 
-Setup:RegisterLayouts("sentinels", sameForAll(layout(
-    "Set two fixed physical raid sides; players stay while tanks swap bosses after Stasis.",
-    {
-        { key="breath_side", kind="world", icon=4, label="Green / Breath side", purpose="Triangle is the fixed green-side position." },
-        { key="blood_side", kind="world", icon=7, label="Red / Blood side", purpose="Cross is the fixed red-side position." },
-    },
-    {
-        "Assign the Green Side to Triangle and Red Side to Cross.",
-        "Both sides stay in place after Stasis while tanks swap bosses.",
-    }
-)))
+Setup:RegisterLayouts("sentinels", {
+    heroic=layout("RED/GREEN sides use the dynamic populated-subgroup split.", {
+        {key="red_side", kind="world", icon=7, label="Red side", purpose="Cross marks the red-side reference."},
+        {key="green_side", kind="world", icon=4, label="Green side", purpose="Triangle marks the green-side reference."},
+    }, {"Briefing generates the closest balanced whole-group RED/GREEN split from the current roster.", "After Stasis, raid groups return to their physical side while tanks swap Sentinels."}),
+    mythic=layout("Set two fixed physical Mythic sides; players hold sides while tanks swap bosses after Stasis.", {
+        {key="green_side", kind="world", icon=4, label="Green side", purpose="Triangle is the green-side reference."},
+        {key="red_side", kind="world", icon=7, label="Red side", purpose="Cross is the red-side reference."},
+    }, {"Assign the two non-overlapping Mythic sides before pull."}),
+})
 
+local thudMarkers = {
+    {key="thud_one", kind="world", icon=1, label="Thud 1", purpose="Star is Mighty Thud soak point 1."},
+    {key="thud_two", kind="world", icon=2, label="Thud 2", purpose="Circle is Mighty Thud soak point 2."},
+    {key="thud_three", kind="world", icon=3, label="Thud 3", purpose="Diamond is Mighty Thud soak point 3."},
+}
 Setup:RegisterLayouts("explorers", {
-    normal = layout(
-        "Place the three Mighty Thud soak points. No roster assignment is required.",
-        {
-            { key="thud_one", kind="world", icon=1, label="Thud 1", purpose="Star is Mighty Thud soak point 1." },
-            { key="thud_two", kind="world", icon=2, label="Thud 2", purpose="Circle is Mighty Thud soak point 2." },
-            { key="thud_three", kind="world", icon=3, label="Thud 3", purpose="Diamond is Mighty Thud soak point 3." },
-        },
-        {
-            "Use fish order: Nama, then Iku, then Gebbo.",
-            "Open crates as needed until the next fish appears.",
-        }
-    ),
-    heroic = layout(
-        "Keep the three Thud points. Heroic still needs no fixed crate roster.",
-        {
-            { key="thud_one", kind="world", icon=1, label="Thud 1", purpose="Star is Mighty Thud soak point 1." },
-            { key="thud_two", kind="world", icon=2, label="Thud 2", purpose="Circle is Mighty Thud soak point 2." },
-            { key="thud_three", kind="world", icon=3, label="Thud 3", purpose="Diamond is Mighty Thud soak point 3." },
-        },
-        {
-            "Use fish order: Nama, then Iku, then Gebbo.",
-            "Open crates as needed until the next fish appears.",
-        }
-    ),
-    mythic = layout(
-        "Keep the Thud points and assign a controlled crate rotation for 15+ yard clearance.",
-        {
-            { key="thud_one", kind="world", icon=1, label="Thud 1", purpose="Star is Mighty Thud soak point 1." },
-            { key="thud_two", kind="world", icon=2, label="Thud 2", purpose="Circle is Mighty Thud soak point 2." },
-            { key="thud_three", kind="world", icon=3, label="Thud 3", purpose="Diamond is Mighty Thud soak point 3." },
-        },
-        {
-            "Use fish order: Nama, then Iku, then Gebbo.",
-            "Assign the crate rotation; raid clears 15+ yards before each break.",
-        }
-    ),
+    heroic=layout("Place the three Mighty Thud soak points; Heroic fish order is Gebbo → Nama → Iku.", thudMarkers, {"Fish: Gebbo → Nama → Iku."}),
+    mythic=layout("Keep the Thud points and assign a controlled crate rotation for 15+ yard clearance.", thudMarkers, {"Assign the crate rotation; raid clears 15+ yards before each break."}),
 })
 
 Setup:RegisterLayouts("vashnik", {
-    normal = layout(
-        "Use the fixed three-pair fountain route; no player assignment is required.",
-        {},
-        {
-            "Route: Flame+Shadow, then Shadow+Blood, then Blood+Flame.",
-            "Before each Imbibe, position Vashnik between the next fountain pair.",
-        }
-    ),
-    heroic = layout(
-        "Keep the fountain route and reserve Skull/Cross for the two Fire adds.",
-        {
-            { key="fire_first", kind="target", icon=8, label="Fire add first", purpose="Skull is the first Burning Venom kill target." },
-            { key="fire_second", kind="target", icon=7, label="Fire add second", purpose="Cross dies after the first Fire DoT has ended." },
-        },
-        {
-            "Route: Flame+Shadow, then Shadow+Blood, then Blood+Flame.",
-            "Fire pair: kill Skull, wait for the DoT, then kill Cross.",
-        }
-    ),
-    mythic = layout(
-        "Keep the same fountain route and Skull/Cross Fire-add stagger.",
-        {
-            { key="fire_first", kind="target", icon=8, label="Fire add first", purpose="Skull is the first Burning Venom kill target." },
-            { key="fire_second", kind="target", icon=7, label="Fire add second", purpose="Cross dies after the first Fire DoT has ended." },
-        },
-        {
-            "Route: Flame+Shadow, then Shadow+Blood, then Blood+Flame.",
-            "Fire pair: kill Skull, wait for the DoT, then kill Cross.",
-        }
-    ),
+    heroic=layout("Heroic uses the current Purple/Shadow + Orange/Fire-only strategy.", {}, {"Keep the fight on Purple + Orange; do not use the old Blood/Red Heroic rotation.", "Stagger dangerous dispels/deaths and keep the cross/wave lane clear."}),
+    mythic=layout("Mythic keeps its separate fountain/tumor execution.", {
+        {key="fire_first", kind="target", icon=8, label="Fire add first", purpose="Skull is the first Burning Venom kill target."},
+        {key="fire_second", kind="target", icon=7, label="Fire add second", purpose="Cross follows after the first Fire DoT ends."},
+    }, {"Do not inherit the simplified Heroic Purple+Orange profile without a Mythic-specific call."}),
 })
 
-Setup:RegisterLayouts("sszorak", sameForAll(layout(
-    "Place three saved-Cyst markers and prepare Mutilate groups plus Cyst Poppers.",
-    {
-        { key="cyst_one", kind="world", icon=1, label="Cyst 1", purpose="Star is the first saved Cyst position." },
-        { key="cyst_two", kind="world", icon=2, label="Cyst 2", purpose="Circle is the second saved Cyst position." },
-        { key="cyst_three", kind="world", icon=3, label="Cyst 3", purpose="Diamond is the third saved Cyst position." },
-    },
-    {
-        "Place each Cyst marker opposite a different tornado cluster.",
-        "Assign Poppers 1/2/3 and two different Mutilate soak groups.",
-    }
-)))
+Setup:RegisterLayouts("sszorak", {
+    heroic=layout("Use four outer markers: Blue opposite Moon; X opposite Green. BLUE/X teams are generated dynamically.", {
+        {key="blue_team", kind="world", icon=6, label="Blue team", purpose="Square/Blue is the first raid-team reference."},
+        {key="moon_opposite", kind="world", icon=5, label="Moon opposite Blue", purpose="Moon is directly opposite the Blue marker for the cyst/wind lane."},
+        {key="x_team", kind="world", icon=7, label="X team", purpose="Cross/X is the second raid-team reference."},
+        {key="green_opposite", kind="world", icon=4, label="Green opposite X", purpose="Triangle/Green is directly opposite X for the cyst/wind lane."},
+    }, {"Briefing generates the closest balanced whole-group BLUE/X split from the current roster.", "Place cysts at the called wind mark and pop only one when the wind call occurs."}),
+    mythic=layout("Mythic keeps saved-Cyst markers, Mutilate groups and Cyst Poppers.", {
+        {key="cyst_one", kind="world", icon=1, label="Cyst 1", purpose="Star is the first saved Cyst position."},
+        {key="cyst_two", kind="world", icon=2, label="Cyst 2", purpose="Circle is the second saved Cyst position."},
+        {key="cyst_three", kind="world", icon=3, label="Cyst 3", purpose="Diamond is the third saved Cyst position."},
+    }, {"Assign Poppers 1/2/3 and two different Mutilate soak groups."}),
+})
 
 Setup:RegisterLayouts("twinfangs", {
-    normal = layout(
-        "Normal Feast is dynamic; every hit still needs fresh eligible soakers.",
-        {},
-        {
-            "Each Feast hit needs 3+ players who skipped earlier hits in that cast.",
-        }
-    ),
-    heroic = layout(
-        "Assign three different Feast groups, one for each hit.",
-        {},
-        {
-            "Set three different 3+ Feast groups for hits 1, 2 and 3.",
-        }
-    ),
-    mythic = layout(
-        "Keep the three Feast groups and add Broodling interrupt owners.",
-        {},
-        {
-            "Set three different 3+ Feast groups for hits 1, 2 and 3.",
-            "Assign Broodling interrupts; Tainted Blood needs no fixed roster group.",
-        }
-    ),
+    heroic=layout("Heroic uses three fresh Ravenous Feast soak teams.", {}, {"Assign three non-overlapping Feast teams before pull.", "Each player soaks at most one of the three Feast hits; Feasted makes repeat hits unsafe."}),
+    mythic=layout("Mythic keeps three Feast groups and Broodling interrupt owners.", {}, {"Set three different 3+ Feast groups.", "Assign Broodling interrupts."}),
 })
 
+local altarMarkers = {
+    {key="sever_end", kind="world", icon=4, label="Orb / Sever end", purpose="Triangle is the orb collection and Sever reference end."},
+    {key="soul_end", kind="world", icon=7, label="Ghost / Soul Sever end", purpose="Cross is the ghost routing and Soul Sever reference end."},
+}
 Setup:RegisterLayouts("altar", {
-    normal = layout(
-        "Mark both platform ends and prepare Orb Collectors plus Wail interrupt ownership.",
-        {
-            { key="sever_end", kind="world", icon=4, label="Orb / Sever end", purpose="Triangle is the orb collection and Sever reference end." },
-            { key="soul_end", kind="world", icon=7, label="Ghost / Soul Sever end", purpose="Cross is the ghost routing and Soul Sever reference end." },
-        },
-        {
-            "Assign 2-3 mobile Orb Collectors and a primary Wail interrupt.",
-            "Normal Guillotine needs any 3+ soakers; no fixed team is required.",
-        }
-    ),
-    heroic = layout(
-        "Use the same markers; add two different Guillotine groups and Wail interrupts.",
-        {
-            { key="sever_end", kind="world", icon=4, label="Orb / Sever end", purpose="Triangle is the orb collection and Sever reference end." },
-            { key="soul_end", kind="world", icon=7, label="Ghost / Soul Sever end", purpose="Cross is the ghost routing and Soul Sever reference end." },
-        },
-        {
-            "Assign 2-3 mobile Orb Collectors.",
-            "Assign two different 3+ Guillotine groups and at least two Wail kicks.",
-        }
-    ),
-    mythic = layout(
-        "Use the same markers; prepare fresh Guillotine groups and Wail interrupts.",
-        {
-            { key="sever_end", kind="world", icon=4, label="Orb / Sever end", purpose="Triangle is the orb collection and Sever reference end." },
-            { key="soul_end", kind="world", icon=7, label="Ghost / Soul Sever end", purpose="Cross is the ghost routing and Soul Sever reference end." },
-        },
-        {
-            "Assign 2-3 mobile Orb Collectors.",
-            "Plan fresh 5+ Guillotine groups and at least two Wail kicks.",
-        }
-    ),
+    heroic=layout("Use both platform-end markers; prepare Orb Collectors, Guillotine groups and Wail interrupts.", altarMarkers, {"Assign 2-3 Orb Collectors.", "Assign two different 3+ Guillotine groups and at least two Wail kicks."}),
+    mythic=layout("Use the same markers; prepare fresh Guillotine groups and Wail interrupts.", altarMarkers, {"Assign 2-3 Orb Collectors.", "Plan fresh 5+ Guillotine groups and at least two Wail kicks."}),
 })
 
+local ulatekMarkers = {
+    {key="coils_soak", kind="world", icon=6, label="Coils reference", purpose="Square is the shared Spectral Coils reference."},
+    {key="egg_left", kind="world", icon=4, label="Left side", purpose="Triangle labels the left Phase 2 side."},
+    {key="egg_right", kind="world", icon=7, label="Right side", purpose="Cross labels the right Phase 2 side."},
+}
 Setup:RegisterLayouts("ulatek", {
-    normal = layout(
-        "Mark left/right Phase 2 sides and the shared Coils point; preassign Bite helper sectors.",
-        {
-            { key="coils_soak", kind="world", icon=6, label="Coils soak", purpose="Square is the shared Normal Spectral Coils soak point; meet the 40%+ floor." },
-            { key="egg_left", kind="world", icon=4, label="Left side", purpose="Triangle labels the left Phase 2 side and Doomscale egg carrier." },
-            { key="egg_right", kind="world", icon=7, label="Right side", purpose="Cross labels the right Phase 2 side and Doomscale egg carrier." },
-        },
-        {
-            "Assign left/right Doomscale egg carriers.",
-            "Assign melee, ranged and healer Serpent's Bite helper groups for Phase 3.",
-        }
-    ),
-    heroic = layout(
-        "Mark left/right sides and pre-split two alternating Coils teams plus three Bite helper sectors.",
-        {
-            { key="coils_soak", kind="world", icon=6, label="Coils reference", purpose="Square is the shared Coils reference; the called team must still meet the 40%+ floor." },
-            { key="egg_left", kind="world", icon=4, label="Left side", purpose="Triangle labels Team 1's Phase 2 side and Doomscale egg carrier." },
-            { key="egg_right", kind="world", icon=7, label="Right side", purpose="Cross labels Team 2's Phase 2 side and Doomscale egg carrier." },
-        },
-        {
-            "Assign two near-equal alternating Coils/side teams and left/right egg carriers.",
-            "Assign melee, ranged and healer Serpent's Bite helper groups for Phase 3.",
-        }
-    ),
-    mythic = layout(
-        "Mythic keeps alternating Coils teams, left/right egg lanes, Bite helper sectors and Incubation intercepts.",
-        {
-            { key="coils_soak", kind="world", icon=6, label="Coils reference", purpose="Square is the Spectral Coils reference for the called team." },
-            { key="egg_left", kind="world", icon=4, label="Left eggs", purpose="Triangle labels the planned left egg side." },
-            { key="egg_right", kind="world", icon=7, label="Right eggs", purpose="Cross labels the planned right egg side." },
-        },
-        {
-            "Assign alternating Coils teams, left/right egg carriers and three Bite helper groups.",
-            "Assign a 4+ Toxic Incubation intercept group; call safe Purge wave directions.",
-        }
-    ),
+    heroic=layout("Mark left/right sides and pre-split two alternating Coils teams plus three Bite helper sectors.", ulatekMarkers, {"Assign two near-equal Coils/side teams and left/right egg carriers.", "Assign melee, ranged and healer Bite helper groups."}),
+    mythic=layout("Mythic keeps alternating Coils teams, egg lanes, Bite helper sectors and Incubation intercepts.", ulatekMarkers, {"Assign alternating Coils teams, egg carriers and Bite groups.", "Assign a 4+ Toxic Incubation intercept group."}),
 })

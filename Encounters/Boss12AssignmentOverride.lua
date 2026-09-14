@@ -2,15 +2,15 @@ local _, ns = ...
 
 local AssignmentRegistry = ns:GetModule("Encounters.AssignmentRegistry")
 
-local NEKZALI_NORMAL = {
-    summary = "No assignment is needed on Normal. Melee soak Pyre; ranged stay out and spread.",
+local NEKZALI_HEROIC = {
+    summary = "Heroic uses the role-based melee+tank Pyre call; no fixed roster assignment is required.",
     sections = {},
 }
 
 local NEKZALI_PYRE = {
     key = "pyre",
     title = "Hungering Pyre Soak",
-    description = "Heroic/Mythic only: choose the players who soak Pyre. Everyone else stays outside and handles fire circles.",
+    description = "Mythic: choose the players who soak Pyre. Everyone else stays outside and handles fire circles.",
     columns = 1,
     slots = {
         {
@@ -26,13 +26,8 @@ local NEKZALI_PYRE = {
     },
 }
 
-local NEKZALI_HEROIC = {
-    summary = "Only the Pyre soak group needs assigning. Fire-circle players are everyone outside that group.",
-    sections = { NEKZALI_PYRE },
-}
-
 local NEKZALI_MYTHIC = {
-    summary = "Keep the Heroic Pyre group and add two fresh Grasping Depths well groups.",
+    summary = "Assign the Mythic Pyre group and two fresh Grasping Depths well groups.",
     sections = {
         NEKZALI_PYRE,
         {
@@ -42,64 +37,43 @@ local NEKZALI_MYTHIC = {
             columns = 2,
             slots = {
                 {
-                    key = "well_a",
-                    label = "Well Group 1",
-                    kind = "rotation",
-                    callKey = "grasping",
-                    callLabel = "Well group",
-                    rotation = "well",
-                    required = true,
-                    exclusiveGroup = "well",
-                    compactGroups = true,
-                    helper = "Choose the first fresh group that enters the Soulcoil Well.",
+                    key = "well_a", label = "Well Group 1", kind = "rotation", callKey = "grasping",
+                    callLabel = "Well group", rotation = "well", required = true, exclusiveGroup = "well",
+                    compactGroups = true, helper = "Choose the first fresh group that enters the Soulcoil Well.",
                 },
                 {
-                    key = "well_b",
-                    label = "Well Group 2",
-                    kind = "rotation",
-                    callKey = "grasping",
-                    callLabel = "Well group",
-                    rotation = "well",
-                    required = true,
-                    exclusiveGroup = "well",
-                    compactGroups = true,
-                    helper = "Choose a different fresh group for the next Grasping Depths.",
+                    key = "well_b", label = "Well Group 2", kind = "rotation", callKey = "grasping",
+                    callLabel = "Well group", rotation = "well", required = true, exclusiveGroup = "well",
+                    compactGroups = true, helper = "Choose a different fresh group for the next Grasping Depths.",
                 },
             },
         },
     },
 }
 
-local SENTINELS_SPLIT = {
-    summary = "Assign two non-overlapping physical sides. Players hold their side after Stasis while tanks swap bosses.",
+local SENTINELS_HEROIC = {
+    summary = "Heroic RED/GREEN sides are generated from the actually populated raid subgroups when the pre-pull briefing is sent.",
+    sections = {},
+}
+
+local SENTINELS_MYTHIC = {
+    summary = "Assign two non-overlapping Mythic sides. Players hold their physical side after Stasis while tanks swap bosses.",
     sections = {
         {
             key = "split",
-            title = "Fixed Raid Sides",
-            description = "Use actual players or complete current raid groups. Green stays Triangle; red stays Cross; tanks swap bosses after Stasis.",
+            title = "Mythic Raid Sides",
+            description = "Use actual players or complete current raid groups. Green stays on its side; red stays on its side; tanks swap bosses after Stasis.",
             columns = 2,
             slots = {
                 {
-                    key = "team_a",
-                    label = "Green Side",
-                    kind = "assignee",
-                    callKey = "side_swap",
-                    callLabel = "Green",
-                    required = true,
-                    compactGroups = true,
-                    exclusiveGroup = "sentinels_sides",
-                    helper = "Choose the players who remain on the Triangle / green side for the fight.",
+                    key = "team_a", label = "Green Side", kind = "assignee", callKey = "side_swap",
+                    callLabel = "Green", required = true, compactGroups = true, exclusiveGroup = "sentinels_sides",
+                    helper = "Choose the players who remain on the green side.",
                 },
                 {
-                    key = "team_b",
-                    label = "Red Side",
-                    kind = "assignee",
-                    callKey = "side_swap",
-                    callLabel = "Red",
-                    required = true,
-                    compactGroups = true,
-                    exclusiveGroup = "sentinels_sides",
-                    helper = "Choose the players who remain on the Cross / red side for the fight.",
+                    key = "team_b", label = "Red Side", kind = "assignee", callKey = "side_swap",
+                    callLabel = "Red", required = true, compactGroups = true, exclusiveGroup = "sentinels_sides",
+                    helper = "Choose the players who remain on the red side.",
                 },
             },
         },
@@ -107,12 +81,10 @@ local SENTINELS_SPLIT = {
 }
 
 AssignmentRegistry:RegisterLayouts("nekzali", {
-    normal = NEKZALI_NORMAL,
     heroic = NEKZALI_HEROIC,
     mythic = NEKZALI_MYTHIC,
 })
 AssignmentRegistry:RegisterLayouts("sentinels", {
-    normal = SENTINELS_SPLIT,
-    heroic = SENTINELS_SPLIT,
-    mythic = SENTINELS_SPLIT,
+    heroic = SENTINELS_HEROIC,
+    mythic = SENTINELS_MYTHIC,
 })

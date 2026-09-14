@@ -36,68 +36,88 @@ local AR = ns:GetModule("Encounters.AssignmentRegistry")
 local R = ns:GetModule("Encounters.Registry")
 A:Initialize({ assignments = {} })
 
--- Fixed Normal mechanics must not create unnecessary assignment placeholders.
-assert(#AR:GetDefinitions("nekzali", "normal") == 0)
-assert(A:IsCallReady("nekzali", "normal", "pyre") == true)
-local normalPyre = R:GetProfile("nekzali", "normal").callsByKey.pyre
-local action = A:BuildCallAction(normalPyre.action, "nekzali", "normal", "pyre")
-assert(action == "Melee soak; ranged stay out")
+-- Normal is retired throughout the runtime and may not expose placeholder assignment behavior.
+for _, bossKey in ipairs({ "nekzali", "sentinels", "explorers", "vashnik", "sszorak", "twinfangs", "altar", "ulatek" }) do
+    assert(R:GetProfile(bossKey, "normal") == nil, bossKey .. " Normal profile must stay retired")
+    assert(#AR:GetDefinitions(bossKey, "normal") == 0, bossKey .. " Normal assignments must stay empty")
+end
+local normalReady, normalReason = A:IsCallReady("nekzali", "normal", "pyre")
+assert(not normalReady and normalReason == "Unknown boss or difficulty.",
+    "retired Normal call readiness must fail closed")
 
--- Heroic Nek'zali needs only the real Pyre soak assignment.
-local nekDefs = AR:GetDefinitions("nekzali", "heroic")
-assert(#nekDefs == 1 and nekDefs[1].key == "pyre_soakers" and nekDefs[1].compactGroups)
-local ok = A:ApplyBossDraft("nekzali", "heroic", { pyre_soakers = "Group 1" })
-assert(ok)
+-- Heroic Nek'zali is role-based: no fixed Pyre roster placeholder is required.
+assert(#AR:GetDefinitions("nekzali", "heroic") == 0)
 local nekPyre = R:GetProfile("nekzali", "heroic").callsByKey.pyre
+assert(nekPyre.warning == "MELEE + TANK — SOAK")
 local nekAction, ready = A:BuildCallAction(nekPyre.action, "nekzali", "heroic", "pyre")
-assert(ready and nekAction == "Group 1 soak; everyone else out")
-local nekWarning = A:BuildCallWarning(nekPyre.warning, "nekzali", "heroic", "pyre")
-assert(nekWarning == "Pyre: Group 1 soak; everyone else out.")
+assert(ready and nekAction == nekPyre.action)
+assert(A:IsCallReady("nekzali", "heroic", "pyre") == true)
+
+-- Mythic Nek'zali keeps only the actual Pyre and rotating well assignments.
+local mythicNekDefs = AR:GetDefinitions("nekzali", "mythic")
+assert(#mythicNekDefs == 3)
+local ok = A:ApplyBossDraft("nekzali", "mythic", {
+    pyre_soakers = "Group 1",
+    well_a = "Group 2",
+    well_b = "Group 3",
+})
+assert(ok)
+local mythicPyre = R:GetProfile("nekzali", "mythic").callsByKey.pyre
+local mythicWarning = A:BuildCallWarning(mythicPyre.warning, "nekzali", "mythic", "pyre")
+assert(mythicWarning:find("Group 1", 1, true), "Mythic Pyre warning must render the configured group")
 
 -- Group shorthand is validated against the actual current raid subgroups.
-local invalid, err = A:ApplyBossDraft("nekzali", "heroic", { pyre_soakers = "Group 5" })
+local invalid, err = A:ApplyBossDraft("nekzali", "mythic", {
+    pyre_soakers = "Group 5",
+    well_a = "Group 2",
+    well_b = "Group 3",
+})
 assert(not invalid and err.assignmentKey == "pyre_soakers")
 assert(err.message:find("not present", 1, true))
 
--- Missing required dynamic assignments fail closed instead of sending generic calls.
-A:ResetBoss("nekzali", "heroic")
-local callReady, reason = A:IsCallReady("nekzali", "heroic", "pyre")
-assert(not callReady and reason:find("Pyre Soak Group", 1, true))
-local missingAction, complete = A:BuildCallAction(nekPyre.action, "nekzali", "heroic", "pyre")
-assert(missingAction == nil and complete == false)
-
--- Lost Explorers uses a fixed fish order; no fish-runner roster placeholder remains.
-for _, difficulty in ipairs({ "normal", "heroic", "mythic" }) do
+-- Lost Explorers Heroic uses fixed sequential fish calls; neither difficulty has a fish-owner placeholder.
+for _, difficulty in ipairs({ "heroic", "mythic" }) do
     for _, definition in ipairs(AR:GetDefinitions("explorers", difficulty)) do
-        assert(definition.callKey ~= "fish")
+        assert(definition.callKey ~= "fish" and not definition.callKey:find("^fish_"))
     end
-    assert(R:GetProfile("explorers", difficulty).callsByKey.fish.warning == "Fish: feed Nama, then Iku, then Gebbo.")
 end
+local explorersHeroic = R:GetProfile("explorers", "heroic")
+assert(explorersHeroic.callsByKey.fish_gebbo.warning == "FISH NOW → GEBBO")
+assert(explorersHeroic.callsByKey.fish_nama.warning == "FISH NOW → NAMA")
+assert(explorersHeroic.callsByKey.fish_iku.warning == "FISH NOW → IKU")
+assert(table.concat(explorersHeroic.callsByKey.fish_gebbo.sequenceKeys, ",") == "fish_gebbo,fish_nama,fish_iku")
+assert(R:GetProfile("explorers", "mythic").callsByKey.fish.warning == "Fish: use the planned Mythic target.")
 
--- Vashnik route is fixed strategy and therefore has no roster fields.
-for _, difficulty in ipairs({ "normal", "heroic", "mythic" }) do
+-- Vashnik Heroic and Mythic do not require fixed player roster fields.
+for _, difficulty in ipairs({ "heroic", "mythic" }) do
     assert(#AR:GetDefinitions("vashnik", difficulty) == 0)
 end
-assert(table.concat(R:GetProfile("vashnik", "normal").explanation, "\n"):find(
-    "Flame+Shadow, Shadow+Blood, then Blood+Flame", 1, true
+assert(table.concat(R:GetProfile("vashnik", "heroic").explanation, "\n"):find(
+    "PURPLE + ORANGE ONLY", 1, true
 ))
 
--- Heroic Feast shows the actual configured groups in order.
+-- Heroic Twin Fangs requires three fresh non-overlapping Feast groups. In a 20-player raid
+-- the 30% floor means 6+ players per team, so exercise a realistic 7/7/6 partition.
+local feastTeamA = "G1P1, G1P2, G1P3, G1P4, G1P5, G2P1, G2P2"
+local feastTeamB = "G2P3, G2P4, G2P5, G3P1, G3P2, G3P3, G3P4"
+local feastTeamC = "G3P5, G4P1, G4P2, G4P3, G4P4, G4P5"
 ok = A:ApplyBossDraft("twinfangs", "heroic", {
-    feast_team_a = "Group 1",
-    feast_team_b = "Group 2",
-    feast_team_c = "Group 3",
+    feast_heroic_a = feastTeamA,
+    feast_heroic_b = feastTeamB,
+    feast_heroic_c = feastTeamC,
 })
 assert(ok)
-local feast = R:GetProfile("twinfangs", "heroic").callsByKey.feast
-local feastWarning = A:BuildCallWarning(feast.warning, "twinfangs", "heroic", "feast")
-assert(feastWarning == "Feast: Group 1, then Group 2, then Group 3.")
+for index, expected in ipairs({ feastTeamA, feastTeamB, feastTeamC }) do
+    local callKey = "feast" .. tostring(index)
+    local feast = R:GetProfile("twinfangs", "heroic").callsByKey[callKey]
+    local warning, complete = A:BuildCallWarning(feast.warning, "twinfangs", "heroic", callKey)
+    assert(complete and warning:find(expected, 1, true), callKey .. " must render its configured fresh team")
+end
 
--- Normal Altar Guillotine is fixed 3+ execution after the live hotfix; Heroic introduces assigned groups.
-local altarNormal = AR:GetCallDefinitions("altar", "normal", "guillotine")
+-- Heroic Altar has real assignment fields; retired Normal has none.
+assert(#AR:GetCallDefinitions("altar", "normal", "guillotine") == 0)
 local altarHeroic = AR:GetCallDefinitions("altar", "heroic", "guillotine")
-assert(#altarNormal == 0 and #altarHeroic == 2)
-assert(R:GetProfile("altar", "normal").callsByKey.guillotine.warning == "Guillotine: at least 3 soak; raid move 40+ yards.")
+assert(#altarHeroic == 2)
 for _, definition in ipairs(altarHeroic) do
     assert(definition.minPlayers == 3)
 end
@@ -129,4 +149,4 @@ local bite = R:GetProfile("ulatek", "mythic").callsByKey.bite
 local biteWarning, biteReady = A:BuildCallWarning(bite.warning, "ulatek", "mythic", "bite")
 assert(biteReady and biteWarning == "Bite: G3P3; G3P4; G3P5 soak. Purge waves out.")
 
-print("ok - difficulty-specific assignments are roster-aware and render into callouts")
+print("ok - Heroic/Mythic assignments are roster-aware, Normal is retired, and calls render only real assignments")

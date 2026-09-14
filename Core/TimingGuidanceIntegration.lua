@@ -4,6 +4,7 @@ local Constants = ns:GetModule("Core.Constants")
 local EventBus = ns:GetModule("Core.EventBus")
 local Registry = ns:GetModule("Encounters.Registry")
 local Audio = ns:GetModule("Services.AudioService")
+local Timeline = ns:GetModule("Services.TimelineService")
 local Guidance = ns:GetModule("Services.TimingGuidance")
 local UI = ns:GetModule("UI.MainFrame")
 local App = ns:GetModule("Core.App")
@@ -28,13 +29,16 @@ App.SendCall = function(self, callKey)
     local now = GetTime()
     originalSendCall(self, callKey)
     if (self.manualLockUntil[callKey] or 0) > now then
-        Guidance:Acknowledge(callKey)
+        local timelineCallKey = Guidance:Acknowledge(callKey)
+        -- Sequence display calls such as FEAST 2/3 intentionally differ from
+        -- the one stable-ID timing call. Acknowledge that underlying occurrence
+        -- once so DBM/BigWigs duplicates cannot immediately re-arm it.
+        if timelineCallKey and timelineCallKey ~= callKey then
+            Timeline:AcknowledgeCall(timelineCallKey)
+        end
     end
 end
 
--- Phase 4 replaces the old per-button timer scan with one normalized current
--- mechanic. The raid leader still clicks the Raid Warning button manually; this
--- layer only guides which single call matters and when.
 App.UpdateTiming = function(self)
     local profile = Registry:GetProfile(self.activeBossKey, self.activeDifficultyKey)
     if not profile then return end
@@ -63,8 +67,6 @@ App.UpdateTiming = function(self)
         return
     end
 
-    -- First neutralize every call. Only the normalized current mechanic may be
-    -- promoted to WAIT/SOON/PRESS NOW/LATE; recent manual calls keep CALLED.
     for index = 1, #profile.calls do
         local call = profile.calls[index]
         UI:SetCallState(call.key, calledState(self, call.key, now)

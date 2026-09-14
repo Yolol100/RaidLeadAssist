@@ -9,7 +9,7 @@ local MessageService = {
     MAX_EXPLANATION_LINES = 8,
 }
 
-local VALID_DIFFICULTIES = { normal = true, heroic = true, mythic = true }
+local VALID_DIFFICULTIES = { heroic = true, mythic = true }
 
 local function trim(value)
     if type(value) ~= "string" then return "" end
@@ -24,7 +24,9 @@ end
 
 local function resolveDifficulty(service, difficultyKey)
     if VALID_DIFFICULTIES[difficultyKey] then return difficultyKey end
-    return (service.database and service.database.selectedDifficultyKey) or Registry:GetActiveDifficulty() or "heroic"
+    local fallback = (service.database and service.database.selectedDifficultyKey) or Registry:GetActiveDifficulty()
+    if VALID_DIFFICULTIES[fallback] then return fallback end
+    return "heroic"
 end
 
 local function defaultFingerprint(defaults)
@@ -123,7 +125,7 @@ function MessageService:NormalizeStoredProfiles()
         else
             local cleanDifficulties = {}
             for difficultyKey, profile in pairs(difficultyProfiles) do
-                local defaults = Registry:GetProfile(bossKey, difficultyKey)
+                local defaults = VALID_DIFFICULTIES[difficultyKey] and Registry:GetProfile(bossKey, difficultyKey) or nil
                 if defaults and type(profile) == "table" then
                     local cleanCalls = {}
                     if type(profile.calls) == "table" then

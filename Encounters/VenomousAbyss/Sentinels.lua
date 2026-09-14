@@ -1,145 +1,129 @@
 local _, ns = ...
 local Registry = ns:GetModule("Encounters.Registry")
 
-local function sharedCalls()
-    return {
-        {
-            key = "stasis",
-            ability = "Vitriolic Stasis",
-            action = "Pair toxins to exactly 4",
-            warning = "Stasis: pair toxins to exactly 4.",
-            voice = "Match to four",
-            spellIDs = { 1284588 },
-            prepareSeconds = 6,
-            pressSeconds = 2,
-            uiGroup = "shared",
-        },
-        {
-            key = "side_swap",
-            ability = "After Stasis",
-            action = "Hold sides; tanks swap bosses",
-            warning = "After Stasis: hold sides; tanks swap bosses.",
-            actionTemplate = "{{team_a}} green; {{team_b}} red; tanks swap bosses",
-            warningTemplate = "After Stasis: {{team_a}} green; {{team_b}} red; tanks swap bosses.",
-            voice = "Hold sides",
-            timing = false,
-            uiGroup = "shared",
-        },
-        {
-            key = "balance_stop_breath",
-            ability = "Stop DPS on Breath",
-            action = "Stop Breath DPS",
-            warning = "Breath: stop DPS.",
-            voice = "Stop Breath",
-            timing = false,
-            uiGroup = "balance",
-        },
-        {
-            key = "balance_stop_blood",
-            ability = "Stop DPS on Blood",
-            action = "Stop Blood DPS",
-            warning = "Blood: stop DPS.",
-            voice = "Stop Blood",
-            timing = false,
-            uiGroup = "balance",
-        },
-        {
-            key = "balance_resume",
-            ability = "Resume DPS",
-            action = "Resume DPS; keep health even",
-            warning = "Resume: keep both bosses even.",
-            voice = "Resume DPS",
-            timing = false,
-            uiGroup = "balance",
-        },
-    }
-end
+local heroicCalls = {
+    {
+        key = "droplets",
+        ability = "Toxic Droplets",
+        action = "GREEN — SOAK DROPLETS",
+        warning = "GREEN — SOAK DROPLETS",
+        voice = "Soak droplets",
+        timing = false,
+    },
+    {
+        key = "blob",
+        ability = "Venom Coagulation",
+        action = "GREEN — KILL BLOB",
+        warning = "GREEN — KILL BLOB",
+        voice = "Kill blob",
+        timing = false,
+        iconSpellID = 1284251,
+    },
+    {
+        key = "return_lines",
+        ability = "Returning Venom",
+        action = "GREEN — DODGE RETURN LINES",
+        warning = "GREEN — DODGE RETURN LINES",
+        voice = "Dodge return lines",
+        timing = false,
+    },
+    {
+        key = "miasma",
+        ability = "Unstable Miasma",
+        action = "RED — GROUP SOAK, DROP BLOOD OUT",
+        warning = "RED — GROUP SOAK, DROP BLOOD OUT",
+        voice = "Group soak then drop out",
+        spellIDs = { 1288232 },
+        prepareSeconds = 5,
+        pressSeconds = 1,
+    },
+    {
+        key = "stasis",
+        ability = "Vitriolic Stasis",
+        action = "STASIS — 1+3 / 2+2",
+        warning = "STASIS — 1+3 / 2+2",
+        voice = "One three or two two",
+        spellIDs = { 1284588 },
+        prepareSeconds = 6,
+        pressSeconds = 2,
+    },
+}
 
-local function breathCalls()
-    return {
-        {
-            key = "coagulation",
-            ability = "Venom Coagulation",
-            action = "Kill green slime",
-            warning = "Green side: kill slime.",
-            voice = "Kill add",
-            timing = false,
-            iconSpellID = 1284251,
-            uiGroup = "breath",
-        },
-    }
-end
-
-local function bloodCalls()
-    return {
-        {
-            key = "miasma",
-            ability = "Unstable Miasma",
-            action = "Stack on red target",
-            warning = "Red mark: stack together.",
-            voice = "Blood side soak",
-            spellIDs = { 1288232 },
-            prepareSeconds = 5,
-            pressSeconds = 1,
-            uiGroup = "blood",
-        },
-    }
-end
-
-local function combine(...)
-    local result = {}
-    for index = 1, select("#", ...) do
-        local list = select(index, ...)
-        for itemIndex = 1, #list do result[#result + 1] = list[itemIndex] end
-    end
-    return result
-end
-
-local normalCalls = combine(breathCalls(), bloodCalls(), sharedCalls())
-local heroicCalls = combine(breathCalls(), bloodCalls(), sharedCalls())
-local mythicCalls = combine(breathCalls(), bloodCalls(), sharedCalls())
-mythicCalls[#mythicCalls + 1] = {
-    key = "protovenom",
-    ability = "Shifting Protovenom",
-    action = "Marked players pair together",
-    warning = "Protovenom: marked players pair together.",
-    voice = "Match marked",
-    spellIDs = { 1296878, 1296880, 1296882 },
-    prepareSeconds = 7,
-    pressSeconds = 4,
-    uiGroup = "shared",
+local mythicCalls = {
+    {
+        key = "coagulation",
+        ability = "Venom Coagulation",
+        action = "Kill green slime",
+        warning = "Green side: kill slime.",
+        voice = "Kill add",
+        timing = false,
+        iconSpellID = 1284251,
+        uiGroup = "breath",
+    },
+    {
+        key = "miasma",
+        ability = "Unstable Miasma",
+        action = "Stack on red target",
+        warning = "Red mark: stack together.",
+        voice = "Blood side soak",
+        spellIDs = { 1288232 },
+        prepareSeconds = 5,
+        pressSeconds = 1,
+        uiGroup = "blood",
+    },
+    {
+        key = "stasis",
+        ability = "Vitriolic Stasis",
+        action = "Pair toxins to exactly 4",
+        warning = "Stasis: pair toxins to exactly 4.",
+        voice = "Match to four",
+        spellIDs = { 1284588 },
+        prepareSeconds = 6,
+        pressSeconds = 2,
+        uiGroup = "shared",
+    },
+    {
+        key = "side_swap",
+        ability = "After Stasis",
+        action = "Hold sides; tanks swap bosses",
+        warning = "After Stasis: hold sides; tanks swap bosses.",
+        actionTemplate = "{{team_a}} / {{team_b}} hold sides; tanks swap bosses",
+        warningTemplate = "After Stasis: {{team_a}} / {{team_b}} hold sides; tanks swap bosses.",
+        voice = "Tanks swap bosses",
+        timing = false,
+        uiGroup = "shared",
+    },
+    {
+        key = "protovenom",
+        ability = "Shifting Protovenom",
+        action = "Marked players pair together",
+        warning = "Protovenom: marked players pair together.",
+        voice = "Match marked",
+        spellIDs = { 1296878, 1296880, 1296882 },
+        prepareSeconds = 7,
+        pressSeconds = 4,
+        uiGroup = "shared",
+    },
 }
 
 Registry:Register({
     key = "sentinels",
     name = "Entombed Sentinels",
     encounterID = 3445,
-    strategyStatus = "12.1 Journal + current Wowhead + DBM/BigWigs source-reviewed 2026-08-19; fixed-side split with difficulty deltas; live validation pending",
+    strategyStatus = "Heroic raid-lead profile refreshed against current 2026-09 split/stasis strategy and Blizzard hotfixes; raid groups hold their physical sides after Stasis while tanks swap Sentinels; Mythic Protovenom retained separately; PASS-LIVE pending",
     profiles = {
-        normal = {
-            explanation = {
-                "Stay with your assigned green or red side.",
-                "Keep both bosses 40+ yards apart and their health even.",
-                "Green side: kill the slime, then clear green droplets.",
-                "Red mark on you: stack with your group to split damage.",
-                "Stasis: pair toxin numbers to total exactly four.",
-                "During Stasis, heal the weaker boss while pairing toxins.",
-                "Use 1+3 or 2+2, then return to your side.",
-                "After Stasis: stay put while tanks swap the bosses.",
-            },
-            calls = normalCalls,
-        },
         heroic = {
             explanation = {
-                "Returning green poison: move out of its path.",
-                "Blood poison on you: move out and drop the puddle away.",
+                "{{GROUP_SPLIT:RED:GREEN}}",
+                "AFTER STASIS — RAID HOLDS SIDES; TANKS SWAP BOSSES",
             },
             calls = heroicCalls,
         },
         mythic = {
             explanation = {
-                "Protovenom on you: find another Protovenom-marked player.",
-                "Touch that marked player; never touch an unmarked player.",
+                "Split into two balanced sides and keep both bosses 40+ yards apart.",
+                "After Stasis players hold their physical sides while tanks swap bosses.",
+                "Protovenom on you: find another Protovenom-marked player and pair safely.",
             },
             calls = mythicCalls,
         },

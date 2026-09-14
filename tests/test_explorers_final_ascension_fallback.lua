@@ -55,10 +55,12 @@ assert(seedCount == 1,
     "encounter selection must reseed native events even while DBM globally suppresses Blizzard")
 
 local native = Timeline.timers["Blizzard|final-ascension-native"]
-assert(native and native.call and native.call.key == "fish",
-    "DBM suppression must not hide the native Final Ascension timer when DBM has no direct representation")
+assert(native and native.call and native.call.key == "fish_gebbo",
+    "DBM suppression must retain Final Ascension as the first Heroic fish-sequence call when DBM has no direct representation")
+assert(native.call.sequenceKey == "fish",
+    "retained Final Ascension fallback must remain attached to the Heroic fish sequence")
 assert(Timeline.timers["Blizzard|fling-fish-native"] == nil,
-    "Fling Fish is a separate mechanic and must never alias the Final Ascension raidleader call")
+    "Fling Fish is a separate mechanic and must never alias the Final Ascension raid-lead call")
 
 Timeline:ProviderTimerStarted("BigWigs", "final-ascension-direct", {
     key = 1292779,
@@ -67,10 +69,11 @@ Timeline:ProviderTimerStarted("BigWigs", "final-ascension-direct", {
     nativeEventID = 501,
     precision = "exact",
 })
-local selected = Timeline:GetTimerForCall("fish")
+local selected = Timeline:GetTimerForCall("fish_gebbo")
 assert(selected and selected.providerName == "BigWigs",
     "an exact direct BigWigs Final Ascension timer must outrank the retained native fallback")
 assert(selected.occurrenceID == native.occurrenceID,
     "direct and native Final Ascension representations must deduplicate to one occurrence")
 
-print("ok - Lost Explorers Final Ascension reseeds under DBM authority without aliasing Fling Fish")
+_G.issecretvalue = nil
+print("ok - Lost Explorers Final Ascension reseeds under DBM authority and feeds the Heroic fish sequence")
