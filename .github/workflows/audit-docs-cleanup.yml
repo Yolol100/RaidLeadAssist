@@ -1,0 +1,83 @@
+name: Audit documentation cleanup
+
+on:
+  push:
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Remove stale Normal runtime claims
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          replacements = {
+              'docs/AUDIT_SOURCES.md': [
+                  ('Normal/Heroic do not need a fixed crate roster. Mythic alone uses a controlled breaker rotation so everyone else can clear 15+ yards before the break.', 'Heroic does not need a fixed crate roster. Mythic alone uses a controlled breaker rotation so everyone else can clear 15+ yards before the break.'),
+                  ('Normal resolves fresh eligible soakers dynamically, while Heroic/Mythic use configured groups.', 'Heroic/Mythic use configured fresh groups; Normal is not an RLA runtime profile.'),
+                  ('Normal Guillotine only needs any 5+ soakers; Heroic adds rotating groups; Mythic uses fresh groups because the repeat-hit restriction is stronger.', 'Heroic uses the current rotating-group Guillotine contract; Mythic uses fresh groups because the repeat-hit restriction is stronger.'),
+                  ('Normal/Heroic Spectral Coils stays a full-raid Square stack; Mythic alone introduces the assigned Coil rotation and additional egg/incubation ownership in the current plan.', 'Heroic uses the reviewed alternating Coil contract; Mythic adds its additional egg/incubation ownership.'),
+              ],
+              'docs/BOSSES_1_4_TACTIC_ALIGNMENT_2026-09-14.md': [
+                  ('Normal Pyre now states the full execution split in the raidleader call: melee soak, ranged stay out.', 'Heroic Pyre now states the full execution split in the raidleader call: melee soak, ranged stay out.'),
+                  ('The normal plan explicitly retains healing the weaker boss during Stasis.', 'The Heroic plan explicitly retains healing the weaker boss during Stasis.'),
+                  ('Normal/Heroic crate calls now use “break” consistently with the player plan.', 'Heroic crate calls now use “break” consistently with the player plan.'),
+                  ('Normal/Heroic remain assignment-free; Mythic retains two required breakers plus an optional third rotation slot.', 'Heroic remains assignment-free; Mythic retains two required breakers plus an optional third rotation slot.'),
+              ],
+              'docs/FINAL_BOSSES_REVIEW_2026-09-13.md': [
+                  ('### Normal / Heroic Guillotine', '### Heroic Guillotine (RLA runtime; Normal source context only)'),
+                  ('- says `3+` on Normal;', '- does not expose a Normal runtime profile;'),
+                  ('- Normal: the raid can soak each active Coil as one group, but every impact must still meet the live **40%+** floor.\n- Heroic: current Icy Veins', '- Heroic: alternating Coil teams must still meet the live **40%+** floor on every impact.\n- Heroic: current Icy Veins'),
+                  ('on Normal, Heroic and Mythic.', 'on Heroic and Mythic.'),
+                  ('- The Coiled Altar Normal/Heroic 3-player Guillotine floor is guarded; Mythic 5+ remains guarded separately.', '- The Coiled Altar Heroic 3-player Guillotine floor is guarded; Mythic 5+ remains guarded separately.'),
+                  ('- Normal keeps no fixed Coil roster; Heroic/Mythic require two non-overlapping alternating Coil teams.', '- Heroic/Mythic require two non-overlapping alternating Coil teams.'),
+                  ('1. Normal/Heroic The Coiled Altar Guillotine', '1. Heroic The Coiled Altar Guillotine'),
+                  ('3. Ula\'tek Normal/Heroic exact', '3. Ula\'tek Heroic/Mythic exact'),
+                  ('4. Ula\'tek Normal side carriers', '4. Ula\'tek Heroic/Mythic side carriers'),
+              ],
+              'docs/LIVE_TEST_MATRIX.md': [
+                  ('one supported Normal/Heroic encounter', 'one supported Heroic/Mythic encounter'),
+                  ('8 bosses x Normal/Heroic/Mythic', '8 bosses x Heroic/Mythic'),
+                  ('Normal/Heroic have no unnecessary fixed assignment UI.', 'Heroic has no unnecessary fixed assignment UI.'),
+                  ('Normal/Heroic simple profile', 'Heroic simple profile'),
+                  ('Normal/Heroic 3-player Guillotine assignment', 'Heroic 3-player Guillotine assignment'),
+                  ('the Normal/Heroic 3-player rule', 'the Heroic 3-player rule'),
+                  ('Normal raid-wide Coils, Heroic/Mythic alternating Coil teams', 'Heroic/Mythic alternating Coil teams'),
+              ],
+              'docs/TEN_OF_TEN_ACCEPTANCE.md': [
+                  ('Normal/Heroic/Mythic map to the correct supported difficulty IDs.', 'Heroic/Mythic map to the correct supported difficulty IDs; Normal remains unsupported.'),
+                  ('Every plan is reviewed separately for Normal/Heroic/Mythic.', 'Every plan is reviewed separately for Heroic/Mythic.'),
+              ],
+          }
+          changed = False
+          for filename, pairs in replacements.items():
+              path = Path(filename)
+              text = path.read_text(encoding='utf-8')
+              original = text
+              for old, new in pairs:
+                  text = text.replace(old, new)
+              if text != original:
+                  path.write_text(text, encoding='utf-8')
+                  changed = True
+          Path('/tmp/audit-docs-changed').write_text('1' if changed else '0')
+          PY
+          if [ "$(cat /tmp/audit-docs-changed)" = 0 ]; then exit 0; fi
+          git diff --check
+          git config user.name "RaidLeadAssist Audit"
+          git config user.email "actions@users.noreply.github.com"
+          git add docs
+          git diff --cached --check
+          git commit -m "docs: align Heroic Mythic support claims"
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push origin HEAD:audit/full-system-20260914
