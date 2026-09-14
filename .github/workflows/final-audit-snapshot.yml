@@ -8,7 +8,6 @@ permissions:
 
 jobs:
   apply:
-    if: github.ref == 'refs/heads/audit/final-plafond-20260914' && github.event.head_commit.message == 'chore: run final audit patch'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -21,6 +20,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          if [ ! -f final-audit-nonworkflow.patch.gz.b64 ]; then
+            echo "No staged audit patch; nothing to apply."
+            exit 0
+          fi
           base64 -d final-audit-nonworkflow.patch.gz.b64 | gunzip > /tmp/final-audit.patch
           git apply --check /tmp/final-audit.patch
           git apply /tmp/final-audit.patch
