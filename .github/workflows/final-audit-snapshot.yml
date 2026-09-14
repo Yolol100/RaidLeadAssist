@@ -15,10 +15,12 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+          fetch-depth: 2
       - name: Create exact tracked-source snapshot
         shell: bash
         run: |
           set -euo pipefail
+          git cat-file -e c00274e5650d9fe5f18730d23fc70a37293dd517^{commit}
           git archive --format=zip --output=final-audit-source.zip c00274e5650d9fe5f18730d23fc70a37293dd517
           git ls-tree -r --name-only c00274e5650d9fe5f18730d23fc70a37293dd517 > tracked-files.txt
           sha256sum final-audit-source.zip > final-audit-source.zip.sha256
