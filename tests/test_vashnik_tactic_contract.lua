@@ -10,14 +10,16 @@ local function plan(d) return table.concat(Registry:GetProfile("vashnik", d).exp
 local function has(text, needle) return text:find(needle,1,true) ~= nil end
 
 for _, d in ipairs({"normal","heroic","mythic"}) do
-    assert(Registry:GetProfile("vashnik",d).callsByKey.imbibe.warning == "Fountain adds: kill them before center.")
+    local profile = Registry:GetProfile("vashnik",d)
+    assert(profile.callsByKey.imbibe.warning == "Fountain adds: kill them before center.")
+    assert(profile.callsByKey.siphon.warning == "Blood circle: several teammates stack for healing.")
 end
 local normal = plan("normal")
 assert(has(normal, "Flame+Shadow, Shadow+Blood, then Blood+Flame"))
 assert(has(normal, "Fountain adds spawn"))
 assert(has(normal, "Fire debuff on you"))
 assert(has(normal, "Blood circle on you"))
-assert(has(normal, "stack with several teammates so you can be healed"))
+assert(has(normal, "several teammates stack in it so you can be healed"))
 assert(has(normal, "Shadow debuff on you"))
 assert(has(normal, "Froth circle on you"))
 
@@ -37,4 +39,4 @@ assert(has(mythic, "switch and kill it immediately"))
 assert(not has(mythic, "Skull"), "Mythic should contain only changes from Heroic")
 assert(Registry:GetProfile("vashnik","mythic").callsByKey.froth.warning == "Froth: aim one wave through Tumor.")
 
-print("ok - Vashnik keeps one fixed route plus clear Normal/Heroic/Mythic execution")
+print("ok - Vashnik keeps one fixed route plus explicit Blood-circle, Heroic and Mythic execution")
