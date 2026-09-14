@@ -17,17 +17,19 @@ for _, bossKey in ipairs({"nekzali","sentinels","explorers","vashnik","sszorak",
     counts(bossKey, "normal", 0, 0, 0)
 end
 counts("nekzali", "heroic", 0, 0, 1); counts("nekzali", "mythic", 0, 0, 2)
-counts("sentinels", "heroic", 2, 0, 1); counts("sentinels", "mythic", 2, 0, 1)
+counts("sentinels", "heroic", 2, 0, 2); counts("sentinels", "mythic", 2, 0, 1)
 counts("explorers", "heroic", 3, 0, 1); counts("explorers", "mythic", 3, 0, 1)
 counts("vashnik", "heroic", 0, 0, 2); counts("vashnik", "mythic", 0, 2, 1)
 counts("sszorak", "heroic", 4, 0, 2); counts("sszorak", "mythic", 3, 0, 1)
-counts("twinfangs", "heroic", 0, 0, 3); counts("twinfangs", "mythic", 0, 0, 2)
+counts("twinfangs", "heroic", 0, 0, 2); counts("twinfangs", "mythic", 0, 0, 2)
 counts("altar", "heroic", 2, 0, 2); counts("altar", "mythic", 2, 0, 2)
 counts("ulatek", "heroic", 3, 0, 2); counts("ulatek", "mythic", 3, 0, 2)
 
 local sentinels = Registry:GetLayout("sentinels", "heroic")
 assert(sentinels.markers[1].icon == 7 and sentinels.markers[1].label == "Red side")
 assert(sentinels.markers[2].icon == 4 and sentinels.markers[2].label == "Green side")
+assert(sentinels.checks[2]:find("tanks swap", 1, true),
+    "Heroic Sentinels setup must lock the post-Stasis tank swap")
 local ssz = Registry:GetLayout("sszorak", "heroic")
 assert(#ssz.markers == 4)
 assert(ssz.markers[1].icon == 6 and ssz.markers[2].icon == 5,
@@ -35,7 +37,11 @@ assert(ssz.markers[1].icon == 6 and ssz.markers[2].icon == 5,
 assert(ssz.markers[3].icon == 7 and ssz.markers[4].icon == 4,
     "X must be opposite Green")
 assert(Registry:GetLayout("vashnik", "heroic").summary:find("Purple/Shadow + Orange/Fire", 1, true))
-assert(Registry:GetLayout("twinfangs", "heroic").checks[1]:find("raid soaks", 1, true))
+local twin = Registry:GetLayout("twinfangs", "heroic")
+assert(twin.checks[1]:find("three non%-overlapping Feast teams"),
+    "Heroic Twin Fangs setup must require three fresh Feast teams")
+assert(twin.checks[2]:find("at most one", 1, true),
+    "Heroic Twin Fangs setup must prohibit repeat Feast soaks")
 
 Setup:Initialize()
 assert(not Setup:IsReady("sszorak", "heroic"))
