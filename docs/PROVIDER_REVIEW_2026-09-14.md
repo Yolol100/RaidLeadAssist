@@ -25,7 +25,7 @@ Current BigWigs blob: `6c873faefbc1b76c2f20b8ea79a450cfeb3868d5`.
 Two upstream changes are material to the provider audit:
 
 - BigWigs now stops the `Rage of the Shackled` bar when the channel ends early. RLA already consumes public BigWigs stop events and keeps occurrence identity/reset handling in `TimelineService`, so an early stop correctly makes that occurrence non-actionable instead of leaving a stale countdown.
-- BigWigs added Doomscale Warden and Blightscale Wretch tracking bars. These bars are not automatically promoted by RLA. The Ula'tek profile still permits automatic guidance only for its explicit reviewed stable-ID exact/native allowlist; Warden/egg/Grasping Fangs and other strategy milestones remain manual.
+- BigWigs added Doomscale Warden and Blightscale Wretch (`Warden/Wretch`) tracking bars. These bars are not automatically promoted by RLA. The Ula'tek profile still permits automatic guidance only for its explicit reviewed stable-ID exact/native allowlist; Warden/egg/Grasping Fangs and other strategy milestones remain manual.
 
 Blizzard's September 9-10 hotfixes reinforce the current strategy boundaries, including the 40% Spectral Coils floor, three Grasping Fangs targets per side on Heroic, Warden timing fixes and other Ula'tek corrections. They do not justify broadening RLA's timing allowlist without a separate product review.
 
