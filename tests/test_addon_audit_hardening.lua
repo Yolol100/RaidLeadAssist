@@ -136,7 +136,7 @@ assert(baseline:find("2f9fdaf2a4d6b2d986d18c6ed8eb78464e544939", 1, true),
 assert(baseline:find('"releaseTag": "v424.8"', 1, true), "BigWigs source-reviewed stable release pin must be v424.8")
 assert(baseline:find("8177bf9d06f2f1b6c51b54bf8da330a39e4c3651", 1, true),
     "BigWigs v424.8 release commit must stay pinned")
-assert(baseline:find("4c9aea8bebb365878ac298d166dadf21e4e807ce", 1, true),
+assert(baseline:find("511af2ec3a91608cfa9e476e2d4fe1b1cbbe10ca", 1, true),
     "BigWigs current BossPrototype source baseline must stay pinned")
 assert(baseline:find("01b5f12872ad9abfe165cbb77ea2f00dccba7002", 1, true),
     "Nek'zali BigWigs current baseline must stay pinned")
