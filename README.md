@@ -55,7 +55,7 @@ Only one verified current mechanic is emphasized. When two distinct verified mec
 
 Provider payloads are untrusted runtime input. Secret, malformed, stale or cross-encounter data is rejected/downgraded. Direct bossmod timers must resolve to the verified active encounter. A bossmod timer cancelled well before its deadline cannot later reappear as a phantom `LATE` call; the short late snapshot is retained only when the mechanic was actually observed inside the final grace window.
 
-The current **source-reviewed** stable provider contracts are **DBM 12.1.9** and **BigWigs v424.8**. `docs/UPSTREAM_BASELINES.json` pins those releases plus the exact watched current-`master` files re-reviewed on **2026-09-13**, while Blizzard's live generated Encounter Timeline contract remains unchanged. RLA continues to consume resolved public timer durations rather than copying private bossmod schedules.
+The current **source-reviewed** stable provider contracts are **DBM 12.1.9** and **BigWigs v424.8**. `docs/UPSTREAM_BASELINES.json` pins those releases plus the exact watched current-`master` files re-reviewed on **2026-09-13**, while Blizzard's live generated Encounter Timeline contract remains unchanged. RLA continues to consume resolved public timer durations rather than copying private bossmod schedules; see `docs/PROVIDER_REVIEW_2026-09-13.md`.
 
 Source review is separate from **live-tested** evidence. The runtime doctor/live matrix still records **DBM 12.1.6** and **BigWigs v424.1** as the last live-tested contracts until fresh Retail evidence is collected. A newer source-reviewed pin therefore means “contract inspected and CI-compatible”, not “proved in a real raid client”. When a bossmod cannot provide a usable matching timer, RLA may use Blizzard Encounter Timeline data for supported calls when the normal precision and authority gates pass. Manual calls remain available independently of bossmod timing.
 
@@ -65,11 +65,11 @@ The tactic/runtime review for **The Coiled Altar** and **Ula'tek** is recorded i
 
 For The Coiled Altar, Normal/Heroic Guillotine follows Blizzard's live **3-player minimum** while Heroic keeps alternating assigned teams. Mythic remains on fresh 5+ groups because the 3-player hotfix does not include Mythic. The intermission call keeps the current progression strategy of using Bloodlust during Soulbinding's Zul'jan damage window and staggering fragment interceptions.
 
-For Ula'tek, RLA permits fail-closed exact/native provider timing for a deliberately limited set of stable public DBM/BigWigs identities: Caustic Waves, Spectral Coils, Rage of the Shackled, Call of the Serpent, Serpent's Bite, Circling Prey and Mythic Toxic Incubation. Approximate provider data remains non-actionable; Doomscale Warden, egg choices, Grasping Fangs execution and the generic Phase 3 transition remain manual raid-leader calls.
+Ula'tek is no longer globally manual-only. RLA permits fail-closed exact/native provider timing for a deliberately limited set of stable public DBM/BigWigs identities: Caustic Waves, Spectral Coils, Rage of the Shackled, Call of the Serpent, Serpent's Bite, Circling Prey and Mythic Toxic Incubation. Approximate provider data remains non-actionable; Doomscale Warden, egg choices, Grasping Fangs execution and the generic Phase 3 transition remain manual raid-leader calls.
 
 Provider timer identity stays separate from display spell identity. Mythic Toxic Incubation, for example, matches reviewed provider timer key `1299757` while the UI can retain display spell `1299759`. Current bossmod source identifies `1301510` as the Circling Prey/platform-break timing identity.
 
-The **0.9.0-beta.68** candidate combines the beta67 encounter review with the Phase 4 timing-guidance layer and Phase 5 source QA hardening. It is technically source/CI-testable but is not `PASS-LIVE` until the exact package is exercised in Retail according to `docs/LIVE_TEST_MATRIX.md`.
+The **0.9.0-beta.68** candidate combines the beta67 encounter review with the Phase 4 timing-guidance layer and Phase 5 source QA hardening. It is technically source/CI-testable but is not yet PASS-LIVE; the exact package must still be exercised in Retail according to `docs/LIVE_TEST_MATRIX.md`.
 
 ## Operational controls
 
