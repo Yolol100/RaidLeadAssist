@@ -5,6 +5,7 @@ local sent = {}
 local timers = {}
 local leader = true
 local encounterActive = false
+local splitValue = "G1 = RED — G2 = GREEN"
 
 _G.GetTime = function() return now end
 _G.IsInRaid = function() return true end
@@ -22,6 +23,9 @@ _G.table.wipe = _G.table.wipe or function(tbl) for key in pairs(tbl) do tbl[key]
 _G.issecretvalue = function() return false end
 
 ns:RegisterModule("Core.Constants", { BRIEFING_LINE_DELAY = 0.1, BRIEFING_CLICK_LOCK_SECONDS = 0.5 })
+ns:RegisterModule("Services.RaidGroupSplitService", {
+    Describe = function() return splitValue end,
+})
 T.Load("Core/Util.lua", ns)
 T.Load("Services/RaidWarningService.lua", ns)
 local Service = ns:GetModule("Services.RaidWarningService")
@@ -45,4 +49,20 @@ leader = false
 assert(Service:Send("manual") == false)
 assert(#sent == 1)
 
-print("ok - raid warning lifecycle and length guards")
+leader = true
+splitValue = nil
+now = now + 1
+local timerCount = #timers
+assert(Service:SendBriefing({ "{{GROUP_SPLIT:RED:GREEN}}" }) == false,
+    "dynamic briefing must fail closed when the current raid split cannot be verified")
+assert(#timers == timerCount, "failed dynamic split must not schedule any Raid Warning")
+assert(ns.messages[#ns.messages]:find("verified multi%-group raid roster"),
+    "failed dynamic split must explain the missing verified roster")
+
+splitValue = "G1 = RED — G2 = GREEN"
+now = now + 1
+assert(Service:SendBriefing({ "{{GROUP_SPLIT:RED:GREEN}}" }) == true,
+    "verified dynamic split must remain sendable")
+assert(#timers == timerCount + 1)
+
+print("ok - raid warning lifecycle, length guards and dynamic split fail-closed behavior")
