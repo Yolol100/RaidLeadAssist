@@ -21,7 +21,7 @@ local NEKZALI_PYRE = {
             callLabel = "Pyre",
             required = true,
             compactGroups = true,
-            helper = "Choose actual players or complete current raid groups. No separate Cremation assignment is needed.",
+            helper = "Choose actual players or complete current raid groups. Called players soak; everyone else stays out.",
         },
     },
 }
@@ -71,12 +71,12 @@ local NEKZALI_MYTHIC = {
 }
 
 local SENTINELS_SPLIT = {
-    summary = "Assign two non-overlapping physical sides. Players keep their side after Stasis; tanks swap bosses.",
+    summary = "Assign two non-overlapping physical sides. Players hold their side after Stasis while tanks swap bosses.",
     sections = {
         {
             key = "split",
             title = "Fixed Raid Sides",
-            description = "Use actual players or complete current raid groups. Green stays Triangle; red stays Cross.",
+            description = "Use actual players or complete current raid groups. Green stays Triangle; red stays Cross; tanks swap bosses after Stasis.",
             columns = 2,
             slots = {
                 {
