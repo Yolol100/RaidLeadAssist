@@ -8,7 +8,6 @@ permissions:
 
 jobs:
   apply:
-    if: github.ref == 'refs/heads/audit/full-system-20260914' && github.event.head_commit.message == 'chore: execute staged audit patch'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
