@@ -98,12 +98,7 @@ function RaidGroupSplit:Describe(firstLabel, secondLabel, roster)
     firstLabel = tostring(firstLabel or "A")
     secondLabel = tostring(secondLabel or "B")
     local split = self:BuildSplit(roster)
-    if not split then
-        -- This fallback is only for preview/out-of-raid state where there is no
-        -- authoritative multi-group roster. Real raid briefings resolve against
-        -- the populated subgroups returned by the WoW roster API.
-        return ("G1 + G2 = %s — G3 + G4 = %s"):format(firstLabel, secondLabel)
-    end
+    if not split then return nil end
     return ("%s = %s — %s = %s"):format(
         self:FormatGroups(split.firstGroups), firstLabel,
         self:FormatGroups(split.secondGroups), secondLabel
