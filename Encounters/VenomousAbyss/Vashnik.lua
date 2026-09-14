@@ -32,9 +32,9 @@ local fireStagger = manualCall(
 )
 local siphon = manualCall(
     "siphon", "Siphoning Infection",
-    "Stack on Siphon target",
-    "Siphon: stack on the target.",
-    "Stack for siphon"
+    "Stack several in Blood circle",
+    "Blood circle: several teammates stack for healing.",
+    "Stack blood circle"
 )
 local catalyst = timedCall(
     "catalyst", "Malignant Catalyst",
@@ -70,7 +70,7 @@ Registry:Register({
                 "Fountain order: Flame+Shadow, Shadow+Blood, then Blood+Flame.",
                 "Fountain adds spawn: kill them before they reach the center.",
                 "Fire debuff on you: run far away before it explodes.",
-                "Blood circle on you: stack with several teammates so you can be healed.",
+                "Blood circle on you: several teammates stack in it so you can be healed.",
                 "Shadow debuff on you: spread and keep moving from eruptions.",
                 "Froth circle on you: spread and aim its waves into clear space.",
             },
