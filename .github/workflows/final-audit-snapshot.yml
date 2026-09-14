@@ -1,0 +1,35 @@
+name: Final audit snapshot
+
+on:
+  push:
+
+permissions:
+  contents: read
+
+jobs:
+  snapshot:
+    if: github.ref == 'refs/heads/audit/final-plafond-20260914'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Create exact tracked-source snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          git archive --format=zip --output=final-audit-source.zip c00274e5650d9fe5f18730d23fc70a37293dd517
+          git ls-tree -r --name-only c00274e5650d9fe5f18730d23fc70a37293dd517 > tracked-files.txt
+          sha256sum final-audit-source.zip > final-audit-source.zip.sha256
+      - name: Upload snapshot
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: final-audit-source-c00274e5650d9fe5f18730d23fc70a37293dd517
+          path: |
+            final-audit-source.zip
+            final-audit-source.zip.sha256
+            tracked-files.txt
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
