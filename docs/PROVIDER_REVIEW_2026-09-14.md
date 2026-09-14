@@ -2,7 +2,13 @@
 
 ## Scope
 
-This review closes the scheduled upstream-drift alert raised on 2026-09-14 for the two watched BigWigs Venomous Abyss modules that changed after the stable `v424.8` release. Stable release pins remain DBM `12.1.9` and BigWigs `v424.8`; only current-`master` watched-file fingerprints are refreshed.
+This review closes the upstream-drift alerts raised on 2026-09-14 for current BigWigs `master`: the Coiled Altar and Ula'tek encounter modules plus the later `Core/BossPrototype.lua` change. Stable release pins remain DBM `12.1.9` and BigWigs `v424.8`; only current-`master` watched-file fingerprints are refreshed.
+
+## BigWigs core
+
+Current BigWigs `Core/BossPrototype.lua` blob: `511af2ec3a91608cfa9e476e2d4fe1b1cbbe10ca`.
+
+Commit `fecae11b6d2547e7387456edc6427379e241c1c0` adds an optional unit argument to BigWigs `SecretMessage` so the secret-safe message can include the current spell target. Raid Lead Assist does not consume BigWigs message text or `SecretMessage` as a timing contract. Its provider integration remains based on the public timer/bar lifecycle and explicitly preserves approximation metadata, so this core change does not widen RLA's provider authority or timing allowlist.
 
 ## The Coiled Altar
 
@@ -25,7 +31,7 @@ Blizzard's September 9-10 hotfixes reinforce the current strategy boundaries, in
 
 ## Decision
 
-- Refresh only the two changed BigWigs current-`master` fingerprints in `docs/UPSTREAM_BASELINES.json`.
+- Refresh the three reviewed BigWigs current-`master` fingerprints in `docs/UPSTREAM_BASELINES.json`.
 - Keep DBM `12.1.9` and BigWigs `v424.8` as the stable source-reviewed release pins.
 - Keep the last live-tested runtime contracts in `/rla doctor` unchanged until new Retail evidence exists.
 - Make the online upstream-drift check part of the required aggregate `validation` gate and therefore part of the release/provenance dependency chain.
@@ -33,6 +39,6 @@ Blizzard's September 9-10 hotfixes reinforce the current strategy boundaries, in
 
 ## Sources
 
-- BigWigs current master: `TheVenomousAbyss/CoiledAltar.lua` and `TheVenomousAbyss/Ulatek.lua`.
-- BigWigs commits reviewed: `3ee110feee0f8e476ee2c3c9e8bbf34fb2edddbe`, `f38a2ba610597569ffbac13ec4ef1a86f2b9e12f`, `f1156021f0c912e02c501afb15afe5022e0a8352`, `690d5951a90f41fea31cc90759263c853cbeacf2`, `488c17a0b6a46afc9c9be943f331e3ef3ac3af1d`.
+- BigWigs current master: `Core/BossPrototype.lua`, `TheVenomousAbyss/CoiledAltar.lua` and `TheVenomousAbyss/Ulatek.lua`.
+- BigWigs commits reviewed: `fecae11b6d2547e7387456edc6427379e241c1c0`, `3ee110feee0f8e476ee2c3c9e8bbf34fb2edddbe`, `f38a2ba610597569ffbac13ec4ef1a86f2b9e12f`, `f1156021f0c912e02c501afb15afe5022e0a8352`, `690d5951a90f41fea31cc90759263c853cbeacf2`, `488c17a0b6a46afc9c9be943f331e3ef3ac3af1d`.
 - Blizzard Hotfixes: September 9, 2026 and September 10, 2026.
