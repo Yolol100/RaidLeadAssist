@@ -14,7 +14,7 @@ Setup:RegisterLayouts("sentinels", {
     heroic=layout("RED/GREEN sides use the dynamic populated-subgroup split.", {
         {key="red_side", kind="world", icon=7, label="Red side", purpose="Cross marks the red-side reference."},
         {key="green_side", kind="world", icon=4, label="Green side", purpose="Triangle marks the green-side reference."},
-    }, {"Briefing generates the closest balanced whole-group RED/GREEN split from the current roster."}),
+    }, {"Briefing generates the closest balanced whole-group RED/GREEN split from the current roster.", "After Stasis, raid groups return to their physical side while tanks swap Sentinels."}),
     mythic=layout("Set two fixed physical Mythic sides; players hold sides while tanks swap bosses after Stasis.", {
         {key="green_side", kind="world", icon=4, label="Green side", purpose="Triangle is the green-side reference."},
         {key="red_side", kind="world", icon=7, label="Red side", purpose="Cross is the red-side reference."},
@@ -54,7 +54,7 @@ Setup:RegisterLayouts("sszorak", {
 })
 
 Setup:RegisterLayouts("twinfangs", {
-    heroic=layout("Heroic uses the custom raid → main tank → off tank Feast plan.", {}, {"Feast 1: raid soaks with both tanks out.", "Feast 2: main tank solo.", "Feast 3: off tank solo."}),
+    heroic=layout("Heroic uses three fresh Ravenous Feast soak teams.", {}, {"Assign three non-overlapping Feast teams before pull.", "Each player soaks at most one of the three Feast hits; Feasted makes repeat hits unsafe."}),
     mythic=layout("Mythic keeps three Feast groups and Broodling interrupt owners.", {}, {"Set three different 3+ Feast groups.", "Assign Broodling interrupts."}),
 })
 
