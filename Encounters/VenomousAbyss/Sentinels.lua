@@ -30,9 +30,9 @@ local heroicCalls = {
     {
         key = "miasma",
         ability = "Unstable Miasma",
-        action = "RED — GROUP SOAK",
-        warning = "RED — GROUP SOAK",
-        voice = "Group soak",
+        action = "RED — GROUP SOAK, DROP BLOOD OUT",
+        warning = "RED — GROUP SOAK, DROP BLOOD OUT",
+        voice = "Group soak then drop out",
         spellIDs = { 1288232 },
         prepareSeconds = 5,
         pressSeconds = 1,
@@ -110,10 +110,13 @@ Registry:Register({
     key = "sentinels",
     name = "Entombed Sentinels",
     encounterID = 3445,
-    strategyStatus = "Heroic raid-lead profile refreshed against current 2026-09 split/stasis strategy and Blizzard hotfixes; Mythic Protovenom retained separately; PASS-LIVE pending",
+    strategyStatus = "Heroic raid-lead profile refreshed against current 2026-09 split/stasis strategy and Blizzard hotfixes; raid groups hold their physical sides after Stasis while tanks swap Sentinels; Mythic Protovenom retained separately; PASS-LIVE pending",
     profiles = {
         heroic = {
-            explanation = { "{{GROUP_SPLIT:RED:GREEN}}" },
+            explanation = {
+                "{{GROUP_SPLIT:RED:GREEN}}",
+                "AFTER STASIS — RAID HOLDS SIDES; TANKS SWAP BOSSES",
+            },
             calls = heroicCalls,
         },
         mythic = {
