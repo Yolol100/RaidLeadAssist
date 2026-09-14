@@ -51,6 +51,7 @@ function RaidWarningService:ResolveBriefingLines(lines)
         local firstLabel, secondLabel = line:match("^{{GROUP_SPLIT:([A-Z]+):([A-Z]+)}}$")
         if firstLabel and secondLabel then
             line = RaidGroupSplit:Describe(firstLabel, secondLabel)
+            if not line then return nil end
         elseif line:find("{{GROUP_SPLIT:", 1, true) then
             return nil
         end
@@ -108,7 +109,7 @@ function RaidWarningService:SendBriefing(lines)
 
     lines = self:ResolveBriefingLines(lines)
     if not lines then
-        ns:Print("Boss Explanation contains an invalid dynamic group split.")
+        ns:Print("Boss Explanation requires a verified multi-group raid roster for its dynamic group split.")
         return false
     end
     lines = compactAssignmentLines(lines)
