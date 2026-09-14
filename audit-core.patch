@@ -1,0 +1,259 @@
+diff --git a/.github/workflows/validate.yml b/.github/workflows/validate.yml
+index edcbaea..68e70db 100644
+--- a/.github/workflows/validate.yml
++++ b/.github/workflows/validate.yml
+@@ -13,7 +13,7 @@ concurrency:
+   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+ 
+ jobs:
+-  validation:
++  source-validation:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 15
+     steps:
+@@ -132,7 +132,7 @@ jobs:
+           compression-level: 0
+ 
+   reproducibility-check:
+-    needs: [validation, reproducibility]
++    needs: [source-validation, reproducibility]
+     runs-on: ubuntu-24.04
+     timeout-minutes: 5
+     steps:
+@@ -154,6 +154,14 @@ jobs:
+           cmp primary/RaidLeadAssist.zip.sha256 repro/RaidLeadAssist.zip.sha256
+           cmp primary/SBOM.spdx.json repro/SBOM.spdx.json
+ 
++  validation:
++    needs: [source-validation, reproducibility-check]
++    runs-on: ubuntu-24.04
++    timeout-minutes: 2
++    steps:
++      - name: Confirm complete CI gate
++        run: echo "Source validation and reproducibility checks passed for $GITHUB_SHA"
++
+   provenance:
+     if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+     needs: reproducibility-check
+diff --git a/README.md b/README.md
+index 131718b..c4c3e56 100644
+--- a/README.md
++++ b/README.md
+@@ -4,13 +4,13 @@
+ 
+ ## At a glance
+ 
+-Raid Lead Assist is a fail-closed raid-leader callout and assignment panel for The Venomous Abyss. It supports separate Normal, Heroic and Mythic strategy profiles while leaving protected combat decisions to players.
++Raid Lead Assist is a fail-closed raid-leader callout and assignment panel for The Venomous Abyss. It supports separate Heroic and Mythic strategy profiles while leaving protected combat decisions to players.
+ 
+ | Area | Evidence |
+ | --- | --- |
+ | Audience | Raid leaders who need repeatable pre-pull plans and bounded manual callouts |
+ | Stack | Lua, WoW Retail APIs and GitHub Actions validation |
+-| Coverage | Eight encounters and 24 difficulty-specific profiles |
++| Coverage | Eight encounters and 16 Heroic/Mythic profiles |
+ | Safety | Unknown encounters, unsupported difficulties and stale or malformed state disable automatic guidance |
+ | Quality | Validation workflow plus upstream-drift monitoring |
+ 
+@@ -31,7 +31,7 @@ encounter + difficulty context -> validated strategy profile
+ unknown or invalid state       -> automatic guidance disabled
+ ```
+ 
+-Raid Lead Assist (RLA) is a raid-leader callout panel for **The Venomous Abyss** with separate Normal, Heroic and Mythic strategy profiles. It provides pre-pull plans, boss-specific assignments, manual Raid Warning buttons and optional timing/audio guidance.
++Raid Lead Assist (RLA) is a raid-leader callout panel for **The Venomous Abyss** with separate Heroic and Mythic strategy profiles. It provides pre-pull plans, boss-specific assignments, manual Raid Warning buttons and optional timing/audio guidance.
+ 
+ Automatic guidance is deliberately narrow. A timer must resolve to a stable numeric spell identity owned by the selected call and must already be exact/native and actionable. RLA then exposes one normalized current mechanic at a time using `WAIT -> SOON -> PRESS NOW -> LATE`. `LATE` is bounded to a one-second grace window. Localized/name-only matches, wrong IDs, approximate bars, faded bars, stale state and malformed input do not become actionable guidance.
+ 
+@@ -41,7 +41,7 @@ RLA is fail-closed: uncertain encounter identity, unsupported difficulty, malfor
+ 
+ ## Encounter, calls and assignments
+ 
+-RLA supports eight encounters and 24 Normal/Heroic/Mythic profiles. During a supported encounter WoW's encounter/difficulty context locks the active profile. Unknown encounters and unsupported difficulties disable calls/timing. Pre-pull plans cannot be sent during an active encounter.
++RLA supports eight encounters and 16 Heroic/Mythic profiles. During a supported encounter WoW's encounter/difficulty context locks the active profile. Unknown encounters and unsupported difficulties disable calls/timing. Pre-pull plans cannot be sent during an active encounter.
+ 
+ Assignments are configured before combat through `ASSIGN`, Settings or `/rla assignments`. PLAYER/GROUP, ROTATION, RULE and SEQUENCE fields are validated per boss/difficulty. Duplicate/overlapping players and hard group-size constraints are rejected where the tactic requires it. Rotation advances only after the matching manual Raid Warning succeeds.
+ 
+@@ -63,7 +63,7 @@ Source review is separate from **live-tested** evidence. The runtime doctor/live
+ 
+ The tactic/runtime review for **The Coiled Altar** and **Ula'tek** is recorded in `docs/FINAL_BOSSES_REVIEW_2026-09-13.md`.
+ 
+-For The Coiled Altar, Normal/Heroic Guillotine follows Blizzard's live **3-player minimum** while Heroic keeps alternating assigned teams. Mythic remains on fresh 5+ groups because the 3-player hotfix does not include Mythic. The intermission call keeps the current progression strategy of using Bloodlust during Soulbinding's Zul'jan damage window and staggering fragment interceptions.
++For The Coiled Altar, Heroic Guillotine follows Blizzard's live **3-player minimum** with alternating assigned teams. Mythic remains on fresh 5+ groups because the 3-player hotfix does not include Mythic. The intermission call keeps the current progression strategy of using Bloodlust during Soulbinding's Zul'jan damage window and staggering fragment interceptions.
+ 
+ Ula'tek is no longer globally manual-only. RLA permits fail-closed exact/native provider timing for a deliberately limited set of stable public DBM/BigWigs identities: Caustic Waves, Spectral Coils, Rage of the Shackled, Call of the Serpent, Serpent's Bite, Circling Prey and Mythic Toxic Incubation. Approximate provider data remains non-actionable; Doomscale Warden, egg choices, Grasping Fangs execution and the generic Phase 3 transition remain manual raid-leader calls.
+ 
+diff --git a/Services/RaidWarningService.lua b/Services/RaidWarningService.lua
+index ed678ce..f21a0fd 100644
+--- a/Services/RaidWarningService.lua
++++ b/Services/RaidWarningService.lua
+@@ -66,6 +66,10 @@ end
+ 
+ function RaidWarningService:SendRaw(text)
+     if type(text) ~= "string" or text == "" then return false end
++    if not self:CanSend() then
++        ns:Print("Raid Warning requires raid leader or assistant.")
++        return false
++    end
+     if #text > MAX_CHAT_LENGTH then
+         ns:Print(("Raid Warning exceeds %d characters; shorten the call before sending."):format(MAX_CHAT_LENGTH))
+         return false
+@@ -93,13 +97,6 @@ function RaidWarningService:CancelBriefing()
+ end
+ 
+ function RaidWarningService:Send(text)
+-    if type(text) ~= "string" or text == "" then return false end
+-
+-    if not self:CanSend() then
+-        ns:Print("Raid Warning requires raid leader or assistant.")
+-        return false
+-    end
+-
+     return self:SendRaw(text)
+ end
+ 
+diff --git a/Services/SetupService.lua b/Services/SetupService.lua
+index 87c1f89..a8d3783 100644
+--- a/Services/SetupService.lua
++++ b/Services/SetupService.lua
+@@ -6,7 +6,7 @@ local SetupService = {
+     confirmations = {},
+ }
+ 
+-local VALID_DIFFICULTIES = { normal = true, heroic = true, mythic = true }
++local VALID_DIFFICULTIES = { heroic = true, mythic = true }
+ 
+ local function confirmationKey(bossKey, difficultyKey)
+     return tostring(bossKey) .. ":" .. tostring(difficultyKey)
+diff --git a/UI/AssignmentFrame.lua b/UI/AssignmentFrame.lua
+index d47dbf6..9e42dc4 100644
+--- a/UI/AssignmentFrame.lua
++++ b/UI/AssignmentFrame.lua
+@@ -151,7 +151,8 @@ function AssignmentFrame:Initialize(database, callbacks)
+     self.bossDropdown.menu:SetPoint("TOPLEFT", self.bossDropdown.frame, "BOTTOMLEFT", 0, -2)
+     self.bossDropdown.menu:SetPoint("TOPRIGHT", self.bossDropdown.frame, "BOTTOMRIGHT", 0, -2)
+ 
+-    local tabWidth = (688 - 12) / 3
++    local difficultyCount = #Constants.DIFFICULTY_ORDER
++    local tabWidth = (688 - (6 * math.max(0, difficultyCount - 1))) / difficultyCount
+     local previous
+     for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
+         local info = Constants.DIFFICULTIES[difficultyKey]
+@@ -170,7 +171,7 @@ function AssignmentFrame:Initialize(database, callbacks)
+ 
+     self.summary = frame:CreateFontString(nil, "OVERLAY")
+     self.summary:SetFont(Theme.font, 9, "OUTLINE")
+-    self.summary:SetPoint("TOPLEFT", self.difficultyTabs.normal, "BOTTOMLEFT", 2, -9)
++    self.summary:SetPoint("TOPLEFT", self.difficultyTabs.heroic, "BOTTOMLEFT", 2, -9)
+     self.summary:SetPoint("RIGHT", -18, 0)
+     self.summary:SetJustifyH("LEFT")
+     self.summary:SetTextColor(Theme.colors.muted[1], Theme.colors.muted[2], Theme.colors.muted[3], 1)
+diff --git a/UI/MainFrame.lua b/UI/MainFrame.lua
+index 19530a6..7d6afed 100644
+--- a/UI/MainFrame.lua
++++ b/UI/MainFrame.lua
+@@ -231,7 +231,8 @@ function MainFrame:Initialize(database, callbacks)
+     self.dropdown.menu:SetPoint("TOPLEFT", self.dropdown.frame, "BOTTOMLEFT", 0, -2)
+     self.dropdown.menu:SetPoint("TOPRIGHT", self.dropdown.frame, "BOTTOMRIGHT", 0, -2)
+ 
+-    local tabWidth = (Theme.width - (Theme.padding * 2) - (Theme.difficultyTabGap * 2)) / 3
++    local difficultyCount = #Constants.DIFFICULTY_ORDER
++    local tabWidth = (Theme.width - (Theme.padding * 2) - (Theme.difficultyTabGap * math.max(0, difficultyCount - 1))) / difficultyCount
+     local previousTab
+     for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
+         local info = Constants.DIFFICULTIES[difficultyKey]
+@@ -263,7 +264,7 @@ function MainFrame:Initialize(database, callbacks)
+ 
+     self.timeline = TimelineBar:Create(frame)
+     self.timeline.frame:SetHeight(Theme.timelineHeight)
+-    self.timeline.frame:SetPoint("TOPLEFT", self.difficultyTabs.normal, "BOTTOMLEFT", 0, -8)
++    self.timeline.frame:SetPoint("TOPLEFT", self.difficultyTabs.heroic, "BOTTOMLEFT", 0, -8)
+     self.timeline.frame:SetPoint("TOPRIGHT", self.difficultyTabs.mythic, "BOTTOMRIGHT", 0, -8)
+ 
+     self.explanationTitle = createSectionTitle(frame, "Boss Plan")
+diff --git a/scripts/audit_repository.py b/scripts/audit_repository.py
+index deb40cc..dfeaaf6 100755
+--- a/scripts/audit_repository.py
++++ b/scripts/audit_repository.py
+@@ -241,9 +241,13 @@ def validate_workflows(files: list[str]) -> None:
+                 f"({persist_count}/{checkout_count})"
+             )
+     validate = read_text(".github/workflows/validate.yml")
+-    for job in ("validation:", "reproducibility:", "reproducibility-check:", "provenance:", "release:"):
++    for job in ("source-validation:", "validation:", "reproducibility:", "reproducibility-check:", "provenance:", "release:"):
+         if job not in validate:
+             fail(f"validation workflow missing required job: {job[:-1]}")
++    if "needs: [source-validation, reproducibility]" not in validate:
++        fail("reproducibility-check must depend on both source validation and independent build")
++    if "needs: [source-validation, reproducibility-check]" not in validate:
++        fail("required validation context must be the final aggregate CI gate")
+     for marker in (
+         "workflow_dispatch:",
+         "concurrency:",
+diff --git a/tests/test_mainframe_usability_contract.lua b/tests/test_mainframe_usability_contract.lua
+index 8a39ba6..009c68f 100644
+--- a/tests/test_mainframe_usability_contract.lua
++++ b/tests/test_mainframe_usability_contract.lua
+@@ -42,6 +42,13 @@ assert(contains(productivityUI, 'AssignmentUI.currentBossKey') and contains(prod
+ assert(not contains(productivityCore, 'ns:GetModule("UI.ActionButton")') and not contains(productivityCore, 'ActionButton:Create('),
+     "Core productivity integration must not own visual child construction")
+ 
++
++assert(not contains(mainFrame, 'difficultyTabs.normal') and not contains(assignmentFrame, 'difficultyTabs.normal'),
++    "Heroic/Mythic-only UI must not anchor controls to the retired Normal tab")
++assert(contains(mainFrame, 'local difficultyCount = #Constants.DIFFICULTY_ORDER')
++    and contains(assignmentFrame, 'local difficultyCount = #Constants.DIFFICULTY_ORDER'),
++    "difficulty tab geometry must derive from the active Heroic/Mythic order")
++
+ -- The plan action is only valid before the pull; its label should say so before users click it.
+ assert(contains(mainFrame, 'SetText("SEND PRE-PULL PLAN")'),
+     "Boss Plan action should expose its pre-pull lifecycle in the visible label")
+diff --git a/tests/test_prepull_setup.lua b/tests/test_prepull_setup.lua
+index 2c3c2f6..c7fa3bf 100644
+--- a/tests/test_prepull_setup.lua
++++ b/tests/test_prepull_setup.lua
+@@ -50,5 +50,6 @@ assert(Setup:IsReady("sszorak", "heroic"))
+ assert(Setup:Toggle("sszorak", "heroic") == false)
+ assert(not Setup:IsReady("sszorak", "heroic"))
+ assert(Setup:IsReady("nekzali", "normal"), "unsupported Normal has no setup and is inert")
++assert(Setup:SetReady("nekzali", "normal", true) == false, "retired Normal must be rejected by SetupService")
+ 
+ print("ok - pre-pull setup exposes only current Heroic/Mythic marker contracts")
+diff --git a/tests/test_raid_group_split.lua b/tests/test_raid_group_split.lua
+index 025d123..012b197 100644
+--- a/tests/test_raid_group_split.lua
++++ b/tests/test_raid_group_split.lua
+@@ -33,6 +33,21 @@ roster = makeRoster({ [1]=4, [3]=4, [4]=4 })
+ local gapped = Split:Describe("RED", "GREEN")
+ assert(not gapped:find("G2", 1, true), "empty subgroup gaps must never appear in the dynamic split")
+ 
++for groupCount = 5, 8 do
++    local spec = {}
++    for subgroup = 1, groupCount do spec[subgroup] = 5 end
++    roster = makeRoster(spec)
++    local split = assert(Split:BuildSplit(roster), tostring(groupCount) .. " populated groups must split safely")
++    assert(math.abs(split.firstPlayers - split.secondPlayers) <= 5,
++        tostring(groupCount) .. " full groups must remain as balanced as whole-subgroup ownership permits")
++end
++
++roster = makeRoster({ [1]=5, [3]=4, [6]=5 })
++local sparse = assert(Split:BuildSplit(roster), "G1/G3/G6 sparse roster must split")
++local sparseText = Split:Describe("RED", "GREEN", roster)
++assert(not sparseText:find("G2", 1, true) and not sparseText:find("G4", 1, true)
++    and not sparseText:find("G5", 1, true), "sparse split must use populated subgroups only")
++
+ local first = Split:Describe("RED", "GREEN")
+ for _ = 1, 10 do
+     assert(Split:Describe("RED", "GREEN") == first, "same roster must always produce the same split")
+diff --git a/tests/test_raid_warning.lua b/tests/test_raid_warning.lua
+index 1f7b2b8..0abe048 100644
+--- a/tests/test_raid_warning.lua
++++ b/tests/test_raid_warning.lua
+@@ -48,6 +48,8 @@ assert(#sent == 1, "oversized Raid Warning must never reach SendChatMessage")
+ leader = false
+ assert(Service:Send("manual") == false)
+ assert(#sent == 1)
++assert(Service:SendRaw("bypass") == false, "raw Raid Warning helper must not bypass permission checks")
++assert(#sent == 1, "permission failure through SendRaw must never reach chat")
+ 
+ leader = true
+ splitValue = nil
