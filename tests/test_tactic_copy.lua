@@ -30,8 +30,12 @@ for _,enc in ipairs(R:GetOrdered()) do
 end
 
 local sentinels = R:GetProfile("sentinels","heroic")
-assert(sentinels.callsByKey.side_swap,
-    "Heroic Sentinels must retain the post-Stasis physical-side/tank-swap call")
+assert(txt("sentinels","heroic"):find("AFTER STASIS — RAID HOLDS SIDES; TANKS SWAP BOSSES",1,true),
+    "Heroic Sentinels must retain the post-Stasis physical-side/tank-swap strategy")
+assert(sentinels.callsByKey.side_swap == nil,
+    "Heroic post-Stasis side handling belongs in the dynamic briefing rather than a duplicate manual button")
+assert(R:GetProfile("sentinels","mythic").callsByKey.side_swap,
+    "Mythic Sentinels keeps the explicit assigned-side swap call")
 
 local vashnik = R:GetProfile("vashnik","heroic")
 assert(vashnik.callsByKey.catalyst and vashnik.callsByKey.siphon == nil and vashnik.callsByKey.fire_stagger == nil,
