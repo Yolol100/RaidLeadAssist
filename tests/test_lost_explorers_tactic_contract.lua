@@ -37,14 +37,14 @@ for _, profile in ipairs({ normal, heroic, mythic }) do
     assert(profile.callsByKey.crates.spellIDs[1] == 1291933, "Throw Junk timer identity drifted")
     assert(profile.callsByKey.fish.spellIDs[1] == 1292779, "Final Ascension timer identity drifted")
     assert(profile.callsByKey.thud.spellIDs[1] == 1296092, "Mighty Thud timer identity drifted")
-    assert(profile.callsByKey.fish.warning == "Fish: Nama, then Iku, then Gebbo.")
+    assert(profile.callsByKey.fish.warning == "Fish: feed Nama, then Iku, then Gebbo.")
     assert(profile.callsByKey.shell == nil and profile.callsByKey.blink == nil)
     assert(profile.callsByKey.volley == nil and profile.callsByKey.bomb == nil)
     assert(profile.callsByKey.position == nil and profile.callsByKey.icebound == nil)
     assert(profile.callsByKey.tankswap == nil and profile.callsByKey.tank == nil)
 end
-assert(normal.callsByKey.crates.warning == "Crates: open them until fish appears.")
-assert(heroic.callsByKey.crates.warning == "Crates: open them until fish appears.")
+assert(normal.callsByKey.crates.warning == "Crates: break until fish appears.")
+assert(heroic.callsByKey.crates.warning == "Crates: break until fish appears.")
 assert(mythic.callsByKey.crates.warning == "Crate: clear 15+ yards, then break.")
 assert(plan(mythic):find("15+ yards away", 1, true))
 
