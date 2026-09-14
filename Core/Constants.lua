@@ -5,18 +5,15 @@ local Constants = {
     RAID_NAME = "THE VENOMOUS ABYSS",
     INSTANCE_ID = 3004,
 
-    NORMAL_DIFFICULTY_ID = 14,
     HEROIC_DIFFICULTY_ID = 15,
     MYTHIC_DIFFICULTY_ID = 16,
 
-    DIFFICULTY_ORDER = { "normal", "heroic", "mythic" },
+    DIFFICULTY_ORDER = { "heroic", "mythic" },
     DIFFICULTIES = {
-        normal = { key = "normal", name = "Normal", label = "NORMAL", id = 14 },
         heroic = { key = "heroic", name = "Heroic", label = "HEROIC", id = 15 },
         mythic = { key = "mythic", name = "Mythic", label = "MYTHIC", id = 16 },
     },
     DIFFICULTY_KEY_BY_ID = {
-        [14] = "normal",
         [15] = "heroic",
         [16] = "mythic",
     },
@@ -117,10 +114,10 @@ function Constants.GetCallState(call, remaining, actionable, timingLead)
     return Constants.CallState.IDLE
 end
 
--- Phase 4 guidance state uses signed remaining time. Automatic guidance is only
--- allowed for an already-verified actionable timer. Far-away mechanics are WAIT,
--- the prepare window is presented as SOON, the press window as PRESS NOW, and a
--- just-missed occurrence stays visibly LATE only for the bounded expiry grace.
+-- Guidance uses signed remaining time. Automatic guidance is only allowed for
+-- an already-verified actionable timer. Far-away mechanics are WAIT, the prepare
+-- window is presented as SOON, the press window as PRESS NOW, and a just-missed
+-- occurrence stays visibly LATE only for the bounded expiry grace.
 function Constants.GetGuidanceState(call, signedRemaining, actionable, timingLead)
     if actionable ~= true or not finite(signedRemaining) then
         return Constants.CallState.IDLE

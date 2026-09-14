@@ -18,7 +18,7 @@ local BOSS_KEYS = {
 local VALID_BOSSES = {}
 for index = 1, #BOSS_KEYS do VALID_BOSSES[BOSS_KEYS[index]] = true end
 
-local VALID_DIFFICULTIES = { normal = true, heroic = true, mythic = true }
+local VALID_DIFFICULTIES = { heroic = true, mythic = true }
 local VALID_KINDS = { world = true, target = true }
 local MARKER_NAMES = {
     [1] = "Star",
@@ -88,7 +88,7 @@ end
 
 function SetupRegistry:RegisterLayouts(bossKey, layouts)
     assert(type(layouts) == "table", "Setup layouts must be a table")
-    for _, difficultyKey in ipairs({ "normal", "heroic", "mythic" }) do
+    for _, difficultyKey in ipairs({ "heroic", "mythic" }) do
         local profile = layouts[difficultyKey]
         if profile then self:Register(bossKey, difficultyKey, profile) end
     end

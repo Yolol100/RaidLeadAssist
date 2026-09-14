@@ -11,25 +11,28 @@ for _, file in ipairs({"CoiledAltar.lua","Explorers.lua","Nekzali.lua","Sentinel
 end
 T.Load("Services/MessageService.lua", ns)
 
+local Constants = ns:GetModule("Core.Constants")
 local Registry = ns:GetModule("Encounters.Registry")
 local Messages = ns:GetModule("Services.MessageService")
 local db = { selectedDifficultyKey = "heroic", customMessages = {} }
 Registry:SetActiveDifficulty("heroic")
 Messages:Initialize(db)
 
-local normalDefault = Registry:GetProfile("nekzali", "normal").callsByKey.adds.warning
+assert(Constants.DIFFICULTIES.normal == nil, "Normal must not be an active supported difficulty")
+assert(Constants.DIFFICULTY_KEY_BY_ID[14] == nil, "Normal instance difficulty must fail closed")
+assert(#Constants.DIFFICULTY_ORDER == 2 and Constants.DIFFICULTY_ORDER[1] == "heroic" and Constants.DIFFICULTY_ORDER[2] == "mythic")
+
 local heroicDefault = Registry:GetProfile("nekzali", "heroic").callsByKey.adds.warning
-assert(Messages:SetCallWarning("nekzali", "normal", "adds", "NORMAL ONLY CALL"))
-assert(Messages:GetCallWarning("nekzali", "normal", "adds") == "NORMAL ONLY CALL")
-assert(Messages:GetCallWarning("nekzali", "heroic", "adds") == heroicDefault, "Normal custom call must not leak into Heroic")
-assert(Messages:GetCallWarning("nekzali", "mythic", "adds") ~= "NORMAL ONLY CALL", "Normal custom call must not leak into Mythic")
+assert(Messages:SetCallWarning("nekzali", "heroic", "adds", "HEROIC ONLY CALL"))
+assert(Messages:GetCallWarning("nekzali", "heroic", "adds") == "HEROIC ONLY CALL")
+assert(Messages:GetCallWarning("nekzali", "mythic", "adds") ~= "HEROIC ONLY CALL", "Heroic custom call must not leak into Mythic")
 
 assert(Messages:SetExplanationText("nekzali", "mythic", "MYTHIC CUSTOM PLAN"))
 assert(Messages:GetExplanation("nekzali", "mythic")[1] == "MYTHIC CUSTOM PLAN")
-assert(Messages:GetExplanation("nekzali", "normal")[1] ~= "MYTHIC CUSTOM PLAN", "Mythic plan override must not leak into Normal")
+assert(Messages:GetExplanation("nekzali", "heroic")[1] ~= "MYTHIC CUSTOM PLAN", "Mythic plan override must not leak into Heroic")
 
-Messages:ResetBoss("nekzali", "normal")
-assert(Messages:GetCallWarning("nekzali", "normal", "adds") == normalDefault, "Normal reset must restore Normal default")
-assert(Messages:GetExplanation("nekzali", "mythic")[1] == "MYTHIC CUSTOM PLAN", "Normal reset must not wipe Mythic override")
+Messages:ResetBoss("nekzali", "heroic")
+assert(Messages:GetCallWarning("nekzali", "heroic", "adds") == heroicDefault, "Heroic reset must restore Heroic default")
+assert(Messages:GetExplanation("nekzali", "mythic")[1] == "MYTHIC CUSTOM PLAN", "Heroic reset must not wipe Mythic override")
 
-print("ok - difficulty-specific message overrides stay isolated")
+print("ok - Heroic/Mythic message overrides stay isolated and Normal is unsupported")
