@@ -18,8 +18,8 @@ local function calls(crateAction, crateWarning, crateActionTemplate, crateWarnin
         {
             key = "fish",
             ability = "Final Ascension",
-            action = "Nama, then Iku, then Gebbo",
-            warning = "Fish: Nama, then Iku, then Gebbo.",
+            action = "Feed Nama, then Iku, then Gebbo",
+            warning = "Fish: feed Nama, then Iku, then Gebbo.",
             voice = "Fish",
             spellIDs = { 1292779 },
             prepareSeconds = 8,
@@ -57,8 +57,8 @@ Registry:Register({
                 "Icebound Flames starts: interrupt it immediately.",
             },
             calls = calls(
-                "Open crates until fish appears",
-                "Crates: open them until fish appears."
+                "Break crates until fish appears",
+                "Crates: break until fish appears."
             ),
         },
         heroic = {
@@ -67,8 +67,8 @@ Registry:Register({
                 "Spreading fire appears: keep it away from usable space.",
             },
             calls = calls(
-                "Open crates until fish appears",
-                "Crates: open them until fish appears."
+                "Break crates until fish appears",
+                "Crates: break until fish appears."
             ),
         },
         mythic = {
@@ -76,7 +76,7 @@ Registry:Register({
                 "Before a crate breaks, everyone else moves 15+ yards away.",
             },
             calls = calls(
-                "Clear 15+ yards; breaker opens",
+                "Clear 15+ yards; breaker breaks crate",
                 "Crate: clear 15+ yards, then break.",
                 "Clear 15+ yards; {{rotation:crates}} breaks",
                 "Crate: clear 15+ yards; {{rotation:crates}} break."
