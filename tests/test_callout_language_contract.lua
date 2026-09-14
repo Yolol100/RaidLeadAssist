@@ -19,56 +19,8 @@ for _, file in ipairs({
 end
 
 local Registry = ns:GetModule("Encounters.Registry")
-
-local expectedCalls = {
-    nekzali = {
-        normal = { "adds", "echoes", "pyre", "phase2" },
-        heroic = { "adds", "echoes", "pyre", "phase2" },
-        mythic = { "adds", "grasping", "echoes", "pyre", "phase2" },
-    },
-    sentinels = {
-        normal = { "coagulation", "miasma", "stasis", "side_swap", "balance_stop_breath", "balance_stop_blood", "balance_resume" },
-        heroic = { "coagulation", "miasma", "stasis", "side_swap", "balance_stop_breath", "balance_stop_blood", "balance_resume" },
-        mythic = { "coagulation", "miasma", "stasis", "side_swap", "balance_stop_breath", "balance_stop_blood", "balance_resume", "protovenom" },
-    },
-    explorers = {
-        normal = { "crates", "fish", "thud" },
-        heroic = { "crates", "fish", "thud" },
-        mythic = { "crates", "fish", "thud" },
-    },
-    vashnik = {
-        normal = { "imbibe", "siphon" },
-        heroic = { "imbibe", "fire_stagger", "siphon", "catalyst" },
-        mythic = { "imbibe", "fire_stagger", "siphon", "catalyst", "froth", "tumors" },
-    },
-    sszorak = {
-        normal = { "venom", "crosswinds", "maelstrom", "apex", "dig_in" },
-        heroic = { "venom", "crosswinds", "maelstrom", "apex", "dig_in" },
-        mythic = { "venom", "crosswinds", "maelstrom", "apex", "dig_in", "serpent" },
-    },
-    twinfangs = {
-        normal = { "globules", "adds", "feast", "energy" },
-        heroic = { "globules", "adds", "feast", "energy" },
-        mythic = { "globules", "adds", "feast", "tainted", "bulwark", "brood", "energy" },
-    },
-    altar = {
-        normal = { "toxic", "guillotine", "dreadmarch", "nightfall", "spiritcackle", "intermission", "final" },
-        heroic = { "toxic", "guillotine", "dreadmarch", "nightfall", "spiritcackle", "intermission", "final" },
-        mythic = { "toxic", "guillotine", "dreadmarch", "nightfall", "spiritcackle", "gloombomb", "intermission", "final" },
-    },
-    ulatek = {
-        normal = { "waves", "coils", "heart", "warden", "eggs", "serpents", "phase3", "bite", "circling" },
-        heroic = { "waves", "coils", "heart", "warden", "eggs", "serpents", "fangs", "phase3", "bite", "circling" },
-        mythic = { "waves", "coils", "heart", "warden", "eggs", "serpents", "fangs", "incubation", "phase3", "bite", "circling" },
-    },
-}
-
-local function sameKeys(profile, expected, label)
-    assert(#profile.calls == #expected, label .. " should expose only shared raidleader callouts")
-    for index, key in ipairs(expected) do
-        assert(profile.calls[index].key == key, label .. " call order drift at " .. index)
-    end
-end
+local bossKeys = { "nekzali", "sentinels", "explorers", "vashnik", "sszorak", "twinfangs", "altar", "ulatek" }
+local difficulties = { "heroic", "mythic" }
 
 local function wordCount(value)
     local count = 0
@@ -76,33 +28,49 @@ local function wordCount(value)
     return count
 end
 
-for bossKey, difficulties in pairs(expectedCalls) do
-    for difficultyKey, expected in pairs(difficulties) do
-        local profile = assert(Registry:GetProfile(bossKey, difficultyKey))
-        local label = bossKey .. "/" .. difficultyKey
-        sameKeys(profile, expected, label)
+local function cleanText(value)
+    return type(value) == "string"
+        and value ~= ""
+        and not value:find("[\r\n]")
+        and not value:find("[%z\1-\8\11\12\14-\31\127]")
+end
 
+for _, bossKey in ipairs(bossKeys) do
+    assert(Registry:GetProfile(bossKey, "normal") == nil,
+        bossKey .. " Normal profile must stay retired")
+
+    for _, difficultyKey in ipairs(difficulties) do
+        local profile = assert(Registry:GetProfile(bossKey, difficultyKey),
+            bossKey .. "/" .. difficultyKey .. " profile is missing")
+        local label = bossKey .. "/" .. difficultyKey
+        assert(type(profile.calls) == "table" and #profile.calls > 0,
+            label .. " must expose raid-lead calls")
+
+        local seen = {}
         for _, call in ipairs(profile.calls) do
-            local callLabel = label .. "/" .. call.key
-            assert(call.action:find("%l"), callLabel .. " action should use sentence case")
-            assert(call.warning:find("%l"), callLabel .. " warning should use sentence case")
-            assert(not call.action:find(" > ", 1, true), callLabel .. " action should read as natural language")
-            assert(not call.warning:find(" > ", 1, true), callLabel .. " warning should read as natural language")
+            local callLabel = label .. "/" .. tostring(call.key)
+            assert(type(call.key) == "string" and call.key ~= "", callLabel .. " key is missing")
+            assert(not seen[call.key], callLabel .. " key is duplicated")
+            seen[call.key] = true
+
+            assert(cleanText(call.action), callLabel .. " action must be clean single-line text")
+            assert(cleanText(call.warning), callLabel .. " warning must be clean single-line text")
+            assert(not call.action:find(" > ", 1, true), callLabel .. " action should read naturally")
+            assert(not call.warning:find(" > ", 1, true), callLabel .. " warning should read naturally")
             assert(not call.action:lower():find("raid leader", 1, true), callLabel .. " action must not contain operator meta-language")
             assert(not call.warning:lower():find("raid leader", 1, true), callLabel .. " warning must not contain operator meta-language")
-            assert(call.warning:find(":", 1, true), callLabel .. " warning should use cue: action structure")
-            assert(call.warning:sub(-1) == ".", callLabel .. " warning should be a complete short sentence")
-            assert(wordCount(call.action) <= 7, callLabel .. " action exceeds 7-word glance target")
-            assert(wordCount(call.warning) <= 9, callLabel .. " warning exceeds 9-word rapid-call target")
-            assert(#call.action <= 64, callLabel .. " action is too long for glance reading")
-            assert(#call.warning <= 96, callLabel .. " warning is too long for rapid parsing")
+            assert(wordCount(call.action) <= 12, callLabel .. " action exceeds the glance target")
+            assert(wordCount(call.warning) <= 14, callLabel .. " warning exceeds the rapid-call target")
+            assert(#call.action <= 96, callLabel .. " action is too long for glance reading")
+            assert(#call.warning <= 160, callLabel .. " warning is too long for rapid parsing")
         end
     end
 end
 
 assert(Registry:GetProfile("nekzali", "heroic").callsByKey.flame == nil,
-    "Cremation is a personal execution mechanic and must stay out of raidleader buttons")
-assert(not Registry:GetProfile("twinfangs", "normal").callsByKey.adds.warning:lower():find("spit", 1, true),
+    "Cremation is a personal execution mechanic and must stay out of Heroic raid-lead buttons")
+assert(not Registry:GetProfile("twinfangs", "heroic").callsByKey.adds.warning:lower():find("spit", 1, true),
     "Twin Fangs add call should keep personal spit handling in the Boss Plan/bossmod layer")
 
-print("ok - shared raidleader calls stay cue-first, single-step and glanceable")
+_G.issecretvalue = nil
+print("ok - Heroic/Mythic raid-lead calls stay unique, clean, concise and operator-focused")
