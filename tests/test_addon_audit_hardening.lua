@@ -156,9 +156,11 @@ assert(readme:find("PROVIDER_REVIEW_2026-09-13.md", 1, true),
 assert(readme:find("FINAL_BOSSES_REVIEW_2026-09-13.md", 1, true),
     "README must route final-boss tactics to the dated product review")
 assert(readme:find("Ula'tek is no longer globally manual-only", 1, true),
-    "README must describe the bounded beta67 Ula'tek timing change")
+    "README must retain the bounded Ula'tek timing decision")
 assert(readme:find("not yet PASS-LIVE", 1, true),
-    "README must not turn source/CI final-boss evidence into a live-runtime claim")
+    "README must not turn source/CI evidence into a live-runtime claim")
+assert(readme:find("WAIT -> SOON -> PRESS NOW -> LATE", 1, true),
+    "README must describe the beta68 guidance contract")
 
 local providerReview = read("docs/PROVIDER_REVIEW_2026-09-13.md")
 assert(providerReview:find("DBM stable release reviewed: `12.1.9`", 1, true),
@@ -194,22 +196,24 @@ assert(auditSources:find("EncounterTimelineDocumentation.lua", 1, true),
     "audit source register must document the Blizzard timeline drift watch")
 
 local liveMatrix = read("docs/LIVE_TEST_MATRIX.md")
-assert(liveMatrix:find("0.9.0-beta.67", 1, true), "live matrix must target the current runtime candidate")
+assert(liveMatrix:find("0.9.0-beta.68", 1, true), "live matrix must target the current beta68 runtime candidate")
 assert(liveMatrix:find("DBM 12.1.6", 1, true), "live matrix must retain the last live-tested DBM contract")
 assert(liveMatrix:find("BigWigs v424.1", 1, true), "live matrix must retain the last live-tested BigWigs contract")
 assert(liveMatrix:find("2026-08-31", 1, true), "live matrix must retain its actual live evidence date")
-assert(liveMatrix:find("selected timing and assignment strategy enabled in source/CI; PASS-LIVE pending", 1, true),
-    "live matrix must keep beta67 Ula'tek source/CI evidence separate from PASS-LIVE")
-assert(liveMatrix:find("correct difficulty-specific assignments", 1, true),
-    "live matrix must require live validation of the new Ula'tek assignment model")
-assert(liveMatrix:find("fail-closed behavior when required assignments are missing or overlapping", 1, true),
+assert(liveMatrix:find("beta67 tactic review", 1, true),
+    "live matrix must preserve the historical Ula'tek strategy evidence boundary")
+assert(liveMatrix:find("missing/overlapping required assignments failing closed", 1, true),
     "live matrix must require negative live assignment validation")
+assert(liveMatrix:find("source/CI green candidate; Retail PASS-LIVE pending", 1, true),
+    "live matrix must keep beta68 source/CI evidence separate from PASS-LIVE")
+assert(liveMatrix:find("phantom `LATE`", 1, true),
+    "live matrix must cover the Phase 5 early-cancel regression")
 
 local toc = read("RaidLeadAssist.toc")
-assert(toc:find("## Version: 0.9.0-beta.67", 1, true), "TOC version must match the current runtime candidate")
+assert(toc:find("## Version: 0.9.0-beta.68", 1, true), "TOC version must match the current beta68 runtime candidate")
 local changelog = read("CHANGELOG.md")
-assert(changelog:find("## 0.9.0-beta.67 — 2026-09-13", 1, true),
-    "changelog must document the current runtime candidate")
+assert(changelog:find("## 0.9.0-beta.68 — 2026-09-14", 1, true),
+    "changelog must document the current beta68 runtime candidate")
 
 local security = read("SECURITY.md")
 assert(security:find("RaidLeadAssist.toc", 1, true))
