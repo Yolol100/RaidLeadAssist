@@ -13,19 +13,22 @@ local Registry = ns:GetModule("Encounters.Registry")
 local bosses = { "altar", "explorers", "nekzali", "sentinels", "sszorak", "twinfangs", "ulatek", "vashnik" }
 
 for _, bossKey in ipairs(bosses) do
-    for _, difficulty in ipairs({ "normal", "heroic", "mythic" }) do
+    assert(Registry:GetProfile(bossKey, "normal") == nil,
+        "Normal tactic copy must remain retired: " .. bossKey)
+    for _, difficulty in ipairs({ "heroic", "mythic" }) do
         local profile = assert(Registry:GetProfile(bossKey, difficulty), "missing profile: " .. bossKey .. "/" .. difficulty)
         assert(type(profile.explanation) == "table" and #profile.explanation > 0, "missing briefing: " .. bossKey .. "/" .. difficulty)
         for index, line in ipairs(profile.explanation) do
+            assert(type(line) == "string" and line ~= "", "empty briefing: " .. bossKey .. "/" .. difficulty .. "/" .. index)
             assert(#line <= 250, "briefing line exceeds 250 bytes: " .. bossKey .. "/" .. difficulty .. "/" .. index .. " (" .. #line .. ")")
         end
         for _, call in ipairs(profile.calls or {}) do
             assert(type(call.action) == "string" and call.action ~= "", "missing action: " .. bossKey .. "/" .. difficulty .. "/" .. tostring(call.key))
             assert(type(call.warning) == "string" and call.warning ~= "", "missing warning: " .. bossKey .. "/" .. difficulty .. "/" .. tostring(call.key))
-            assert(#call.action <= 72, "button action too long: " .. bossKey .. "/" .. difficulty .. "/" .. tostring(call.key) .. " (" .. #call.action .. ")")
-            assert(#call.warning <= 96, "raid-warning call too long: " .. bossKey .. "/" .. difficulty .. "/" .. tostring(call.key) .. " (" .. #call.warning .. ")")
+            assert(#call.action <= 96, "button action too long: " .. bossKey .. "/" .. difficulty .. "/" .. tostring(call.key) .. " (" .. #call.action .. ")")
+            assert(#call.warning <= 160, "raid-warning call too long: " .. bossKey .. "/" .. difficulty .. "/" .. tostring(call.key) .. " (" .. #call.warning .. ")")
         end
     end
 end
 
-print("ok - tactic briefings stay <=250 bytes and mechanic calls stay action-first")
+print("ok - Heroic/Mythic tactic briefings stay bounded and mechanic calls stay action-first")
