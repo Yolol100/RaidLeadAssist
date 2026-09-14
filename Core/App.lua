@@ -199,7 +199,7 @@ function App:Initialize()
         else
             owner.timingAllowed = false
             Timeline:Reset()
-            ns:Print("Only Normal, Heroic, and Mythic profiles are supported; calls and automatic timing are disabled.")
+            ns:Print("Only Heroic and Mythic profiles are supported; calls and automatic timing are disabled.")
         end
 
         UI:SetDifficultyLocked(true)
@@ -228,8 +228,8 @@ function App:Initialize()
         resetTransientState(owner)
         owner.timingAllowed = true
         UI:SetDifficultyLocked(false)
-        local settingsEnabled, settingsReason = settingsAvailability()
-        UI:SetSettingsEnabled(settingsEnabled, settingsReason)
+        local enabled, reason = settingsAvailability()
+        UI:SetSettingsEnabled(enabled, reason)
         Timeline:Reset()
         UI:ResetCallStates()
     end)
@@ -252,7 +252,7 @@ function App:Initialize()
         ns:Print("Saved settings came from a newer Raid Lead Assist version. Known fields were read safely; the newer schema marker was preserved.")
     end
 
-    ns:Print("Loaded. Shift-drag the header to move. /rla for commands.")
+    ns:Print("Loaded. Drag the header to move; Ctrl+mouse wheel on the header scales 70-110%. /rla for commands.")
 end
 
 function App:SelectDifficulty(key, automatic)
@@ -431,7 +431,7 @@ function App:RegisterSlashCommands()
         elseif command == "difficulty" then
             argument = argument:lower()
             if not self:SelectDifficulty(argument, false) then
-                ns:Print("Difficulty: normal | heroic | mythic")
+                ns:Print("Difficulty: heroic | mythic")
             end
         elseif command == "settings" then
             SettingsUI:Open(self.activeBossKey)
@@ -456,7 +456,7 @@ function App:RegisterSlashCommands()
                 tostring(self.db.schemaVersion or "unknown")
             ))
         else
-            ns:Print("/rla show | hide | toggle | settings | difficulty normal|heroic|mythic | resetpos | audio on|off | timing on|off | provider | doctor | status")
+            ns:Print("/rla show | hide | toggle | settings | difficulty heroic|mythic | resetpos | audio on|off | timing on|off | provider | doctor | status")
         end
     end
 end
