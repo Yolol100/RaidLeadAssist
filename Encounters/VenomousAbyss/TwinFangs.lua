@@ -23,18 +23,26 @@ local heroicCalls = {
         spellIDs = { 1290956 }, prepareSeconds = 7, pressSeconds = 4,
     },
     {
-        key = "feast1", ability = "Ravenous Feast", action = "FEAST 1 — RAID SOAK, TANKS OUT",
-        warning = "FEAST 1 — RAID SOAK, TANKS OUT", voice = "Feast one raid soak",
+        key = "feast1", ability = "Ravenous Feast", action = "FEAST 1 — GROUP 1 SOAK",
+        warning = "FEAST 1 — GROUP 1 SOAK", voice = "Feast one group one",
+        actionTemplate = "FEAST 1 — {{feast_heroic_a}} SOAK",
+        warningTemplate = "FEAST 1 — {{feast_heroic_a}} SOAK",
         spellIDs = { 1290516 }, prepareSeconds = 7, pressSeconds = 4,
         sequenceKey = "feast", sequenceKeys = { "feast1", "feast2", "feast3" },
     },
     {
-        key = "feast2", ability = "Ravenous Feast — second", action = "FEAST 2 — MAIN TANK SOLO",
-        warning = "FEAST 2 — MAIN TANK SOLO", voice = "Feast two main tank", timing = false, iconSpellID = 1290516,
+        key = "feast2", ability = "Ravenous Feast — second", action = "FEAST 2 — GROUP 2 SOAK",
+        warning = "FEAST 2 — GROUP 2 SOAK", voice = "Feast two group two",
+        actionTemplate = "FEAST 2 — {{feast_heroic_b}} SOAK",
+        warningTemplate = "FEAST 2 — {{feast_heroic_b}} SOAK",
+        timing = false, iconSpellID = 1290516,
     },
     {
-        key = "feast3", ability = "Ravenous Feast — third", action = "FEAST 3 — OFF TANK SOLO",
-        warning = "FEAST 3 — OFF TANK SOLO", voice = "Feast three off tank", timing = false, iconSpellID = 1290516,
+        key = "feast3", ability = "Ravenous Feast — third", action = "FEAST 3 — GROUP 3 SOAK",
+        warning = "FEAST 3 — GROUP 3 SOAK", voice = "Feast three group three",
+        actionTemplate = "FEAST 3 — {{feast_heroic_c}} SOAK",
+        warningTemplate = "FEAST 3 — {{feast_heroic_c}} SOAK",
+        timing = false, iconSpellID = 1290516,
     },
     {
         key = "beam", ability = "Vile Flood", action = "ROTATING BEAM — CROSS EARLY, STAY BEHIND",
@@ -88,19 +96,18 @@ Registry:Register({
     key = "twinfangs",
     name = "The Twin Fangs",
     encounterID = 3421,
-    strategyStatus = "Heroic custom Feast raid→MT→OT plan with sequence-aware exact-ID guidance; BigWigs/DBM current keys source-verified 2026-09-14; Mythic mechanics retained separately; PASS-LIVE pending",
+    strategyStatus = "Heroic uses three fresh Ravenous Feast soak teams because Feasted adds 800% repeat-hit damage; exact-ID guidance stays sequence-aware; Mythic remains separate; source-reviewed 2026-09-14; PASS-LIVE pending",
     profiles = {
         heroic = {
             explanation = {
-                "SOAK 1 = RAID — TANKS OUT",
-                "SOAK 2 = MAIN TANK SOLO",
-                "SOAK 3 = OFF TANK SOLO",
+                "FEAST = 3 FRESH GROUPS — ONE HIT EACH",
+                "NO ONE SOAKS TWO FEAST HITS",
             },
             calls = heroicCalls,
         },
         mythic = {
             explanation = {
-                "Keep Mythic Feast teams separate and fresh; do not use the Heroic raid→tank→tank shortcut.",
+                "Keep Mythic Feast teams separate and fresh; do not inherit the Heroic assignment sizes automatically.",
                 "Blood founts, protected globules and Broodling interrupts remain Mythic-specific responsibilities.",
             },
             calls = mythicCalls,
