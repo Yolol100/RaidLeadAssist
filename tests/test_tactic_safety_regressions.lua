@@ -34,10 +34,13 @@ assert(altarHeroic.callsByKey.guillotine and altarMythic.callsByKey.guillotine)
 assert(altarHeroic.callsByKey.intermission.warning:find("Bloodlust",1,true))
 assert(altarHeroic.callsByKey.final.warning == "Final phase: keep health even; kill together.")
 
-for _,d in ipairs({"heroic","mythic"}) do
-    assert(R:GetProfile("sentinels",d).callsByKey.side_swap,
-        d .. " Sentinels must retain the post-Stasis side/tank execution")
-end
+local sentHeroic = R:GetProfile("sentinels","heroic")
+assert(table.concat(sentHeroic.explanation,"\n"):find("AFTER STASIS — RAID HOLDS SIDES; TANKS SWAP BOSSES",1,true),
+    "Heroic Sentinels must retain post-Stasis side/tank execution in the dynamic briefing")
+assert(sentHeroic.callsByKey.side_swap == nil,
+    "Heroic Sentinels must not duplicate the dynamic side plan with an extra side-swap button")
+assert(R:GetProfile("sentinels","mythic").callsByKey.side_swap,
+    "Mythic Sentinels keeps the explicit assigned-side swap call")
 
 local sszHeroic = R:GetProfile("sszorak","heroic")
 assert(sszHeroic.callsByKey.venom and sszHeroic.callsByKey.crosswinds and sszHeroic.callsByKey.maelstrom)
