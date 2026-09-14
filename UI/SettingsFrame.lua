@@ -19,6 +19,13 @@ local function setBackdropColor(frame, color)
     frame:SetBackdropColor(color[1], color[2], color[3], color[4] or 1)
 end
 
+local function safeDialogScale(database)
+    local requested = math.max(0.70, math.min(1.10, tonumber(database.uiScale) or 1))
+    local widthScale = (UIParent:GetWidth() - 32) / Theme.settings.width
+    local heightScale = (UIParent:GetHeight() - 32) / Theme.settings.height
+    return math.max(0.70, math.min(requested, widthScale, heightScale, 1.10))
+end
+
 function SettingsFrame:SetStatus(message, kind)
     if not self.status then return end
     self.status:SetText(message or "")
@@ -37,32 +44,53 @@ function SettingsFrame:Initialize(database, callbacks)
     frame:SetPoint("CENTER")
     frame:SetFrameStrata("DIALOG")
     frame:SetClampedToScreen(true)
+    frame:SetMovable(true)
+    frame:EnableMouse(true)
+    frame:SetScale(safeDialogScale(database))
     frame:SetBackdrop({ bgFile = Theme.texture, edgeFile = Theme.texture, edgeSize = 1 })
     setBackdropColor(frame, Theme.colors.backgroundSolid)
     frame:SetBackdropBorderColor(Theme.colors.border[1], Theme.colors.border[2], Theme.colors.border[3], 1)
     frame:Hide()
 
+    local drag = CreateFrame("Button", nil, frame)
+    drag:SetPoint("TOPLEFT", 0, 0)
+    drag:SetPoint("TOPRIGHT", 0, 0)
+    drag:SetHeight(34)
+    drag:RegisterForDrag("LeftButton")
+    drag:SetScript("OnDragStart", function() frame:StartMoving() end)
+    drag:SetScript("OnDragStop", function() frame:StopMovingOrSizing() end)
+    drag:SetScript("OnEnter", function(button)
+        GameTooltip:SetOwner(button, "ANCHOR_TOP")
+        GameTooltip:SetText("Drag to move Settings", 0.82, 0.86, 0.82, 1)
+        GameTooltip:Show()
+    end)
+    drag:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    frame.drag = drag
+
     local eyebrow = frame:CreateFontString(nil, "OVERLAY")
     eyebrow:SetFont(Theme.font, 10, "OUTLINE")
-    eyebrow:SetPoint("TOPLEFT", Theme.settings.padding, -14)
+    eyebrow:SetPoint("TOPLEFT", Theme.settings.padding, -13)
     eyebrow:SetText("RAID LEAD ASSIST \194\183 SETTINGS")
     eyebrow:SetTextColor(Theme.colors.venom[1], Theme.colors.venom[2], Theme.colors.venom[3], 1)
 
     local title = frame:CreateFontString(nil, "OVERLAY")
     title:SetFont(Theme.font, 16, "OUTLINE")
-    title:SetPoint("TOPLEFT", eyebrow, "BOTTOMLEFT", 0, -7)
+    title:SetPoint("TOPLEFT", eyebrow, "BOTTOMLEFT", 0, -6)
     title:SetText("Raid Warning Text")
     title:SetTextColor(1, 1, 1, 1)
 
     local subtitle = frame:CreateFontString(nil, "OVERLAY")
     subtitle:SetFont(Theme.font, 9, "OUTLINE")
-    subtitle:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -5)
-    subtitle:SetText("Customize what each button sends to /rw. Timer matching never changes here.")
+    subtitle:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -4)
+    subtitle:SetPoint("RIGHT", -Theme.settings.padding, 0)
+    subtitle:SetJustifyH("LEFT")
+    subtitle:SetText("Customize button /rw text. Timer matching is managed separately.")
     subtitle:SetTextColor(Theme.colors.muted[1], Theme.colors.muted[2], Theme.colors.muted[3], 1)
 
     local close = CreateFrame("Button", nil, frame)
     close:SetSize(28, 28)
-    close:SetPoint("TOPRIGHT", -10, -10)
+    close:SetPoint("TOPRIGHT", -8, -8)
+    close:SetFrameLevel(drag:GetFrameLevel() + 1)
     close.text = close:CreateFontString(nil, "OVERLAY")
     close.text:SetFont(Theme.font, 14, "OUTLINE")
     close.text:SetAllPoints()
@@ -79,7 +107,7 @@ function SettingsFrame:Initialize(database, callbacks)
         fontSize = 9,
         variant = "primary",
     })
-    audioButton:SetPoint("TOPRIGHT", -48, -46)
+    audioButton:SetPoint("TOPRIGHT", -Theme.settings.padding, -70)
     audioButton:SetScript("OnClick", function()
         database.audioEnabled = not database.audioEnabled
         self:RefreshAudioButton()
@@ -101,17 +129,17 @@ function SettingsFrame:Initialize(database, callbacks)
     self.timingButton = timingButton
 
     self.bossDropdown = Dropdown:Create(frame)
-    self.bossDropdown.frame:SetPoint("TOPLEFT", Theme.settings.padding, -82)
-    self.bossDropdown.frame:SetPoint("TOPRIGHT", -Theme.settings.padding, -82)
+    self.bossDropdown.frame:SetPoint("TOPLEFT", Theme.settings.padding, -101)
+    self.bossDropdown.frame:SetPoint("TOPRIGHT", -Theme.settings.padding, -101)
     self.bossDropdown.menu:SetPoint("TOPLEFT", self.bossDropdown.frame, "BOTTOMLEFT", 0, -2)
     self.bossDropdown.menu:SetPoint("TOPRIGHT", self.bossDropdown.frame, "BOTTOMRIGHT", 0, -2)
 
     local scroll = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
-    scroll:SetPoint("TOPLEFT", Theme.settings.padding, -128)
-    scroll:SetPoint("BOTTOMRIGHT", -36, Theme.settings.footerHeight)
+    scroll:SetPoint("TOPLEFT", Theme.settings.padding, -145)
+    scroll:SetPoint("BOTTOMRIGHT", -34, Theme.settings.footerHeight)
 
     local content = CreateFrame("Frame", nil, scroll)
-    content:SetWidth(Theme.settings.width - 64)
+    content:SetWidth(Theme.settings.width - 60)
     content:SetHeight(1)
     scroll:SetScrollChild(content)
     self.content = content
@@ -138,12 +166,12 @@ function SettingsFrame:Initialize(database, callbacks)
 
     self.callsTitle = content:CreateFontString(nil, "OVERLAY")
     self.callsTitle:SetFont(Theme.font, 14, "OUTLINE")
-    self.callsTitle:SetPoint("TOPLEFT", self.explanationField.frame, "BOTTOMLEFT", 0, -14)
+    self.callsTitle:SetPoint("TOPLEFT", self.explanationField.frame, "BOTTOMLEFT", 0, -12)
     self.callsTitle:SetText("Combat Call Buttons")
     self.callsTitle:SetTextColor(1, 1, 1, 1)
 
     self.saveButton = ActionButton:Create(frame, { text = "SAVE CHANGES", width = 124, variant = "primary" })
-    self.saveButton:SetPoint("BOTTOMRIGHT", -Theme.settings.padding, 16)
+    self.saveButton:SetPoint("BOTTOMRIGHT", -Theme.settings.padding, 15)
     self.saveButton:SetScript("OnClick", function() self:SaveCurrentBoss(false) end)
 
     self.resetBossButton = ActionButton:Create(frame, { text = "RESET TO DEFAULTS", width = 132, variant = "secondary" })
@@ -173,6 +201,7 @@ function SettingsFrame:Initialize(database, callbacks)
     self.providerText:SetTextColor(0.43, 0.50, 0.46, 1)
 
     self.frame = frame
+    self.scroll = scroll
     self.confirmDialog = ConfirmDialog:Create(frame)
 
     frame:SetScript("OnHide", function()
@@ -278,8 +307,12 @@ function SettingsFrame:LoadBoss(bossKey)
 
     local callHeight = #encounter.calls * Theme.settings.callFieldHeight
     local gaps = math.max(0, #encounter.calls - 1) * Theme.settings.fieldGap
-    local contentHeight = Theme.settings.explanationFieldHeight + 14 + 18 + 9 + callHeight + gaps + 16
-    self.content:SetHeight(math.max(430, contentHeight))
+    local contentHeight = Theme.settings.explanationFieldHeight + 12 + 18 + 9 + callHeight + gaps + 16
+    self.content:SetHeight(math.max(1, contentHeight))
+    local desiredHeight = math.max(430, math.min(Theme.settings.height, contentHeight + 165))
+    self.frame:SetHeight(desiredHeight)
+    self.frame:SetScale(safeDialogScale(self.database))
+    self.scroll:SetVerticalScroll(0)
     self:SetDirty(false)
     self:SetStatus("Edit Raid Warning text, then save.", "muted")
 end
