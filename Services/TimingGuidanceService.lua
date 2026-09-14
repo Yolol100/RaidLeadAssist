@@ -50,6 +50,14 @@ local function sameOccurrence(first, second)
         and first.occurrenceID == second.occurrenceID
 end
 
+local function sourceTieKey(candidate)
+    return table.concat({
+        tostring(candidate.callKey or ""),
+        tostring(candidate.providerName or ""),
+        tostring(candidate.sourceID or ""),
+    }, "|")
+end
+
 local function betterFuture(candidate, current)
     if not current then return true end
     if sameOccurrence(candidate, current) then
@@ -58,7 +66,11 @@ local function betterFuture(candidate, current)
         if candidateRank ~= currentRank then return candidateRank < currentRank end
     end
     if candidate.remaining ~= current.remaining then return candidate.remaining < current.remaining end
-    return (providerRank[candidate.providerName] or 999) < (providerRank[current.providerName] or 999)
+    if candidate.priority ~= current.priority then return candidate.priority < current.priority end
+    local candidateRank = providerRank[candidate.providerName] or 999
+    local currentRank = providerRank[current.providerName] or 999
+    if candidateRank ~= currentRank then return candidateRank < currentRank end
+    return sourceTieKey(candidate) < sourceTieKey(current)
 end
 
 local function betterLate(candidate, current)
@@ -70,7 +82,11 @@ local function betterLate(candidate, current)
     end
     -- Closest-to-zero negative value is the most recently missed occurrence.
     if candidate.remaining ~= current.remaining then return candidate.remaining > current.remaining end
-    return (providerRank[candidate.providerName] or 999) < (providerRank[current.providerName] or 999)
+    if candidate.priority ~= current.priority then return candidate.priority < current.priority end
+    local candidateRank = providerRank[candidate.providerName] or 999
+    local currentRank = providerRank[current.providerName] or 999
+    if candidateRank ~= currentRank then return candidateRank < currentRank end
+    return sourceTieKey(candidate) < sourceTieKey(current)
 end
 
 function TimingGuidance:Reset()
@@ -99,7 +115,7 @@ function TimingGuidance:Acknowledge(callKey)
     return false
 end
 
-function TimingGuidance:BuildMechanic(timer, call, remaining, state)
+function TimingGuidance:BuildMechanic(timer, call, remaining, state, priority)
     return {
         timer = timer,
         call = call,
@@ -111,6 +127,7 @@ function TimingGuidance:BuildMechanic(timer, call, remaining, state)
         expiration = timer.expiration,
         remaining = remaining,
         state = state,
+        priority = priority or math.huge,
     }
 end
 
@@ -121,6 +138,12 @@ function TimingGuidance:GetNextMechanic(encounterKey, difficultyKey)
     if not profile or type(profile.callsByKey) ~= "table" then
         self:Reset()
         return nil
+    end
+
+    local priorityByCallKey = {}
+    for index = 1, #(profile.calls or {}) do
+        local call = profile.calls[index]
+        if call and call.key then priorityByCallKey[call.key] = index end
     end
 
     local now = GetTime()
@@ -137,7 +160,9 @@ function TimingGuidance:GetNextMechanic(encounterKey, difficultyKey)
             if finite(remaining) and remaining >= -Constants.TIMER_EXPIRY_GRACE_SECONDS then
                 local state = Constants.GetGuidanceState(call, remaining, true)
                 if state ~= Constants.CallState.IDLE then
-                    local candidate = self:BuildMechanic(timer, call, remaining, state)
+                    local candidate = self:BuildMechanic(
+                        timer, call, remaining, state, priorityByCallKey[call.key]
+                    )
                     if remaining < 0 then
                         if betterLate(candidate, bestLate) then bestLate = candidate end
                     elseif betterFuture(candidate, bestFuture) then
@@ -149,14 +174,17 @@ function TimingGuidance:GetNextMechanic(encounterKey, difficultyKey)
     end
 
     -- A missed mechanic gets a short, deterministic LATE state before guidance
-    -- advances to a later mechanic. Keep the snapshot even if the bossmod removes
-    -- its bar exactly at zero.
+    -- advances to a later mechanic. Keep a snapshot only when this mechanic was
+    -- actually observed inside the final grace window. An early cancel/stop must
+    -- never resurface later as a phantom LATE call at its former deadline.
     if not bestLate and self.lastMechanic
         and finite(self.lastMechanic.expiration)
+        and finite(self.lastMechanic.seenAt)
+        and self.lastMechanic.seenAt >= self.lastMechanic.expiration - Constants.TIMER_EXPIRY_GRACE_SECONDS
         and now > self.lastMechanic.expiration
         and now <= self.lastMechanic.expiration + Constants.TIMER_EXPIRY_GRACE_SECONDS then
         local call = profile.callsByKey[self.lastMechanic.callKey]
-        if call and call.timing ~= false then
+        if call and call.timing ~= false and not (self.lastMechanic.timer and self.lastMechanic.timer.paused == true) then
             local remaining = self.lastMechanic.expiration - now
             local state = Constants.GetGuidanceState(call, remaining, true)
             if state == Constants.CallState.LATE then
@@ -171,6 +199,7 @@ function TimingGuidance:GetNextMechanic(encounterKey, difficultyKey)
                     expiration = self.lastMechanic.expiration,
                     remaining = remaining,
                     state = state,
+                    priority = priorityByCallKey[call.key] or math.huge,
                 }
             end
         end
@@ -179,7 +208,8 @@ function TimingGuidance:GetNextMechanic(encounterKey, difficultyKey)
     local selected = bestLate or bestFuture
     if not selected then
         if self.lastMechanic and finite(self.lastMechanic.expiration)
-            and now > self.lastMechanic.expiration + Constants.TIMER_EXPIRY_GRACE_SECONDS then
+            and (now < self.lastMechanic.expiration - Constants.TIMER_EXPIRY_GRACE_SECONDS
+                or now > self.lastMechanic.expiration + Constants.TIMER_EXPIRY_GRACE_SECONDS) then
             self.lastMechanic = nil
         end
         return nil
@@ -194,6 +224,7 @@ function TimingGuidance:GetNextMechanic(encounterKey, difficultyKey)
             occurrenceID = selected.occurrenceID,
             precision = selected.precision,
             expiration = selected.expiration,
+            seenAt = now,
         }
     end
 
