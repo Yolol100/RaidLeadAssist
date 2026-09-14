@@ -65,15 +65,5 @@ function RosterService:GetRoster()
     return result
 end
 
-function RosterService:GetGroupMembers(subgroup)
-    local result = {}
-    subgroup = tonumber(subgroup)
-    if not subgroup then return result end
-    local roster = self:GetRoster()
-    for index = 1, #roster do
-        if roster[index].subgroup == subgroup then result[#result + 1] = roster[index].name end
-    end
-    return result
-end
 
 ns:RegisterModule("Services.RosterService", RosterService)

@@ -19,6 +19,14 @@ This candidate combines the beta67 encounter/tactic review with the Phase 4 timi
 - Near-zero bar removal still permits the deliberately bounded late snapshot when the mechanic was observed inside the final grace window.
 - Documentation and the Retail acceptance matrix now describe the same beta68 guidance contract.
 
+## Final repository audit
+
+- The 2026-09-14 scheduled provider drift was reviewed against current BigWigs master before its watched fingerprints were refreshed.
+- The required `validation` context now includes live upstream-baseline verification, and provenance/release wait for that complete gate.
+- Dynamic difficulty tabs also own their downstream anchors; no post-tab layout depends on named Heroic/Mythic tab fields.
+- Private addon methods with no runtime/test references were removed rather than carried as dormant API surface.
+- The living ten-of-ten acceptance document now matches the 16 supported Heroic/Mythic profiles and Ula'tek's bounded timing contract.
+
 ## Manual action boundary
 
 Raid Warning delivery remains manual. DBM, BigWigs and Blizzard timing can guide the raid leader, but the addon never sends the timed Raid Warning without the raid leader clicking the call button.

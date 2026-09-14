@@ -61,7 +61,7 @@ Evidence states: `PASS-CI`, `PASS-LIVE`, `MANUAL TEST NEEDED`, `DRIFT REVIEW`, `
 44. Boss and difficulty are locked to native encounter context during a pull.
 45. Unsupported difficulty cannot retain a prior supported profile.
 46. Unsupported encounter cannot retain a prior supported boss.
-47. All 24 boss/difficulty profiles exist.
+47. All 16 Heroic/Mythic boss/difficulty profiles exist.
 48. Every profile has non-empty pre-pull plan copy.
 49. Every profile has a valid call set and unique stable call keys.
 50. Every visible call maps to a real raid-leader coordination action.
@@ -74,7 +74,7 @@ Evidence states: `PASS-CI`, `PASS-LIVE`, `MANUAL TEST NEEDED`, `DRIFT REVIEW`, `
 57. Lost Explorers uses health balancing/joint finish rather than the obsolete fixed kill order.
 58. Twin Fangs explicitly coordinates a joint finish.
 59. Stable soak-count constraints match current encounter evidence.
-60. Ula'tek remains manual-only until the dedicated live gate is satisfied.
+60. Ula'tek permits only the reviewed stable-ID exact/native timing allowlist; Warden/egg/Grasping Fangs and other strategy milestones remain manual, and PASS-LIVE still requires the dedicated live gate.
 61. Ula'tek Heroic does not inherit unconfirmed Mythic-only handling.
 62. Post-hotfix tactic changes trigger a targeted strategy re-review.
 
@@ -131,7 +131,7 @@ Evidence states: `PASS-CI`, `PASS-LIVE`, `MANUAL TEST NEEDED`, `DRIFT REVIEW`, `
 
 ## Assignments, roster, chat and audio
 
-105. Assignment layouts exist for all 24 profiles.
+105. Assignment layouts exist for all 16 supported profiles.
 106. Required player/group/rotation/rule/sequence field types validate before save.
 107. Duplicate player names are rejected case-insensitively where uniqueness is required.
 108. Simultaneous assignment groups cannot overlap when the mechanic forbids overlap.

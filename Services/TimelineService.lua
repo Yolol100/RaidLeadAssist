@@ -785,9 +785,6 @@ function TimelineService:GetProviderSummary()
     return table.concat(active, ", ")
 end
 
-function TimelineService:HasUsableTimingSource()
-    return self:GetProviderSummary() ~= ""
-end
 
 function TimelineService:GetProviderDiagnostics()
     local active = {}

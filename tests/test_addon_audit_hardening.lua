@@ -48,12 +48,25 @@ assert(raidWarning:find("MAX_CHAT_LENGTH = 200", 1, true))
 local workflow = read(".github/workflows/validate.yml")
 assert(workflow:find("reproducibility:", 1, true))
 assert(workflow:find("reproducibility%-check:"))
+assert(workflow:find("upstream%-drift:"), "validate workflow must include online upstream drift")
+assert(workflow:find("python3 scripts/check_upstream_drift.py %-%-online"), "aggregate validation must run the online source check")
+assert(workflow:find("needs: %[source%-validation, reproducibility%-check, upstream%-drift%]"), "required validation must aggregate upstream drift")
+assert(workflow:find("if: ${{ always() }}", 1, true),
+    "required validation must run even when a dependency failed or was skipped")
+assert(workflow:find("${{ needs.source-validation.result }}", 1, true)
+    and workflow:find("${{ needs.reproducibility-check.result }}", 1, true)
+    and workflow:find("${{ needs.upstream-drift.result }}", 1, true),
+    "required validation must inspect every dependency result explicitly")
+assert(workflow:find('if [ "$result" != "success" ]', 1, true),
+    "required validation must fail rather than turn dependency skips into green checks")
+assert(workflow:find("needs: validation", 1, true), "provenance must wait for aggregate validation")
+assert(workflow:find("needs: [validation, provenance]", 1, true), "release must wait for validation plus provenance")
 assert(workflow:find("cmp primary/RaidLeadAssist.zip repro/RaidLeadAssist.zip", 1, true))
 assert(workflow:find("gh attestation verify dist/RaidLeadAssist.zip", 1, true))
 assert(workflow:find("runs%-on: ubuntu%-24%.04"))
 local checkoutCount = select(2, workflow:gsub("actions/checkout@", ""))
 local nonPersistingCheckoutCount = select(2, workflow:gsub("persist%-credentials:%s*false", ""))
-assert(checkoutCount == 3, "validate workflow checkout inventory drifted")
+assert(checkoutCount == 4, "validate workflow checkout inventory drifted")
 assert(nonPersistingCheckoutCount == checkoutCount,
     "every validate/release checkout must disable persisted Git credentials")
 
@@ -95,7 +108,7 @@ for _, path in ipairs({
 end
 assert(baseline:find("EncounterTimelineDocumentation.lua", 1, true),
     "Blizzard EncounterTimeline API source must remain drift-watched")
-assert(baseline:find('"reviewedAt": "2026-09-13"', 1, true), "provider baseline review date must stay current")
+assert(baseline:find('"reviewedAt": "2026-09-14"', 1, true), "provider baseline review date must stay current")
 assert(baseline:find('"releaseTag": "12.1.9"', 1, true), "DBM source-reviewed stable release pin must be 12.1.9")
 assert(baseline:find("f2aa0876ef91a6c80d48bde620bed58402bd8878", 1, true),
     "DBM 12.1.9 release commit must stay pinned")
@@ -123,7 +136,7 @@ assert(baseline:find("2f9fdaf2a4d6b2d986d18c6ed8eb78464e544939", 1, true),
 assert(baseline:find('"releaseTag": "v424.8"', 1, true), "BigWigs source-reviewed stable release pin must be v424.8")
 assert(baseline:find("8177bf9d06f2f1b6c51b54bf8da330a39e4c3651", 1, true),
     "BigWigs v424.8 release commit must stay pinned")
-assert(baseline:find("4c9aea8bebb365878ac298d166dadf21e4e807ce", 1, true),
+assert(baseline:find("511af2ec3a91608cfa9e476e2d4fe1b1cbbe10ca", 1, true),
     "BigWigs current BossPrototype source baseline must stay pinned")
 assert(baseline:find("01b5f12872ad9abfe165cbb77ea2f00dccba7002", 1, true),
     "Nek'zali BigWigs current baseline must stay pinned")
@@ -131,7 +144,7 @@ assert(baseline:find("4ecb9e02052022626df84c5f19e7f716dd6b5f74", 1, true),
     "Sentinels BigWigs current baseline must stay pinned")
 assert(baseline:find("727c7760366f8ae77278412c9acd8437b15a5b93", 1, true),
     "Twin Fangs BigWigs current baseline must stay pinned")
-assert(baseline:find("3ab07136ce8bce7eeb870b90d1f70410a5e4ed54", 1, true),
+assert(baseline:find("8ffd6d755d0781b3fc6d888138039bf184bcb9b9", 1, true),
     "Coiled Altar BigWigs current baseline must stay pinned")
 assert(baseline:find("fe00dfe004d9603ff0837b219267a52c6092c4ef", 1, true),
     "Vashnik BigWigs current baseline must stay pinned")
@@ -139,8 +152,11 @@ assert(baseline:find("e00ac888c416c227f0b2463ce15089b08e61caa2", 1, true),
     "Lost Explorers BigWigs current baseline must stay pinned")
 assert(baseline:find("6ee0b32ced6c574aa9319907973820e526b3065f", 1, true),
     "Sszorak BigWigs current baseline must stay pinned")
-assert(baseline:find("7982e9cdac7364edae2efa282df59b541f387da1", 1, true),
+assert(baseline:find("6c873faefbc1b76c2f20b8ea79a450cfeb3868d5", 1, true),
     "Ula'tek BigWigs current baseline must stay pinned")
+assert(not baseline:find("every Ula'tek raidleader call timing=false", 1, true)
+    and not baseline:find("every Ula'tek raidleader call manual-only", 1, true),
+    "current baselines must not resurrect the retired global Ula'tek manual-only decision")
 
 local app = read("Core/App.lua")
 assert(app:find("Tested bossmod contracts: DBM 12.1.6; BigWigs v424.1", 1, true),
@@ -149,10 +165,12 @@ assert(app:find("Tested bossmod contracts: DBM 12.1.6; BigWigs v424.1", 1, true)
 local readme = read("README.md")
 assert(readme:find("DBM 12.1.9", 1, true), "README source-reviewed DBM contract must track the audited baseline")
 assert(readme:find("BigWigs v424.8", 1, true), "README source-reviewed BigWigs contract must track the audited baseline")
-assert(readme:find("2026-09-13", 1, true), "README provider source-review date must stay current")
+assert(readme:find("2026-09-14", 1, true), "README provider source-review date must stay current")
 assert(readme:find("live-tested", 1, true), "README must distinguish source review from live-tested evidence")
+assert(readme:find("PROVIDER_REVIEW_2026-09-14.md", 1, true),
+    "README must route the current provider review to the latest dated evidence document")
 assert(readme:find("PROVIDER_REVIEW_2026-09-13.md", 1, true),
-    "README must route the current provider review to the dated evidence document")
+    "README must retain the earlier provider review as historical evidence")
 assert(readme:find("FINAL_BOSSES_REVIEW_2026-09-13.md", 1, true),
     "README must route final-boss tactics to the dated product review")
 assert(readme:find("Ula'tek is no longer globally manual-only", 1, true),
@@ -171,6 +189,17 @@ assert(providerReview:find("Ula'tek", 1, true) and providerReview:find("manual-o
     "the earlier provider-only review must retain its historical manual-only decision")
 assert(providerReview:find("scripts/native_ats_prospecting.py", 1, true),
     "current provider review must retain cleanup evidence and rollback context")
+
+local currentProviderReview = read("docs/PROVIDER_REVIEW_2026-09-14.md")
+for _, marker in ipairs({
+    "8ffd6d755d0781b3fc6d888138039bf184bcb9b9",
+    "6c873faefbc1b76c2f20b8ea79a450cfeb3868d5",
+    "Rage of the Shackled",
+    "Warden/Wretch",
+    "PASS-LIVE",
+}) do
+    assert(currentProviderReview:find(marker, 1, true), "missing current provider review marker: " .. marker)
+end
 
 local finalBossReview = read("docs/FINAL_BOSSES_REVIEW_2026-09-13.md")
 for _, marker in ipairs({

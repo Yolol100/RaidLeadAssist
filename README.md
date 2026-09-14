@@ -55,7 +55,7 @@ Only one verified current mechanic is emphasized. When two distinct verified mec
 
 Provider payloads are untrusted runtime input. Secret, malformed, stale or cross-encounter data is rejected/downgraded. Direct bossmod timers must resolve to the verified active encounter. A bossmod timer cancelled well before its deadline cannot later reappear as a phantom `LATE` call; the short late snapshot is retained only when the mechanic was actually observed inside the final grace window.
 
-The current **source-reviewed** stable provider contracts are **DBM 12.1.9** and **BigWigs v424.8**. `docs/UPSTREAM_BASELINES.json` pins those releases plus the exact watched current-`master` files re-reviewed on **2026-09-13**, while Blizzard's live generated Encounter Timeline contract remains unchanged. RLA continues to consume resolved public timer durations rather than copying private bossmod schedules; see `docs/PROVIDER_REVIEW_2026-09-13.md`.
+The current **source-reviewed** stable provider contracts are **DBM 12.1.9** and **BigWigs v424.8**. `docs/UPSTREAM_BASELINES.json` pins those releases plus the exact watched current-`master` files re-reviewed on **2026-09-14**, while Blizzard's live generated Encounter Timeline contract remains unchanged. RLA continues to consume resolved public timer durations rather than copying private bossmod schedules; see `docs/PROVIDER_REVIEW_2026-09-14.md`. The earlier `docs/PROVIDER_REVIEW_2026-09-13.md` remains historical evidence.
 
 Source review is separate from **live-tested** evidence. The runtime doctor/live matrix still records **DBM 12.1.6** and **BigWigs v424.1** as the last live-tested contracts until fresh Retail evidence is collected. A newer source-reviewed pin therefore means “contract inspected and CI-compatible”, not “proved in a real raid client”. When a bossmod cannot provide a usable matching timer, RLA may use Blizzard Encounter Timeline data for supported calls when the normal precision and authority gates pass. Manual calls remain available independently of bossmod timing.
 
@@ -99,7 +99,8 @@ Settings owns the default timing-lead editor beside `AUTO`. Defaults are SOON at
 - `docs/ARCHITECTURE.md`: what each layer owns, when it runs, for whom and why.
 - `docs/TEN_OF_TEN_ACCEPTANCE.md`: the master source/behavior audit.
 - `docs/LIVE_TEST_MATRIX.md`: evidence that can only be collected in the real Retail client.
-- `docs/PROVIDER_REVIEW_2026-09-13.md`: current Midnight/DBM/BigWigs provider-drift review.
+- `docs/PROVIDER_REVIEW_2026-09-14.md`: current Midnight/DBM/BigWigs provider-drift review.
+- `docs/PROVIDER_REVIEW_2026-09-13.md`: preserved historical provider review preceding the bounded Ula'tek timing decision.
 - `docs/FINAL_BOSSES_REVIEW_2026-09-13.md`: live-hotfix, bossmod, guide/video and RWF review for The Coiled Altar and Ula'tek.
 - `docs/AUDIT_SOURCES.md`: source register through its recorded review date.
 - `docs/RELEASE_PROCESS.md`: release-versus-repository-only change classification and publication flow.

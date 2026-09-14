@@ -131,6 +131,21 @@ jobs:
           retention-days: 90
           compression-level: 0
 
+  upstream-drift:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Verify reviewed upstream provider and API baselines
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 scripts/check_upstream_drift.py --online
+
   reproducibility-check:
     needs: [source-validation, reproducibility]
     runs-on: ubuntu-24.04
@@ -155,16 +170,30 @@ jobs:
           cmp primary/SBOM.spdx.json repro/SBOM.spdx.json
 
   validation:
-    needs: [source-validation, reproducibility-check]
+    if: ${{ always() }}
+    needs: [source-validation, reproducibility-check, upstream-drift]
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     steps:
       - name: Confirm complete CI gate
-        run: echo "Source validation and reproducibility checks passed for $GITHUB_SHA"
+        shell: bash
+        env:
+          SOURCE_VALIDATION_RESULT: ${{ needs.source-validation.result }}
+          REPRODUCIBILITY_RESULT: ${{ needs.reproducibility-check.result }}
+          UPSTREAM_DRIFT_RESULT: ${{ needs.upstream-drift.result }}
+        run: |
+          set -euo pipefail
+          for result in "$SOURCE_VALIDATION_RESULT" "$REPRODUCIBILITY_RESULT" "$UPSTREAM_DRIFT_RESULT"; do
+            if [ "$result" != "success" ]; then
+              echo "Required validation dependency did not succeed: $result" >&2
+              exit 1
+            fi
+          done
+          echo "Source validation, reproducibility and upstream drift checks passed for $GITHUB_SHA"
 
   provenance:
     if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
-    needs: reproducibility-check
+    needs: validation
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
@@ -190,7 +219,7 @@ jobs:
 
   release:
     if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
-    needs: [reproducibility-check, provenance]
+    needs: [validation, provenance]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:

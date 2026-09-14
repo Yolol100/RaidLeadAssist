@@ -8,6 +8,10 @@
 - Make simultaneous verified mechanics deterministic by using the encounter profile call order as the explicit raid-leader priority tie-break instead of Lua table iteration order.
 - Refresh the QA/release documentation for the beta68 candidate and keep source/CI evidence separate from real Retail `PASS-LIVE` evidence.
 - Preserve the current DBM 12.1.6 and BigWigs v424.1 live-tested baselines while the newer source-reviewed provider contracts remain CI/source evidence only.
+- Close the 2026-09-14 BigWigs Coiled Altar/Ula'tek source-drift alert after semantic review, refresh only the changed master fingerprints, and keep Ula'tek's timing authority explicitly bounded.
+- Make online upstream-drift verification part of the required aggregate `validation` gate and block provenance/release until that gate is green.
+- Remove private-namespace functions with zero repository references and make post-tab UI anchors derive from `DIFFICULTY_ORDER` instead of named Heroic/Mythic tabs.
+- Correct the living ten-of-ten acceptance contract from the retired 24-profile/fully-manual Ula'tek model to the current 16 Heroic/Mythic profiles and bounded timing model.
 
 ## 0.9.0-beta.67 — 2026-09-13
 
