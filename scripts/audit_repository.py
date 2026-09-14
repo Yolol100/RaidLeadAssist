@@ -57,6 +57,9 @@ APPROVED_RUNTIME_PATCHES = {
     "Core/ProviderRecoveryIntegration.lua": {
         "Services.TimelineService": {"ProviderTimerStarted"},
     },
+    "Core/TimingGuidanceIntegration.lua": {
+        "Core.App": {"UpdateTiming", "SendCall"},
+    },
     "Core/SentinelsIntegration.lua": {
         "UI.MainFrame": {"Initialize", "SetEncounter", "SetCallState", "ResetCallStates"},
     },
@@ -169,6 +172,8 @@ def validate_modules(entries: list[str]) -> None:
         fail(f"runtime extension surface drifted: expected {APPROVED_RUNTIME_PATCHES}, got {patches}")
     if entries.index("Core/App.lua") >= entries.index("Core/AssignmentIntegration.lua"):
         fail("AssignmentIntegration must load after Core/App.lua")
+    if entries.index("Core/App.lua") >= entries.index("Core/TimingGuidanceIntegration.lua"):
+        fail("TimingGuidanceIntegration must load after Core/App.lua")
     if entries.index("UI/MainFrame.lua") >= entries.index("Core/SentinelsIntegration.lua"):
         fail("SentinelsIntegration must load after UI/MainFrame.lua")
 
