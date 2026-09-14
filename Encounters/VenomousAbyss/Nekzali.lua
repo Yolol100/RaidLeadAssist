@@ -38,8 +38,8 @@ local function baseCalls(pyreAction, pyreWarning, pyreActionTemplate, pyreWarnin
     calls[#calls + 1] = {
         key = "phase2",
         ability = "Phase 2",
-        action = "Bloodlust and burn boss",
-        warning = "Phase 2: Bloodlust and burn boss.",
+        action = "Bloodlust; burn before full energy",
+        warning = "Phase 2: Bloodlust; burn before full energy.",
         voice = "Phase two",
         timing = false,
         iconSpellID = 1299673,
@@ -48,20 +48,20 @@ local function baseCalls(pyreAction, pyreWarning, pyreActionTemplate, pyreWarnin
 end
 
 local normalCalls = baseCalls(
-    "Melee soak together",
-    "Pyre: melee soak together."
+    "Melee soak; ranged stay out",
+    "Pyre: melee soak; ranged stay out."
 )
 local heroicCalls = baseCalls(
-    "Assigned group soaks Pyre",
-    "Pyre: assigned group soak together.",
-    "{{pyre_soakers}} soak Pyre",
-    "Pyre: {{pyre_soakers}} soak together."
+    "Assigned group soaks; everyone else out",
+    "Pyre: assigned group soak; everyone else out.",
+    "{{pyre_soakers}} soak; everyone else out",
+    "Pyre: {{pyre_soakers}} soak; everyone else out."
 )
 local mythicCalls = baseCalls(
-    "Assigned group soaks Pyre",
-    "Pyre: assigned group soak together.",
-    "{{pyre_soakers}} soak Pyre",
-    "Pyre: {{pyre_soakers}} soak together."
+    "Assigned group soaks; everyone else out",
+    "Pyre: assigned group soak; everyone else out.",
+    "{{pyre_soakers}} soak; everyone else out",
+    "Pyre: {{pyre_soakers}} soak; everyone else out."
 )
 table.insert(mythicCalls, 2, {
     key = "grasping",
@@ -94,7 +94,7 @@ Registry:Register({
         },
         heroic = {
             explanation = {
-                "Hungering Pyre: soak only with your assigned Pyre group.",
+                "Hungering Pyre: soak only with your assigned Pyre group; everyone else stays out.",
                 "Fire circle on you: move onto a dead Amani corpse.",
                 "Stay on the corpse until your fire explodes; keep 4+ yards from others.",
             },
