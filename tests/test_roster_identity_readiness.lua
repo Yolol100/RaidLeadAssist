@@ -45,7 +45,7 @@ ns:RegisterModule("Services.TimelineService", {
 })
 ns:RegisterModule("Core.App", {
     activeBossKey = "ulatek",
-    activeDifficultyKey = "normal",
+    activeDifficultyKey = "heroic",
     db = { automaticTimingEnabled = false },
     PrintDoctor = function() end,
 })
@@ -56,7 +56,9 @@ T.Load("Core/ReadinessIntegration.lua", ns)
 local Readiness = ns:GetModule("Core.ReadinessIntegration")
 
 local function applyEgg(left)
-    local ok, reason = Assignments:ApplyBossDraft("ulatek", "normal", {
+    local ok, reason = Assignments:ApplyBossDraft("ulatek", "heroic", {
+        coil_a = "Group 1",
+        coil_b = "Group 2",
         egg_left = left,
         egg_right = "P04",
         bite_melee = "P05",
@@ -92,6 +94,8 @@ currentRoster = {
     { name = "P05", subgroup = 1, role = "DAMAGER" },
     { name = "P06", subgroup = 2, role = "DAMAGER" },
     { name = "P07", subgroup = 2, role = "DAMAGER" },
+    { name = "P08", subgroup = 2, role = "DAMAGER" },
+    { name = "P09", subgroup = 2, role = "DAMAGER" },
 }
 applyEgg("Alex")
 state = Readiness:GetState()
@@ -104,4 +108,4 @@ state = Readiness:GetState()
 assert(#state.rosterMissing == 0,
     "solo/party planning must not pretend its roster is authoritative for future raid assignments")
 
-print("ok - readiness uses exact qualified names, unique short aliases and authoritative raid context")
+print("ok - Heroic readiness uses exact qualified names, unique short aliases and authoritative raid context")
