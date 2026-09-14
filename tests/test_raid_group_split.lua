@@ -39,7 +39,10 @@ for _ = 1, 10 do
 end
 
 roster = {}
-assert(Split:Describe("RED", "GREEN") == "G1 + G2 = RED — G3 + G4 = GREEN",
-    "out-of-raid preview should use the documented four-group fallback")
+assert(Split:Describe("RED", "GREEN") == nil,
+    "empty roster must fail closed instead of inventing G1-G4")
+roster = makeRoster({ [2]=5 })
+assert(Split:Describe("RED", "GREEN") == nil,
+    "single populated subgroup cannot produce a verified two-side split")
 
-print("ok - raid subgroup splitting is populated-group aware, balanced and deterministic")
+print("ok - raid subgroup splitting is populated-group aware, balanced, deterministic and fail-closed")
