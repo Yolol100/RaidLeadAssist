@@ -14,20 +14,22 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - name: Apply reviewed patch and remove audit transport files
+      - name: Apply reviewed non-workflow patch
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          git apply --check audit-core.patch
-          git apply audit-core.patch
-          rm audit-core.patch .github/workflows/audit-source-snapshot.yml
+          awk 'BEGIN{skip=0} /^diff --git a\/.github\/workflows\/validate.yml /{skip=1; next} /^diff --git a\/README.md /{skip=0} !skip{print}' audit-core.patch > /tmp/nonworkflow.patch
+          test -s /tmp/nonworkflow.patch
+          git apply --check /tmp/nonworkflow.patch
+          git apply /tmp/nonworkflow.patch
+          rm audit-core.patch
           git diff --check
           git config user.name "RaidLeadAssist Audit"
           git config user.email "actions@users.noreply.github.com"
           git add -A
           git diff --cached --check
-          git commit -m "fix: harden Heroic Mythic audit boundaries"
+          git commit -m "fix: harden Heroic Mythic runtime boundaries"
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git push origin HEAD:audit/full-system-20260914
