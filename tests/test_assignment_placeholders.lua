@@ -41,7 +41,7 @@ assert(#AR:GetDefinitions("nekzali", "normal") == 0)
 assert(A:IsCallReady("nekzali", "normal", "pyre") == true)
 local normalPyre = R:GetProfile("nekzali", "normal").callsByKey.pyre
 local action = A:BuildCallAction(normalPyre.action, "nekzali", "normal", "pyre")
-assert(action == "Melee soak together")
+assert(action == "Melee soak; ranged stay out")
 
 -- Heroic Nek'zali needs only the real Pyre soak assignment.
 local nekDefs = AR:GetDefinitions("nekzali", "heroic")
@@ -50,9 +50,9 @@ local ok = A:ApplyBossDraft("nekzali", "heroic", { pyre_soakers = "Group 1" })
 assert(ok)
 local nekPyre = R:GetProfile("nekzali", "heroic").callsByKey.pyre
 local nekAction, ready = A:BuildCallAction(nekPyre.action, "nekzali", "heroic", "pyre")
-assert(ready and nekAction == "Group 1 soak Pyre")
+assert(ready and nekAction == "Group 1 soak; everyone else out")
 local nekWarning = A:BuildCallWarning(nekPyre.warning, "nekzali", "heroic", "pyre")
-assert(nekWarning == "Pyre: Group 1 soak together.")
+assert(nekWarning == "Pyre: Group 1 soak; everyone else out.")
 
 -- Group shorthand is validated against the actual current raid subgroups.
 local invalid, err = A:ApplyBossDraft("nekzali", "heroic", { pyre_soakers = "Group 5" })
@@ -71,7 +71,7 @@ for _, difficulty in ipairs({ "normal", "heroic", "mythic" }) do
     for _, definition in ipairs(AR:GetDefinitions("explorers", difficulty)) do
         assert(definition.callKey ~= "fish")
     end
-    assert(R:GetProfile("explorers", difficulty).callsByKey.fish.warning == "Fish: Nama, then Iku, then Gebbo.")
+    assert(R:GetProfile("explorers", difficulty).callsByKey.fish.warning == "Fish: feed Nama, then Iku, then Gebbo.")
 end
 
 -- Vashnik route is fixed strategy and therefore has no roster fields.
