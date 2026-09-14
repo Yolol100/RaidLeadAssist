@@ -23,7 +23,7 @@ T.Load("Encounters/VenomousAbyss/Ulatek.lua", ns)
 
 local Registry = ns:GetModule("Encounters.Registry")
 local Assignments = ns:GetModule("Encounters.AssignmentRegistry")
-local difficulties = { "normal", "heroic", "mythic" }
+local difficulties = { "heroic", "mythic" }
 local encounters = Registry:GetOrdered()
 local ulatekTimed = {
     waves = true,
@@ -34,7 +34,7 @@ local ulatekTimed = {
     circling = true,
 }
 
-assert(#encounters == 8, "ten-of-ten readiness requires exactly eight supported Venomous Abyss encounters")
+assert(#encounters == 8, "readiness requires exactly eight supported Venomous Abyss encounters")
 
 local profileCount = 0
 for _, encounter in ipairs(encounters) do
@@ -42,6 +42,8 @@ for _, encounter in ipairs(encounters) do
     assert(type(encounter.name) == "string" and encounter.name ~= "", encounter.key .. " requires a display name")
     assert(type(encounter.encounterID) == "number", encounter.key .. " requires a numeric encounter ID")
     assert(type(encounter.strategyStatus) == "string" and encounter.strategyStatus ~= "", encounter.key .. " requires strategy provenance/status")
+    assert(Registry:GetProfile(encounter.key, "normal") == nil,
+        encounter.key .. " Normal profile must remain retired")
     if encounter.key == "ulatek" then
         assert(encounter.strategyStatus:find("PASS-LIVE pending", 1, true),
             "Ula'tek selected source/CI timing must remain explicitly gated from PASS-LIVE")
@@ -92,6 +94,6 @@ for _, encounter in ipairs(encounters) do
     end
 end
 
-assert(profileCount == 24, "ten-of-ten readiness requires all 24 boss/difficulty profiles")
+assert(profileCount == 16, "readiness requires all 16 supported boss/difficulty profiles")
 
-print("ok - ten-of-ten readiness covers 8 encounters, 24 profiles, bounded Ula'tek timing and the actual runtime assignment override stack")
+print("ok - full readiness covers 8 encounters, 16 Heroic/Mythic profiles, bounded Ula'tek timing and runtime assignment overrides")
