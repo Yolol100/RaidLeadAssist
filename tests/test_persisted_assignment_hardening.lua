@@ -34,9 +34,9 @@ local db = {
         },
         twinfangs = {
             heroic = {
-                feast_team_a = "One, Two, Three",
-                feast_team_b = "Three, Four, Five",
-                feast_team_c = "Six, Seven, Eight",
+                feast_heroic_a = "One, Two, Three",
+                feast_heroic_b = "Three, Four, Five",
+                feast_heroic_c = "Six, Seven, Eight",
             },
         },
         vashnik = {
@@ -64,12 +64,12 @@ assert(Assignments:GetValue("sentinels", "mythic", "team_a") == "Group 1",
 assert(Assignments:GetValue("sentinels", "mythic", "team_b") == "Group 2",
     "current Mythic fixed-side Team B must survive initialization")
 
-assert(Assignments:GetValue("twinfangs", "heroic", "feast_team_a") == "One, Two, Three",
-    "the first valid exclusive Feast assignment should be preserved")
-assert(Assignments:GetValue("twinfangs", "heroic", "feast_team_b") == "",
-    "persisted exclusive-group overlap must fail closed")
-assert(Assignments:GetValue("twinfangs", "heroic", "feast_team_c") == "Six, Seven, Eight",
-    "non-overlapping exclusive Feast assignments should be preserved")
+assert(Assignments:GetValue("twinfangs", "heroic", "feast_heroic_a") == "One, Two, Three",
+    "the first valid Heroic Feast assignment should be preserved")
+assert(Assignments:GetValue("twinfangs", "heroic", "feast_heroic_b") == "",
+    "persisted Heroic Feast overlap must fail closed")
+assert(Assignments:GetValue("twinfangs", "heroic", "feast_heroic_c") == "Six, Seven, Eight",
+    "non-overlapping Heroic Feast assignments should be preserved")
 
 assert(Assignments:GetValue("vashnik", "heroic", "bile_team") == "",
     "retired Vashnik fixed-roster fields must be removed from persisted data")
