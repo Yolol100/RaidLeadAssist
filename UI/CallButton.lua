@@ -19,24 +19,24 @@ function CallButton:Create(parent)
 
     button.name = button:CreateFontString(nil, "OVERLAY")
     button.name:SetFont(Theme.font, 11, "OUTLINE")
-    button.name:SetPoint("TOPLEFT", 11, -7)
+    button.name:SetPoint("TOPLEFT", 11, -6)
     button.name:SetPoint("RIGHT", -84, 0)
     button.name:SetJustifyH("LEFT")
 
     button.action = button:CreateFontString(nil, "OVERLAY")
     button.action:SetFont(Theme.font, 9, "OUTLINE")
-    button.action:SetPoint("BOTTOMLEFT", 11, 7)
+    button.action:SetPoint("BOTTOMLEFT", 11, 6)
     button.action:SetPoint("RIGHT", -11, 0)
     button.action:SetJustifyH("LEFT")
 
     button.state = button:CreateFontString(nil, "OVERLAY")
     button.state:SetFont(Theme.font, 9, "OUTLINE")
-    button.state:SetPoint("TOPRIGHT", -10, -7)
+    button.state:SetPoint("TOPRIGHT", -10, -6)
     button.state:SetJustifyH("RIGHT")
 
     button:SetScript("OnEnter", function(frame)
         if instance.state == Constants.CallState.IDLE then
-            local color = Theme.colors.venomBright
+            local color = Theme.colors.venom
             frame:SetBackdropBorderColor(color[1], color[2], color[3], 1)
         end
 
@@ -90,11 +90,11 @@ function CallButton:SetState(state, force)
         frame.state:SetTextColor(0.04, 0.20, 0.17, 1)
         frame.state:SetText("PRESS NOW")
     elseif state == Constants.CallState.PREPARE then
-        setBackdropColor(frame, Theme.colors.venomBright)
-        frame:SetBackdropBorderColor(0.90, 1.00, 0.48, 1)
-        frame.name:SetTextColor(0.05, 0.10, 0.03, 1)
-        frame.action:SetTextColor(0.15, 0.23, 0.07, 1)
-        frame.state:SetTextColor(0.14, 0.23, 0.06, 1)
+        setBackdropColor(frame, Theme.colors.venomDark)
+        frame:SetBackdropBorderColor(Theme.colors.venomBright[1], Theme.colors.venomBright[2], Theme.colors.venomBright[3], 1)
+        frame.name:SetTextColor(1, 1, 1, 1)
+        frame.action:SetTextColor(0.86, 0.92, 0.78, 1)
+        frame.state:SetTextColor(Theme.colors.venomBright[1], Theme.colors.venomBright[2], Theme.colors.venomBright[3], 1)
         frame.state:SetText("PREPARE")
     elseif state == Constants.CallState.CALLED then
         setBackdropColor(frame, Theme.colors.called)
@@ -104,10 +104,10 @@ function CallButton:SetState(state, force)
         frame.state:SetTextColor(0.70, 0.66, 0.88, 1)
         frame.state:SetText("CALLED")
     else
-        setBackdropColor(frame, Theme.colors.venom)
-        frame:SetBackdropBorderColor(0.78, 0.92, 0.28, 1)
-        frame.name:SetTextColor(0.05, 0.10, 0.03, 1)
-        frame.action:SetTextColor(0.16, 0.22, 0.08, 1)
+        setBackdropColor(frame, Theme.colors.surfaceRaised)
+        frame:SetBackdropBorderColor(Theme.colors.borderStrong[1], Theme.colors.borderStrong[2], Theme.colors.borderStrong[3], 1)
+        frame.name:SetTextColor(Theme.colors.text[1], Theme.colors.text[2], Theme.colors.text[3], 1)
+        frame.action:SetTextColor(0.72, 0.78, 0.73, 1)
         frame.state:SetText("")
     end
 end
