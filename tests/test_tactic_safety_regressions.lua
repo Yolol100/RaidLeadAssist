@@ -29,9 +29,10 @@ assert(R:GetProfile("altar","normal").callsByKey.intermission.warning:find("Bloo
 assert(not R:GetProfile("altar","normal").callsByKey.final.warning:find("Bloodlust",1,true))
 
 for _,d in ipairs({"normal","heroic","mythic"}) do
-    assert(R:GetProfile("sentinels",d).callsByKey.side_swap.warning == "After Stasis: hold assigned sides.")
+    assert(R:GetProfile("sentinels",d).callsByKey.side_swap.warning == "After Stasis: hold sides; tanks swap bosses.")
     assert(R:GetProfile("sszorak",d).callsByKey.maelstrom.warning == "Maelstrom: assigned Poppers trigger Cysts.")
     assert(R:GetProfile("sszorak",d).callsByKey.dig_in.warning == "Dig In: use damage cooldowns.")
+    assert(R:GetProfile("vashnik",d).callsByKey.siphon.warning == "Blood circle: several teammates stack for healing.")
 end
 for _,d in ipairs({"heroic","mythic"}) do
     assert(R:GetProfile("vashnik",d).callsByKey.catalyst.warning == "Catalyst: soak every circle.")

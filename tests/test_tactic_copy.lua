@@ -26,8 +26,9 @@ for _,enc in ipairs(R:GetOrdered()) do
   end
  end
 end
-assert(R:GetProfile("sentinels","heroic").callsByKey.side_swap.warning == "After Stasis: hold assigned sides.")
+assert(R:GetProfile("sentinels","heroic").callsByKey.side_swap.warning == "After Stasis: hold sides; tanks swap bosses.")
 assert(R:GetProfile("vashnik","heroic").callsByKey.catalyst.warning == "Catalyst: soak every circle.")
+assert(R:GetProfile("vashnik","heroic").callsByKey.siphon.warning == "Blood circle: several teammates stack for healing.")
 assert(R:GetProfile("sszorak","heroic").callsByKey.maelstrom.warning == "Maelstrom: assigned Poppers trigger Cysts.")
 assert(R:GetProfile("sszorak","normal").callsByKey.dig_in.warning == "Dig In: use damage cooldowns.")
 assert(R:GetProfile("twinfangs","normal").callsByKey.feast.warning == "Feast: fresh 3+ players soak each hit.")

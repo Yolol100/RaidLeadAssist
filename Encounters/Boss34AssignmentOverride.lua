@@ -3,17 +3,17 @@ local _, ns = ...
 local AssignmentRegistry = ns:GetModule("Encounters.AssignmentRegistry")
 
 local EXPLORERS_BASE = {
-    summary = "No roster assignment is needed. Players can open crates as needed; fish order and Thud markers are fixed strategy.",
+    summary = "No roster assignment is needed. Crates are opportunistic; fish order and Thud markers are fixed strategy.",
     sections = {},
 }
 
 local EXPLORERS_MYTHIC = {
-    summary = "Mythic only: assign a crate-breaker rotation so the raid can clear 15+ yards before each controlled break.",
+    summary = "Mythic only: assign a crate-breaker rotation so everyone else can clear 15+ yards before each break.",
     sections = {
         {
             key = "crates",
             title = "Mythic Crate Breaker Rotation",
-            description = "Rotate distinct breakers to manage Splinters while everyone else clears 15+ yards.",
+            description = "Rotate distinct breakers. Everyone else clears 15+ yards before the called breaker opens the crate.",
             columns = 3,
             slots = {
                 { key = "crate_a", label = "Breaker 1", kind = "rotation", callKey = "crates", callLabel = "Breaker", rotation = "crates", required = true, exclusiveGroup = "crates" },
@@ -25,7 +25,7 @@ local EXPLORERS_MYTHIC = {
 }
 
 local VASHNIK_NONE = {
-    summary = "No fixed player assignment is needed. Fountain route and Fire-add marks are fixed raidleader strategy.",
+    summary = "No fixed player assignment is needed. Fountain route, Blood-circle help and Fire-add order are shared strategy.",
     sections = {},
 }
 
