@@ -120,10 +120,6 @@ function EncounterService:IsSupportedDifficulty()
     return self:GetDifficultyKey() ~= nil
 end
 
-function EncounterService:IsNormal()
-    return self:GetDifficultyID() == Constants.NORMAL_DIFFICULTY_ID
-end
-
 function EncounterService:IsHeroic()
     return self:GetDifficultyID() == Constants.HEROIC_DIFFICULTY_ID
 end
