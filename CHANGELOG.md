@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.0-beta.68 — 2026-09-14
+
+- Add the stable-ID-only single-mechanic timing guidance path introduced in Phase 4: `WAIT` -> `SOON` -> `PRESS NOW` -> bounded `LATE`, while keeping every Raid Warning action on an explicit raid-leader click.
+- Keep localized/name-only, wrong-ID, faded, malformed and approximate timer representations fail-closed for automatic guidance; exact/native duplicate representations still resolve through DBM, then BigWigs, then Blizzard authority.
+- Harden the final guidance edge cases so an early-cancelled or removed paused timer cannot resurface later as a phantom `LATE` call at its former deadline.
+- Make simultaneous verified mechanics deterministic by using the encounter profile call order as the explicit raid-leader priority tie-break instead of Lua table iteration order.
+- Refresh the QA/release documentation for the beta68 candidate and keep source/CI evidence separate from real Retail `PASS-LIVE` evidence.
+- Preserve the current DBM 12.1.6 and BigWigs v424.1 live-tested baselines while the newer source-reviewed provider contracts remain CI/source evidence only.
+
 ## 0.9.0-beta.67 — 2026-09-13
 
 - Re-audit the final two Venomous Abyss encounters against live Blizzard hotfixes, current DBM `12.1.9`, BigWigs `v424.8`, current written guides, video guides and Race to World First evidence.
