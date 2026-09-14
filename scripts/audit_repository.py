@@ -241,9 +241,13 @@ def validate_workflows(files: list[str]) -> None:
                 f"({persist_count}/{checkout_count})"
             )
     validate = read_text(".github/workflows/validate.yml")
-    for job in ("validation:", "reproducibility:", "reproducibility-check:", "provenance:", "release:"):
+    for job in ("source-validation:", "validation:", "reproducibility:", "reproducibility-check:", "provenance:", "release:"):
         if job not in validate:
             fail(f"validation workflow missing required job: {job[:-1]}")
+    if "needs: [source-validation, reproducibility]" not in validate:
+        fail("reproducibility-check must depend on both source validation and independent build")
+    if "needs: [source-validation, reproducibility-check]" not in validate:
+        fail("required validation context must be the final aggregate CI gate")
     for marker in (
         "workflow_dispatch:",
         "concurrency:",

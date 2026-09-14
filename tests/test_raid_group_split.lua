@@ -33,6 +33,21 @@ roster = makeRoster({ [1]=4, [3]=4, [4]=4 })
 local gapped = Split:Describe("RED", "GREEN")
 assert(not gapped:find("G2", 1, true), "empty subgroup gaps must never appear in the dynamic split")
 
+for groupCount = 5, 8 do
+    local spec = {}
+    for subgroup = 1, groupCount do spec[subgroup] = 5 end
+    roster = makeRoster(spec)
+    local split = assert(Split:BuildSplit(roster), tostring(groupCount) .. " populated groups must split safely")
+    assert(math.abs(split.firstPlayers - split.secondPlayers) <= 5,
+        tostring(groupCount) .. " full groups must remain as balanced as whole-subgroup ownership permits")
+end
+
+roster = makeRoster({ [1]=5, [3]=4, [6]=5 })
+local sparse = assert(Split:BuildSplit(roster), "G1/G3/G6 sparse roster must split")
+local sparseText = Split:Describe("RED", "GREEN", roster)
+assert(not sparseText:find("G2", 1, true) and not sparseText:find("G4", 1, true)
+    and not sparseText:find("G5", 1, true), "sparse split must use populated subgroups only")
+
 local first = Split:Describe("RED", "GREEN")
 for _ = 1, 10 do
     assert(Split:Describe("RED", "GREEN") == first, "same roster must always produce the same split")

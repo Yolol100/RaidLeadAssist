@@ -50,5 +50,6 @@ assert(Setup:IsReady("sszorak", "heroic"))
 assert(Setup:Toggle("sszorak", "heroic") == false)
 assert(not Setup:IsReady("sszorak", "heroic"))
 assert(Setup:IsReady("nekzali", "normal"), "unsupported Normal has no setup and is inert")
+assert(Setup:SetReady("nekzali", "normal", true) == false, "retired Normal must be rejected by SetupService")
 
 print("ok - pre-pull setup exposes only current Heroic/Mythic marker contracts")

@@ -6,7 +6,7 @@ local SetupService = {
     confirmations = {},
 }
 
-local VALID_DIFFICULTIES = { normal = true, heroic = true, mythic = true }
+local VALID_DIFFICULTIES = { heroic = true, mythic = true }
 
 local function confirmationKey(bossKey, difficultyKey)
     return tostring(bossKey) .. ":" .. tostring(difficultyKey)

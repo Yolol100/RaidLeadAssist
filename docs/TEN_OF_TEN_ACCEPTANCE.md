@@ -57,7 +57,7 @@ Evidence states: `PASS-CI`, `PASS-LIVE`, `MANUAL TEST NEEDED`, `DRIFT REVIEW`, `
 
 41. Exactly eight intended Venomous Abyss encounter identities are registered.
 42. Numeric encounter identity is authoritative over localized display text.
-43. Normal/Heroic/Mythic map to the correct supported difficulty IDs.
+43. Heroic/Mythic map to the correct supported difficulty IDs; Normal remains unsupported.
 44. Boss and difficulty are locked to native encounter context during a pull.
 45. Unsupported difficulty cannot retain a prior supported profile.
 46. Unsupported encounter cannot retain a prior supported boss.
@@ -65,7 +65,7 @@ Evidence states: `PASS-CI`, `PASS-LIVE`, `MANUAL TEST NEEDED`, `DRIFT REVIEW`, `
 48. Every profile has non-empty pre-pull plan copy.
 49. Every profile has a valid call set and unique stable call keys.
 50. Every visible call maps to a real raid-leader coordination action.
-51. Every plan is reviewed separately for Normal/Heroic/Mythic.
+51. Every plan is reviewed separately for Heroic/Mythic.
 52. Difficulty-only mechanics never leak into a lower difficulty without evidence.
 53. Spell, aura, cast, icon, timer and timeline IDs are not assumed interchangeable.
 54. Provider-specific timer keys cannot silently replace UI mechanic identity.

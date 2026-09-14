@@ -84,7 +84,7 @@ A useful volatility example is Twin Fangs `Eternal Venom`: current public guides
 - The selected fixed fish order is Nama, then Iku, then Gebbo. It is an RLA strategy choice, not a universal mechanic invariant.
 - Mighty Thud uses three fixed Star/Circle/Diamond soak points.
 - The supplied recap explicitly pairs Fire/Frost circles, drops them beside each other, then has players enter the opposite elemental patch; the Boss Plan mirrors that sequence instead of compressing it into an ambiguous one-line instruction.
-- Normal/Heroic do not need a fixed crate roster. Mythic alone uses a controlled breaker rotation so everyone else can clear 15+ yards before the break.
+- Heroic does not need a fixed crate roster. Mythic alone uses a controlled breaker rotation so everyone else can clear 15+ yards before the break.
 - DBM master added explicit Mythic routing on 2026-09-02 while retaining encounter `3497` and the RLA-used identities for Throw Junk (`1291933`), Final Ascension (`1292779`) and Mighty Thud (`1296092`). This is source compatibility evidence only; live cadence remains `PASS-LIVE`-pending.
 
 ### Vashnik
@@ -103,7 +103,7 @@ A useful volatility example is Twin Fangs `Eternal Venom`: current public guides
 
 ### Twin Fangs
 
-- Ravenous Feast hits three times. Every hit requires at least 3 players; after soaking one hit, Feasted prevents that player from safely serving as the fresh soak for the next hit of the same cast. Normal resolves fresh eligible soakers dynamically, while Heroic/Mythic use configured groups.
+- Ravenous Feast hits three times. Every hit requires at least 3 players; after soaking one hit, Feasted prevents that player from safely serving as the fresh soak for the next hit of the same cast. Heroic/Mythic use configured fresh groups; Normal is not an RLA runtime profile.
 - Stone Breaker remains tank/bossmod-owned rather than adding another raidleader button.
 - The shared 100-energy movement remains one RLA call anchored to the current movement mechanic rather than duplicating each personal hazard.
 - Current sources disagree on the exact lethal Eternal Venom threshold. RLA therefore keeps the threshold qualitative instead of hard-coding a volatile number.
@@ -112,7 +112,7 @@ A useful volatility example is Twin Fangs `Eternal Venom`: current public guides
 
 - Pre-pull setup uses world markers at both platform ends plus assigned mobile Orb Collectors and Wail interrupt ownership.
 - The player plan cues orb handling from the actual spawn event: only assigned collectors touch the green poison orbs and carry them to Triangle. It does not imply that an orb initially appears on a player.
-- Normal Guillotine only needs any 5+ soakers; Heroic adds rotating groups; Mythic uses fresh groups because the repeat-hit restriction is stronger.
+- Heroic uses the current rotating-group Guillotine contract; Mythic uses fresh groups because the repeat-hit restriction is stronger.
 - Dreadmarch/ghost routing, Nightfall shield+interrupt, Soulcoilers/Wail, intermission fragment control and synchronized final boss deaths remain the raid-lead essentials.
 - The selected Bloodlust timing is during Soulbinding/intermission from the supplied Ready Check Pull tactic. This is recorded as strategy rather than presented as a universal mechanic invariant.
 - Current public guidance continues to describe the three-phase/intermission/final-linked-boss structure. Same-day DBM/BigWigs route changes are treated as timing-provider evidence and do not silently rewrite the strategy plan.
@@ -121,5 +121,5 @@ A useful volatility example is Twin Fangs `Eternal Venom`: current public guides
 
 - Ula'tek remains the lowest-confidence encounter for automation. Public Patch 12.1 guides describe the encounter, but current source availability alone still does not justify source-only automatic timing.
 - Provider timing is monitoring evidence, not a readiness signal; live Retail proof is required before changing RLA's manual-only boundary.
-- Normal/Heroic Spectral Coils stays a full-raid Square stack; Mythic alone introduces the assigned Coil rotation and additional egg/incubation ownership in the current plan.
+- Heroic uses the reviewed alternating Coil contract; Mythic adds its additional egg/incubation ownership.
 - Every Ula'tek call remains manual (`timing=false`) until live Retail evidence confirms stable exact public timer identity/cadence. Provider drycode, current guide availability or generic Blizzard timeline coverage alone is insufficient.

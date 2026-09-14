@@ -66,6 +66,10 @@ end
 
 function RaidWarningService:SendRaw(text)
     if type(text) ~= "string" or text == "" then return false end
+    if not self:CanSend() then
+        ns:Print("Raid Warning requires raid leader or assistant.")
+        return false
+    end
     if #text > MAX_CHAT_LENGTH then
         ns:Print(("Raid Warning exceeds %d characters; shorten the call before sending."):format(MAX_CHAT_LENGTH))
         return false
@@ -93,13 +97,6 @@ function RaidWarningService:CancelBriefing()
 end
 
 function RaidWarningService:Send(text)
-    if type(text) ~= "string" or text == "" then return false end
-
-    if not self:CanSend() then
-        ns:Print("Raid Warning requires raid leader or assistant.")
-        return false
-    end
-
     return self:SendRaw(text)
 end
 

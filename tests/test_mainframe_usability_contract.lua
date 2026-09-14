@@ -42,6 +42,13 @@ assert(contains(productivityUI, 'AssignmentUI.currentBossKey') and contains(prod
 assert(not contains(productivityCore, 'ns:GetModule("UI.ActionButton")') and not contains(productivityCore, 'ActionButton:Create('),
     "Core productivity integration must not own visual child construction")
 
+
+assert(not contains(mainFrame, 'difficultyTabs.normal') and not contains(assignmentFrame, 'difficultyTabs.normal'),
+    "Heroic/Mythic-only UI must not anchor controls to the retired Normal tab")
+assert(contains(mainFrame, 'local difficultyCount = #Constants.DIFFICULTY_ORDER')
+    and contains(assignmentFrame, 'local difficultyCount = #Constants.DIFFICULTY_ORDER'),
+    "difficulty tab geometry must derive from the active Heroic/Mythic order")
+
 -- The plan action is only valid before the pull; its label should say so before users click it.
 assert(contains(mainFrame, 'SetText("SEND PRE-PULL PLAN")'),
     "Boss Plan action should expose its pre-pull lifecycle in the visible label")

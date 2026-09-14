@@ -32,7 +32,7 @@ Record one evidence line per item with date/time, region, Retail build, installe
 - [ ] Confirm the main panel can be dragged directly by the header and Ctrl+mouse wheel scales it through the supported 70–110% range without overlap or clipping.
 - [ ] Open RLA through the normal UI and AddOn Compartment path; left-click toggles raid controls and right-click opens settings.
 - [ ] With no bossmod active, select one supported encounter and verify manual calls remain usable and no provider failure creates actionable phantom timing.
-- [ ] With **DBM 12.1.6**, start one supported Normal/Heroic encounter or reproducible provider path and verify encounter identity, one mechanic occurrence, `WAIT -> SOON -> PRESS NOW` ordering and wipe/reset cleanup.
+- [ ] With **DBM 12.1.6**, start one supported Heroic/Mythic encounter or reproducible provider path and verify encounter identity, one mechanic occurrence, `WAIT -> SOON -> PRESS NOW` ordering and wipe/reset cleanup.
 - [ ] With **BigWigs v424.1**, repeat the lifecycle and verify exact/approximate semantics are respected.
 - [ ] With DBM+BigWigs where practical, verify duplicate representations collapse to one occurrence and provider priority does not create double guidance/audio.
 - [ ] Verify one Blizzard `isApproximate=true` event cannot drive actionable `SOON`/`PRESS NOW`/TTS.
@@ -56,7 +56,7 @@ Test at minimum:
 
 ## Per boss/difficulty
 
-For every one of 8 bosses x Normal/Heroic/Mythic that is claimed live-ready, verify:
+For every one of 8 bosses x Heroic/Mythic that is claimed live-ready, verify:
 
 - plan text and current tactic correctness;
 - assignment layout/readiness and difficulty-specific constraints;
@@ -108,7 +108,7 @@ For representative timed calls on at least two bosses and both primary bossmods,
 
 ### Nek'zali
 
-- [ ] Normal/Heroic have no unnecessary fixed assignment UI.
+- [ ] Heroic has no unnecessary fixed assignment UI.
 - [ ] DBM current/live routing for Restless Amani, Hungering Pyre, Invoke and Grasping Depths maps to the intended stable identities.
 - [ ] Hungering Pyre IDs `1305421` and `1290679` select the same intended RLA call without duplicate/re-arm behavior.
 - [ ] BigWigs repeated Phase 1/2 occurrences do not leave stale or duplicate timers.
@@ -129,7 +129,7 @@ For representative timed calls on at least two bosses and both primary bossmods,
 
 ### Vashnik the Malignant
 
-- [ ] Normal/Heroic simple profile keeps the raid between Shadow/Purple and Fire/Orange and does not surface Blood/red strategy calls.
+- [ ] Heroic simple profile keeps the raid between Shadow/Purple and Fire/Orange and does not surface Blood/red strategy calls.
 - [ ] Purple-first/Orange-after strategy copy matches what the raid is intentionally executing.
 - [ ] Current DBM numeric identities remain bound to the intended calls and authority release leaves no stale exact guidance.
 
@@ -144,9 +144,9 @@ For representative timed calls on at least two bosses and both primary bossmods,
 
 ### The Coiled Altar
 
-- [ ] Normal/Heroic 3-player Guillotine assignment passes RLA validation and the live mechanic minimum.
+- [ ] Heroic 3-player Guillotine assignment passes RLA validation and the live mechanic minimum.
 - [ ] Heroic second Guillotine advances to the other assigned group.
-- [ ] Mythic still requires fresh 5+ groups and does not inherit the Normal/Heroic 3-player rule.
+- [ ] Mythic still requires fresh 5+ groups and does not inherit the Heroic 3-player rule.
 - [ ] DBM/BigWigs phase/intermission transitions do not create stale or duplicate guidance.
 - [ ] Wipe around Soulbinding/intermission leaves no stale Guillotine, Dreadmarch, Nightfall, assignment rotation or timing state.
 
@@ -158,7 +158,7 @@ The beta67 tactic review remains the source for the bounded Ula'tek timing/assig
 - Caustic Waves `1292188`, Spectral Coils `1300530`, Rage of the Shackled `1286860`, Call of the Serpent `1300751`, Serpent's Bite `1295905` and Circling Prey `1301510` selecting the intended call exactly once per occurrence;
 - Mythic Toxic Incubation provider key `1299757` resolving to Incubation while display spell `1299759` remains UI-only;
 - no approximate-to-actionable precision escalation;
-- Normal raid-wide Coils, Heroic/Mythic alternating Coil teams, left/right egg carriers, three Bite helper sectors, plus Mythic Incubation;
+- Heroic/Mythic alternating Coil teams, left/right egg carriers, three Bite helper sectors, plus Mythic Incubation;
 - missing/overlapping required assignments failing closed;
 - Doomscale Warden, Doomscale Eggs, Grasping Fangs and generic Phase 3 remaining manual;
 - provider switch/fallback, `/reload`, wipe and repull carrying no timer, acknowledgement, assignment rotation, `LATE` snapshot or audio state into the next pull;
