@@ -14,7 +14,6 @@ local VALID_POINTS = {
 }
 
 local VALID_DIFFICULTIES = {
-    normal = true,
     heroic = true,
     mythic = true,
 }
@@ -86,6 +85,17 @@ local function normalizeUIScale(value)
     local scale = numeric(value)
     if not isFiniteNumber(scale) then return DEFAULTS.uiScale end
     return math.max(0.70, math.min(1.10, scale))
+end
+
+local function dropUnsupportedDifficulties(root)
+    if type(root) ~= "table" then return end
+    for _, difficulties in pairs(root) do
+        if type(difficulties) == "table" then
+            for difficultyKey in pairs(difficulties) do
+                if not VALID_DIFFICULTIES[difficultyKey] then difficulties[difficultyKey] = nil end
+            end
+        end
+    end
 end
 
 function Database:Initialize()
@@ -165,6 +175,10 @@ function Database:Migrate()
     if version < 7 then
         self.data.uiScale = normalizeUIScale(self.data.uiScale)
     end
+
+    dropUnsupportedDifficulties(self.data.customMessages)
+    dropUnsupportedDifficulties(self.data.assignments)
+    dropUnsupportedDifficulties(self.data.assignmentPresets)
 
     if not self.newerSchemaDetected then
         self.data.schemaVersion = self.SCHEMA_VERSION
