@@ -90,8 +90,8 @@
         {
           "ref": "master",
           "path": "Core/BossPrototype.lua",
-          "blobSha": "4c9aea8bebb365878ac298d166dadf21e4e807ce",
-          "reason": "Current BigWigs retains the public BigWigs_Timer/BigWigs_StartBar timing surface consumed by RLA. RLA continues to preserve upstream approximation metadata and downgrade uncertain bridge output."
+          "blobSha": "511af2ec3a91608cfa9e476e2d4fe1b1cbbe10ca",
+          "reason": "Current BigWigs core extends SecretMessage with optional secret-safe target rendering. RLA does not consume BigWigs message text as a timing contract; its public BigWigs_Timer/BigWigs_StartBar lifecycle, approximation metadata and fail-closed downgrade boundary remain unchanged."
         },
         {
           "ref": "master",
