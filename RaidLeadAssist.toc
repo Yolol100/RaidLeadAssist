@@ -43,10 +43,11 @@ Encounters/VenomousAbyss/TwinFangs.lua
 Encounters/VenomousAbyss/CoiledAltar.lua
 Encounters/VenomousAbyss/Ulatek.lua
 Encounters/VenomousAbyss/SetupLayouts.lua
+Services/RosterService.lua
+Services/RaidGroupSplitService.lua
 Services/RaidWarningService.lua
 Services/MessageService.lua
 Services/AudioService.lua
-Services/RosterService.lua
 Services/AssignmentService.lua
 Services/AssignmentPresetService.lua
 Services/PersonalAssignmentService.lua

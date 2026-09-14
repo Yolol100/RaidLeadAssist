@@ -2,13 +2,13 @@ local _, ns = ...
 
 local AssignmentRegistry = ns:GetModule("Encounters.AssignmentRegistry")
 
-local EXPLORERS_BASE = {
-    summary = "No roster assignment is needed. Crates are opportunistic; fish order and Thud markers are fixed strategy.",
+local EXPLORERS_HEROIC = {
+    summary = "Heroic uses the fixed Gebbo → Nama → Iku fish plan and needs no roster assignment.",
     sections = {},
 }
 
 local EXPLORERS_MYTHIC = {
-    summary = "Mythic only: assign a crate-breaker rotation so everyone else can clear 15+ yards before each break.",
+    summary = "Mythic: assign a crate-breaker rotation so everyone else can clear 15+ yards before each break.",
     sections = {
         {
             key = "crates",
@@ -24,18 +24,21 @@ local EXPLORERS_MYTHIC = {
     },
 }
 
-local VASHNIK_NONE = {
-    summary = "No fixed player assignment is needed. Fountain route, Blood-circle help and Fire-add order are shared strategy.",
+local VASHNIK_HEROIC = {
+    summary = "Heroic Purple+Orange is shared raid strategy; no fixed player assignment is required.",
+    sections = {},
+}
+
+local VASHNIK_MYTHIC = {
+    summary = "Mythic uses its separate fountain/tumor execution and needs no fixed roster assignment here.",
     sections = {},
 }
 
 AssignmentRegistry:RegisterLayouts("explorers", {
-    normal = EXPLORERS_BASE,
-    heroic = EXPLORERS_BASE,
+    heroic = EXPLORERS_HEROIC,
     mythic = EXPLORERS_MYTHIC,
 })
 AssignmentRegistry:RegisterLayouts("vashnik", {
-    normal = VASHNIK_NONE,
-    heroic = VASHNIK_NONE,
-    mythic = VASHNIK_NONE,
+    heroic = VASHNIK_HEROIC,
+    mythic = VASHNIK_MYTHIC,
 })

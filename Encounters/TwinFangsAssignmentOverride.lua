@@ -20,7 +20,7 @@ end
 local FEAST_TEAMS = {
     key = "feast",
     title = "Ravenous Feast Soak Order",
-    description = "Heroic/Mythic: build three different 3+ teams, one for each Feast hit.",
+    description = "Mythic: build three different 3+ teams, one for each Feast hit.",
     columns = 3,
     slots = {
         assigneeSlot("feast_team_a", "Feast Hit 1", "feast", "Hit 1", true, "feast", 3, "Choose at least 3 players for Feast hit 1.", true),
@@ -32,7 +32,7 @@ local FEAST_TEAMS = {
 local MYTHIC_BROOD = {
     key = "brood",
     title = "Broodling Interrupts",
-    description = "Mythic only: assign separate kick owners for simultaneous Visceral Bursts.",
+    description = "Mythic: assign separate kick owners for simultaneous Visceral Bursts.",
     columns = 3,
     slots = {
         assigneeSlot("brood_kick_a", "Broodling Kick 1", "brood", "Kick 1", true, "brood", nil, "Primary Broodling interrupt."),
@@ -41,19 +41,13 @@ local MYTHIC_BROOD = {
     },
 }
 
-local LAYOUTS = {
-    normal = {
-        summary = "No fixed Feast assignment is needed on Normal. Each hit still needs fresh 3+ soakers.",
+AssignmentRegistry:RegisterLayouts("twinfangs", {
+    heroic = {
+        summary = "Heroic uses the fixed raid → main tank → off tank Feast plan; no editable Feast teams are required.",
         sections = {},
     },
-    heroic = {
-        summary = "Assign three different 3+ Feast teams. RLA shows the actual configured order in the call.",
-        sections = { FEAST_TEAMS },
-    },
     mythic = {
-        summary = "Keep the three Feast teams and add Broodling interrupt owners. Tainted Blood needs no fixed roster assignment.",
+        summary = "Mythic keeps three Feast teams and Broodling interrupt owners.",
         sections = { FEAST_TEAMS, MYTHIC_BROOD },
     },
-}
-
-AssignmentRegistry:RegisterLayouts("twinfangs", LAYOUTS)
+})

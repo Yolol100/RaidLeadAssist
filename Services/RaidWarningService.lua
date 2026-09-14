@@ -2,6 +2,7 @@ local _, ns = ...
 
 local Constants = ns:GetModule("Core.Constants")
 local Util = ns:GetModule("Core.Util")
+local RaidGroupSplit = ns:GetModule("Services.RaidGroupSplitService")
 
 local RaidWarningService = {
     queuedTimers = {},
@@ -38,6 +39,23 @@ local function compactAssignmentLines(lines)
         end
     end
     if current ~= "" then result[#result + 1] = current end
+    return result
+end
+
+function RaidWarningService:ResolveBriefingLines(lines)
+    if type(lines) ~= "table" then return nil end
+    local result = {}
+    for index = 1, #lines do
+        local line = lines[index]
+        if type(line) ~= "string" then return nil end
+        local firstLabel, secondLabel = line:match("^{{GROUP_SPLIT:([A-Z]+):([A-Z]+)}}$")
+        if firstLabel and secondLabel then
+            line = RaidGroupSplit:Describe(firstLabel, secondLabel)
+        elseif line:find("{{GROUP_SPLIT:", 1, true) then
+            return nil
+        end
+        result[#result + 1] = line
+    end
     return result
 end
 
@@ -88,6 +106,11 @@ function RaidWarningService:SendBriefing(lines)
     if type(lines) ~= "table" or #lines == 0 then return false end
     if self.briefingLockUntil > GetTime() then return false end
 
+    lines = self:ResolveBriefingLines(lines)
+    if not lines then
+        ns:Print("Boss Explanation contains an invalid dynamic group split.")
+        return false
+    end
     lines = compactAssignmentLines(lines)
     for index = 1, #lines do
         if type(lines[index]) ~= "string" or lines[index] == "" or #lines[index] > MAX_CHAT_LENGTH then
