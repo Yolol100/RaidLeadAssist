@@ -96,14 +96,18 @@ assert(table.concat(R:GetProfile("vashnik", "heroic").explanation, "\n"):find(
     "PURPLE + ORANGE ONLY", 1, true
 ))
 
--- Heroic Twin Fangs requires three fresh non-overlapping Feast groups and renders each hit separately.
+-- Heroic Twin Fangs requires three fresh non-overlapping Feast groups. In a 20-player raid
+-- the 30% floor means 6+ players per team, so exercise a realistic 7/7/6 partition.
+local feastTeamA = "G1P1, G1P2, G1P3, G1P4, G1P5, G2P1, G2P2"
+local feastTeamB = "G2P3, G2P4, G2P5, G3P1, G3P2, G3P3, G3P4"
+local feastTeamC = "G3P5, G4P1, G4P2, G4P3, G4P4, G4P5"
 ok = A:ApplyBossDraft("twinfangs", "heroic", {
-    feast_heroic_a = "Group 1",
-    feast_heroic_b = "Group 2",
-    feast_heroic_c = "Groups 3+4",
+    feast_heroic_a = feastTeamA,
+    feast_heroic_b = feastTeamB,
+    feast_heroic_c = feastTeamC,
 })
 assert(ok)
-for index, expected in ipairs({ "Group 1", "Group 2", "Groups 3+4" }) do
+for index, expected in ipairs({ feastTeamA, feastTeamB, feastTeamC }) do
     local callKey = "feast" .. tostring(index)
     local feast = R:GetProfile("twinfangs", "heroic").callsByKey[callKey]
     local warning, complete = A:BuildCallWarning(feast.warning, "twinfangs", "heroic", callKey)
