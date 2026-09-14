@@ -56,6 +56,7 @@ Services/Providers/BigWigsProvider.lua
 Services/Providers/DBMProvider.lua
 Services/Providers/BlizzardProvider.lua
 Services/TimelineService.lua
+Services/TimingGuidanceService.lua
 Services/EncounterService.lua
 UI/Theme.lua
 UI/Dropdown.lua
@@ -79,5 +80,6 @@ Core/AssignmentIntegration.lua
 Core/ReadinessIntegration.lua
 Core/ProductivityIntegration.lua
 Core/ProviderRecoveryIntegration.lua
+Core/TimingGuidanceIntegration.lua
 Core/SentinelsIntegration.lua
 Core/AddonCompartment.lua
