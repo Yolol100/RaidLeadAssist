@@ -11,15 +11,20 @@ T.Load("Encounters/Boss78AssignmentOverride.lua", ns)
 local Registry = ns:GetModule("Encounters.Registry")
 local AR = ns:GetModule("Encounters.AssignmentRegistry")
 
-for _, d in ipairs({"normal","heroic","mythic"}) do
-    local altar = Registry:GetProfile("altar",d)
+assert(Registry:GetProfile("altar", "normal") == nil)
+assert(Registry:GetProfile("ulatek", "normal") == nil)
+assert(#AR:GetDefinitions("altar", "normal") == 0)
+assert(#AR:GetDefinitions("ulatek", "normal") == 0)
+
+for _, d in ipairs({"heroic","mythic"}) do
+    local altar = assert(Registry:GetProfile("altar", d))
     assert(altar.callsByKey.sever == nil)
-    assert(altar.callsByKey.intermission.warning:find("Bloodlust",1,true))
+    assert(altar.callsByKey.intermission.warning:find("Bloodlust", 1, true))
     assert(altar.callsByKey.final.warning == "Final phase: keep health even; kill together.")
-    local defs = AR:GetDefinitions("altar",d)
+    local defs = AR:GetDefinitions("altar", d)
     assert(defs[1].key == "orb_collectors" and defs[1].minPlayers == 2 and defs[1].required)
 
-    local ulatek = Registry:GetProfile("ulatek",d)
+    local ulatek = assert(Registry:GetProfile("ulatek", d))
     for _, key in ipairs({ "waves", "coils", "heart", "serpents", "bite", "circling" }) do
         assert(ulatek.callsByKey[key] and ulatek.callsByKey[key].timing ~= false,
             d .. " Ula'tek must expose selected provider-timed call " .. key)
@@ -30,10 +35,6 @@ for _, d in ipairs({"normal","heroic","mythic"}) do
     end
 end
 
-assert(Registry:GetProfile("altar", "normal").callsByKey.guillotine.warning:find("at least 3", 1, true),
-    "Normal Guillotine must reflect the live 3-player minimum")
-assert(#AR:GetCallDefinitions("altar", "normal", "guillotine") == 0,
-    "Normal Guillotine uses any 3+ players and needs no fixed roster group")
 local heroicGuillotine = AR:GetCallDefinitions("altar", "heroic", "guillotine")
 assert(#heroicGuillotine == 2,
     "Heroic Guillotine requires two assigned soak groups")
@@ -47,9 +48,11 @@ for _, definition in ipairs(mythicGuillotine) do
     assert(definition.minPlayers == 5, "Mythic Guillotine keeps the 5+ fresh-group contract")
 end
 
-local h = AR:GetDefinitions("altar","heroic")
-local requiredWail=0
-for _,def in ipairs(h) do if def.key:find("wail_kick_",1,true) and def.required then requiredWail=requiredWail+1 end end
+local h = AR:GetDefinitions("altar", "heroic")
+local requiredWail = 0
+for _, def in ipairs(h) do
+    if def.key:find("wail_kick_", 1, true) and def.required then requiredWail = requiredWail + 1 end
+end
 assert(requiredWail == 2)
 
 local function keysFor(difficulty)
@@ -57,12 +60,6 @@ local function keysFor(difficulty)
     for _, definition in ipairs(AR:GetDefinitions("ulatek", difficulty)) do found[definition.key] = definition end
     return found
 end
-
-local un = keysFor("normal")
-assert(un.egg_left and un.egg_right, "Normal Ula'tek needs one Phase 2 egg carrier per side")
-assert(un.bite_melee and un.bite_ranged and un.bite_healer,
-    "Normal Ula'tek needs three Phase 3 Serpent's Bite helper sectors")
-assert(not un.coil_a and not un.coil_b, "Normal may soak Spectral Coils as one raid group")
 
 local uh = keysFor("heroic")
 assert(uh.coil_a and uh.coil_b,
@@ -78,12 +75,13 @@ assert(um.coil_a and um.coil_b and um.egg_left and um.egg_right and um.incubatio
 assert(um.bite_melee and um.bite_ranged and um.bite_healer,
     "Mythic Ula'tek keeps three Bite helper sectors for Purge wave control")
 
-local normalUlatek = Registry:GetProfile("ulatek","normal")
-assert(normalUlatek.callsByKey.circling and normalUlatek.callsByKey.circling.spellIDs[1] == 1301510,
+local heroicUlatek = Registry:GetProfile("ulatek", "heroic")
+assert(heroicUlatek.callsByKey.circling and heroicUlatek.callsByKey.circling.spellIDs[1] == 1301510,
     "Ula'tek platform-break timing must use current bossmod Circling Prey identity 1301510")
-assert(normalUlatek.callsByKey.demolish == nil,
+assert(heroicUlatek.callsByKey.demolish == nil,
     "stale Demolish call identity must not return")
-assert(Registry:GetProfile("ulatek","mythic").callsByKey.incubation.timing ~= false,
+assert(Registry:GetProfile("ulatek", "mythic").callsByKey.incubation.timing ~= false,
     "Mythic Toxic Incubation may use the reviewed exact provider timer")
 
-print("ok - Coiled Altar and Ula'tek live tactic contracts stay difficulty-specific and fail-closed")
+_G.issecretvalue = nil
+print("ok - Coiled Altar and Ula'tek Heroic/Mythic contracts stay difficulty-specific and fail closed")
