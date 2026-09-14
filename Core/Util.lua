@@ -64,14 +64,6 @@ function Util.GetSpellIcon(spellID)
     return C_Spell and C_Spell.GetSpellTexture and C_Spell.GetSpellTexture(spellID) or nil
 end
 
-function Util.SafeCall(fn, ...)
-    if type(fn) ~= "function" then return false end
-    local ok, result = pcall(fn, ...)
-    if not ok then
-        ns:Print("Internal error: " .. tostring(result))
-    end
-    return ok, result
-end
 
 function Util.CopyDefaults(target, defaults)
     target = type(target) == "table" and target or {}

@@ -281,24 +281,6 @@ function MessageService:SetExplanationText(bossKey, difficultyKey, text)
     return true
 end
 
-function MessageService:ResetCallWarning(bossKey, difficultyKey, callKey)
-    if callKey == nil then callKey, difficultyKey = difficultyKey, nil end
-    difficultyKey = resolveDifficulty(self, difficultyKey)
-    local profile = getStoredProfile(self.database, bossKey, difficultyKey, false)
-    if profile and profile.calls then profile.calls[callKey] = nil end
-    local defaults = Registry:GetProfile(bossKey, difficultyKey)
-    if profile and (profile.explanation or next(profile.calls or {})) then stampCurrentDefault(profile, defaults) end
-    EventBus:Emit("MESSAGES_CHANGED", bossKey, difficultyKey, callKey)
-end
-
-function MessageService:ResetExplanation(bossKey, difficultyKey)
-    difficultyKey = resolveDifficulty(self, difficultyKey)
-    local profile = getStoredProfile(self.database, bossKey, difficultyKey, false)
-    if profile then profile.explanation = nil end
-    local defaults = Registry:GetProfile(bossKey, difficultyKey)
-    if profile and next(profile.calls or {}) then stampCurrentDefault(profile, defaults) end
-    EventBus:Emit("MESSAGES_CHANGED", bossKey, difficultyKey, "explanation")
-end
 
 function MessageService:ResetBoss(bossKey, difficultyKey)
     difficultyKey = resolveDifficulty(self, difficultyKey)

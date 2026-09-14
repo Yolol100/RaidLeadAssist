@@ -2,6 +2,43 @@ local T = assert(loadfile("tests/testlib.lua"))()
 local ns = T.NewNamespace()
 _G.issecretvalue = function() return false end
 
+-- Exercise the real roster adapter before the readiness test swaps in its controlled roster stub.
+do
+    local rosterNs = T.NewNamespace()
+    local raidRows = {
+        { "Zulu", 2, "DAMAGER" },
+        { "Tank", 1, "TANK" },
+        { "Heal", 1, "HEALER" },
+        { "Alpha", 1, "DAMAGER" },
+        { "", 1, "DAMAGER" },
+    }
+    _G.IsInRaid = function() return true end
+    _G.GetNumGroupMembers = function() return #raidRows end
+    _G.GetRaidRosterInfo = function(index)
+        local row = raidRows[index]
+        return row[1], nil, row[2], nil, "Class", "CLASS", nil, nil, nil, row[3]
+    end
+    T.Load("Services/RosterService.lua", rosterNs)
+    local realRoster = rosterNs:GetModule("Services.RosterService")
+    local roster = realRoster:GetRoster()
+    assert(#roster == 4, "real raid roster adapter must drop empty names")
+    assert(roster[1].name == "Tank" and roster[2].name == "Heal" and roster[3].name == "Alpha" and roster[4].name == "Zulu",
+        "real raid roster adapter must sort by subgroup, role and name")
+    assert(roster[4].subgroup == 2 and roster[4].raidIndex == 1,
+        "real raid roster adapter must preserve subgroup and source raid index")
+
+    _G.IsInRaid = function() return false end
+    _G.GetNumGroupMembers = function() return 3 end
+    local unitNames = { player = "Player-Realm", party1 = "Healer-Realm", party2 = "Dps-Realm" }
+    local unitRoles = { player = "TANK", party1 = "HEALER", party2 = "DAMAGER" }
+    _G.UnitName = function(unit) return unitNames[unit] end
+    _G.UnitGroupRolesAssigned = function(unit) return unitRoles[unit] end
+    _G.UnitClass = function() return "Class", "CLASS" end
+    roster = realRoster:GetRoster()
+    assert(#roster == 3 and roster[1].name == "Player-Realm" and roster[2].name == "Healer-Realm" and roster[3].name == "Dps-Realm",
+        "real party roster adapter must include player plus party units in role order")
+end
+
 local currentRoster = {
     { name = "Alex-NewRealm", subgroup = 1, role = "DAMAGER" },
     { name = "Sam-RealmA", subgroup = 1, role = "DAMAGER" },

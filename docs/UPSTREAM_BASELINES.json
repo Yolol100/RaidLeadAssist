@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-09-13",
+  "reviewedAt": "2026-09-14",
   "wowInterface": 120100,
   "raidUnlock": {
     "eu": "2026-08-19",
@@ -77,7 +77,7 @@
           "ref": "master",
           "path": "DBM-Raids-Midnight/TheVenomousAbyss/Ulatek.lua",
           "blobSha": "2f9fdaf2a4d6b2d986d18c6ed8eb78464e544939",
-          "reason": "DBM Ula'tek remains at the reviewed fingerprint. RLA deliberately keeps every Ula'tek raidleader call timing=false, so upstream timing cannot create automatic PREPARE/PRESS/TTS without live evidence and a separate product change."
+          "reason": "DBM Ula'tek remains at the reviewed fingerprint. RLA uses only the deliberately allowlisted stable spell identities for exact/native timing; strategy milestones such as Warden/egg execution remain manual and PASS-LIVE remains separate."
         }
       ]
     },
@@ -114,8 +114,8 @@
         {
           "ref": "master",
           "path": "TheVenomousAbyss/CoiledAltar.lua",
-          "blobSha": "3ab07136ce8bce7eeb870b90d1f70410a5e4ed54",
-          "reason": "Coiled Altar source changed upstream. RLA remains isolated from BigWigs' private phase resolver and consumes the resulting public bar lifecycle."
+          "blobSha": "8ffd6d755d0781b3fc6d888138039bf184bcb9b9",
+          "reason": "Current BigWigs master reworked Blizzard warning/personal-target handling and related phase timing internals. RLA does not consume those private warning helpers; it remains isolated behind the public BigWigs bar lifecycle and encounter-scoped stable identities."
         },
         {
           "ref": "master",
@@ -144,8 +144,8 @@
         {
           "ref": "master",
           "path": "TheVenomousAbyss/Ulatek.lua",
-          "blobSha": "7982e9cdac7364edae2efa282df59b541f387da1",
-          "reason": "BigWigs Ula'tek timing/routing changed upstream, but RLA deliberately keeps every Ula'tek raidleader call manual-only pending live Retail evidence."
+          "blobSha": "6c873faefbc1b76c2f20b8ea79a450cfeb3868d5",
+          "reason": "Current BigWigs master now stops Rage of the Shackled when its channel ends early and adds Warden/Wretch tracking bars. RLA already consumes public stop events, keeps only its explicit stable-ID timing allowlist actionable, and does not automatically promote the new add bars; live Retail proof is still required."
         }
       ]
     }

@@ -48,6 +48,13 @@ assert(not contains(mainFrame, 'difficultyTabs.normal') and not contains(assignm
 assert(contains(mainFrame, 'local difficultyCount = #Constants.DIFFICULTY_ORDER')
     and contains(assignmentFrame, 'local difficultyCount = #Constants.DIFFICULTY_ORDER'),
     "difficulty tab geometry must derive from the active Heroic/Mythic order")
+assert(contains(mainFrame, 'local firstDifficultyKey = Constants.DIFFICULTY_ORDER[1]')
+    and contains(mainFrame, 'local lastDifficultyKey = Constants.DIFFICULTY_ORDER[difficultyCount]')
+    and contains(assignmentFrame, 'local firstDifficultyKey = Constants.DIFFICULTY_ORDER[1]'),
+    "post-tab anchors must derive from the same active difficulty order")
+assert(not contains(mainFrame, 'difficultyTabs.heroic') and not contains(mainFrame, 'difficultyTabs.mythic')
+    and not contains(assignmentFrame, 'difficultyTabs.heroic'),
+    "dynamic difficulty geometry must not fall back to named-tab anchors")
 
 -- The plan action is only valid before the pull; its label should say so before users click it.
 assert(contains(mainFrame, 'SetText("SEND PRE-PULL PLAN")'),

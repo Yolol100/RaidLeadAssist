@@ -241,13 +241,28 @@ def validate_workflows(files: list[str]) -> None:
                 f"({persist_count}/{checkout_count})"
             )
     validate = read_text(".github/workflows/validate.yml")
-    for job in ("source-validation:", "validation:", "reproducibility:", "reproducibility-check:", "provenance:", "release:"):
+    for job in ("source-validation:", "upstream-drift:", "validation:", "reproducibility:", "reproducibility-check:", "provenance:", "release:"):
         if job not in validate:
             fail(f"validation workflow missing required job: {job[:-1]}")
     if "needs: [source-validation, reproducibility]" not in validate:
         fail("reproducibility-check must depend on both source validation and independent build")
-    if "needs: [source-validation, reproducibility-check]" not in validate:
-        fail("required validation context must be the final aggregate CI gate")
+    if "needs: [source-validation, reproducibility-check, upstream-drift]" not in validate:
+        fail("required validation context must aggregate source validation, reproducibility and online upstream drift")
+    for marker in (
+        "validation:\n    if: ${{ always() }}",
+        "${{ needs.source-validation.result }}",
+        "${{ needs.reproducibility-check.result }}",
+        "${{ needs.upstream-drift.result }}",
+        'if [ "$result" != "success" ]',
+    ):
+        if marker not in validate:
+            fail(f"required validation context must fail explicitly when a dependency fails or is skipped: {marker}")
+    if "python3 scripts/check_upstream_drift.py --online" not in validate:
+        fail("required validation workflow must verify live upstream baselines before the aggregate gate")
+    if "needs: validation" not in validate:
+        fail("provenance must depend on the final aggregate validation gate")
+    if "needs: [validation, provenance]" not in validate:
+        fail("release must depend on both aggregate validation and provenance")
     for marker in (
         "workflow_dispatch:",
         "concurrency:",

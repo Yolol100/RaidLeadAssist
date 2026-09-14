@@ -116,16 +116,5 @@ function EncounterService:GetDifficultyKey()
     return Constants.DIFFICULTY_KEY_BY_ID[self:GetDifficultyID()]
 end
 
-function EncounterService:IsSupportedDifficulty()
-    return self:GetDifficultyKey() ~= nil
-end
-
-function EncounterService:IsHeroic()
-    return self:GetDifficultyID() == Constants.HEROIC_DIFFICULTY_ID
-end
-
-function EncounterService:IsMythic()
-    return self:GetDifficultyID() == Constants.MYTHIC_DIFFICULTY_ID
-end
 
 ns:RegisterModule("Services.EncounterService", EncounterService)
