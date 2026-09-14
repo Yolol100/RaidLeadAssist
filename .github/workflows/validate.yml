@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  validation:
+  source-validation:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -132,7 +132,7 @@ jobs:
           compression-level: 0
 
   reproducibility-check:
-    needs: [validation, reproducibility]
+    needs: [source-validation, reproducibility]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -153,6 +153,14 @@ jobs:
           cmp primary/RaidLeadAssist.zip repro/RaidLeadAssist.zip
           cmp primary/RaidLeadAssist.zip.sha256 repro/RaidLeadAssist.zip.sha256
           cmp primary/SBOM.spdx.json repro/SBOM.spdx.json
+
+  validation:
+    needs: [source-validation, reproducibility-check]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Confirm complete CI gate
+        run: echo "Source validation and reproducibility checks passed for $GITHUB_SHA"
 
   provenance:
     if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
