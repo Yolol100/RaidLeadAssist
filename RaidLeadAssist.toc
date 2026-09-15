@@ -62,6 +62,7 @@ Services/EncounterService.lua
 Services/BossMacroService.lua
 Services/BossMacroDraftBridge.lua
 Services/ManagedMacroService.lua
+Services/ActionBarOverlayService.lua
 UI/Theme.lua
 UI/Dropdown.lua
 UI/TimelineBar.lua
