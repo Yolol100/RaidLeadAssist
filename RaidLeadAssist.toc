@@ -60,6 +60,7 @@ Services/TimelineService.lua
 Services/TimingGuidanceService.lua
 Services/EncounterService.lua
 Services/BossMacroService.lua
+Services/BossMacroDraftBridge.lua
 UI/Theme.lua
 UI/Dropdown.lua
 UI/TimelineBar.lua
@@ -77,6 +78,8 @@ UI/SentinelsPanel.lua
 UI/SetupCard.lua
 UI/MainFrame.lua
 UI/ProductivityPanel.lua
+UI/IconPicker.lua
+UI/BossMacroManager.lua
 Core/App.lua
 Core/AssignmentIntegration.lua
 Core/ReadinessIntegration.lua
