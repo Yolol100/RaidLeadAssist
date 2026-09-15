@@ -59,6 +59,7 @@ Services/Providers/BlizzardProvider.lua
 Services/TimelineService.lua
 Services/TimingGuidanceService.lua
 Services/EncounterService.lua
+Services/BossMacroService.lua
 UI/Theme.lua
 UI/Dropdown.lua
 UI/TimelineBar.lua
