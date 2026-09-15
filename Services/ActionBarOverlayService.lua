@@ -73,7 +73,7 @@ end
 
 function OverlayService:AttachButton(button)
     if not button or self.overlays[button] then return self.overlays[button] end
-    if inCombat() then return nil end
+    if inCombat() or type(button.GetFrameLevel) ~= "function" then return nil end
 
     local overlay = CreateFrame("Frame", nil, button)
     overlay:SetAllPoints(button)
@@ -121,8 +121,7 @@ function OverlayService:CollectButtons(allowCreate)
     local seen = {}
 
     local function collect(button)
-        if type(button) ~= "table" or type(button.GetObjectType) ~= "function" then return end
-        if seen[button] then return end
+        if not button or type(button.GetObjectType) ~= "function" or seen[button] then return end
         seen[button] = true
         if allowCreate then self:AttachButton(button) end
     end
@@ -158,7 +157,8 @@ function OverlayService:RefreshBindings()
     local seen = self:CollectButtons(allowCreate)
 
     for button, overlay in pairs(self.overlays) do
-        if seen[button] or button:IsVisible() then
+        local visible = type(button.IsVisible) == "function" and button:IsVisible()
+        if seen[button] or visible then
             overlay.macroId = self:ResolveButtonMacroId(button)
         else
             overlay.macroId = nil
