@@ -1,0 +1,109 @@
+name: Apply Midnight StaticPopup fix
+
+on:
+  push:
+    branches:
+      - fix/staticpopup-editbox-midnight-20260916
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/staticpopup-editbox-midnight-20260916
+          fetch-depth: 0
+      - name: Patch StaticPopup edit box access
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('UI/BossMacroManager.lua')
+          text = path.read_text(encoding='utf-8')
+
+          anchor = '''local function difficultyLabel(key)
+              return key == "mythic" and "Mythic" or "Heroic"
+          end
+
+          local function setupDialogs()
+          '''
+          replacement = '''local function difficultyLabel(key)
+              return key == "mythic" and "Mythic" or "Heroic"
+          end
+
+          local function getDialogEditBox(dialog)
+              if not dialog then return nil end
+
+              local editBox = dialog.EditBox or dialog.editBox
+              if not editBox and type(dialog.GetEditBox) == "function" then
+                  editBox = dialog:GetEditBox()
+              end
+              if not editBox and type(dialog.GetName) == "function" then
+                  local name = dialog:GetName()
+                  if name and _G then editBox = _G[name .. "EditBox"] end
+              end
+              return editBox
+          end
+
+          local function setupDialogs()
+          '''
+          if anchor not in text:
+              raise SystemExit('difficulty/setupDialogs anchor not found')
+          text = text.replace(anchor, replacement, 1)
+
+          old = '''            OnShow = function(dialog, data)
+                          dialog.editBox:SetText((data and data.value) or "")
+                          dialog.editBox:HighlightText()
+                          dialog.editBox:SetFocus()
+                      end,
+                      OnAccept = function(dialog, data)
+                          if data and data.callback then data.callback(dialog.editBox:GetText() or "") end
+                      end,
+                      EditBoxOnEnterPressed = function(editBox)
+                          local parent = editBox:GetParent()
+                          local data = parent.data
+                          if data and data.callback then data.callback(editBox:GetText() or "") end
+                          parent:Hide()
+                      end,
+          '''
+          new = '''            OnShow = function(dialog, data)
+                          local editBox = getDialogEditBox(dialog)
+                          if not editBox then return end
+                          editBox:SetText((data and data.value) or "")
+                          editBox:HighlightText()
+                          editBox:SetFocus()
+                      end,
+                      OnAccept = function(dialog, data)
+                          local editBox = getDialogEditBox(dialog)
+                          if data and data.callback and editBox then data.callback(editBox:GetText() or "") end
+                      end,
+                      EditBoxOnEnterPressed = function(editBox)
+                          local parent = editBox and editBox:GetParent() or nil
+                          local data = parent and parent.data or nil
+                          if data and data.callback and editBox then data.callback(editBox:GetText() or "") end
+                          if parent then parent:Hide() end
+                      end,
+          '''
+          if old not in text:
+              raise SystemExit('StaticPopup edit-box handler block not found')
+          text = text.replace(old, new, 1)
+
+          path.write_text(text, encoding='utf-8')
+          PY
+
+          rm -f .github/workflows/apply-staticpopup-midnight-fix.yml
+          git diff --check
+          grep -q 'local function getDialogEditBox' UI/BossMacroManager.lua
+          grep -q 'dialog.EditBox or dialog.editBox' UI/BossMacroManager.lua
+          ! grep -q 'dialog.editBox:Set' UI/BossMacroManager.lua
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Fix StaticPopup edit box access on Midnight'
+          git push origin HEAD:fix/staticpopup-editbox-midnight-20260916
