@@ -1,0 +1,164 @@
+name: Apply UI layout and timing 1.1.6
+
+on:
+  push:
+    branches:
+      - fix/ui-layout-timing-1.1.6
+    paths:
+      - .github/workflows/apply-ui-layout-timing-1.1.6.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/ui-layout-timing-1.1.6
+      - name: Apply requested layout, tactics and timer fixes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace_once(text, old, new, label):
+              if old not in text:
+                  raise SystemExit(f"Missing expected block: {label}")
+              return text.replace(old, new, 1)
+
+          p = Path('UI/BossMacroManager.lua')
+          s = p.read_text(encoding='utf-8')
+
+          # Keep controls out of the ButtonFrameTemplate title strip and give the content 15px side margins.
+          s = replace_once(s, '    frame:SetSize(432, 668)\n', '    frame:SetSize(448, 668)\n', 'main frame width')
+          s = replace_once(s, '    removePortrait(frame)\n    setFrameTitle(frame, "Raid Lead Assist — Boss Macros")\n\n', '''    removePortrait(frame)\n    setFrameTitle(frame, "Raid Lead Assist — Boss Macros")\n    if frame.Inset then\n        frame.Inset:ClearAllPoints()\n        frame.Inset:SetPoint("TOPLEFT", frame, "TOPLEFT", 5, -31)\n        frame.Inset:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -5, 31)\n    end\n\n''', 'raise main inset')
+
+          old = '''    local bossLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")\n    bossLabel:SetPoint("TOPLEFT", 12, -57)\n    bossLabel:SetText("Boss:")\n\n    local bossDropdown = CreateFrame("Frame", "RaidLeadAssistBossDropdown", frame, "UIDropDownMenuTemplate")\n    bossDropdown:SetPoint("TOPLEFT", 38, -46)\n    UIDropDownMenu_SetWidth(bossDropdown, 185)\n    frame.BossDropdown = bossDropdown\n\n    local newBoss = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")\n    newBoss:SetSize(50, 22)\n    newBoss:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -106, -51)\n    newBoss:SetText("New")\n    newBoss:SetScript("OnClick", function() self:CreateBoss() end)\n\n    local renameBoss = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")\n    renameBoss:SetSize(62, 22)\n    renameBoss:SetPoint("LEFT", newBoss, "RIGHT", 4, 0)\n    renameBoss:SetText("Rename")\n    renameBoss:SetScript("OnClick", function() self:RenameBoss() end)\n\n    local deleteBoss = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")\n    deleteBoss:SetSize(22, 22)\n    deleteBoss:SetPoint("LEFT", renameBoss, "RIGHT", 4, 0)\n    deleteBoss:SetText("X")\n'''
+          new = '''    local bossRow = CreateFrame("Frame", nil, frame)\n    bossRow:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -45)\n    bossRow:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -15, -45)\n    bossRow:SetHeight(26)\n\n    local bossLabel = bossRow:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")\n    bossLabel:SetPoint("LEFT", bossRow, "LEFT", 0, 0)\n    bossLabel:SetWidth(42)\n    bossLabel:SetJustifyH("LEFT")\n    bossLabel:SetText("Boss:")\n\n    local bossDropdown = CreateFrame("Frame", "RaidLeadAssistBossDropdown", bossRow, "UIDropDownMenuTemplate")\n    bossDropdown:SetPoint("LEFT", bossRow, "LEFT", 36, -1)\n    UIDropDownMenu_SetWidth(bossDropdown, 190)\n    frame.BossDropdown = bossDropdown\n\n    local deleteBoss = CreateFrame("Button", nil, bossRow, "UIPanelButtonTemplate")\n    deleteBoss:SetSize(22, 22)\n    deleteBoss:SetPoint("RIGHT", bossRow, "RIGHT", 0, 0)\n    deleteBoss:SetText("X")\n\n    local renameBoss = CreateFrame("Button", nil, bossRow, "UIPanelButtonTemplate")\n    renameBoss:SetSize(62, 22)\n    renameBoss:SetPoint("RIGHT", deleteBoss, "LEFT", -4, 0)\n    renameBoss:SetText("Rename")\n    renameBoss:SetScript("OnClick", function() self:RenameBoss() end)\n\n    local newBoss = CreateFrame("Button", nil, bossRow, "UIPanelButtonTemplate")\n    newBoss:SetSize(50, 22)\n    newBoss:SetPoint("RIGHT", renameBoss, "LEFT", -4, 0)\n    newBoss:SetText("New")\n    newBoss:SetScript("OnClick", function() self:CreateBoss() end)\n'''
+          s = replace_once(s, old, new, 'boss row alignment')
+
+          old = '''    local difficultyLabelText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")\n    difficultyLabelText:SetPoint("TOPLEFT", 12, -89)\n    difficultyLabelText:SetText("Difficulty:")\n\n    frame.DifficultyButtons = {}\n    local heroicButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")\n    heroicButton:SetSize(80, 22)\n    heroicButton:SetPoint("TOPLEFT", 82, -83)\n    heroicButton:SetText("Heroic")\n    heroicButton:SetScript("OnClick", function() self:SelectDifficulty("heroic", true) end)\n    frame.DifficultyButtons.heroic = heroicButton\n\n    local mythicButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")\n    mythicButton:SetSize(80, 22)\n    mythicButton:SetPoint("LEFT", heroicButton, "RIGHT", 6, 0)\n    mythicButton:SetText("Mythic")\n    mythicButton:SetScript("OnClick", function() self:SelectDifficulty("mythic", true) end)\n    frame.DifficultyButtons.mythic = mythicButton\n\n    local tacticsButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")\n    tacticsButton:SetSize(116, 22)\n    tacticsButton:SetPoint("TOPRIGHT", -14, -83)\n    tacticsButton:SetText("Boss Tactics")\n'''
+          new = '''    local difficultyRow = CreateFrame("Frame", nil, frame)\n    difficultyRow:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -78)\n    difficultyRow:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -15, -78)\n    difficultyRow:SetHeight(24)\n\n    local difficultyLabelText = difficultyRow:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")\n    difficultyLabelText:SetPoint("LEFT", difficultyRow, "LEFT", 0, 0)\n    difficultyLabelText:SetWidth(72)\n    difficultyLabelText:SetJustifyH("LEFT")\n    difficultyLabelText:SetText("Difficulty:")\n\n    frame.DifficultyButtons = {}\n    local heroicButton = CreateFrame("Button", nil, difficultyRow, "UIPanelButtonTemplate")\n    heroicButton:SetSize(80, 22)\n    heroicButton:SetPoint("LEFT", difficultyRow, "LEFT", 72, 0)\n    heroicButton:SetText("Heroic")\n    heroicButton:SetScript("OnClick", function() self:SelectDifficulty("heroic", true) end)\n    frame.DifficultyButtons.heroic = heroicButton\n\n    local mythicButton = CreateFrame("Button", nil, difficultyRow, "UIPanelButtonTemplate")\n    mythicButton:SetSize(80, 22)\n    mythicButton:SetPoint("LEFT", heroicButton, "RIGHT", 6, 0)\n    mythicButton:SetText("Mythic")\n    mythicButton:SetScript("OnClick", function() self:SelectDifficulty("mythic", true) end)\n    frame.DifficultyButtons.mythic = mythicButton\n\n    local tacticsButton = CreateFrame("Button", nil, difficultyRow, "UIPanelButtonTemplate")\n    tacticsButton:SetSize(116, 22)\n    tacticsButton:SetPoint("RIGHT", difficultyRow, "RIGHT", 0, 0)\n    tacticsButton:SetText("Boss Tactics")\n'''
+          s = replace_once(s, old, new, 'difficulty row alignment')
+
+          s = replace_once(s, '    grid:SetPoint("TOPLEFT", 14, -116)\n    grid:SetSize(404, 170)\n', '    grid:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -112)\n    grid:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -15, -112)\n    grid:SetHeight(170)\n', 'grid margins')
+          s = replace_once(s, '        button:SetPoint("TOPLEFT", 20 + (col * 62), -10 - (row * 50))\n', '        button:SetPoint("TOPLEFT", 22 + (col * 66), -10 - (row * 50))\n', 'grid spacing')
+
+          old = '''    local gridStatus = frame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")\n    gridStatus:SetPoint("TOPLEFT", grid, "BOTTOMLEFT", 8, -2)\n    gridStatus:SetWidth(300)\n    gridStatus:SetJustifyH("LEFT")\n    frame.GridStatus = gridStatus\n\n    local moveRight = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")\n    moveRight:SetSize(26, 19)\n    moveRight:SetPoint("TOPRIGHT", grid, "BOTTOMRIGHT", -4, 1)\n    moveRight:SetText(">")\n    moveRight:SetScript("OnClick", function() self:MoveSelected(1) end)\n    frame.MoveRightButton = moveRight\n\n    local moveLeft = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")\n    moveLeft:SetSize(26, 19)\n    moveLeft:SetPoint("RIGHT", moveRight, "LEFT", -3, 0)\n    moveLeft:SetText("<")\n    moveLeft:SetScript("OnClick", function() self:MoveSelected(-1) end)\n    frame.MoveLeftButton = moveLeft\n\n    addHorizontalBar(frame, -307, 414)\n\n    local editor = CreateFrame("Frame", nil, frame)\n    editor:SetPoint("TOPLEFT", 14, -318)\n    editor:SetPoint("BOTTOMRIGHT", -14, 42)\n'''
+          new = '''    local moveLeft = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")\n    moveLeft:SetSize(26, 19)\n    moveLeft:SetPoint("TOPLEFT", grid, "BOTTOMLEFT", 8, -2)\n    moveLeft:SetText("<")\n    moveLeft:SetScript("OnClick", function() self:MoveSelected(-1) end)\n    frame.MoveLeftButton = moveLeft\n\n    local moveRight = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")\n    moveRight:SetSize(26, 19)\n    moveRight:SetPoint("LEFT", moveLeft, "RIGHT", 4, 0)\n    moveRight:SetText(">")\n    moveRight:SetScript("OnClick", function() self:MoveSelected(1) end)\n    frame.MoveRightButton = moveRight\n\n    local gridStatus = frame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")\n    gridStatus:SetPoint("LEFT", moveRight, "RIGHT", 8, 0)\n    gridStatus:SetPoint("RIGHT", grid, "RIGHT", -8, 0)\n    gridStatus:SetJustifyH("LEFT")\n    frame.GridStatus = gridStatus\n\n    local editor = CreateFrame("Frame", nil, frame)\n    editor:SetPoint("TOPLEFT", 15, -312)\n    editor:SetPoint("BOTTOMRIGHT", -15, 42)\n'''
+          s = replace_once(s, old, new, 'reorder controls and remove separator')
+
+          s = replace_once(s, '    local selectedName = editor:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")\n', '    local selectedName = editor:CreateFontString(nil, "OVERLAY", "GameFontNormal")\n', 'selected title font')
+          s = replace_once(s, '    selectedName:SetWidth(220)\n', '    selectedName:SetWidth(218)\n', 'selected title width')
+
+          old = '''    local abilityRow = CreateFrame("Frame", nil, editor)\n    abilityRow:SetPoint("TOPLEFT", 0, -70)\n    abilityRow:SetPoint("TOPRIGHT", 0, -70)\n    abilityRow:SetHeight(32)\n\n    local abilityLabel = abilityRow:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")\n    abilityLabel:SetPoint("LEFT", abilityRow, "LEFT", 8, 0)\n    abilityLabel:SetWidth(74)\n    abilityLabel:SetJustifyH("LEFT")\n    abilityLabel:SetText("Boss Ability:")\n\n    local abilityDropdown = CreateFrame("Frame", "RaidLeadAssistAbilityDropdown", abilityRow, "UIDropDownMenuTemplate")\n    abilityDropdown:SetPoint("LEFT", abilityLabel, "RIGHT", -12, -1)\n    UIDropDownMenu_SetWidth(abilityDropdown, 178)\n    frame.AbilityDropdown = abilityDropdown\n\n    local advancedButton = CreateFrame("Button", nil, abilityRow, "UIPanelButtonTemplate")\n    advancedButton:SetSize(92, 22)\n    advancedButton:SetPoint("RIGHT", abilityRow, "RIGHT", 0, 0)\n    advancedButton:SetText("Advanced")\n    advancedButton:SetScript("OnClick", function() self:OpenAdvanced() end)\n    frame.AdvancedButton = advancedButton\n\n    local dragButton = CreateFrame("Button", nil, editor, "UIPanelButtonTemplate")\n    dragButton:SetSize(118, 22)\n    dragButton:SetPoint("TOP", advancedButton, "BOTTOM", 0, -6)\n    dragButton:SetText("To Action Bar")\n'''
+          new = '''    local abilityRow = CreateFrame("Frame", nil, editor)\n    abilityRow:SetPoint("TOPLEFT", 0, -68)\n    abilityRow:SetPoint("TOPRIGHT", 0, -68)\n    abilityRow:SetHeight(62)\n\n    local abilityLabel = abilityRow:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")\n    abilityLabel:SetPoint("TOPLEFT", abilityRow, "TOPLEFT", 8, -10)\n    abilityLabel:SetWidth(74)\n    abilityLabel:SetJustifyH("LEFT")\n    abilityLabel:SetText("Boss Ability:")\n\n    local abilityDropdown = CreateFrame("Frame", "RaidLeadAssistAbilityDropdown", abilityRow, "UIDropDownMenuTemplate")\n    abilityDropdown:SetPoint("LEFT", abilityRow, "LEFT", 72, 11)\n    UIDropDownMenu_SetWidth(abilityDropdown, 246)\n    frame.AbilityDropdown = abilityDropdown\n\n    local advancedButton = CreateFrame("Button", nil, abilityRow, "UIPanelButtonTemplate")\n    advancedButton:SetSize(104, 22)\n    advancedButton:SetPoint("TOPLEFT", abilityRow, "TOPLEFT", 88, -34)\n    advancedButton:SetText("Advanced")\n    advancedButton:SetScript("OnClick", function() self:OpenAdvanced() end)\n    frame.AdvancedButton = advancedButton\n\n    local dragButton = CreateFrame("Button", nil, abilityRow, "UIPanelButtonTemplate")\n    dragButton:SetSize(130, 22)\n    dragButton:SetPoint("LEFT", advancedButton, "RIGHT", 8, 0)\n    dragButton:SetText("To Action Bar")\n'''
+          s = replace_once(s, old, new, 'ability controls under dropdown')
+
+          # Remove the obsolete helper now that the separator is gone.
+          start = s.find('local function addHorizontalBar(parent, y, width)')
+          if start != -1:
+              end = s.find('\nlocal function getMouseFocusSafe()', start)
+              if end == -1:
+                  raise SystemExit('Could not remove addHorizontalBar helper')
+              s = s[:start] + s[end+1:]
+
+          # Put only useful status text beside the reorder arrows.
+          old = '''    local prefix = "Drag icons to reorder"\n    if #macros == 0 then\n        self.frame.GridStatus:SetText(("No %s macros — press New to create one."):format(difficultyLabel(self.selectedDifficultyKey)))\n    elseif #macros > self.macroPageSize then\n        local last = math.min(#macros, self.macroOffset + self.macroPageSize - 1)\n        self.frame.GridStatus:SetFormattedText("%s   %d-%d / %d", prefix, self.macroOffset, last, #macros)\n    else\n        self.frame.GridStatus:SetText(prefix)\n    end\n'''
+          new = '''    if #macros == 0 then\n        self.frame.GridStatus:SetText(("No %s macros — press New to create one."):format(difficultyLabel(self.selectedDifficultyKey)))\n    elseif #macros > self.macroPageSize then\n        local last = math.min(#macros, self.macroOffset + self.macroPageSize - 1)\n        self.frame.GridStatus:SetFormattedText("%d-%d / %d", self.macroOffset, last, #macros)\n    else\n        self.frame.GridStatus:SetText("")\n    end\n'''
+          s = replace_once(s, old, new, 'remove drag instructions')
+
+          # Center the boss name in the dropdown, and keep ability text centered as well.
+          s = replace_once(s, '    UIDropDownMenu_SetText(dropdown, boss and boss.name or "Select Boss")\n', '''    UIDropDownMenu_SetText(dropdown, boss and boss.name or "Select Boss")\n    local textRegion = dropdown.Text or (dropdown.GetName and _G[dropdown:GetName() .. "Text"])\n    if textRegion then textRegion:SetJustifyH("CENTER") end\n''', 'boss dropdown text alignment')
+          s = replace_once(s, '    UIDropDownMenu_SetText(self.frame.AbilityDropdown, label)\n', '''    UIDropDownMenu_SetText(self.frame.AbilityDropdown, label)\n    local dropdown = self.frame.AbilityDropdown\n    local textRegion = dropdown and (dropdown.Text or (dropdown.GetName and _G[dropdown:GetName() .. "Text"]))\n    if textRegion then textRegion:SetJustifyH("CENTER") end\n''', 'ability dropdown text alignment')
+
+          p.write_text(s, encoding='utf-8')
+
+          # Update Nek'zali to the current live timer identities used by DBM/BigWigs and clearer sentence-case callouts.
+          p = Path('Encounters/VenomousAbyss/Nekzali.lua')
+          s = p.read_text(encoding='utf-8')
+          replacements = [
+              ('ability = "Restless Amani",\n        action = "KILL ADDS",\n        warning = "KILL ADDS",\n        voice = "Kill adds",\n        spellIDs = { 1295397, 1297630 },', 'ability = "Restless Amani",\n        action = "Kill adds before the Soulcoil Well",\n        warning = "Restless Amani: kill adds before the Soulcoil Well.",\n        legacyWarnings = { "KILL ADDS" },\n        voice = "Kill adds",\n        spellIDs = { 1295397, 1297630 },\n        iconSpellID = 1297630,'),
+              ('ability = "Essence Rend",\n        action = "DEBUFF — GO TO THE SIDE",\n        warning = "DEBUFF — GO TO THE SIDE",\n        voice = "Debuff side",\n        timing = false,\n        iconSpellID = 1287427,', 'ability = "Essence Rend",\n        action = "Move to the edge for dispel",\n        warning = "Essence Rend: move to the edge for dispel.",\n        legacyWarnings = { "DEBUFF — GO TO THE SIDE" },\n        voice = "Debuff side",\n        spellIDs = { 1287426 },\n        iconSpellID = 1287426,\n        prepareSeconds = 6,\n        pressSeconds = 3,'),
+              ('ability = "Corpse Burn",\n        action = "BURN CORPSES",\n        warning = "BURN CORPSES",\n        voice = "Burn corpses",\n        timing = false,\n        iconSpellID = 1305421,', 'ability = "Cremation",\n        legacyAbilities = { "Corpse Burn" },\n        action = "Use the flame to burn remaining corpses",\n        warning = "Cremation: burn the remaining corpses.",\n        legacyWarnings = { "BURN CORPSES" },\n        voice = "Burn corpses",\n        timing = false,\n        iconSpellID = 1289875,'),
+              ('ability = "Hungering Pyre",\n        action = "MELEE + TANK — SOAK",\n        warning = "MELEE + TANK — SOAK",\n        voice = "Melee tank soak",\n        spellIDs = { 1305421, 1290679 },', 'ability = "Hungering Pyre",\n        action = "Melee and tanks soak on corpses",\n        warning = "Hungering Pyre: melee and tanks soak on corpses.",\n        legacyWarnings = { "MELEE + TANK — SOAK" },\n        voice = "Melee tank soak",\n        spellIDs = { 1305421 },\n        iconSpellID = 1289855,'),
+              ('ability = "Restless Amani",\n        action = "Kill Amani before the Well",\n        warning = "Amani: kill them before the Well.",\n        voice = "Adds",\n        spellIDs = { 1295397, 1297630 },', 'ability = "Restless Amani",\n        action = "Kill Amani before the Well",\n        warning = "Restless Amani: kill them before the Well.",\n        legacyWarnings = { "Amani: kill them before the Well." },\n        voice = "Adds",\n        spellIDs = { 1295397, 1297630 },\n        iconSpellID = 1297630,'),
+              ('warning = "Pyre: assigned group soak; everyone else out.",\n        actionTemplate', 'warning = "Hungering Pyre: assigned group soak; everyone else out.",\n        legacyWarnings = { "Pyre: assigned group soak; everyone else out." },\n        actionTemplate'),
+              ('spellIDs = { 1305421, 1290679 },\n        prepareSeconds = 8,', 'spellIDs = { 1305421 },\n        iconSpellID = 1289855,\n        prepareSeconds = 8,'),
+          ]
+          for old, new in replacements:
+              if old not in s:
+                  raise SystemExit('Missing Nekzali replacement block: ' + old[:40])
+              s = s.replace(old, new, 1)
+          s = replace_once(s, '            explanation = { "BL START" },\n', '''            legacyExplanation = { "BL START" },\n            explanation = {\n                "Bloodlust on pull.",\n                "Essence Rend: targeted players move to the edge before the dispel.",\n                "Restless Amani: kill adds before they reach the Soulcoil Well.",\n                "Intermission: melee and tanks soak Hungering Pyre on add corpses.",\n                "Use Cremation flames to burn any remaining corpses.",\n            },\n''', 'Nekzali heroic tactics')
+          p.write_text(s, encoding='utf-8')
+
+          # Convert the remaining all-caps default tactic lines to normal readable sentences while preserving template tokens.
+          tactic_updates = {
+              'Encounters/VenomousAbyss/Explorers.lua': ('            explanation = { "GEBBO → NAMA → IKU" },', '            legacyExplanation = { "GEBBO → NAMA → IKU" },\n            explanation = { "Fish order: Gebbo → Nama → Iku." },'),
+              'Encounters/VenomousAbyss/Sentinels.lua': ('                "AFTER STASIS — RAID HOLDS SIDES; TANKS SWAP BOSSES",', '                "After Stasis, the raid holds sides while tanks swap bosses.",'),
+              'Encounters/VenomousAbyss/TwinFangs.lua': ('            explanation = {\n                "FEAST = 3 FRESH GROUPS — ONE HIT EACH",\n                "NO ONE SOAKS TWO FEAST HITS",\n            },', '            legacyExplanation = {\n                "FEAST = 3 FRESH GROUPS — ONE HIT EACH",\n                "NO ONE SOAKS TWO FEAST HITS",\n            },\n            explanation = {\n                "Ravenous Feast: use three fresh groups, one hit per group.",\n                "No player should soak two Feast hits.",\n            },'),
+              'Encounters/VenomousAbyss/Vashnik.lua': ('            explanation = { "PURPLE + ORANGE ONLY — BL ON PULL" },', '            legacyExplanation = { "PURPLE + ORANGE ONLY — BL ON PULL" },\n            explanation = { "Use Purple and Orange assignments only; Bloodlust on pull." },'),
+          }
+          for path, (old, new) in tactic_updates.items():
+              q = Path(path)
+              t = q.read_text(encoding='utf-8')
+              if old not in t:
+                  raise SystemExit('Missing tactics block: ' + path)
+              q.write_text(t.replace(old, new, 1), encoding='utf-8')
+
+          # Sentinels needs a legacy snapshot for safe SavedVariables migration.
+          q = Path('Encounters/VenomousAbyss/Sentinels.lua')
+          t = q.read_text(encoding='utf-8')
+          old = '''        heroic = {\n            explanation = {\n                "{{GROUP_SPLIT:RED:GREEN}}",\n                "After Stasis, the raid holds sides while tanks swap bosses.",\n            },\n'''
+          new = '''        heroic = {\n            legacyExplanation = {\n                "{{GROUP_SPLIT:RED:GREEN}}",\n                "AFTER STASIS — RAID HOLDS SIDES; TANKS SWAP BOSSES",\n            },\n            explanation = {\n                "{{GROUP_SPLIT:RED:GREEN}}",\n                "After Stasis, the raid holds sides while tanks swap bosses.",\n            },\n'''
+          q.write_text(replace_once(t, old, new, 'Sentinels legacy tactics'), encoding='utf-8')
+
+          # Safely migrate only unchanged generated tactics/callouts; user-edited text is preserved.
+          p = Path('Services/BossMacroService.lua')
+          s = p.read_text(encoding='utf-8')
+          old = '''local function defaultTacticsText(encounterKey, difficultyKey)\n    local profile = type(encounterKey) == "string" and Registry:GetProfile(encounterKey, difficultyKey) or nil\n    local lines = profile and profile.explanation or nil\n    if type(lines) ~= "table" then return "" end\n    local result = {}\n    for index = 1, #lines do\n        if type(lines[index]) == "string" and lines[index] ~= "" then\n            result[#result + 1] = lines[index]\n        end\n    end\n    return table.concat(result, "\\n")\nend\n'''
+          new = '''local function tacticsTextFromLines(lines)\n    if type(lines) ~= "table" then return nil end\n    local result = {}\n    for index = 1, #lines do\n        if type(lines[index]) == "string" and lines[index] ~= "" then\n            result[#result + 1] = lines[index]\n        end\n    end\n    return table.concat(result, "\\n")\nend\n\nlocal function defaultTacticsText(encounterKey, difficultyKey)\n    local profile = type(encounterKey) == "string" and Registry:GetProfile(encounterKey, difficultyKey) or nil\n    return tacticsTextFromLines(profile and profile.explanation) or ""\nend\n\nlocal function legacyTacticsText(encounterKey, difficultyKey)\n    local profile = type(encounterKey) == "string" and Registry:GetProfile(encounterKey, difficultyKey) or nil\n    return tacticsTextFromLines(profile and profile.legacyExplanation)\nend\n\nlocal function listContainsExact(values, candidate)\n    if type(values) ~= "table" or type(candidate) ~= "string" then return false end\n    for index = 1, #values do\n        if values[index] == candidate then return true end\n    end\n    return false\nend\n'''
+          s = replace_once(s, old, new, 'tactics helpers')
+
+          old = '''                local call = callsByKey[sourceKey]\n                if call then\n                    macro.spellIDs = copyArray(call.spellIDs)\n'''
+          new = '''                local call = callsByKey[sourceKey]\n                if call then\n                    if listContainsExact(call.legacyAbilities, macro.name) then\n                        macro.name = call.ability\n                    end\n                    local currentWarning = customWarning(service.database, encounter.key, difficultyKey, call.key) or call.warning or call.action or call.ability\n                    local body = type(macro.body) == "string" and macro.body or ""\n                    for _, legacyWarning in ipairs(type(call.legacyWarnings) == "table" and call.legacyWarnings or {}) do\n                        if body == "/rw " .. tostring(legacyWarning) then\n                            macro.body = "/rw " .. tostring(currentWarning or "")\n                            break\n                        end\n                    end\n                    macro.spellIDs = copyArray(call.spellIDs)\n'''
+          s = replace_once(s, old, new, 'default macro safe migration')
+
+          old = '''                if profile.tactics == nil then\n                    profile.tactics = defaultTacticsText(boss.sourceEncounterKey, difficultyKey)\n                end\n'''
+          new = '''                local legacyTactics = legacyTacticsText(boss.sourceEncounterKey, difficultyKey)\n                if profile.tactics == nil or (legacyTactics and profile.tactics == legacyTactics) then\n                    profile.tactics = defaultTacticsText(boss.sourceEncounterKey, difficultyKey)\n                end\n'''
+          s = replace_once(s, old, new, 'default tactics safe migration')
+          p.write_text(s, encoding='utf-8')
+
+          # Version bump.
+          p = Path('RaidLeadAssist.toc')
+          s = p.read_text(encoding='utf-8')
+          s = replace_once(s, '## Version: 1.1.5', '## Version: 1.1.6', 'version')
+          p.write_text(s, encoding='utf-8')
+          PY
+
+          git diff --check
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq lua5.1
+          find . -type f -name '*.lua' -print0 | xargs -0 -n1 luac -p
+          grep -q '^## Version: 1.1.6$' RaidLeadAssist.toc
+          grep -q 'bossRow:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -45)' UI/BossMacroManager.lua
+          grep -q 'moveLeft:SetPoint("TOPLEFT", grid, "BOTTOMLEFT", 8, -2)' UI/BossMacroManager.lua
+          grep -q 'advancedButton:SetPoint("TOPLEFT", abilityRow, "TOPLEFT", 88, -34)' UI/BossMacroManager.lua
+          ! grep -q 'Drag icons to reorder' UI/BossMacroManager.lua
+          grep -q 'iconSpellID = 1289855' Encounters/VenomousAbyss/Nekzali.lua
+          grep -q 'spellIDs = { 1287426 }' Encounters/VenomousAbyss/Nekzali.lua
+          grep -q 'Bloodlust on pull.' Encounters/VenomousAbyss/Nekzali.lua
+
+      - name: Commit code changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Andrew Baeten"
+          git config user.email "Andrew_Baeten@hotmail.com"
+          git add UI/BossMacroManager.lua Services/BossMacroService.lua Encounters/VenomousAbyss/Nekzali.lua Encounters/VenomousAbyss/Explorers.lua Encounters/VenomousAbyss/Sentinels.lua Encounters/VenomousAbyss/TwinFangs.lua Encounters/VenomousAbyss/Vashnik.lua RaidLeadAssist.toc
+          git commit -m "RaidLeadAssist 1.1.6: align UI and verify Nekzali timing" || exit 0
+          git push origin HEAD:fix/ui-layout-timing-1.1.6
