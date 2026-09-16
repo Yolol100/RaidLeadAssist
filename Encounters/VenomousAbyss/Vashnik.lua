@@ -95,7 +95,8 @@ Registry:Register({
     strategyStatus = "Heroic uses the current 2026-09 permanent Shadow/Purple + Fire/Orange simple strategy; old Blood/Red Heroic route removed; Mythic mechanics remain separate; PASS-LIVE pending",
     profiles = {
         heroic = {
-            explanation = { "PURPLE + ORANGE ONLY — BL ON PULL" },
+            legacyExplanation = { "PURPLE + ORANGE ONLY — BL ON PULL" },
+            explanation = { "Use Purple and Orange assignments only; Bloodlust on pull." },
             calls = { killAddsHeroic, staggerDispelsHeroic, dodgeCrossHeroic, soakBileHeroic },
         },
         mythic = {
