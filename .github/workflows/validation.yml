@@ -23,11 +23,17 @@ jobs:
           test ! -e .rla-payload
           test ! -e .github/workflows/rla-apply.yml
           test ! -e .github/workflows/apply-ui-polish-1.1.1.yml
-          grep -q '^## Version: 1.1.1$' RaidLeadAssist.toc
+          test ! -e .github/workflows/apply-macro-audit-1.1.2.yml
+          test ! -e .github/scripts/apply_macro_audit_112.py
+          grep -q '^## Version: 1.1.2$' RaidLeadAssist.toc
           grep -q 'Boss Tactics' UI/BossMacroManager.lua
           grep -q 'selectedDifficultyKey' Services/BossMacroService.lua
           grep -q 'ButtonFrameTemplate_HidePortrait' UI/BossMacroManager.lua
           grep -q 'ButtonFrameTemplate_HidePortrait' UI/IconPicker.lua
+          grep -q 'reconcileCallsFromProfile' Services/BossMacroService.lua
+          grep -q 'Soak Raid -> Tank -> Tank' Encounters/VenomousAbyss/Sszorak.lua
+          grep -q 'iconSpellID = 1305902' Encounters/VenomousAbyss/Vashnik.lua
+          grep -q 'iconSpellID = 1310099' Encounters/VenomousAbyss/TwinFangs.lua
           python3 - <<'PY'
           from pathlib import Path
           toc = Path('RaidLeadAssist.toc').read_text(encoding='utf-8').splitlines()
