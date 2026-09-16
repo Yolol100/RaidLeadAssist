@@ -2,7 +2,7 @@
 ## Title: Raid Lead Assist
 ## Notes: Blizzard-style boss macro manager with encounter-timed action-bar guidance.
 ## Author: RaidLeadAssist Contributors
-## Version: 1.0.0-beta.1
+## Version: 1.0.0
 ## SavedVariables: RaidLeadAssistDB
 ## OptionalDeps: DBM-Core, BigWigs
 ## Category: Dungeons & Raids
