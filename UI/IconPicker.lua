@@ -64,13 +64,19 @@ local function removePortrait(frame)
     hideRegion(frame.PortraitContainer)
     hideRegion(frame.portrait)
     hideRegion(frame.Portrait)
-    if frame.PortraitContainer and frame.PortraitContainer.portrait then
+    if frame.PortraitContainer then
         hideRegion(frame.PortraitContainer.portrait)
+        hideRegion(frame.PortraitContainer.CircleMask)
     end
-    if frame.TitleText then
+    if frame.TitleContainer then
+        frame.TitleContainer:ClearAllPoints()
+        frame.TitleContainer:SetPoint("TOPLEFT", frame, "TOPLEFT", 30, -1)
+        frame.TitleContainer:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -24, -1)
+    end
+    if type(frame.SetTitle) == "function" then
+        frame:SetTitle("Change Name/Icon")
+    elseif frame.TitleText then
         frame.TitleText:SetText("Change Name/Icon")
-        frame.TitleText:ClearAllPoints()
-        frame.TitleText:SetPoint("TOP", frame, "TOP", 0, -6)
     end
 end
 
