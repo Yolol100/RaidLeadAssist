@@ -27,6 +27,15 @@ function App:SetDifficulty(key)
     self.activeDifficultyKey = key
     self.db.selectedDifficultyKey = key
     Registry:SetActiveDifficulty(key)
+
+    -- Encounter start/recovery may change difficulty while the manager is open.
+    -- Keep the visible macro/tactics profile in lockstep without creating a callback loop.
+    if UI.frame and UI.selectedDifficultyKey ~= key then
+        UI:SelectDifficulty(key, false, true)
+    end
+    if Overlay and type(Overlay.RefreshBindings) == "function" then
+        Overlay:RefreshBindings()
+    end
     return true
 end
 
@@ -113,9 +122,10 @@ function App:PrintStatus()
         if ManagedMacros:GetMacroIndex(macro.id) then managed = managed + 1 end
     end
 
-    ns:Print(("Boss Macro Manager v%s | boss=%s | macros=%d | on action bars=%d"):format(
+    ns:Print(("Boss Macro Manager v%s | boss=%s | difficulty=%s | macros=%d | on action bars=%d"):format(
         tostring(ns.version),
         boss and boss.name or "none",
+        tostring(self.db.selectedDifficultyKey or "heroic"),
         #macros,
         managed
     ))
@@ -179,6 +189,9 @@ function App:Initialize()
         getMacroMaxLength = function() return ManagedMacros:GetMacroBodyMax() end,
         onBossSelected = function(boss, userInitiated)
             self:SetBossContext(boss, userInitiated ~= true)
+        end,
+        onDifficultySelected = function(difficultyKey)
+            self:SetDifficulty(difficultyKey)
         end,
         onMacroSaved = function(macro)
             ManagedMacros:SyncMacro(macro)

@@ -131,9 +131,20 @@ function IconPicker:Initialize()
     frame:SetFrameStrata("DIALOG")
     frame:SetClampedToScreen(true)
     frame:Hide()
-    if frame.TitleText then frame.TitleText:SetText("Change Name/Icon") end
-    if frame.PortraitContainer and frame.PortraitContainer.portrait then
-        frame.PortraitContainer.portrait:SetTexture("Interface\\MacroFrame\\MacroFrame-Icon")
+    if frame.PortraitContainer then
+        frame.PortraitContainer:Hide()
+        if frame.PortraitContainer.portrait then
+            frame.PortraitContainer.portrait:SetTexture(nil)
+        end
+    end
+    if frame.portrait then
+        frame.portrait:SetTexture(nil)
+        frame.portrait:Hide()
+    end
+    if frame.TitleText then
+        frame.TitleText:SetText("Change Name/Icon")
+        frame.TitleText:ClearAllPoints()
+        frame.TitleText:SetPoint("TOP", frame, "TOP", 0, -6)
     end
 
     local nameLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")

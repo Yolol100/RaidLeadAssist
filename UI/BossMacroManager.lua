@@ -6,14 +6,17 @@ local IconPicker = ns:GetModule("UI.IconPicker")
 local BossMacroManager = {
     frame = nil,
     advancedFrame = nil,
+    tacticsFrame = nil,
     database = nil,
     callbacks = nil,
     selectedBossId = nil,
+    selectedDifficultyKey = "heroic",
     selectedMacroId = nil,
     macroButtons = {},
     macroOffset = 1,
     macroPageSize = 18,
     draft = nil,
+    draggingMacroId = nil,
 }
 
 local function trim(value)
@@ -32,6 +35,14 @@ local function shortName(name)
     name = tostring(name or "")
     if #name <= 8 then return name end
     return name:sub(1, 7) .. "…"
+end
+
+local function validDifficulty(key)
+    return key == "heroic" or key == "mythic"
+end
+
+local function difficultyLabel(key)
+    return key == "mythic" and "Mythic" or "Heroic"
 end
 
 local function setupDialogs()
@@ -80,24 +91,55 @@ local function setupDialogs()
     end
 end
 
-local function setPortrait(frame)
-    if frame.PortraitContainer and frame.PortraitContainer.portrait then
-        frame.PortraitContainer.portrait:SetTexture("Interface\\MacroFrame\\MacroFrame-Icon")
+local function removePortrait(frame)
+    if not frame then return end
+    if frame.PortraitContainer then
+        frame.PortraitContainer:Hide()
+        if frame.PortraitContainer.portrait then
+            frame.PortraitContainer.portrait:SetTexture(nil)
+        end
+    end
+    if frame.portrait then
+        frame.portrait:SetTexture(nil)
+        frame.portrait:Hide()
+    end
+    if frame.TitleText then
+        frame.TitleText:ClearAllPoints()
+        frame.TitleText:SetPoint("TOP", frame, "TOP", 0, -6)
     end
 end
 
-local function addHorizontalBar(parent, y)
+local function addHorizontalBar(parent, y, width)
+    width = tonumber(width) or 400
     local left = parent:CreateTexture(nil, "ARTWORK")
     left:SetTexture("Interface\\ClassTrainerFrame\\UI-ClassTrainer-HorizontalBar")
-    left:SetSize(256, 16)
+    left:SetSize(math.min(256, width), 16)
     left:SetPoint("TOPLEFT", 2, y)
     left:SetTexCoord(0, 1, 0, 0.25)
 
-    local right = parent:CreateTexture(nil, "ARTWORK")
-    right:SetTexture("Interface\\ClassTrainerFrame\\UI-ClassTrainer-HorizontalBar")
-    right:SetSize(128, 16)
-    right:SetPoint("LEFT", left, "RIGHT", 0, 0)
-    right:SetTexCoord(0, 0.5, 0.25, 0.5)
+    local remaining = math.max(0, width - math.min(256, width))
+    if remaining > 0 then
+        local right = parent:CreateTexture(nil, "ARTWORK")
+        right:SetTexture("Interface\\ClassTrainerFrame\\UI-ClassTrainer-HorizontalBar")
+        right:SetSize(remaining, 16)
+        right:SetPoint("LEFT", left, "RIGHT", 0, 0)
+        right:SetTexCoord(0, math.min(1, remaining / 256), 0.25, 0.5)
+    end
+end
+
+local function getMouseFocusSafe()
+    if type(GetMouseFoci) == "function" then
+        local foci = GetMouseFoci()
+        if type(foci) == "table" then
+            for _, focus in ipairs(foci) do
+                if focus and focus.rlaMacroButton then return focus end
+            end
+            return foci[1]
+        end
+    end
+    if type(GetMouseFocus) == "function" then
+        return GetMouseFocus()
+    end
 end
 
 function BossMacroManager:GetBoss()
@@ -105,7 +147,11 @@ function BossMacroManager:GetBoss()
 end
 
 function BossMacroManager:GetSelectedMacro()
-    local macro = self.selectedMacroId and BossMacros:FindMacroById(self.selectedMacroId) or nil
+    if not self.selectedMacroId then return nil end
+    local macro, boss, difficultyKey = BossMacros:FindMacroById(self.selectedMacroId)
+    if not macro or not boss or boss.id ~= self.selectedBossId or difficultyKey ~= self.selectedDifficultyKey then
+        return nil
+    end
     return macro
 end
 
@@ -131,9 +177,23 @@ function BossMacroManager:RefreshBossDropdown()
     UIDropDownMenu_SetText(dropdown, boss and boss.name or "Select Boss")
 end
 
+function BossMacroManager:RefreshDifficultyButtons()
+    if not self.frame then return end
+    for key, button in pairs(self.frame.DifficultyButtons or {}) do
+        if key == self.selectedDifficultyKey then
+            button:LockHighlight()
+            button:SetButtonState("PUSHED", true)
+        else
+            button:UnlockHighlight()
+            button:SetButtonState("NORMAL", false)
+        end
+    end
+end
+
 function BossMacroManager:RefreshMacroGrid()
+    if not self.frame then return end
     local boss = self:GetBoss()
-    local macros = boss and BossMacros:GetMacros(boss.id) or {}
+    local macros = boss and BossMacros:GetMacros(boss.id, self.selectedDifficultyKey) or {}
     local maxOffset = math.max(1, #macros - self.macroPageSize + 1)
     self.macroOffset = math.max(1, math.min(self.macroOffset or 1, maxOffset))
 
@@ -142,19 +202,26 @@ function BossMacroManager:RefreshMacroGrid()
         local macro = macros[self.macroOffset + index - 1]
         button.macroId = macro and macro.id or nil
         button:SetEnabled(macro ~= nil)
-        button:SetAlpha(macro and 1 or 0.28)
+        button:SetAlpha(macro and 1 or 0.25)
         button.Icon:SetTexture(macro and BossMacros:GetIcon(macro) or nil)
         button.Name:SetText(macro and shortName(macro.name) or "")
         button.Selected:SetShown(macro ~= nil and tonumber(macro.id) == tonumber(self.selectedMacroId))
     end
 
+    local prefix = "Drag icons to reorder"
     if #macros == 0 then
-        self.frame.GridStatus:SetText("No macros for this boss — press New to create one.")
+        self.frame.GridStatus:SetText(("No %s macros — press New to create one."):format(difficultyLabel(self.selectedDifficultyKey)))
     elseif #macros > self.macroPageSize then
         local last = math.min(#macros, self.macroOffset + self.macroPageSize - 1)
-        self.frame.GridStatus:SetFormattedText("%d-%d / %d", self.macroOffset, last, #macros)
+        self.frame.GridStatus:SetFormattedText("%s   %d-%d / %d", prefix, self.macroOffset, last, #macros)
     else
-        self.frame.GridStatus:SetText("")
+        self.frame.GridStatus:SetText(prefix)
+    end
+
+    if self.frame.MoveLeftButton and self.frame.MoveRightButton then
+        local hasSelection = self:GetSelectedMacro() ~= nil
+        self.frame.MoveLeftButton:SetEnabled(hasSelection)
+        self.frame.MoveRightButton:SetEnabled(hasSelection)
     end
 end
 
@@ -163,7 +230,7 @@ function BossMacroManager:RefreshAbilityDropdownText()
     local boss = self:GetBoss()
     local label = "Manual / unlinked"
     if boss and self.draft and self.draft.sourceCallKey then
-        for _, ability in ipairs(BossMacros:GetAbilityOptions(boss.id)) do
+        for _, ability in ipairs(BossMacros:GetAbilityOptions(boss.id, self.selectedDifficultyKey)) do
             if ability.sourceCallKey == self.draft.sourceCallKey then
                 label = ability.name
                 break
@@ -214,7 +281,7 @@ function BossMacroManager:RefreshAbilityDropdown()
         UIDropDownMenu_AddButton(manual, level)
 
         local boss = self:GetBoss()
-        for _, ability in ipairs(boss and BossMacros:GetAbilityOptions(boss.id) or {}) do
+        for _, ability in ipairs(boss and BossMacros:GetAbilityOptions(boss.id, self.selectedDifficultyKey) or {}) do
             local info = UIDropDownMenu_CreateInfo()
             info.text = ability.name
             info.icon = BossMacros:GetIcon(ability)
@@ -241,6 +308,7 @@ function BossMacroManager:UpdateCharacterCount()
 end
 
 function BossMacroManager:PopulateEditor(macro)
+    if not self.frame then return end
     self.draft = nil
     if not macro then
         self.frame.SelectedName:SetText("")
@@ -251,12 +319,14 @@ function BossMacroManager:PopulateEditor(macro)
         self.frame.ChangeButton:Disable()
         self.frame.DeleteButton:Disable()
         self.frame.DragButton:Disable()
+        self.frame.AdvancedButton:Disable()
         self:RefreshAbilityDropdown()
         self:UpdateCharacterCount()
         return
     end
 
     self.draft = {
+        difficultyKey = self.selectedDifficultyKey,
         name = macro.name,
         body = macro.body,
         sourceCallKey = macro.sourceCallKey,
@@ -278,6 +348,7 @@ function BossMacroManager:PopulateEditor(macro)
     self.frame.ChangeButton:Enable()
     self.frame.DeleteButton:Enable()
     self.frame.DragButton:Enable()
+    self.frame.AdvancedButton:Enable()
     self:RefreshAbilityDropdown()
     self:UpdateCharacterCount()
 end
@@ -289,6 +360,27 @@ function BossMacroManager:SelectMacro(macroId)
     self:PopulateEditor(self:GetSelectedMacro())
 end
 
+function BossMacroManager:SelectDifficulty(difficultyKey, userInitiated, suppressCallback)
+    if not validDifficulty(difficultyKey) then return false end
+    self.selectedDifficultyKey = difficultyKey
+    if self.database then self.database.selectedDifficultyKey = difficultyKey end
+    self.macroOffset = 1
+
+    local boss = self:GetBoss()
+    local macros = boss and BossMacros:GetMacros(boss.id, difficultyKey) or {}
+    self.selectedMacroId = macros[1] and macros[1].id or nil
+
+    self:RefreshDifficultyButtons()
+    self:RefreshMacroGrid()
+    self:PopulateEditor(self:GetSelectedMacro())
+
+    if self.tacticsFrame and self.tacticsFrame:IsShown() then self:PopulateTacticsFrame() end
+    if not suppressCallback and self.callbacks and self.callbacks.onDifficultySelected then
+        self.callbacks.onDifficultySelected(difficultyKey, userInitiated == true)
+    end
+    return true
+end
+
 function BossMacroManager:SelectBoss(bossId, userInitiated)
     local boss = BossMacros:GetBoss(bossId)
     if not boss then return false end
@@ -296,11 +388,13 @@ function BossMacroManager:SelectBoss(bossId, userInitiated)
     self.database.selectedBossId = boss.id
     if boss.sourceEncounterKey then self.database.selectedBossKey = boss.sourceEncounterKey end
     self.macroOffset = 1
-    local macros = BossMacros:GetMacros(boss.id)
+    local macros = BossMacros:GetMacros(boss.id, self.selectedDifficultyKey)
     self.selectedMacroId = macros[1] and macros[1].id or nil
     self:RefreshBossDropdown()
+    self:RefreshDifficultyButtons()
     self:RefreshMacroGrid()
     self:PopulateEditor(self:GetSelectedMacro())
+    if self.tacticsFrame and self.tacticsFrame:IsShown() then self:PopulateTacticsFrame() end
     if self.callbacks and self.callbacks.onBossSelected then self.callbacks.onBossSelected(boss, userInitiated == true) end
     return true
 end
@@ -354,31 +448,35 @@ function BossMacroManager:OpenAdvanced()
     frame.PressEdit:SetText(tostring(self.draft.pressSeconds or 3))
     frame.TimingCheck:SetChecked(self.draft.timingEnabled == true)
     frame:ClearAllPoints()
-    frame:SetPoint("TOPLEFT", self.frame, "TOPRIGHT", 5, -75)
+    frame:SetPoint("TOPLEFT", self.frame, "TOPRIGHT", 6, -92)
     frame:Show()
 end
 
 function BossMacroManager:InitializeAdvancedFrame()
     if self.advancedFrame then return end
     local frame = CreateFrame("Frame", "RaidLeadAssistAdvancedFrame", UIParent, "ButtonFrameTemplate")
-    frame:SetSize(340, 220)
+    frame:SetSize(360, 236)
     frame:SetFrameStrata("DIALOG")
     frame:SetClampedToScreen(true)
     frame:Hide()
     if frame.TitleText then frame.TitleText:SetText("Advanced Timer Matching") end
-    setPortrait(frame)
+    removePortrait(frame)
 
     local spellLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    spellLabel:SetPoint("TOPLEFT", 28, -64)
+    spellLabel:SetPoint("TOPLEFT", 28, -58)
+    spellLabel:SetWidth(96)
+    spellLabel:SetJustifyH("LEFT")
     spellLabel:SetText("Spell ID")
     local spellEdit = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
-    spellEdit:SetSize(100, 24)
+    spellEdit:SetSize(150, 24)
     spellEdit:SetPoint("LEFT", spellLabel, "RIGHT", 12, 0)
     spellEdit:SetAutoFocus(false)
     frame.SpellIdEdit = spellEdit
 
     local timerLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    timerLabel:SetPoint("TOPLEFT", spellLabel, "BOTTOMLEFT", 0, -24)
+    timerLabel:SetPoint("TOPLEFT", spellLabel, "BOTTOMLEFT", 0, -25)
+    timerLabel:SetWidth(96)
+    timerLabel:SetJustifyH("LEFT")
     timerLabel:SetText("Timer alias")
     local timerEdit = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
     timerEdit:SetSize(150, 24)
@@ -387,27 +485,29 @@ function BossMacroManager:InitializeAdvancedFrame()
     frame.TimerNameEdit = timerEdit
 
     local prepareLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    prepareLabel:SetPoint("TOPLEFT", timerLabel, "BOTTOMLEFT", 0, -24)
+    prepareLabel:SetPoint("TOPLEFT", timerLabel, "BOTTOMLEFT", 0, -25)
+    prepareLabel:SetWidth(96)
+    prepareLabel:SetJustifyH("LEFT")
     prepareLabel:SetText("Prepare / Press")
     local prepareEdit = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
-    prepareEdit:SetSize(44, 24)
+    prepareEdit:SetSize(52, 24)
     prepareEdit:SetPoint("LEFT", prepareLabel, "RIGHT", 12, 0)
     prepareEdit:SetAutoFocus(false)
     frame.PrepareEdit = prepareEdit
     local pressEdit = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
-    pressEdit:SetSize(44, 24)
-    pressEdit:SetPoint("LEFT", prepareEdit, "RIGHT", 8, 0)
+    pressEdit:SetSize(52, 24)
+    pressEdit:SetPoint("LEFT", prepareEdit, "RIGHT", 10, 0)
     pressEdit:SetAutoFocus(false)
     frame.PressEdit = pressEdit
 
     local timingCheck = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
-    timingCheck:SetPoint("TOPLEFT", prepareLabel, "BOTTOMLEFT", -6, -12)
+    timingCheck:SetPoint("TOPLEFT", prepareLabel, "BOTTOMLEFT", -5, -13)
     timingCheck.text:SetText("Automatic timing overlay")
     frame.TimingCheck = timingCheck
 
     local apply = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-    apply:SetSize(90, 22)
-    apply:SetPoint("BOTTOMRIGHT", -102, 12)
+    apply:SetSize(96, 24)
+    apply:SetPoint("BOTTOMRIGHT", -112, 14)
     apply:SetText(APPLY or "Apply")
     apply:SetScript("OnClick", function()
         if not self.draft then frame:Hide() return end
@@ -424,19 +524,112 @@ function BossMacroManager:InitializeAdvancedFrame()
     end)
 
     local cancel = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-    cancel:SetSize(90, 22)
-    cancel:SetPoint("LEFT", apply, "RIGHT", 8, 0)
+    cancel:SetSize(96, 24)
+    cancel:SetPoint("LEFT", apply, "RIGHT", 10, 0)
     cancel:SetText(CANCEL or "Cancel")
     cancel:SetScript("OnClick", function() frame:Hide() end)
 
     self.advancedFrame = frame
 end
 
+function BossMacroManager:PopulateTacticsFrame()
+    local frame = self.tacticsFrame
+    local boss = self:GetBoss()
+    if not frame or not boss then return end
+    frame.Context:SetText(("%s  —  %s"):format(boss.name or "Boss", difficultyLabel(self.selectedDifficultyKey)))
+    frame.BodyEdit:SetText(BossMacros:GetTactics(boss.id, self.selectedDifficultyKey) or "")
+    frame.BodyEdit:SetCursorPosition(0)
+end
+
+function BossMacroManager:InitializeTacticsFrame()
+    if self.tacticsFrame then return end
+    local frame = CreateFrame("Frame", "RaidLeadAssistTacticsFrame", UIParent, "ButtonFrameTemplate")
+    frame:SetSize(520, 430)
+    frame:SetFrameStrata("DIALOG")
+    frame:SetClampedToScreen(true)
+    frame:Hide()
+    if frame.TitleText then frame.TitleText:SetText("Raid Leader Tactics") end
+    removePortrait(frame)
+
+    local context = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    context:SetPoint("TOPLEFT", 24, -56)
+    context:SetPoint("TOPRIGHT", -24, -56)
+    context:SetJustifyH("LEFT")
+    frame.Context = context
+
+    local hint = frame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    hint:SetPoint("TOPLEFT", context, "BOTTOMLEFT", 0, -6)
+    hint:SetPoint("TOPRIGHT", context, "BOTTOMRIGHT", 0, -6)
+    hint:SetJustifyH("LEFT")
+    hint:SetText("Use this for mechanics, assignments, interrupts, dispels, defensives, movement and raid-leader callouts.")
+
+    local background = CreateFrame("Frame", nil, frame, "TooltipBackdropTemplate")
+    background:SetPoint("TOPLEFT", 20, -102)
+    background:SetPoint("BOTTOMRIGHT", -20, 54)
+
+    local scroll = CreateFrame("ScrollFrame", nil, background, "UIPanelScrollFrameTemplate")
+    scroll:SetPoint("TOPLEFT", 10, -10)
+    scroll:SetPoint("BOTTOMRIGHT", -28, 10)
+
+    local edit = CreateFrame("EditBox", nil, scroll)
+    edit:SetMultiLine(true)
+    edit:SetAutoFocus(false)
+    edit:SetFontObject(GameFontHighlight or ChatFontNormal)
+    edit:SetWidth(438)
+    edit:SetHeight(280)
+    edit:SetMaxLetters(6000)
+    edit:SetScript("OnEscapePressed", edit.ClearFocus)
+    scroll:SetScrollChild(edit)
+    frame.BodyEdit = edit
+
+    local reset = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    reset:SetSize(120, 24)
+    reset:SetPoint("BOTTOMLEFT", 18, 14)
+    reset:SetText("Reset Default")
+    reset:SetScript("OnClick", function()
+        local boss = self:GetBoss()
+        if not boss then return end
+        local ok, text = BossMacros:ResetTactics(boss.id, self.selectedDifficultyKey)
+        if ok then frame.BodyEdit:SetText(text or "") end
+    end)
+
+    local save = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    save:SetSize(96, 24)
+    save:SetPoint("BOTTOMRIGHT", -114, 14)
+    save:SetText(SAVE or "Save")
+    save:SetScript("OnClick", function()
+        local boss = self:GetBoss()
+        if not boss then frame:Hide() return end
+        local ok, err = BossMacros:SetTactics(boss.id, self.selectedDifficultyKey, frame.BodyEdit:GetText() or "")
+        if not ok then ns:Print(err or "Could not save tactics.") return end
+        frame:Hide()
+    end)
+
+    local cancel = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    cancel:SetSize(96, 24)
+    cancel:SetPoint("LEFT", save, "RIGHT", 10, 0)
+    cancel:SetText(CANCEL or "Cancel")
+    cancel:SetScript("OnClick", function() frame:Hide() end)
+
+    self.tacticsFrame = frame
+end
+
+function BossMacroManager:OpenTactics()
+    local boss = self:GetBoss()
+    if not boss then return end
+    self:InitializeTacticsFrame()
+    local frame = self.tacticsFrame
+    self:PopulateTacticsFrame()
+    frame:ClearAllPoints()
+    frame:SetPoint("CENTER", UIParent, "CENTER", 0, 30)
+    frame:Show()
+end
+
 function BossMacroManager:CreateNewMacro()
     local boss = self:GetBoss()
     if not boss then return end
     local previousMacroId = self.selectedMacroId
-    local macro, err = BossMacros:CreateMacro(boss.id)
+    local macro, err = BossMacros:CreateMacro(boss.id, self.selectedDifficultyKey)
     if not macro then ns:Print(err or "Could not create macro.") return end
 
     self.selectedMacroId = macro.id
@@ -456,10 +649,10 @@ function BossMacroManager:CreateNewMacro()
         self:RefreshMacroGrid()
         self:PopulateEditor(updated)
     end, function()
-        BossMacros:DeleteMacro(boss.id, macro.id)
+        BossMacros:DeleteMacro(boss.id, macro.id, self.selectedDifficultyKey)
         self.selectedMacroId = previousMacroId
         if not self:GetSelectedMacro() then
-            local macros = BossMacros:GetMacros(boss.id)
+            local macros = BossMacros:GetMacros(boss.id, self.selectedDifficultyKey)
             self.selectedMacroId = macros[1] and macros[1].id or nil
         end
         self:RefreshMacroGrid()
@@ -473,16 +666,43 @@ function BossMacroManager:DeleteSelectedMacro()
     if not macro or not boss then return end
     StaticPopup_Show("RLA_CONFIRM_DELETE", ("Delete macro '%s'?"):format(macro.name or "Macro"), nil, {
         callback = function()
-            local ok, removed = BossMacros:DeleteMacro(boss.id, macro.id)
+            local ok, removed = BossMacros:DeleteMacro(boss.id, macro.id, self.selectedDifficultyKey)
             if not ok then return end
             if self.callbacks and self.callbacks.onMacroDeleted then self.callbacks.onMacroDeleted(removed, boss) end
-            local macros = BossMacros:GetMacros(boss.id)
+            local macros = BossMacros:GetMacros(boss.id, self.selectedDifficultyKey)
             self.selectedMacroId = macros[1] and macros[1].id or nil
             self.macroOffset = 1
             self:RefreshMacroGrid()
             self:PopulateEditor(self:GetSelectedMacro())
         end,
     })
+end
+
+function BossMacroManager:MoveSelected(delta)
+    local macro = self:GetSelectedMacro()
+    local boss = self:GetBoss()
+    if not macro or not boss then return end
+    if BossMacros:MoveMacroByOffset(boss.id, macro.id, delta, self.selectedDifficultyKey) then
+        self:RefreshMacroGrid()
+    end
+end
+
+function BossMacroManager:FinishMacroDrag(sourceButton)
+    local sourceId = self.draggingMacroId
+    self.draggingMacroId = nil
+    for _, button in ipairs(self.macroButtons) do button:UnlockHighlight() end
+    if sourceButton then sourceButton:UnlockHighlight() end
+    if not sourceId then return end
+
+    local focus = getMouseFocusSafe()
+    local targetId = focus and focus.rlaMacroButton and focus.macroId or nil
+    if not targetId or tonumber(targetId) == tonumber(sourceId) then return end
+    local boss = self:GetBoss()
+    if boss and BossMacros:MoveMacro(boss.id, sourceId, targetId, self.selectedDifficultyKey) then
+        self.selectedMacroId = tonumber(sourceId)
+        self:RefreshMacroGrid()
+        self:PopulateEditor(self:GetSelectedMacro())
+    end
 end
 
 function BossMacroManager:CreateBoss()
@@ -512,9 +732,9 @@ end
 function BossMacroManager:DeleteBoss()
     local boss = self:GetBoss()
     if not boss then return end
-    StaticPopup_Show("RLA_CONFIRM_DELETE", ("Delete boss '%s' and its macros?"):format(boss.name or "Boss"), nil, {
+    StaticPopup_Show("RLA_CONFIRM_DELETE", ("Delete boss '%s' and all Heroic/Mythic macros?"):format(boss.name or "Boss"), nil, {
         callback = function()
-            local macros = BossMacros:GetMacros(boss.id)
+            local macros = BossMacros:GetAllMacros(boss.id)
             if self.callbacks and self.callbacks.onBossDeleting then self.callbacks.onBossDeleting(boss, macros) end
             BossMacros:DeleteBoss(boss.id)
             local ordered = BossMacros:GetBossesOrdered()
@@ -542,9 +762,10 @@ function BossMacroManager:Initialize(database, callbacks)
     setupDialogs()
     self.database = database
     self.callbacks = callbacks or {}
+    self.selectedDifficultyKey = validDifficulty(database.selectedDifficultyKey) and database.selectedDifficultyKey or "heroic"
 
     local frame = CreateFrame("Frame", "RaidLeadAssistBossMacroFrame", UIParent, "ButtonFrameTemplate")
-    frame:SetSize(402, 604)
+    frame:SetSize(432, 668)
     frame:SetClampedToScreen(true)
     frame:SetMovable(true)
     frame:EnableMouse(true)
@@ -559,41 +780,67 @@ function BossMacroManager:Initialize(database, callbacks)
     end)
     frame:Hide()
     if frame.TitleText then frame.TitleText:SetText("Raid Lead Assist — Boss Macros") end
-    setPortrait(frame)
+    removePortrait(frame)
 
     local bossLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     bossLabel:SetPoint("TOPLEFT", 22, -57)
     bossLabel:SetText("Boss:")
 
     local bossDropdown = CreateFrame("Frame", "RaidLeadAssistBossDropdown", frame, "UIDropDownMenuTemplate")
-    bossDropdown:SetPoint("TOPLEFT", 47, -45)
-    UIDropDownMenu_SetWidth(bossDropdown, 182)
+    bossDropdown:SetPoint("TOPLEFT", 48, -45)
+    UIDropDownMenu_SetWidth(bossDropdown, 190)
     frame.BossDropdown = bossDropdown
 
     local newBoss = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-    newBoss:SetSize(44, 21)
-    newBoss:SetPoint("LEFT", bossDropdown, "RIGHT", -4, 1)
+    newBoss:SetSize(46, 22)
+    newBoss:SetPoint("TOPLEFT", 284, -51)
     newBoss:SetText("New")
     newBoss:SetScript("OnClick", function() self:CreateBoss() end)
 
     local renameBoss = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-    renameBoss:SetSize(55, 21)
-    renameBoss:SetPoint("LEFT", newBoss, "RIGHT", 2, 0)
+    renameBoss:SetSize(60, 22)
+    renameBoss:SetPoint("LEFT", newBoss, "RIGHT", 4, 0)
     renameBoss:SetText("Rename")
     renameBoss:SetScript("OnClick", function() self:RenameBoss() end)
 
     local deleteBoss = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-    deleteBoss:SetSize(24, 21)
-    deleteBoss:SetPoint("LEFT", renameBoss, "RIGHT", 2, 0)
+    deleteBoss:SetSize(26, 22)
+    deleteBoss:SetPoint("LEFT", renameBoss, "RIGHT", 4, 0)
     deleteBoss:SetText("-")
     deleteBoss:SetScript("OnClick", function() self:DeleteBoss() end)
 
+    local difficultyLabelText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    difficultyLabelText:SetPoint("TOPLEFT", 22, -89)
+    difficultyLabelText:SetText("Difficulty:")
+
+    frame.DifficultyButtons = {}
+    local heroicButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    heroicButton:SetSize(80, 22)
+    heroicButton:SetPoint("TOPLEFT", 88, -83)
+    heroicButton:SetText("Heroic")
+    heroicButton:SetScript("OnClick", function() self:SelectDifficulty("heroic", true) end)
+    frame.DifficultyButtons.heroic = heroicButton
+
+    local mythicButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    mythicButton:SetSize(80, 22)
+    mythicButton:SetPoint("LEFT", heroicButton, "RIGHT", 6, 0)
+    mythicButton:SetText("Mythic")
+    mythicButton:SetScript("OnClick", function() self:SelectDifficulty("mythic", true) end)
+    frame.DifficultyButtons.mythic = mythicButton
+
+    local tacticsButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    tacticsButton:SetSize(104, 22)
+    tacticsButton:SetPoint("TOPRIGHT", -18, -83)
+    tacticsButton:SetText("Boss Tactics")
+    tacticsButton:SetScript("OnClick", function() self:OpenTactics() end)
+    frame.TacticsButton = tacticsButton
+
     local grid = CreateFrame("Frame", nil, frame, "TooltipBackdropTemplate")
-    grid:SetPoint("TOPLEFT", 14, -88)
-    grid:SetSize(364, 164)
+    grid:SetPoint("TOPLEFT", 14, -118)
+    grid:SetSize(404, 170)
     grid:EnableMouseWheel(true)
     grid:SetScript("OnMouseWheel", function(_, delta)
-        local macros = self:GetBoss() and BossMacros:GetMacros(self.selectedBossId) or {}
+        local macros = self:GetBoss() and BossMacros:GetMacros(self.selectedBossId, self.selectedDifficultyKey) or {}
         local maxOffset = math.max(1, #macros - self.macroPageSize + 1)
         self.macroOffset = math.max(1, math.min(maxOffset, self.macroOffset - (delta * 6)))
         self:RefreshMacroGrid()
@@ -606,10 +853,11 @@ function BossMacroManager:Initialize(database, callbacks)
         button:SetSize(44, 44)
         local col = (index - 1) % columns
         local row = math.floor((index - 1) / columns)
-        button:SetPoint("TOPLEFT", 13 + (col * 57), -9 - (row * 49))
+        button:SetPoint("TOPLEFT", 20 + (col * 62), -10 - (row * 50))
         button:SetNormalTexture("Interface\\Buttons\\UI-Quickslot2")
         button:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
         button:RegisterForDrag("LeftButton")
+        button.rlaMacroButton = true
 
         local icon = button:CreateTexture(nil, "ARTWORK")
         icon:SetPoint("TOPLEFT", 3, -3)
@@ -618,39 +866,60 @@ function BossMacroManager:Initialize(database, callbacks)
         button.Icon = icon
 
         local selected = button:CreateTexture(nil, "OVERLAY")
-        selected:SetTexture("Interface\\Buttons\\CheckButtonHilight")
+        selected:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
         selected:SetBlendMode("ADD")
-        selected:SetAllPoints()
+        selected:SetVertexColor(1, 0.78, 0.08, 1)
+        selected:SetPoint("CENTER", 0, 0)
+        selected:SetSize(62, 62)
         selected:Hide()
         button.Selected = selected
 
         local name = button:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmallOutline")
         name:SetPoint("BOTTOM", 0, 2)
-        name:SetWidth(48)
+        name:SetWidth(50)
+        name:SetJustifyH("CENTER")
         button.Name = name
 
         button:SetScript("OnClick", function(btn) if btn.macroId then self:SelectMacro(btn.macroId) end end)
         button:SetScript("OnDragStart", function(btn)
             if not btn.macroId then return end
             self:SelectMacro(btn.macroId)
-            self:PickupSelected()
+            self.draggingMacroId = btn.macroId
+            btn:LockHighlight()
         end)
+        button:SetScript("OnDragStop", function(btn) self:FinishMacroDrag(btn) end)
         self.macroButtons[index] = button
     end
 
     local gridStatus = frame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-    gridStatus:SetPoint("TOP", grid, "BOTTOM", 0, -1)
+    gridStatus:SetPoint("TOPLEFT", grid, "BOTTOMLEFT", 8, -2)
+    gridStatus:SetWidth(300)
+    gridStatus:SetJustifyH("LEFT")
     frame.GridStatus = gridStatus
 
-    addHorizontalBar(frame, -260)
+    local moveRight = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    moveRight:SetSize(26, 19)
+    moveRight:SetPoint("TOPRIGHT", grid, "BOTTOMRIGHT", -4, 1)
+    moveRight:SetText(">")
+    moveRight:SetScript("OnClick", function() self:MoveSelected(1) end)
+    frame.MoveRightButton = moveRight
+
+    local moveLeft = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    moveLeft:SetSize(26, 19)
+    moveLeft:SetPoint("RIGHT", moveRight, "LEFT", -3, 0)
+    moveLeft:SetText("<")
+    moveLeft:SetScript("OnClick", function() self:MoveSelected(-1) end)
+    frame.MoveLeftButton = moveLeft
+
+    addHorizontalBar(frame, -307, 414)
 
     local editor = CreateFrame("Frame", nil, frame)
-    editor:SetPoint("TOPLEFT", 14, -274)
+    editor:SetPoint("TOPLEFT", 14, -321)
     editor:SetPoint("BOTTOMRIGHT", -14, 42)
     frame.Editor = editor
 
     local selectedButton = CreateFrame("Button", nil, editor)
-    selectedButton:SetSize(64, 64)
+    selectedButton:SetSize(54, 54)
     selectedButton:SetPoint("TOPLEFT", 0, 0)
     selectedButton:SetNormalTexture("Interface\\Buttons\\UI-EmptySlot")
     selectedButton:RegisterForDrag("LeftButton")
@@ -663,71 +932,72 @@ function BossMacroManager:Initialize(database, callbacks)
     frame.SelectedIcon = selectedIcon
 
     local selectedName = editor:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    selectedName:SetPoint("TOPLEFT", selectedButton, "TOPRIGHT", -2, -8)
-    selectedName:SetWidth(205)
+    selectedName:SetPoint("TOPLEFT", selectedButton, "TOPRIGHT", 4, -3)
+    selectedName:SetWidth(220)
     selectedName:SetJustifyH("LEFT")
     frame.SelectedName = selectedName
 
     local changeButton = CreateFrame("Button", nil, editor, "UIPanelButtonTemplate")
     changeButton:SetSize(174, 22)
-    changeButton:SetPoint("TOPLEFT", selectedButton, "TOPRIGHT", -2, -31)
+    changeButton:SetPoint("TOPLEFT", selectedButton, "TOPRIGHT", 4, -28)
     changeButton:SetText("Change Name/Icon")
     changeButton:SetScript("OnClick", function() self:OpenIconPicker() end)
     frame.ChangeButton = changeButton
 
     local saveButton = CreateFrame("Button", nil, editor, "UIPanelButtonTemplate")
-    saveButton:SetSize(82, 22)
-    saveButton:SetPoint("TOPRIGHT", 0, -3)
+    saveButton:SetSize(92, 22)
+    saveButton:SetPoint("TOPRIGHT", 0, -1)
     saveButton:SetText(SAVE or "Save")
     saveButton:SetScript("OnClick", function() self:SaveSelected() end)
     frame.SaveButton = saveButton
 
     local cancelButton = CreateFrame("Button", nil, editor, "UIPanelButtonTemplate")
-    cancelButton:SetSize(82, 22)
+    cancelButton:SetSize(92, 22)
     cancelButton:SetPoint("TOP", saveButton, "BOTTOM", 0, -5)
     cancelButton:SetText(CANCEL or "Cancel")
     cancelButton:SetScript("OnClick", function() self:PopulateEditor(self:GetSelectedMacro()) end)
 
     local abilityLabel = editor:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    abilityLabel:SetPoint("TOPLEFT", 8, -74)
+    abilityLabel:SetPoint("TOPLEFT", 8, -72)
     abilityLabel:SetText("Boss Ability:")
 
     local abilityDropdown = CreateFrame("Frame", "RaidLeadAssistAbilityDropdown", editor, "UIDropDownMenuTemplate")
     abilityDropdown:SetPoint("TOPLEFT", abilityLabel, "BOTTOMLEFT", -18, 6)
-    UIDropDownMenu_SetWidth(abilityDropdown, 202)
+    UIDropDownMenu_SetWidth(abilityDropdown, 210)
     frame.AbilityDropdown = abilityDropdown
 
     local advancedButton = CreateFrame("Button", nil, editor, "UIPanelButtonTemplate")
-    advancedButton:SetSize(73, 20)
-    advancedButton:SetPoint("LEFT", abilityDropdown, "RIGHT", -5, 1)
+    advancedButton:SetSize(92, 22)
+    advancedButton:SetPoint("TOPRIGHT", 0, -84)
     advancedButton:SetText("Advanced")
     advancedButton:SetScript("OnClick", function() self:OpenAdvanced() end)
+    frame.AdvancedButton = advancedButton
 
     local dragButton = CreateFrame("Button", nil, editor, "UIPanelButtonTemplate")
-    dragButton:SetSize(116, 22)
-    dragButton:SetPoint("TOPRIGHT", 0, -82)
+    dragButton:SetSize(118, 22)
+    dragButton:SetPoint("TOPRIGHT", 0, -112)
     dragButton:SetText("To Action Bar")
     dragButton:SetScript("OnClick", function() self:PickupSelected() end)
     frame.DragButton = dragButton
 
     local commandsLabel = editor:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    commandsLabel:SetPoint("TOPLEFT", 8, -124)
+    commandsLabel:SetPoint("TOPLEFT", 8, -132)
     commandsLabel:SetText("Enter Macro Commands:")
 
     local bodyBackground = CreateFrame("Frame", nil, editor, "TooltipBackdropTemplate")
-    bodyBackground:SetPoint("TOPLEFT", 0, -141)
-    bodyBackground:SetSize(364, 111)
+    bodyBackground:SetPoint("TOPLEFT", 0, -149)
+    bodyBackground:SetPoint("BOTTOMRIGHT", 0, 28)
 
     local bodyScroll = CreateFrame("ScrollFrame", nil, bodyBackground, "UIPanelScrollFrameTemplate")
-    bodyScroll:SetPoint("TOPLEFT", 8, -6)
-    bodyScroll:SetPoint("BOTTOMRIGHT", -25, 7)
+    bodyScroll:SetPoint("TOPLEFT", 8, -7)
+    bodyScroll:SetPoint("BOTTOMRIGHT", -26, 8)
 
     local bodyEdit = CreateFrame("EditBox", nil, bodyScroll)
     bodyEdit:SetMultiLine(true)
     bodyEdit:SetAutoFocus(false)
     bodyEdit:SetFontObject(GameFontHighlightSmall or ChatFontNormal)
-    bodyEdit:SetWidth(315)
-    bodyEdit:SetHeight(95)
+    bodyEdit:SetWidth(342)
+    bodyEdit:SetHeight(112)
     bodyEdit:SetMaxLetters(255)
     bodyEdit:SetScript("OnEscapePressed", bodyEdit.ClearFocus)
     bodyEdit:SetScript("OnTextChanged", function(edit)
@@ -742,39 +1012,47 @@ function BossMacroManager:Initialize(database, callbacks)
     frame.CharCount = charCount
 
     local deleteButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-    deleteButton:SetSize(86, 22)
-    deleteButton:SetPoint("BOTTOMLEFT", 7, 7)
+    deleteButton:SetSize(92, 22)
+    deleteButton:SetPoint("BOTTOMLEFT", 8, 8)
     deleteButton:SetText(DELETE or "Delete")
     deleteButton:SetScript("OnClick", function() self:DeleteSelectedMacro() end)
     frame.DeleteButton = deleteButton
 
     local newButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-    newButton:SetSize(86, 22)
-    newButton:SetPoint("BOTTOMRIGHT", -94, 7)
+    newButton:SetSize(92, 22)
+    newButton:SetPoint("BOTTOMRIGHT", -106, 8)
     newButton:SetText(NEW or "New")
     newButton:SetScript("OnClick", function() self:CreateNewMacro() end)
 
     local exitButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-    exitButton:SetSize(86, 22)
-    exitButton:SetPoint("BOTTOMRIGHT", -7, 7)
+    exitButton:SetSize(92, 22)
+    exitButton:SetPoint("BOTTOMRIGHT", -8, 8)
     exitButton:SetText(EXIT or "Exit")
     exitButton:SetScript("OnClick", function() frame:Hide() end)
 
     self.frame = frame
     frame:HookScript("OnHide", function()
         if self.advancedFrame then self.advancedFrame:Hide() end
+        if self.tacticsFrame then self.tacticsFrame:Hide() end
         IconPicker:Close()
     end)
 
     local initial = database.selectedBossId or (BossMacros:GetBossesOrdered()[1] and BossMacros:GetBossesOrdered()[1].id)
     if initial then self:SelectBoss(initial, false) else self:PopulateEditor(nil) end
+    self:RefreshDifficultyButtons()
 end
 
 function BossMacroManager:Show()
     if self.frame then
-        self:RefreshBossDropdown()
-        self:RefreshMacroGrid()
-        self:PopulateEditor(self:GetSelectedMacro())
+        local selected = validDifficulty(self.database and self.database.selectedDifficultyKey) and self.database.selectedDifficultyKey or self.selectedDifficultyKey
+        if selected ~= self.selectedDifficultyKey then
+            self:SelectDifficulty(selected, false, true)
+        else
+            self:RefreshDifficultyButtons()
+            self:RefreshBossDropdown()
+            self:RefreshMacroGrid()
+            self:PopulateEditor(self:GetSelectedMacro())
+        end
         self.frame:Show()
     end
 end
@@ -782,6 +1060,7 @@ end
 function BossMacroManager:Hide()
     if self.frame then self.frame:Hide() end
     if self.advancedFrame then self.advancedFrame:Hide() end
+    if self.tacticsFrame then self.tacticsFrame:Hide() end
     IconPicker:Close()
 end
 

@@ -3,7 +3,7 @@ local _, ns = ...
 local Util = ns:GetModule("Core.Util")
 
 local Database = {
-    SCHEMA_VERSION = 8,
+    SCHEMA_VERSION = 9,
     newerSchemaDetected = false,
 }
 
@@ -35,7 +35,7 @@ local function cloneValue(value, seen)
 end
 
 local DEFAULTS = {
-    schemaVersion = 8,
+    schemaVersion = 9,
     selectedBossKey = "nekzali",
     selectedDifficultyKey = "heroic",
     selectedBossId = nil,
@@ -120,6 +120,17 @@ local function normalizeBossMacroStorage(data)
     -- Reconcile them with durable IDs before anything allocates a new boss/macro.
     local highestBossSerial = 0
     local highestMacroId = 0
+
+    local function inspectMacros(macros)
+        if type(macros) ~= "table" then return end
+        for _, macro in ipairs(macros) do
+            local macroId = type(macro) == "table" and tonumber(macro.id) or nil
+            if macroId and macroId > highestMacroId and macroId == math.floor(macroId) then
+                highestMacroId = macroId
+            end
+        end
+    end
+
     for bossKey, boss in pairs(data.bossProfiles) do
         local id = type(boss) == "table" and boss.id or bossKey
         if type(id) == "string" then
@@ -127,11 +138,15 @@ local function normalizeBossMacroStorage(data)
             if serial and serial > highestBossSerial then highestBossSerial = serial end
         end
 
-        if type(boss) == "table" and type(boss.macros) == "table" then
-            for _, macro in ipairs(boss.macros) do
-                local macroId = type(macro) == "table" and tonumber(macro.id) or nil
-                if macroId and macroId > highestMacroId and macroId == math.floor(macroId) then
-                    highestMacroId = macroId
+        if type(boss) == "table" then
+            inspectMacros(boss.macros)
+            if type(boss.difficulties) == "table" then
+                for difficultyKey, profile in pairs(boss.difficulties) do
+                    if not VALID_DIFFICULTIES[difficultyKey] then
+                        boss.difficulties[difficultyKey] = nil
+                    elseif type(profile) == "table" then
+                        inspectMacros(profile.macros)
+                    end
                 end
             end
         end
@@ -228,6 +243,14 @@ function Database:Migrate()
         if not self.data.selectedBossId and type(self.data.selectedBossKey) == "string" then
             self.data.selectedBossId = "encounter:" .. self.data.selectedBossKey
         end
+    end
+
+    if version < 9 then
+        -- Version 9 introduces per-boss Heroic/Mythic macro and tactics storage.
+        -- The registry-aware migration is completed by BossMacroService after
+        -- encounter definitions are loaded; keep legacy flat macro arrays intact
+        -- here so no user data is discarded before that migration can run.
+        normalizeBossMacroStorage(self.data)
     end
 
     dropUnsupportedDifficulties(self.data.customMessages)

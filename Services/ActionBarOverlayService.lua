@@ -242,8 +242,10 @@ end
 
 function OverlayService:UpdateOverlay(overlay)
     if not overlay.macroId or not self.database then overlay:Hide() return end
-    local macro, boss = BossMacros:FindMacroById(overlay.macroId)
-    if not macro or not boss or boss.id ~= self.database.selectedBossId then
+    local macro, boss, difficultyKey = BossMacros:FindMacroById(overlay.macroId)
+    if not macro or not boss
+        or boss.id ~= self.database.selectedBossId
+        or difficultyKey ~= self.database.selectedDifficultyKey then
         overlay:Hide()
         return
     end

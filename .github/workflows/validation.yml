@@ -1,0 +1,49 @@
+name: Validation
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validation:
+    name: validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate repository hygiene and manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          test ! -e .rla-payload
+          test ! -e .github/workflows/rla-apply.yml
+          grep -q '^## Version: 1.1.0$' RaidLeadAssist.toc
+          grep -q 'Boss Tactics' UI/BossMacroManager.lua
+          grep -q 'selectedDifficultyKey' Services/BossMacroService.lua
+          grep -q 'PortraitContainer:Hide' UI/BossMacroManager.lua
+          python3 - <<'PY'
+          from pathlib import Path
+          toc = Path('RaidLeadAssist.toc').read_text(encoding='utf-8').splitlines()
+          missing = []
+          for line in toc:
+              line = line.strip()
+              if not line or line.startswith('##'):
+                  continue
+              path = Path(line.replace('\\', '/'))
+              if not path.exists():
+                  missing.append(str(path))
+          if missing:
+              raise SystemExit('Missing TOC files: ' + ', '.join(missing))
+          PY
+      - name: Parse Lua sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq lua5.1
+          find . -type f -name '*.lua' -print0 | xargs -0 -n1 luac -p
