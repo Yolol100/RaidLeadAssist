@@ -45,6 +45,20 @@ local function difficultyLabel(key)
     return key == "mythic" and "Mythic" or "Heroic"
 end
 
+local function getDialogEditBox(dialog)
+    if not dialog then return nil end
+
+    local editBox = dialog.EditBox or dialog.editBox
+    if not editBox and type(dialog.GetEditBox) == "function" then
+        editBox = dialog:GetEditBox()
+    end
+    if not editBox and type(dialog.GetName) == "function" then
+        local name = dialog:GetName()
+        if name and _G then editBox = _G[name .. "EditBox"] end
+    end
+    return editBox
+end
+
 local function setupDialogs()
     if not StaticPopupDialogs["RLA_BOSS_NAME"] then
         StaticPopupDialogs["RLA_BOSS_NAME"] = {
@@ -58,18 +72,21 @@ local function setupDialogs()
             hideOnEscape = true,
             preferredIndex = 3,
             OnShow = function(dialog, data)
-                dialog.editBox:SetText((data and data.value) or "")
-                dialog.editBox:HighlightText()
-                dialog.editBox:SetFocus()
+                local editBox = getDialogEditBox(dialog)
+                if not editBox then return end
+                editBox:SetText((data and data.value) or "")
+                editBox:HighlightText()
+                editBox:SetFocus()
             end,
             OnAccept = function(dialog, data)
-                if data and data.callback then data.callback(dialog.editBox:GetText() or "") end
+                local editBox = getDialogEditBox(dialog)
+                if data and data.callback and editBox then data.callback(editBox:GetText() or "") end
             end,
             EditBoxOnEnterPressed = function(editBox)
-                local parent = editBox:GetParent()
-                local data = parent.data
-                if data and data.callback then data.callback(editBox:GetText() or "") end
-                parent:Hide()
+                local parent = editBox and editBox:GetParent() or nil
+                local data = parent and parent.data or nil
+                if data and data.callback and editBox then data.callback(editBox:GetText() or "") end
+                if parent then parent:Hide() end
             end,
         }
     end
