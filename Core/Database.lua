@@ -3,7 +3,7 @@ local _, ns = ...
 local Util = ns:GetModule("Core.Util")
 
 local Database = {
-    SCHEMA_VERSION = 7,
+    SCHEMA_VERSION = 8,
     newerSchemaDetected = false,
 }
 
@@ -35,9 +35,10 @@ local function cloneValue(value, seen)
 end
 
 local DEFAULTS = {
-    schemaVersion = 7,
+    schemaVersion = 8,
     selectedBossKey = "nekzali",
     selectedDifficultyKey = "heroic",
+    selectedBossId = nil,
     audioEnabled = true,
     automaticTimingEnabled = true,
     uiScale = 1,
@@ -49,6 +50,11 @@ local DEFAULTS = {
     customMessages = {},
     assignments = {},
     assignmentPresets = {},
+    bossProfiles = {},
+    deletedDefaultBosses = {},
+    nextBossId = 1,
+    nextMacroId = 1,
+    pendingMacroSync = {},
     position = {
         point = "CENTER",
         relativePoint = "CENTER",
@@ -95,6 +101,47 @@ local function dropUnsupportedDifficulties(root)
                 if not VALID_DIFFICULTIES[difficultyKey] then difficulties[difficultyKey] = nil end
             end
         end
+    end
+end
+
+local function normalizeBossMacroStorage(data)
+    if type(data.bossProfiles) ~= "table" then data.bossProfiles = {} end
+    if type(data.deletedDefaultBosses) ~= "table" then data.deletedDefaultBosses = {} end
+    if type(data.pendingMacroSync) ~= "table" then data.pendingMacroSync = {} end
+
+    local nextBossId = tonumber(data.nextBossId)
+    if not nextBossId or nextBossId < 1 or nextBossId ~= math.floor(nextBossId) then nextBossId = 1 end
+
+    local nextMacroId = tonumber(data.nextMacroId)
+    if not nextMacroId or nextMacroId < 1 or nextMacroId ~= math.floor(nextMacroId) then nextMacroId = 1 end
+
+    -- Saved counters are hints, not authority. A partial restore, downgrade or
+    -- hand-edited SavedVariables file can leave them behind existing records.
+    -- Reconcile them with durable IDs before anything allocates a new boss/macro.
+    local highestBossSerial = 0
+    local highestMacroId = 0
+    for bossKey, boss in pairs(data.bossProfiles) do
+        local id = type(boss) == "table" and boss.id or bossKey
+        if type(id) == "string" then
+            local serial = tonumber(id:match("^custom:(%d+)$"))
+            if serial and serial > highestBossSerial then highestBossSerial = serial end
+        end
+
+        if type(boss) == "table" and type(boss.macros) == "table" then
+            for _, macro in ipairs(boss.macros) do
+                local macroId = type(macro) == "table" and tonumber(macro.id) or nil
+                if macroId and macroId > highestMacroId and macroId == math.floor(macroId) then
+                    highestMacroId = macroId
+                end
+            end
+        end
+    end
+
+    data.nextBossId = math.max(nextBossId, highestBossSerial + 1)
+    data.nextMacroId = math.max(nextMacroId, highestMacroId + 1)
+
+    if data.selectedBossId ~= nil and type(data.selectedBossId) ~= "string" then
+        data.selectedBossId = nil
     end
 end
 
@@ -176,9 +223,17 @@ function Database:Migrate()
         self.data.uiScale = normalizeUIScale(self.data.uiScale)
     end
 
+    if version < 8 then
+        normalizeBossMacroStorage(self.data)
+        if not self.data.selectedBossId and type(self.data.selectedBossKey) == "string" then
+            self.data.selectedBossId = "encounter:" .. self.data.selectedBossKey
+        end
+    end
+
     dropUnsupportedDifficulties(self.data.customMessages)
     dropUnsupportedDifficulties(self.data.assignments)
     dropUnsupportedDifficulties(self.data.assignmentPresets)
+    normalizeBossMacroStorage(self.data)
 
     if not self.newerSchemaDetected then
         self.data.schemaVersion = self.SCHEMA_VERSION

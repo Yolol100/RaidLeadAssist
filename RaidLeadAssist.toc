@@ -1,8 +1,8 @@
 ## Interface: 120100
 ## Title: Raid Lead Assist
-## Notes: Manual raid-leader tactical callouts with bossmod and Blizzard timeline support.
+## Notes: Blizzard-style boss macro manager with encounter-timed action-bar guidance.
 ## Author: RaidLeadAssist Contributors
-## Version: 0.9.0-beta.68
+## Version: 1.0.0-beta.1
 ## SavedVariables: RaidLeadAssistDB
 ## OptionalDeps: DBM-Core, BigWigs
 ## Category: Dungeons & Raids
@@ -27,13 +27,6 @@ Core/Util.lua
 Core/EventBus.lua
 Core/Database.lua
 Encounters/Registry.lua
-Encounters/AssignmentRegistry.lua
-Encounters/SetupRegistry.lua
-Encounters/Boss12AssignmentOverride.lua
-Encounters/Boss34AssignmentOverride.lua
-Encounters/SszorakAssignmentOverride.lua
-Encounters/TwinFangsAssignmentOverride.lua
-Encounters/Boss78AssignmentOverride.lua
 Encounters/VenomousAbyss/Nekzali.lua
 Encounters/VenomousAbyss/Sentinels.lua
 Encounters/VenomousAbyss/Explorers.lua
@@ -42,45 +35,15 @@ Encounters/VenomousAbyss/Sszorak.lua
 Encounters/VenomousAbyss/TwinFangs.lua
 Encounters/VenomousAbyss/CoiledAltar.lua
 Encounters/VenomousAbyss/Ulatek.lua
-Encounters/VenomousAbyss/SetupLayouts.lua
-Services/RosterService.lua
-Services/RaidGroupSplitService.lua
-Services/RaidWarningService.lua
-Services/MessageService.lua
-Services/AudioService.lua
-Services/AssignmentService.lua
-Services/AssignmentPresetService.lua
-Services/PersonalAssignmentService.lua
-Services/AssignmentPlanService.lua
-Services/SetupService.lua
 Services/Providers/BigWigsProvider.lua
 Services/Providers/DBMProvider.lua
 Services/Providers/BlizzardProvider.lua
 Services/TimelineService.lua
-Services/TimingGuidanceService.lua
 Services/EncounterService.lua
-UI/Theme.lua
-UI/Dropdown.lua
-UI/TimelineBar.lua
-UI/CallButton.lua
-UI/ActionButton.lua
-UI/SettingsField.lua
-UI/ConfirmDialog.lua
-UI/AssignmentSlot.lua
-UI/RosterPicker.lua
-UI/AssignmentFrame.lua
-UI/AssignmentPreview.lua
-UI/AssignmentLaunchers.lua
-UI/SettingsFrame.lua
-UI/SentinelsPanel.lua
-UI/SetupCard.lua
-UI/MainFrame.lua
-UI/ProductivityPanel.lua
+Services/BossMacroService.lua
+Services/ManagedMacroService.lua
+Services/ActionBarOverlayService.lua
+UI/IconPicker.lua
+UI/BossMacroManager.lua
 Core/App.lua
-Core/AssignmentIntegration.lua
-Core/ReadinessIntegration.lua
-Core/ProductivityIntegration.lua
-Core/ProviderRecoveryIntegration.lua
-Core/TimingGuidanceIntegration.lua
-Core/SentinelsIntegration.lua
 Core/AddonCompartment.lua
