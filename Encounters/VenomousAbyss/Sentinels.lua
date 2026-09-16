@@ -5,8 +5,8 @@ local heroicCalls = {
     {
         key = "droplets",
         ability = "Toxic Droplets",
-        action = "GREEN — SOAK DROPLETS",
-        warning = "GREEN — SOAK DROPLETS",
+        action = "Green: soak droplets.",
+        warning = "Green: soak droplets.",
         voice = "Soak droplets",
         timing = false,
         iconSpellID = 1284434,
@@ -14,8 +14,8 @@ local heroicCalls = {
     {
         key = "blob",
         ability = "Venom Coagulation",
-        action = "GREEN — KILL BLOB",
-        warning = "GREEN — KILL BLOB",
+        action = "Green: kill the blob.",
+        warning = "Green: kill the blob.",
         voice = "Kill blob",
         timing = false,
         iconSpellID = 1284251,
@@ -23,8 +23,8 @@ local heroicCalls = {
     {
         key = "living_venom",
         ability = "Living Venom",
-        action = "GREEN — DODGE RETURN LINES",
-        warning = "GREEN — DODGE RETURN LINES",
+        action = "Green: dodge the return lines.",
+        warning = "Green: dodge the return lines.",
         voice = "Dodge return lines",
         timing = false,
         iconSpellID = 1284207,
@@ -32,8 +32,8 @@ local heroicCalls = {
     {
         key = "miasma",
         ability = "Unstable Miasma",
-        action = "RED — GROUP SOAK, DROP BLOOD OUT",
-        warning = "RED — GROUP SOAK, DROP BLOOD OUT",
+        action = "Red: group soak, then drop blood out.",
+        warning = "Red: group soak, then drop blood out.",
         voice = "Group soak then drop out",
         spellIDs = { 1288232 },
         prepareSeconds = 5,
@@ -42,8 +42,8 @@ local heroicCalls = {
     {
         key = "stasis",
         ability = "Vitriolic Stasis",
-        action = "STASIS — 1+3 / 2+2",
-        warning = "STASIS — 1+3 / 2+2",
+        action = "Stasis: pair toxins to four (1+3 or 2+2).",
+        warning = "Stasis: pair toxins to four (1+3 or 2+2).",
         voice = "One three or two two",
         spellIDs = { 1284588 },
         prepareSeconds = 6,
@@ -117,11 +117,11 @@ Registry:Register({
     profiles = {
         heroic = {
             legacyExplanation = {
-                "{{GROUP_SPLIT:RED:GREEN}}",
-                "AFTER STASIS — RAID HOLDS SIDES; TANKS SWAP BOSSES",
+                "Pre-pull: split the raid into balanced Red and Green sides.",
+                "After Stasis, the raid holds sides while tanks swap bosses.",
             },
             explanation = {
-                "{{GROUP_SPLIT:RED:GREEN}}",
+                "Pre-pull: split the raid into balanced Red and Green sides.",
                 "After Stasis, the raid holds sides while tanks swap bosses.",
             },
             calls = heroicCalls,

@@ -5,8 +5,8 @@ local heroicCalls = {
     {
         key = "venom",
         ability = "Venomous Surge",
-        action = "CYSTS — PLACE AT CORRECT WIND MARK",
-        warning = "CYSTS — PLACE AT CORRECT WIND MARK",
+        action = "Cysts: place them at the correct wind mark.",
+        warning = "Cysts: place them at the correct wind mark.",
         voice = "Place cysts",
         spellIDs = { 1305959 },
         prepareSeconds = 6,
@@ -15,8 +15,8 @@ local heroicCalls = {
     {
         key = "crosswinds",
         ability = "Raging Crosswinds",
-        action = "WHITE CIRCLES — STACK MID, PAIR OPPOSITE",
-        warning = "WHITE CIRCLES — STACK MID, PAIR OPPOSITE",
+        action = "White circles: stack middle and pair opposite.",
+        warning = "White circles: stack middle and pair opposite.",
         voice = "Pair opposite",
         spellIDs = { 1285425 },
         prepareSeconds = 7,
@@ -25,8 +25,8 @@ local heroicCalls = {
     {
         key = "maelstrom",
         ability = "Howling Maelstrom",
-        action = "WIND — POP ONE CYST",
-        warning = "WIND — POP ONE CYST",
+        action = "Wind: pop one cyst.",
+        warning = "Wind: pop one cyst.",
         voice = "Pop one cyst",
         spellIDs = { 1285732 },
         prepareSeconds = 8,
@@ -55,12 +55,17 @@ Registry:Register({
     strategyStatus = "Heroic mechanics retained; Mythic raid-leader macro set intentionally reduced to one soak-order call (Raid -> Tank -> Tank) while the remaining mechanics stay in tactics; PASS-LIVE pending",
     profiles = {
         heroic = {
-            explanation = { "{{GROUP_SPLIT:BLUE:X}}" },
+            explanation = {
+                "Pre-pull: assign wind marks and cyst placements before the pull.",
+                "Cysts: place them at the correct wind mark and keep the center clear.",
+                "Raging Crosswinds: stack middle, pair opposite, then move cleanly.",
+                "Howling Maelstrom: pop one planned cyst for the wind mechanic.",
+            },
             calls = heroicCalls,
         },
         mythic = {
             explanation = {
-                "Keep Mythic Mutilate and Cyst assignments separate from the simplified Heroic call set.",
+                "Pre-pull: assign the Mythic soak order as Raid -> Tank -> Tank and keep cyst assignments separate.",
                 "Serpent's Fury marks a player: 14+ players stack on them.",
                 "After the charge, Virulence players spread and drop residue away from the raid.",
             },
