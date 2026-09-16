@@ -3,7 +3,7 @@ name: Apply DBM native fallback 1.1.3
 on:
   push:
     branches:
-      - fix/dbm-native-fallback-1.1.3
+      - disabled/dbm-native-fallback-1.1.3
 
 permissions:
   contents: write
@@ -31,6 +31,6 @@ jobs:
           fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add Services/TimelineService.lua RaidLeadAssist.toc .github/workflows/validation.yml
+          git add Services/TimelineService.lua
           git commit -m 'Fix DBM-only native timer fallback'
           git push origin HEAD:fix/dbm-native-fallback-1.1.3
