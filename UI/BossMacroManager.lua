@@ -141,10 +141,11 @@ end
 
 local function setFrameTitle(frame, text)
     if not frame then return end
-    if type(frame.SetTitle) == "function" then
-        frame:SetTitle(text)
-    elseif frame.TitleText then
-        frame.TitleText:SetText(text)
+    local titleText = frame.TitleContainer and frame.TitleContainer.TitleText or frame.TitleText
+    if titleText then
+        titleText:SetText(text or "")
+    elseif type(frame.SetTitle) == "function" then
+        frame:SetTitle(text or "")
     end
 end
 
@@ -243,7 +244,7 @@ function BossMacroManager:RefreshMacroGrid()
         button:SetEnabled(macro ~= nil)
         button:SetAlpha(macro and 1 or 0.25)
         button.Icon:SetTexture(macro and BossMacros:GetIcon(macro) or nil)
-        button.Name:SetText(macro and shortName(macro.name) or "")
+        button.Name:SetText(macro and tostring(macro.name or "") or "")
         button.Selected:SetShown(macro ~= nil and tonumber(macro.id) == tonumber(self.selectedMacroId))
     end
 
@@ -498,8 +499,8 @@ function BossMacroManager:InitializeAdvancedFrame()
     frame:SetFrameStrata("DIALOG")
     frame:SetClampedToScreen(true)
     frame:Hide()
-    setFrameTitle(frame, "Advanced Timer Matching")
     removePortrait(frame)
+    setFrameTitle(frame, "Advanced Timer Matching")
 
     local spellLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     spellLabel:SetPoint("TOPLEFT", 28, -58)
@@ -587,8 +588,8 @@ function BossMacroManager:InitializeTacticsFrame()
     frame:SetFrameStrata("DIALOG")
     frame:SetClampedToScreen(true)
     frame:Hide()
-    setFrameTitle(frame, "Boss Tactics")
     removePortrait(frame)
+    setFrameTitle(frame, "Boss Tactics")
 
     local contentAnchor = frame.Inset or frame
 
@@ -820,8 +821,8 @@ function BossMacroManager:Initialize(database, callbacks)
         database.position = { point = point, relativePoint = relativePoint, x = x, y = y }
     end)
     frame:Hide()
-    setFrameTitle(frame, "Raid Lead Assist — Boss Macros")
     removePortrait(frame)
+    setFrameTitle(frame, "Raid Lead Assist — Boss Macros")
 
     local bossLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     bossLabel:SetPoint("TOPLEFT", 12, -57)
@@ -899,10 +900,10 @@ function BossMacroManager:Initialize(database, callbacks)
     self.macroPageSize = columns * rows
     for index = 1, self.macroPageSize do
         local button = CreateFrame("Button", nil, grid)
-        button:SetSize(40, 40)
+        button:SetSize(44, 44)
         local col = (index - 1) % columns
         local row = math.floor((index - 1) / columns)
-        button:SetPoint("TOPLEFT", 18 + (col * 64), -8 - (row * 54))
+        button:SetPoint("TOPLEFT", 20 + (col * 62), -10 - (row * 50))
         button:SetNormalTexture("Interface\\Buttons\\UI-Quickslot2")
         button:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
         button:RegisterForDrag("LeftButton")
@@ -919,13 +920,15 @@ function BossMacroManager:Initialize(database, callbacks)
         selected:SetBlendMode("ADD")
         selected:SetVertexColor(1, 0.78, 0.08, 1)
         selected:SetPoint("CENTER", 0, 0)
-        selected:SetSize(50, 50)
+        selected:SetSize(56, 56)
         selected:Hide()
         button.Selected = selected
 
+        -- Match Blizzard's MacroButtonTemplate: the macro name is a small
+        -- single-line overlay inside the icon instead of a separate label below it.
         local name = button:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmallOutline")
-        name:SetPoint("TOP", button, "BOTTOM", 0, -1)
-        name:SetWidth(54)
+        name:SetSize(36, 10)
+        name:SetPoint("BOTTOM", button, "BOTTOM", 0, 2)
         name:SetWordWrap(false)
         name:SetJustifyH("CENTER")
         button.Name = name

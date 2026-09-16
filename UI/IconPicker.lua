@@ -73,10 +73,11 @@ local function removePortrait(frame)
         frame.TitleContainer:SetPoint("TOPLEFT", frame, "TOPLEFT", 30, -1)
         frame.TitleContainer:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -24, -1)
     end
-    if type(frame.SetTitle) == "function" then
+    local titleText = frame.TitleContainer and frame.TitleContainer.TitleText or frame.TitleText
+    if titleText then
+        titleText:SetText("Change Name/Icon")
+    elseif type(frame.SetTitle) == "function" then
         frame:SetTitle("Change Name/Icon")
-    elseif frame.TitleText then
-        frame.TitleText:SetText("Change Name/Icon")
     end
 end
 
