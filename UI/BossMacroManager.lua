@@ -163,9 +163,9 @@ function BossMacroManager:RefreshAbilityDropdownText()
     local boss = self:GetBoss()
     local label = "Manual / unlinked"
     if boss and self.draft and self.draft.sourceCallKey then
-        for _, macro in ipairs(BossMacros:GetMacros(boss.id)) do
-            if macro.sourceCallKey == self.draft.sourceCallKey then
-                label = macro.name
+        for _, ability in ipairs(BossMacros:GetAbilityOptions(boss.id)) do
+            if ability.sourceCallKey == self.draft.sourceCallKey then
+                label = ability.name
                 break
             end
         end
@@ -173,15 +173,15 @@ function BossMacroManager:RefreshAbilityDropdownText()
     UIDropDownMenu_SetText(self.frame.AbilityDropdown, label)
 end
 
-function BossMacroManager:SetAbilityDraftFromMacro(sourceMacro)
-    if not self.draft or not sourceMacro then return end
-    self.draft.sourceCallKey = sourceMacro.sourceCallKey
-    self.draft.spellIDs = copyArray(sourceMacro.spellIDs)
-    self.draft.timerNames = copyArray(sourceMacro.timerNames)
-    self.draft.iconSpellID = sourceMacro.iconSpellID
-    self.draft.timingEnabled = sourceMacro.timingEnabled == true
-    self.draft.prepareSeconds = sourceMacro.prepareSeconds
-    self.draft.pressSeconds = sourceMacro.pressSeconds
+function BossMacroManager:SetAbilityDraftFromAbility(ability)
+    if not self.draft or not ability then return end
+    self.draft.sourceCallKey = ability.sourceCallKey
+    self.draft.spellIDs = copyArray(ability.spellIDs)
+    self.draft.timerNames = copyArray(ability.timerNames)
+    self.draft.iconSpellID = ability.iconSpellID
+    self.draft.timingEnabled = ability.timingEnabled == true
+    self.draft.prepareSeconds = ability.prepareSeconds
+    self.draft.pressSeconds = ability.pressSeconds
     self.draft.iconMode = "ability"
     self:RefreshAbilityDropdownText()
     self.frame.SelectedIcon:SetTexture(BossMacros:GetIcon(self.draft))
@@ -198,28 +198,29 @@ function BossMacroManager:RefreshAbilityDropdown()
         manual.checked = self.draft and not self.draft.sourceCallKey
         manual.func = function()
             if not self.draft then return end
+            local currentIcon = BossMacros:GetIcon(self.draft)
             self.draft.sourceCallKey = nil
             self.draft.spellIDs = {}
             self.draft.timerNames = {}
             self.draft.iconSpellID = nil
             self.draft.timingEnabled = false
+            if self.draft.iconMode == "ability" then
+                self.draft.iconMode = "custom"
+                self.draft.customIcon = currentIcon
+            end
             self:RefreshAbilityDropdownText()
+            self.frame.SelectedIcon:SetTexture(BossMacros:GetIcon(self.draft))
         end
         UIDropDownMenu_AddButton(manual, level)
 
         local boss = self:GetBoss()
-        local seen = {}
-        for _, source in ipairs(boss and BossMacros:GetMacros(boss.id) or {}) do
-            local key = source.sourceCallKey
-            if key and not seen[key] then
-                seen[key] = true
-                local info = UIDropDownMenu_CreateInfo()
-                info.text = source.name
-                info.icon = BossMacros:GetIcon(source)
-                info.checked = self.draft and self.draft.sourceCallKey == key
-                info.func = function() self:SetAbilityDraftFromMacro(source) end
-                UIDropDownMenu_AddButton(info, level)
-            end
+        for _, ability in ipairs(boss and BossMacros:GetAbilityOptions(boss.id) or {}) do
+            local info = UIDropDownMenu_CreateInfo()
+            info.text = ability.name
+            info.icon = BossMacros:GetIcon(ability)
+            info.checked = self.draft and self.draft.sourceCallKey == ability.sourceCallKey
+            info.func = function() self:SetAbilityDraftFromAbility(ability) end
+            UIDropDownMenu_AddButton(info, level)
         end
     end)
     self:RefreshAbilityDropdownText()

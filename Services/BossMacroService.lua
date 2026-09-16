@@ -250,6 +250,43 @@ function BossMacroService:GetMacros(bossId)
     return boss.macros
 end
 
+function BossMacroService:GetAbilityOptions(bossId)
+    local boss = self:GetBoss(bossId)
+    if not boss or type(boss.sourceEncounterKey) ~= "string" then return {} end
+
+    local difficultyOrder = {}
+    local preferred = self.database and self.database.selectedDifficultyKey or nil
+    if preferred and Constants.DIFFICULTIES[preferred] then
+        difficultyOrder[#difficultyOrder + 1] = preferred
+    end
+    for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
+        if difficultyKey ~= preferred then difficultyOrder[#difficultyOrder + 1] = difficultyKey end
+    end
+
+    local result, seen = {}, {}
+    for _, difficultyKey in ipairs(difficultyOrder) do
+        local profile = Registry:GetProfile(boss.sourceEncounterKey, difficultyKey)
+        for _, call in ipairs(profile and profile.calls or {}) do
+            if call and type(call.key) == "string" and not seen[call.key] then
+                seen[call.key] = true
+                local prepare, press = Constants.GetCallTiming(call, self.database.timingLead)
+                local spellIDs = copyArray(call.spellIDs)
+                result[#result + 1] = {
+                    sourceCallKey = call.key,
+                    name = call.ability or call.action or call.key,
+                    spellIDs = spellIDs,
+                    timerNames = copyArray(call.timerNames),
+                    iconSpellID = Util.ToNumericID(call.iconSpellID) or Util.ToNumericID(spellIDs[1]),
+                    timingEnabled = call.timing ~= false,
+                    prepareSeconds = prepare,
+                    pressSeconds = press,
+                }
+            end
+        end
+    end
+    return result
+end
+
 function BossMacroService:FindMacroById(id)
     local numericID = tonumber(id)
     if not numericID then return nil, nil end
