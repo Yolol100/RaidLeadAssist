@@ -66,16 +66,3 @@ timeline = replace_once(
     "suppression cleanup",
 )
 timeline_path.write_text(timeline, encoding="utf-8")
-
-toc_path = Path("RaidLeadAssist.toc")
-toc = toc_path.read_text(encoding="utf-8")
-toc = replace_once(toc, "## Version: 1.1.2", "## Version: 1.1.3", "toc version")
-toc_path.write_text(toc, encoding="utf-8")
-
-validation_path = Path(".github/workflows/validation.yml")
-validation = validation_path.read_text(encoding="utf-8")
-validation = replace_once(validation, "grep -q '^## Version: 1.1.2$' RaidLeadAssist.toc", "grep -q '^## Version: 1.1.3$' RaidLeadAssist.toc", "validation version")
-anchor = "          grep -q 'iconSpellID = 1310099' Encounters/VenomousAbyss/TwinFangs.lua\n"
-insert = anchor + "          grep -q 'HasActionableDirectBossmodTimerForCall' Services/TimelineService.lua\n          grep -q 'and self:IsActionable(timer)' Services/TimelineService.lua\n          grep -q 'matching Blizzard-native event remains the authoritative fallback' Services/TimelineService.lua\n"
-validation = replace_once(validation, anchor, insert, "DBM fallback validation guards")
-validation_path.write_text(validation, encoding="utf-8")
