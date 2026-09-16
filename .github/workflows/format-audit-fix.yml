@@ -1,0 +1,154 @@
+name: format-audit-fix
+
+on:
+  push:
+    branches:
+      - audit/high-volume-2026-09-16
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: ${{ contains(github.event.head_commit.message, '[format-run]') && !contains(github.event.head_commit.message, '[format-done]') }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Normalize audited Lua formatting
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          from textwrap import dedent
+
+          boss_path = Path('Services/BossMacroService.lua')
+          boss = boss_path.read_text(encoding='utf-8')
+          start = boss.index('function BossMacroService:GetAbilityOptions(bossId)')
+          end = boss.index('function BossMacroService:FindMacroById(id)', start)
+          boss_block = dedent('''\
+          function BossMacroService:GetAbilityOptions(bossId)
+              local boss = self:GetBoss(bossId)
+              if not boss or type(boss.sourceEncounterKey) ~= "string" then return {} end
+
+              local difficultyOrder = {}
+              local preferred = self.database and self.database.selectedDifficultyKey or nil
+              if preferred and Constants.DIFFICULTIES[preferred] then
+                  difficultyOrder[#difficultyOrder + 1] = preferred
+              end
+              for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
+                  if difficultyKey ~= preferred then difficultyOrder[#difficultyOrder + 1] = difficultyKey end
+              end
+
+              local result, seen = {}, {}
+              for _, difficultyKey in ipairs(difficultyOrder) do
+                  local profile = Registry:GetProfile(boss.sourceEncounterKey, difficultyKey)
+                  for _, call in ipairs(profile and profile.calls or {}) do
+                      if call and type(call.key) == "string" and not seen[call.key] then
+                          seen[call.key] = true
+                          local prepare, press = Constants.GetCallTiming(call, self.database.timingLead)
+                          local spellIDs = copyArray(call.spellIDs)
+                          result[#result + 1] = {
+                              sourceCallKey = call.key,
+                              name = call.ability or call.action or call.key,
+                              spellIDs = spellIDs,
+                              timerNames = copyArray(call.timerNames),
+                              iconSpellID = Util.ToNumericID(call.iconSpellID) or Util.ToNumericID(spellIDs[1]),
+                              timingEnabled = call.timing ~= false,
+                              prepareSeconds = prepare,
+                              pressSeconds = press,
+                          }
+                      end
+                  end
+              end
+              return result
+          end
+
+          ''')
+          boss_path.write_text(boss[:start] + boss_block + boss[end:], encoding='utf-8')
+
+          ui_path = Path('UI/BossMacroManager.lua')
+          ui = ui_path.read_text(encoding='utf-8')
+          start = ui.index('function BossMacroManager:RefreshAbilityDropdownText()')
+          end = ui.index('function BossMacroManager:UpdateCharacterCount()', start)
+          ui_block = dedent('''\
+          function BossMacroManager:RefreshAbilityDropdownText()
+              if not self.frame then return end
+              local boss = self:GetBoss()
+              local label = "Manual / unlinked"
+              if boss and self.draft and self.draft.sourceCallKey then
+                  for _, ability in ipairs(BossMacros:GetAbilityOptions(boss.id)) do
+                      if ability.sourceCallKey == self.draft.sourceCallKey then
+                          label = ability.name
+                          break
+                      end
+                  end
+              end
+              UIDropDownMenu_SetText(self.frame.AbilityDropdown, label)
+          end
+
+          function BossMacroManager:SetAbilityDraftFromAbility(ability)
+              if not self.draft or not ability then return end
+              self.draft.sourceCallKey = ability.sourceCallKey
+              self.draft.spellIDs = copyArray(ability.spellIDs)
+              self.draft.timerNames = copyArray(ability.timerNames)
+              self.draft.iconSpellID = ability.iconSpellID
+              self.draft.timingEnabled = ability.timingEnabled == true
+              self.draft.prepareSeconds = ability.prepareSeconds
+              self.draft.pressSeconds = ability.pressSeconds
+              self.draft.iconMode = "ability"
+              self:RefreshAbilityDropdownText()
+              self.frame.SelectedIcon:SetTexture(BossMacros:GetIcon(self.draft))
+          end
+
+          function BossMacroManager:RefreshAbilityDropdown()
+              if not self.frame then return end
+              local dropdown = self.frame.AbilityDropdown
+              UIDropDownMenu_Initialize(dropdown, function(_, level)
+                  if level ~= 1 then return end
+
+                  local manual = UIDropDownMenu_CreateInfo()
+                  manual.text = "Manual / unlinked"
+                  manual.checked = self.draft and not self.draft.sourceCallKey
+                  manual.func = function()
+                      if not self.draft then return end
+                      local currentIcon = BossMacros:GetIcon(self.draft)
+                      self.draft.sourceCallKey = nil
+                      self.draft.spellIDs = {}
+                      self.draft.timerNames = {}
+                      self.draft.iconSpellID = nil
+                      self.draft.timingEnabled = false
+                      if self.draft.iconMode == "ability" then
+                          self.draft.iconMode = "custom"
+                          self.draft.customIcon = currentIcon
+                      end
+                      self:RefreshAbilityDropdownText()
+                      self.frame.SelectedIcon:SetTexture(BossMacros:GetIcon(self.draft))
+                  end
+                  UIDropDownMenu_AddButton(manual, level)
+
+                  local boss = self:GetBoss()
+                  for _, ability in ipairs(boss and BossMacros:GetAbilityOptions(boss.id) or {}) do
+                      local info = UIDropDownMenu_CreateInfo()
+                      info.text = ability.name
+                      info.icon = BossMacros:GetIcon(ability)
+                      info.checked = self.draft and self.draft.sourceCallKey == ability.sourceCallKey
+                      info.func = function() self:SetAbilityDraftFromAbility(ability) end
+                      UIDropDownMenu_AddButton(info, level)
+                  end
+              end)
+              self:RefreshAbilityDropdownText()
+          end
+
+          ''')
+          ui_path.write_text(ui[:start] + ui_block + ui[end:], encoding='utf-8')
+          PY
+
+          git config user.name "RaidLeadAssist Audit"
+          git config user.email "actions@users.noreply.github.com"
+          git add Services/BossMacroService.lua UI/BossMacroManager.lua
+          git diff --cached --check
+          git commit -m "Normalize ability catalog formatting [audit-fix] [format-done]"
+          git push origin HEAD:audit/high-volume-2026-09-16
