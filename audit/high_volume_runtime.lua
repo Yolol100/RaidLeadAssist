@@ -299,10 +299,48 @@ for _, sourceKey in ipairs(sourceKeys) do
     end
 end
 
--- 6) Ability catalog independence is a functional requirement: boss abilities must survive macro deletion.
-record('ability-catalog', 'Services.BossMacroService', 'macro-list-empty', 'GetAbilityOptions', 'registry-backed-options-remain', function()
-    assert(type(BossMacros.GetAbilityOptions) == 'function', 'BossMacroService has no independent ability catalog')
-end)
+-- 6) Ability catalog independence: registry-backed choices survive macro CRUD and prefer the active difficulty variant.
+local abilityProfiles = {
+    heroic = { calls = {
+        {key='shared', ability='Heroic Shared', spellIDs={101}, prepareSeconds=7, pressSeconds=4},
+        {key='heroic_only', ability='Heroic Only', spellIDs={102}, timing=false},
+    } },
+    mythic = { calls = {
+        {key='shared', ability='Mythic Shared', spellIDs={201}, prepareSeconds=8, pressSeconds=5},
+        {key='mythic_only', ability='Mythic Only', spellIDs={202}, timing=false},
+    } },
+}
+Registry.GetProfile = function(_, encounterKey, difficultyKey)
+    if encounterKey ~= 'catalogboss' then return nil end
+    return abilityProfiles[difficultyKey]
+end
+local macroStates = {
+    {label='empty', macros={}},
+    {label='unrelated', macros={{id=8,name='Custom',body='/rw Custom',sourceCallKey=nil}}},
+    {label='after-delete', macros={}},
+}
+for _, difficulty in ipairs({'heroic','mythic'}) do
+    for _, macroState in ipairs(macroStates) do
+        record('ability-catalog', 'Services.BossMacroService', {difficulty=difficulty,macroState=macroState.label}, 'GetAbilityOptions', 'registry-backed-options-remain', function()
+  assert(type(BossMacros.GetAbilityOptions) == 'function', 'BossMacroService has no independent ability catalog')
+  BossMacros.database = {
+      selectedDifficultyKey=difficulty,
+      timingLead={prepare=5,press=3},
+      bossProfiles={ ['encounter:catalogboss']={id='encounter:catalogboss',sourceEncounterKey='catalogboss',macros=macroState.macros} },
+  }
+  local options = BossMacros:GetAbilityOptions('encounter:catalogboss')
+  assert(#options == 3, 'ability catalog lost registry calls after macro CRUD')
+  local byKey = {}
+  for _, option in ipairs(options) do byKey[option.sourceCallKey] = option end
+  assert(byKey.heroic_only and byKey.mythic_only and byKey.shared, 'missing catalog key')
+  if difficulty == 'heroic' then
+      assert(byKey.shared.name == 'Heroic Shared' and tonumber(byKey.shared.spellIDs[1]) == 101, 'heroic catalog did not prefer heroic variant')
+  else
+      assert(byKey.shared.name == 'Mythic Shared' and tonumber(byKey.shared.spellIDs[1]) == 201, 'mythic catalog did not prefer mythic variant')
+  end
+        end)
+    end
+end
 
 local out = io.open('/tmp/runtime-scenarios.tsv', 'w')
 for fp in pairs(fingerprints) do out:write(fp, '\n') end

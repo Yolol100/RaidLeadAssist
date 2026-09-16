@@ -146,7 +146,7 @@ for path in runtime_lua:
 
 # Validate no persistent test/audit/CI residue in the final tree except this temporary audit branch.
 for path in sorted(p.as_posix() for p in ROOT.rglob('*') if p.is_file()):
-    if path.startswith('audit/') or path.startswith('.github/workflows/high-volume-audit.yml'):
+    if path.startswith('.git/') or path.startswith('audit/') or path.startswith('.github/workflows/high-volume-audit.yml') or path.startswith('.github/workflows/apply-audit-fixes.yml'):
         continue
     bad = any(part in path.lower() for part in ['/tests/', '/test/', '/audit/', '__pycache__', '.pytest_cache'])
     record('repo-hygiene', path, 'runtime-only-default-branch', 'persistent-test-residue', False, bad, not bad)
