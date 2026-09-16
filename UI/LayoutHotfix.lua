@@ -15,6 +15,27 @@ function UI:Initialize(database, callbacks)
     local frame = self.frame
     if not frame or not frame.AbilityDropdown or not frame.AdvancedButton then return end
 
+    local bossRow = frame.BossDropdown and frame.BossDropdown:GetParent() or nil
+    if bossRow then
+        bossRow:ClearAllPoints()
+        bossRow:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -43)
+        bossRow:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -15, -43)
+    end
+
+    local heroic = frame.DifficultyButtons and frame.DifficultyButtons.heroic or nil
+    local difficultyRow = heroic and heroic:GetParent() or nil
+    if difficultyRow then
+        difficultyRow:ClearAllPoints()
+        difficultyRow:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -76)
+        difficultyRow:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -15, -76)
+    end
+
+    if frame.Editor then
+        frame.Editor:ClearAllPoints()
+        frame.Editor:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -310)
+        frame.Editor:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -15, 42)
+    end
+
     local abilityRow = frame.AdvancedButton:GetParent()
     if not abilityRow then return end
     abilityRow:SetHeight(108)
