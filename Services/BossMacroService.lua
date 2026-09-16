@@ -267,21 +267,21 @@ function BossMacroService:GetAbilityOptions(bossId)
     for _, difficultyKey in ipairs(difficultyOrder) do
         local profile = Registry:GetProfile(boss.sourceEncounterKey, difficultyKey)
         for _, call in ipairs(profile and profile.calls or {}) do
-  if call and type(call.key) == "string" and not seen[call.key] then
-      seen[call.key] = true
-      local prepare, press = Constants.GetCallTiming(call, self.database.timingLead)
-      local spellIDs = copyArray(call.spellIDs)
-      result[#result + 1] = {
-sourceCallKey = call.key,
-name = call.ability or call.action or call.key,
-spellIDs = spellIDs,
-timerNames = copyArray(call.timerNames),
-iconSpellID = Util.ToNumericID(call.iconSpellID) or Util.ToNumericID(spellIDs[1]),
-timingEnabled = call.timing ~= false,
-prepareSeconds = prepare,
-pressSeconds = press,
-      }
-  end
+            if call and type(call.key) == "string" and not seen[call.key] then
+                seen[call.key] = true
+                local prepare, press = Constants.GetCallTiming(call, self.database.timingLead)
+                local spellIDs = copyArray(call.spellIDs)
+                result[#result + 1] = {
+                    sourceCallKey = call.key,
+                    name = call.ability or call.action or call.key,
+                    spellIDs = spellIDs,
+                    timerNames = copyArray(call.timerNames),
+                    iconSpellID = Util.ToNumericID(call.iconSpellID) or Util.ToNumericID(spellIDs[1]),
+                    timingEnabled = call.timing ~= false,
+                    prepareSeconds = prepare,
+                    pressSeconds = press,
+                }
+            end
         end
     end
     return result
