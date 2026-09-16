@@ -21,6 +21,7 @@ local spirit = {
 local intermission = {
     key = "intermission", ability = "Soulbinding", action = "Bloodlust; burn Zul'jan; stagger fragment stops",
     warning = "Intermission: Bloodlust, burn Zul'jan; stagger fragment stops.", voice = "Bloodlust", timing = false,
+    iconSpellID = 1304032,
 }
 local final = {
     key = "final", ability = "Coiled Union", action = "Keep health even; kill together",

@@ -174,6 +174,44 @@ local function addCallsFromProfile(service, boss, encounter, difficultyKey)
     end
 end
 
+local function reconcileCallsFromProfile(service, boss, encounter, difficultyKey)
+    local target = ensureDifficultyProfile(boss, difficultyKey)
+    local profile = Registry:GetProfile(encounter.key, difficultyKey)
+    if not profile or type(profile.calls) ~= "table" then return end
+
+    local callsByKey = type(profile.callsByKey) == "table" and profile.callsByKey or {}
+    local reconciled = {}
+    for _, macro in ipairs(target.macros) do
+        if type(macro) == "table" then
+            local sourceKey = type(macro.sourceCallKey) == "string" and macro.sourceCallKey or nil
+            if not sourceKey then
+                reconciled[#reconciled + 1] = macro
+            else
+                local call = callsByKey[sourceKey]
+                if call then
+                    macro.spellIDs = copyArray(call.spellIDs)
+                    macro.timerNames = copyArray(call.timerNames)
+                    local iconSpellID = Util.ToNumericID(call.iconSpellID) or Util.ToNumericID(macro.spellIDs[1])
+                    if macro.iconMode ~= "custom" then
+                        macro.iconSpellID = iconSpellID
+                        macro.iconMode = "ability"
+                        macro.customIcon = nil
+                    end
+                    macro.timingEnabled = call.timing ~= false
+                    local prepare, press = Constants.GetCallTiming(call, service.database.timingLead)
+                    macro.prepareSeconds = prepare
+                    macro.pressSeconds = press
+                    reconciled[#reconciled + 1] = macro
+                elseif tonumber(macro.id) then
+                    service.database.pendingMacroSync[tostring(macro.id)] = "delete"
+                end
+            end
+        end
+    end
+    target.macros = reconciled
+    addCallsFromProfile(service, boss, encounter, difficultyKey)
+end
+
 local function macroBelongsToDifficulty(encounterKey, macro, difficultyKey)
     if type(encounterKey) ~= "string" or type(macro) ~= "table" or type(macro.sourceCallKey) ~= "string" then
         return false
@@ -300,7 +338,7 @@ function BossMacroService:NormalizeStoredProfiles()
                 local encounter = Registry:Get(boss.sourceEncounterKey)
                 if encounter then
                     for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
-                        addCallsFromProfile(self, boss, encounter, difficultyKey)
+                        reconcileCallsFromProfile(self, boss, encounter, difficultyKey)
                     end
                 end
             end

@@ -61,13 +61,13 @@ local fireStaggerMythic = manualCall(
     "fire_stagger", "Burning Venoms",
     "Skull, wait, then Cross",
     "Fire adds: Skull, wait, then Cross.",
-    "Stagger fire adds"
+    "Stagger fire adds", 1305902
 )
 local siphonMythic = manualCall(
     "siphon", "Siphoning Infection",
     "Stack several in Blood circle",
     "Blood circle: several teammates stack for healing.",
-    "Stack blood circle"
+    "Stack blood circle", 1299941
 )
 local catalystMythic = timedCall(
     "catalyst", "Malignant Catalyst",
@@ -85,7 +85,7 @@ local killTumorsMythic = manualCall(
     "tumors", "Malignant Tumors",
     "Kill exposed Tumor",
     "Tumor exposed: switch and kill.",
-    "Kill tumors"
+    "Kill tumors", 1304437
 )
 
 Registry:Register({

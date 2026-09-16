@@ -71,7 +71,7 @@ local mythicCalls = {
     },
     {
         key = "tainted", ability = "Tainted Blood", action = "Heal every fount full",
-        warning = "Blood founts: heal every one to full.", voice = "Heal founts", timing = false,
+        warning = "Blood founts: heal every one to full.", voice = "Heal founts", timing = false, iconSpellID = 1310099,
     },
     {
         key = "bulwark", ability = "Blood Torrent / Barbed Bulwark", action = "Interrupt Protected Gestation",
