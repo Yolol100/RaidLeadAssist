@@ -5,7 +5,7 @@ local IconPicker = {
     provider = nil,
     selectedIcon = 134400,
     offset = 1,
-    pageSize = 80,
+    pageSize = 70,
     buttons = {},
     callback = nil,
     cancelCallback = nil,
@@ -204,7 +204,7 @@ function IconPicker:Initialize()
     gridBackground:EnableMouseWheel(true)
     gridBackground:SetScript("OnMouseWheel", function(_, delta) self:Scroll(delta) end)
 
-    local columns, rows = 10, 8
+    local columns, rows = 10, 7
     self.pageSize = columns * rows
     for index = 1, self.pageSize do
         local button = CreateFrame("Button", nil, gridBackground)
