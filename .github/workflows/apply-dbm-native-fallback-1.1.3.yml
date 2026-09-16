@@ -3,7 +3,7 @@ name: Apply DBM native fallback 1.1.3
 on:
   push:
     branches:
-      - disabled/dbm-native-fallback-1.1.3
+      - fix/dbm-native-fallback-1.1.3
 
 permissions:
   contents: write
