@@ -111,11 +111,34 @@ local function normalizeBossMacroStorage(data)
 
     local nextBossId = tonumber(data.nextBossId)
     if not nextBossId or nextBossId < 1 or nextBossId ~= math.floor(nextBossId) then nextBossId = 1 end
-    data.nextBossId = nextBossId
 
     local nextMacroId = tonumber(data.nextMacroId)
     if not nextMacroId or nextMacroId < 1 or nextMacroId ~= math.floor(nextMacroId) then nextMacroId = 1 end
-    data.nextMacroId = nextMacroId
+
+    -- Saved counters are hints, not authority. A partial restore, downgrade or
+    -- hand-edited SavedVariables file can leave them behind existing records.
+    -- Reconcile them with durable IDs before anything allocates a new boss/macro.
+    local highestBossSerial = 0
+    local highestMacroId = 0
+    for bossKey, boss in pairs(data.bossProfiles) do
+        local id = type(boss) == "table" and boss.id or bossKey
+        if type(id) == "string" then
+            local serial = tonumber(id:match("^custom:(%d+)$"))
+            if serial and serial > highestBossSerial then highestBossSerial = serial end
+        end
+
+        if type(boss) == "table" and type(boss.macros) == "table" then
+            for _, macro in ipairs(boss.macros) do
+                local macroId = type(macro) == "table" and tonumber(macro.id) or nil
+                if macroId and macroId > highestMacroId and macroId == math.floor(macroId) then
+                    highestMacroId = macroId
+                end
+            end
+        end
+    end
+
+    data.nextBossId = math.max(nextBossId, highestBossSerial + 1)
+    data.nextMacroId = math.max(nextMacroId, highestMacroId + 1)
 
     if data.selectedBossId ~= nil and type(data.selectedBossId) ~= "string" then
         data.selectedBossId = nil
