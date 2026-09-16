@@ -32,10 +32,12 @@ jobs:
           test ! -e .github/workflows/apply-ui-fidelity-1.1.5.yml
           test ! -e .github/workflows/apply-ui-layout-timing-1.1.6.yml
           grep -q '^## Interface: 120100$' RaidLeadAssist.toc
-          grep -q '^## Version: 1.1.9$' RaidLeadAssist.toc
+          grep -q '^## Version: 1.1.10$' RaidLeadAssist.toc
           grep -q '^Services/TestModeService.lua$' RaidLeadAssist.toc
           grep -q '^Services/MigrationPolishService.lua$' RaidLeadAssist.toc
+          grep -q '^Services/TacticsMacroService.lua$' RaidLeadAssist.toc
           grep -q '^UI/RaidLeaderPolish.lua$' RaidLeadAssist.toc
+          grep -q '^UI/LayoutHotfix.lua$' RaidLeadAssist.toc
           grep -q 'Boss Tactics' UI/BossMacroManager.lua
           grep -q 'selectedDifficultyKey' Services/BossMacroService.lua
           grep -q 'ButtonFrameTemplate_HidePortrait' UI/BossMacroManager.lua
@@ -65,13 +67,12 @@ jobs:
           grep -q 'function Timeline:StopTest' Services/TestModeService.lua
           grep -q 'Stop Test' UI/RaidLeaderPolish.lua
           grep -q '\[RLA Preview\]' UI/RaidLeaderPolish.lua
-          grep -q 'UIDropDownMenu_SetWidth(frame.AbilityDropdown, 184)' UI/RaidLeaderPolish.lua
-          grep -q 'advanced:SetPoint("TOPLEFT", abilityRow, "TOPLEFT", 88, -52)' UI/RaidLeaderPolish.lua
-          grep -q 'exitButton:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -8, 16)' UI/RaidLeaderPolish.lua
-          grep -q 'frame.Inset:SetPoint("TOPLEFT", frame, "TOPLEFT", 5, -31)' UI/RaidLeaderPolish.lua
-          grep -q 'INV_Misc_Note_01' UI/RaidLeaderPolish.lua
-          grep -q 'looksLikeLegacyCapsWarning' Services/MigrationPolishService.lua
-          ! grep -q 'FEAST 1 — {{feast_heroic_a}} SOAK' Encounters/VenomousAbyss/TwinFangs.lua
+          grep -q 'frame.AbilityDropdown:SetPoint("TOPLEFT", abilityRow, "TOPLEFT", 72, 5)' UI/LayoutHotfix.lua
+          grep -q 'frame.AdvancedButton:SetPoint("TOPLEFT", abilityRow, "TOPLEFT", 88, -48)' UI/LayoutHotfix.lua
+          grep -q 'hint:Hide()' UI/LayoutHotfix.lua
+          grep -q 'systemRole = ROLE' Services/TacticsMacroService.lua
+          grep -q 'name = "Pull Tactics"' Services/TacticsMacroService.lua
+          grep -q 'BODY_LIMIT = 228' Services/TacticsMacroService.lua
           python3 - <<'PY'
           from pathlib import Path
           import re
