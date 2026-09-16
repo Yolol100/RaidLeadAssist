@@ -85,6 +85,10 @@ function ManagedMacroService:GetManagedOverhead(macroId)
     return 1 + #markerLine(macroId)
 end
 
+function ManagedMacroService:GetMacroBodyMax()
+    return macroBodyMax()
+end
+
 function ManagedMacroService:ValidateMacro(macro)
     if type(macro) ~= "table" or not tonumber(macro.id) then return false, "Invalid Raid Lead Assist macro." end
     local body = managedBody(macro)

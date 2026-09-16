@@ -63,6 +63,15 @@ local function maxBossOrder(database)
     return highest
 end
 
+local function registryCallForKey(encounterKey, callKey)
+    if type(encounterKey) ~= "string" or type(callKey) ~= "string" then return nil end
+    for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
+        local profile = Registry:GetProfile(encounterKey, difficultyKey)
+        local call = profile and profile.callsByKey and profile.callsByKey[callKey] or nil
+        if call then return call end
+    end
+end
+
 local function macroFromCall(service, encounter, difficultyKey, call)
     local warning = customWarning(service.database, encounter.key, difficultyKey, call.key) or call.warning or call.action or call.ability
     local prepare, press = Constants.GetCallTiming(call, service.database.timingLead)
@@ -126,8 +135,17 @@ function BossMacroService:NormalizeStoredProfiles()
                 if type(macro) == "table" then
                     macro.spellIDs = type(macro.spellIDs) == "table" and macro.spellIDs or {}
                     macro.timerNames = type(macro.timerNames) == "table" and macro.timerNames or {}
-                    if not macro.iconSpellID then macro.iconSpellID = Util.ToNumericID(macro.spellIDs[1]) end
+                    if not macro.iconSpellID then
+                        local call = registryCallForKey(boss.sourceEncounterKey, macro.sourceCallKey)
+                        macro.iconSpellID = Util.ToNumericID(call and call.iconSpellID) or Util.ToNumericID(macro.spellIDs[1])
+                    end
                     if macro.iconMode ~= "custom" then macro.iconMode = "ability" end
+                    local prepare, press = Constants.GetCallTiming({
+                        prepareSeconds = macro.prepareSeconds,
+                        pressSeconds = macro.pressSeconds,
+                    }, self.database.timingLead)
+                    macro.prepareSeconds = prepare
+                    macro.pressSeconds = press
                 end
             end
         end
@@ -301,8 +319,13 @@ function BossMacroService:UpdateMacro(bossId, macroId, draft)
     if normalizedIcon then macro.customIcon = normalizedIcon end
     macro.iconSpellID = Util.ToNumericID(draft.iconSpellID) or macro.iconSpellID
     macro.timingEnabled = draft.timingEnabled == true
-    macro.prepareSeconds = tonumber(draft.prepareSeconds) or macro.prepareSeconds or Constants.PREPARE_SECONDS
-    macro.pressSeconds = tonumber(draft.pressSeconds) or macro.pressSeconds or Constants.PRESS_SECONDS
+
+    local prepare, press = Constants.GetCallTiming({
+        prepareSeconds = tonumber(draft.prepareSeconds),
+        pressSeconds = tonumber(draft.pressSeconds),
+    }, self.database.timingLead)
+    macro.prepareSeconds = prepare
+    macro.pressSeconds = press
 
     if type(draft.spellIDs) == "table" then
         macro.spellIDs = copyArray(draft.spellIDs)
@@ -377,6 +400,14 @@ end
 
 function BossMacroService:GetBestTimer(boss, macro, timeline)
     if not macro or macro.timingEnabled ~= true or not timeline then return nil end
+
+    if macro.sourceCallKey and type(timeline.GetActionableTimerForCall) == "function" then
+        local timer, remaining = timeline:GetActionableTimerForCall(macro.sourceCallKey)
+        if timer and type(remaining) == "number" and self:TimerMatchesMacro(boss, macro, timer) then
+            return timer, remaining
+        end
+    end
+
     local best, bestRemaining
     for _, timer in pairs(timeline.timers or {}) do
         if timer.acknowledged ~= true and timeline:IsActionable(timer) and self:TimerMatchesMacro(boss, macro, timer) then
@@ -414,14 +445,20 @@ end
 function BossMacroService:AcknowledgeMacro(macroId, timeline)
     local macro, boss = self:FindMacroById(macroId)
     if not macro or not boss or not timeline then return false end
-    if macro.sourceCallKey and type(timeline.AcknowledgeCall) == "function" then
-        timeline:AcknowledgeCall(macro.sourceCallKey)
+
+    if macro.sourceCallKey and type(timeline.AcknowledgeCall) == "function"
+        and timeline:AcknowledgeCall(macro.sourceCallKey) then
         return true
     end
+
+    local changed = false
     for _, timer in pairs(timeline.timers or {}) do
-        if self:TimerMatchesMacro(boss, macro, timer) then timer.acknowledged = true end
+        if timer.acknowledged ~= true and self:TimerMatchesMacro(boss, macro, timer) then
+            timer.acknowledged = true
+            changed = true
+        end
     end
-    return true
+    return changed
 end
 
 ns:RegisterModule("Services.BossMacroService", BossMacroService)

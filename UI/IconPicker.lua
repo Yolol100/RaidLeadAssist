@@ -7,6 +7,9 @@ local IconPicker = {
     offset = 1,
     pageSize = 80,
     buttons = {},
+    callback = nil,
+    cancelCallback = nil,
+    accepted = false,
 }
 
 local FILTERS = {
@@ -89,9 +92,11 @@ function IconPicker:Scroll(delta)
     self:RefreshGrid()
 end
 
-function IconPicker:Open(anchorFrame, name, icon, callback)
+function IconPicker:Open(anchorFrame, name, icon, callback, cancelCallback)
     self:Initialize()
     self.callback = callback
+    self.cancelCallback = cancelCallback
+    self.accepted = false
     self.selectedIcon = icon or 134400
     self.frame.NameEdit:SetText(name or "")
     self.frame.NameEdit:HighlightText()
@@ -239,6 +244,7 @@ function IconPicker:Initialize()
         local callback = self.callback
         local pickedName = frame.NameEdit:GetText() or ""
         local pickedIcon = self.selectedIcon
+        self.accepted = true
         self:Close()
         if callback then callback(pickedName, pickedIcon) end
     end)
@@ -250,8 +256,12 @@ function IconPicker:Initialize()
     cancel:SetScript("OnClick", function() self:Close() end)
 
     frame:SetScript("OnHide", function()
+        local cancelCallback = not self.accepted and self.cancelCallback or nil
         releaseProvider(self)
         self.callback = nil
+        self.cancelCallback = nil
+        self.accepted = false
+        if cancelCallback then cancelCallback() end
     end)
 
     self.frame = frame

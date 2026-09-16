@@ -109,6 +109,11 @@ function BossMacroManager:GetSelectedMacro()
     return macro
 end
 
+function BossMacroManager:GetMacroLimit()
+    local value = self.callbacks and self.callbacks.getMacroMaxLength and self.callbacks.getMacroMaxLength() or nil
+    return tonumber(value) or 255
+end
+
 function BossMacroManager:RefreshBossDropdown()
     if not self.frame then return end
     local dropdown = self.frame.BossDropdown
@@ -225,8 +230,9 @@ function BossMacroManager:UpdateCharacterCount()
     local body = self.frame.BodyEdit:GetText() or ""
     local overhead = self.callbacks and self.callbacks.getManagedOverhead and self.callbacks.getManagedOverhead(self.selectedMacroId) or 0
     local total = #body + (tonumber(overhead) or 0)
-    self.frame.CharCount:SetFormattedText("%d/255 Characters Used", total)
-    if total > 255 then
+    local maxLength = self:GetMacroLimit()
+    self.frame.CharCount:SetFormattedText("%d/%d Characters Used", total, maxLength)
+    if total > maxLength then
         self.frame.CharCount:SetTextColor(1, 0.15, 0.10, 1)
     else
         self.frame.CharCount:SetTextColor(1, 1, 1, 1)
@@ -304,6 +310,15 @@ function BossMacroManager:SaveSelected()
     if not macro or not boss or not self.draft then return end
 
     self.draft.body = self.frame.BodyEdit:GetText() or ""
+    local overhead = self.callbacks and self.callbacks.getManagedOverhead and self.callbacks.getManagedOverhead(macro.id) or 0
+    local total = #self.draft.body + (tonumber(overhead) or 0)
+    local maxLength = self:GetMacroLimit()
+    if total > maxLength then
+        ns:Print(("Macro is %d characters including the Raid Lead Assist timer marker; maximum is %d."):format(total, maxLength))
+        self:UpdateCharacterCount()
+        return
+    end
+
     local ok, result = BossMacros:UpdateMacro(boss.id, macro.id, self.draft)
     if not ok then
         ns:Print(result or "Could not save macro.")
@@ -419,12 +434,36 @@ end
 function BossMacroManager:CreateNewMacro()
     local boss = self:GetBoss()
     if not boss then return end
+    local previousMacroId = self.selectedMacroId
     local macro, err = BossMacros:CreateMacro(boss.id)
     if not macro then ns:Print(err or "Could not create macro.") return end
+
     self.selectedMacroId = macro.id
     self:RefreshMacroGrid()
     self:PopulateEditor(macro)
-    self:OpenIconPicker()
+
+    IconPicker:Open(self.frame, macro.name, BossMacros:GetIcon(macro), function(name, icon)
+        if not self.draft or self.selectedMacroId ~= macro.id then return end
+        self.draft.name = trim(name):sub(1, 16)
+        self.draft.iconMode = "custom"
+        self.draft.customIcon = icon
+        local ok, updated = BossMacros:UpdateMacro(boss.id, macro.id, self.draft)
+        if not ok then
+            ns:Print(updated or "Could not create macro.")
+            return
+        end
+        self:RefreshMacroGrid()
+        self:PopulateEditor(updated)
+    end, function()
+        BossMacros:DeleteMacro(boss.id, macro.id)
+        self.selectedMacroId = previousMacroId
+        if not self:GetSelectedMacro() then
+            local macros = BossMacros:GetMacros(boss.id)
+            self.selectedMacroId = macros[1] and macros[1].id or nil
+        end
+        self:RefreshMacroGrid()
+        self:PopulateEditor(self:GetSelectedMacro())
+    end)
 end
 
 function BossMacroManager:DeleteSelectedMacro()
@@ -721,6 +760,11 @@ function BossMacroManager:Initialize(database, callbacks)
     exitButton:SetScript("OnClick", function() frame:Hide() end)
 
     self.frame = frame
+    frame:HookScript("OnHide", function()
+        if self.advancedFrame then self.advancedFrame:Hide() end
+        IconPicker:Close()
+    end)
+
     local initial = database.selectedBossId or (BossMacros:GetBossesOrdered()[1] and BossMacros:GetBossesOrdered()[1].id)
     if initial then self:SelectBoss(initial, false) else self:PopulateEditor(nil) end
 end
@@ -729,6 +773,7 @@ function BossMacroManager:Show()
     if self.frame then
         self:RefreshBossDropdown()
         self:RefreshMacroGrid()
+        self:PopulateEditor(self:GetSelectedMacro())
         self.frame:Show()
     end
 end
