@@ -1,0 +1,222 @@
+name: apply-audit-fixes
+
+on:
+  push:
+    branches:
+      - audit/high-volume-2026-09-16
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: ${{ !contains(github.event.head_commit.message, '[audit-fix]') }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply confirmed audit fixes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          boss_path = Path('Services/BossMacroService.lua')
+          boss = boss_path.read_text(encoding='utf-8')
+          boss_needle = '''function BossMacroService:GetMacros(bossId)
+              local boss = self:GetBoss(bossId)
+              if not boss then return {} end
+              if type(boss.macros) ~= "table" then boss.macros = {} end
+              return boss.macros
+          end
+
+          '''.replace('          ', '')
+          boss_insert = boss_needle + '''function BossMacroService:GetAbilityOptions(bossId)
+              local boss = self:GetBoss(bossId)
+              if not boss or type(boss.sourceEncounterKey) ~= "string" then return {} end
+
+              local difficultyOrder = {}
+              local preferred = self.database and self.database.selectedDifficultyKey or nil
+              if preferred and Constants.DIFFICULTIES[preferred] then
+                  difficultyOrder[#difficultyOrder + 1] = preferred
+              end
+              for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
+                  if difficultyKey ~= preferred then difficultyOrder[#difficultyOrder + 1] = difficultyKey end
+              end
+
+              local result, seen = {}, {}
+              for _, difficultyKey in ipairs(difficultyOrder) do
+                  local profile = Registry:GetProfile(boss.sourceEncounterKey, difficultyKey)
+                  for _, call in ipairs(profile and profile.calls or {}) do
+                      if call and type(call.key) == "string" and not seen[call.key] then
+                          seen[call.key] = true
+                          local prepare, press = Constants.GetCallTiming(call, self.database.timingLead)
+                          local spellIDs = copyArray(call.spellIDs)
+                          result[#result + 1] = {
+                              sourceCallKey = call.key,
+                              name = call.ability or call.action or call.key,
+                              spellIDs = spellIDs,
+                              timerNames = copyArray(call.timerNames),
+                              iconSpellID = Util.ToNumericID(call.iconSpellID) or Util.ToNumericID(spellIDs[1]),
+                              timingEnabled = call.timing ~= false,
+                              prepareSeconds = prepare,
+                              pressSeconds = press,
+                          }
+                      end
+                  end
+              end
+              return result
+          end
+
+          '''.replace('          ', '')
+          assert boss_needle in boss, 'BossMacroService insertion point not found'
+          boss = boss.replace(boss_needle, boss_insert, 1)
+          boss_path.write_text(boss, encoding='utf-8')
+
+          ui_path = Path('UI/BossMacroManager.lua')
+          ui = ui_path.read_text(encoding='utf-8')
+          start = ui.index('function BossMacroManager:RefreshAbilityDropdownText()')
+          end = ui.index('function BossMacroManager:UpdateCharacterCount()', start)
+          replacement = '''function BossMacroManager:RefreshAbilityDropdownText()
+              if not self.frame then return end
+              local boss = self:GetBoss()
+              local label = "Manual / unlinked"
+              if boss and self.draft and self.draft.sourceCallKey then
+                  for _, ability in ipairs(BossMacros:GetAbilityOptions(boss.id)) do
+                      if ability.sourceCallKey == self.draft.sourceCallKey then
+                          label = ability.name
+                          break
+                      end
+                  end
+              end
+              UIDropDownMenu_SetText(self.frame.AbilityDropdown, label)
+          end
+
+          function BossMacroManager:SetAbilityDraftFromAbility(ability)
+              if not self.draft or not ability then return end
+              self.draft.sourceCallKey = ability.sourceCallKey
+              self.draft.spellIDs = copyArray(ability.spellIDs)
+              self.draft.timerNames = copyArray(ability.timerNames)
+              self.draft.iconSpellID = ability.iconSpellID
+              self.draft.timingEnabled = ability.timingEnabled == true
+              self.draft.prepareSeconds = ability.prepareSeconds
+              self.draft.pressSeconds = ability.pressSeconds
+              self.draft.iconMode = "ability"
+              self:RefreshAbilityDropdownText()
+              self.frame.SelectedIcon:SetTexture(BossMacros:GetIcon(self.draft))
+          end
+
+          function BossMacroManager:RefreshAbilityDropdown()
+              if not self.frame then return end
+              local dropdown = self.frame.AbilityDropdown
+              UIDropDownMenu_Initialize(dropdown, function(_, level)
+                  if level ~= 1 then return end
+
+                  local manual = UIDropDownMenu_CreateInfo()
+                  manual.text = "Manual / unlinked"
+                  manual.checked = self.draft and not self.draft.sourceCallKey
+                  manual.func = function()
+                      if not self.draft then return end
+                      local currentIcon = BossMacros:GetIcon(self.draft)
+                      self.draft.sourceCallKey = nil
+                      self.draft.spellIDs = {}
+                      self.draft.timerNames = {}
+                      self.draft.iconSpellID = nil
+                      self.draft.timingEnabled = false
+                      if self.draft.iconMode == "ability" then
+                          self.draft.iconMode = "custom"
+                          self.draft.customIcon = currentIcon
+                      end
+                      self:RefreshAbilityDropdownText()
+                      self.frame.SelectedIcon:SetTexture(BossMacros:GetIcon(self.draft))
+                  end
+                  UIDropDownMenu_AddButton(manual, level)
+
+                  local boss = self:GetBoss()
+                  for _, ability in ipairs(boss and BossMacros:GetAbilityOptions(boss.id) or {}) do
+                      local info = UIDropDownMenu_CreateInfo()
+                      info.text = ability.name
+                      info.icon = BossMacros:GetIcon(ability)
+                      info.checked = self.draft and self.draft.sourceCallKey == ability.sourceCallKey
+                      info.func = function() self:SetAbilityDraftFromAbility(ability) end
+                      UIDropDownMenu_AddButton(info, level)
+                  end
+              end)
+              self:RefreshAbilityDropdownText()
+          end
+
+          '''.replace('          ', '')
+          ui = ui[:start] + replacement + ui[end:]
+          ui_path.write_text(ui, encoding='utf-8')
+
+          source_path = Path('audit/high_volume_source.py')
+          source = source_path.read_text(encoding='utf-8')
+          old = "    if path.startswith('audit/') or path.startswith('.github/workflows/high-volume-audit.yml'):\n        continue\n"
+          new = "    if path.startswith('.git/') or path.startswith('audit/') or path.startswith('.github/workflows/high-volume-audit.yml') or path.startswith('.github/workflows/apply-audit-fixes.yml'):\n        continue\n"
+          assert old in source, 'source-audit hygiene fixture not found'
+          source_path.write_text(source.replace(old, new, 1), encoding='utf-8')
+
+          runtime_path = Path('audit/high_volume_runtime.lua')
+          runtime = runtime_path.read_text(encoding='utf-8')
+          old_runtime = '''-- 6) Ability catalog independence is a functional requirement: boss abilities must survive macro deletion.
+          record('ability-catalog', 'Services.BossMacroService', 'macro-list-empty', 'GetAbilityOptions', 'registry-backed-options-remain', function()
+              assert(type(BossMacros.GetAbilityOptions) == 'function', 'BossMacroService has no independent ability catalog')
+          end)
+
+          '''.replace('          ', '')
+          new_runtime = '''-- 6) Ability catalog independence: registry-backed choices survive macro CRUD and prefer the active difficulty variant.
+          local abilityProfiles = {
+              heroic = { calls = {
+                  {key='shared', ability='Heroic Shared', spellIDs={101}, prepareSeconds=7, pressSeconds=4},
+                  {key='heroic_only', ability='Heroic Only', spellIDs={102}, timing=false},
+              } },
+              mythic = { calls = {
+                  {key='shared', ability='Mythic Shared', spellIDs={201}, prepareSeconds=8, pressSeconds=5},
+                  {key='mythic_only', ability='Mythic Only', spellIDs={202}, timing=false},
+              } },
+          }
+          Registry.GetProfile = function(_, encounterKey, difficultyKey)
+              if encounterKey ~= 'catalogboss' then return nil end
+              return abilityProfiles[difficultyKey]
+          end
+          local macroStates = {
+              {label='empty', macros={}},
+              {label='unrelated', macros={{id=8,name='Custom',body='/rw Custom',sourceCallKey=nil}}},
+              {label='after-delete', macros={}},
+          }
+          for _, difficulty in ipairs({'heroic','mythic'}) do
+              for _, macroState in ipairs(macroStates) do
+                  record('ability-catalog', 'Services.BossMacroService', {difficulty=difficulty,macroState=macroState.label}, 'GetAbilityOptions', 'registry-backed-options-remain', function()
+                      assert(type(BossMacros.GetAbilityOptions) == 'function', 'BossMacroService has no independent ability catalog')
+                      BossMacros.database = {
+                          selectedDifficultyKey=difficulty,
+                          timingLead={prepare=5,press=3},
+                          bossProfiles={ ['encounter:catalogboss']={id='encounter:catalogboss',sourceEncounterKey='catalogboss',macros=macroState.macros} },
+                      }
+                      local options = BossMacros:GetAbilityOptions('encounter:catalogboss')
+                      assert(#options == 3, 'ability catalog lost registry calls after macro CRUD')
+                      local byKey = {}
+                      for _, option in ipairs(options) do byKey[option.sourceCallKey] = option end
+                      assert(byKey.heroic_only and byKey.mythic_only and byKey.shared, 'missing catalog key')
+                      if difficulty == 'heroic' then
+                          assert(byKey.shared.name == 'Heroic Shared' and tonumber(byKey.shared.spellIDs[1]) == 101, 'heroic catalog did not prefer heroic variant')
+                      else
+                          assert(byKey.shared.name == 'Mythic Shared' and tonumber(byKey.shared.spellIDs[1]) == 201, 'mythic catalog did not prefer mythic variant')
+                      end
+                  end)
+              end
+          end
+
+          '''.replace('          ', '')
+          assert old_runtime in runtime, 'runtime ability-catalog fixture not found'
+          runtime_path.write_text(runtime.replace(old_runtime, new_runtime, 1), encoding='utf-8')
+          PY
+
+          git config user.name "RaidLeadAssist Audit"
+          git config user.email "actions@users.noreply.github.com"
+          git add Services/BossMacroService.lua UI/BossMacroManager.lua audit/high_volume_source.py audit/high_volume_runtime.lua
+          git commit -m "Fix independent boss ability catalog [audit-fix]"
+          git push origin HEAD:audit/high-volume-2026-09-16
