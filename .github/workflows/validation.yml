@@ -25,7 +25,9 @@ jobs:
           test ! -e .github/workflows/apply-ui-polish-1.1.1.yml
           test ! -e .github/workflows/apply-macro-audit-1.1.2.yml
           test ! -e .github/scripts/apply_macro_audit_112.py
-          grep -q '^## Version: 1.1.2$' RaidLeadAssist.toc
+          test ! -e .github/workflows/apply-dbm-native-fallback-1.1.3.yml
+          test ! -e .github/scripts/apply_dbm_native_fallback_113.py
+          grep -q '^## Version: 1.1.3$' RaidLeadAssist.toc
           grep -q 'Boss Tactics' UI/BossMacroManager.lua
           grep -q 'selectedDifficultyKey' Services/BossMacroService.lua
           grep -q 'ButtonFrameTemplate_HidePortrait' UI/BossMacroManager.lua
@@ -34,6 +36,9 @@ jobs:
           grep -q 'Soak Raid -> Tank -> Tank' Encounters/VenomousAbyss/Sszorak.lua
           grep -q '1305902' Encounters/VenomousAbyss/Vashnik.lua
           grep -q 'iconSpellID = 1310099' Encounters/VenomousAbyss/TwinFangs.lua
+          grep -q 'HasActionableDirectBossmodTimerForCall' Services/TimelineService.lua
+          grep -q 'and self:IsActionable(timer)' Services/TimelineService.lua
+          grep -q 'matching Blizzard-native event remains the authoritative fallback' Services/TimelineService.lua
           python3 - <<'PY'
           from pathlib import Path
           toc = Path('RaidLeadAssist.toc').read_text(encoding='utf-8').splitlines()
