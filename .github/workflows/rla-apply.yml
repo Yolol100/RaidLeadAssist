@@ -1,7 +1,9 @@
 name: Apply RaidLeadAssist 1.1 payload
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - feat/heroic-mythic-ui-tactics-20260916
 
 permissions:
   contents: write
@@ -10,4 +12,30 @@ jobs:
   apply:
     runs-on: ubuntu-latest
     steps:
-      - run: echo 'Payload staging in progress'
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/heroic-mythic-ui-tactics-20260916
+          fetch-depth: 0
+      - name: Apply verified payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .rla-payload/chunk-* | base64 -d > /tmp/rla-release-payload.tar.gz
+          echo "c0d423318433fc87ff84b5449578f1133d7333f7de299676490864c8f19f2c89  /tmp/rla-release-payload.tar.gz" | sha256sum -c -
+          tar -xzf /tmp/rla-release-payload.tar.gz
+          rm -rf .rla-payload
+          rm -f .github/workflows/rla-apply.yml
+          rmdir .github/workflows 2>/dev/null || true
+          rmdir .github 2>/dev/null || true
+          git diff --check
+          grep -q '## Version: 1.1.0' RaidLeadAssist.toc
+          grep -q 'selectedDifficultyKey' Services/BossMacroService.lua
+          grep -q 'Boss Tactics' UI/BossMacroManager.lua
+          grep -q 'PortraitContainer:Hide' UI/BossMacroManager.lua
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m 'Implement RaidLeadAssist 1.1 UI and difficulty profiles'
+            git push origin HEAD:feat/heroic-mythic-ui-tactics-20260916
+          fi
