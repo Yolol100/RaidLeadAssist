@@ -33,8 +33,8 @@ end
 
 local function shortName(name)
     name = tostring(name or "")
-    if #name <= 10 then return name end
-    return name:sub(1, 9) .. "…"
+    if #name <= 7 then return name end
+    return name:sub(1, 6) .. "…"
 end
 
 local function validDifficulty(key)
@@ -124,12 +124,27 @@ local function removePortrait(frame)
     hideRegion(frame.PortraitContainer)
     hideRegion(frame.portrait)
     hideRegion(frame.Portrait)
-    if frame.PortraitContainer and frame.PortraitContainer.portrait then
+    if frame.PortraitContainer then
         hideRegion(frame.PortraitContainer.portrait)
+        hideRegion(frame.PortraitContainer.CircleMask)
     end
-    if frame.TitleText then
-        frame.TitleText:ClearAllPoints()
-        frame.TitleText:SetPoint("TOP", frame, "TOP", 0, -6)
+
+    -- Modern Blizzard ButtonFrameTemplate owns the title through TitleContainer.
+    -- Keep the template's TitleText anchors intact and move the container to the
+    -- same no-portrait margins Blizzard uses instead of pinning text to the frame.
+    if frame.TitleContainer then
+        frame.TitleContainer:ClearAllPoints()
+        frame.TitleContainer:SetPoint("TOPLEFT", frame, "TOPLEFT", 30, -1)
+        frame.TitleContainer:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -24, -1)
+    end
+end
+
+local function setFrameTitle(frame, text)
+    if not frame then return end
+    if type(frame.SetTitle) == "function" then
+        frame:SetTitle(text)
+    elseif frame.TitleText then
+        frame.TitleText:SetText(text)
     end
 end
 
@@ -483,7 +498,7 @@ function BossMacroManager:InitializeAdvancedFrame()
     frame:SetFrameStrata("DIALOG")
     frame:SetClampedToScreen(true)
     frame:Hide()
-    if frame.TitleText then frame.TitleText:SetText("Advanced Timer Matching") end
+    setFrameTitle(frame, "Advanced Timer Matching")
     removePortrait(frame)
 
     local spellLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -572,24 +587,26 @@ function BossMacroManager:InitializeTacticsFrame()
     frame:SetFrameStrata("DIALOG")
     frame:SetClampedToScreen(true)
     frame:Hide()
-    if frame.TitleText then frame.TitleText:SetText("Raid Leader Tactics") end
+    setFrameTitle(frame, "Boss Tactics")
     removePortrait(frame)
 
+    local contentAnchor = frame.Inset or frame
+
     local context = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    context:SetPoint("TOPLEFT", 18, -54)
-    context:SetPoint("TOPRIGHT", -18, -54)
+    context:SetPoint("TOPLEFT", contentAnchor, "TOPLEFT", 14, -12)
+    context:SetPoint("TOPRIGHT", contentAnchor, "TOPRIGHT", -14, -12)
     context:SetJustifyH("LEFT")
     frame.Context = context
 
     local hint = frame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-    hint:SetPoint("TOPLEFT", context, "BOTTOMLEFT", 0, -6)
-    hint:SetPoint("TOPRIGHT", context, "BOTTOMRIGHT", 0, -6)
+    hint:SetPoint("TOPLEFT", context, "BOTTOMLEFT", 0, -5)
+    hint:SetPoint("TOPRIGHT", context, "BOTTOMRIGHT", 0, -5)
     hint:SetJustifyH("LEFT")
     hint:SetText("Use this for mechanics, assignments, interrupts, dispels, defensives, movement and raid-leader callouts.")
 
     local background = CreateFrame("Frame", nil, frame, "TooltipBackdropTemplate")
-    background:SetPoint("TOPLEFT", 18, -100)
-    background:SetPoint("BOTTOMRIGHT", -18, 52)
+    background:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, -8)
+    background:SetPoint("BOTTOMRIGHT", contentAnchor, "BOTTOMRIGHT", -14, 14)
 
     local scroll = CreateFrame("ScrollFrame", nil, background, "UIPanelScrollFrameTemplate")
     scroll:SetPoint("TOPLEFT", 8, -8)
@@ -803,7 +820,7 @@ function BossMacroManager:Initialize(database, callbacks)
         database.position = { point = point, relativePoint = relativePoint, x = x, y = y }
     end)
     frame:Hide()
-    if frame.TitleText then frame.TitleText:SetText("Raid Lead Assist — Boss Macros") end
+    setFrameTitle(frame, "Raid Lead Assist — Boss Macros")
     removePortrait(frame)
 
     local bossLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
@@ -882,10 +899,10 @@ function BossMacroManager:Initialize(database, callbacks)
     self.macroPageSize = columns * rows
     for index = 1, self.macroPageSize do
         local button = CreateFrame("Button", nil, grid)
-        button:SetSize(44, 44)
+        button:SetSize(40, 40)
         local col = (index - 1) % columns
         local row = math.floor((index - 1) / columns)
-        button:SetPoint("TOPLEFT", 20 + (col * 62), -10 - (row * 50))
+        button:SetPoint("TOPLEFT", 18 + (col * 64), -8 - (row * 54))
         button:SetNormalTexture("Interface\\Buttons\\UI-Quickslot2")
         button:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
         button:RegisterForDrag("LeftButton")
@@ -902,13 +919,13 @@ function BossMacroManager:Initialize(database, callbacks)
         selected:SetBlendMode("ADD")
         selected:SetVertexColor(1, 0.78, 0.08, 1)
         selected:SetPoint("CENTER", 0, 0)
-        selected:SetSize(56, 56)
+        selected:SetSize(50, 50)
         selected:Hide()
         button.Selected = selected
 
         local name = button:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmallOutline")
-        name:SetPoint("BOTTOM", 0, 2)
-        name:SetWidth(58)
+        name:SetPoint("TOP", button, "BOTTOM", 0, -1)
+        name:SetWidth(54)
         name:SetWordWrap(false)
         name:SetJustifyH("CENTER")
         button.Name = name
@@ -1002,25 +1019,32 @@ function BossMacroManager:Initialize(database, callbacks)
     cancelButton:SetText(CANCEL or "Cancel")
     cancelButton:SetScript("OnClick", function() self:PopulateEditor(self:GetSelectedMacro()) end)
 
-    local abilityLabel = editor:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    abilityLabel:SetPoint("TOPLEFT", 8, -74)
+    local abilityRow = CreateFrame("Frame", nil, editor)
+    abilityRow:SetPoint("TOPLEFT", 0, -70)
+    abilityRow:SetPoint("TOPRIGHT", 0, -70)
+    abilityRow:SetHeight(32)
+
+    local abilityLabel = abilityRow:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    abilityLabel:SetPoint("LEFT", abilityRow, "LEFT", 8, 0)
+    abilityLabel:SetWidth(74)
+    abilityLabel:SetJustifyH("LEFT")
     abilityLabel:SetText("Boss Ability:")
 
-    local abilityDropdown = CreateFrame("Frame", "RaidLeadAssistAbilityDropdown", editor, "UIDropDownMenuTemplate")
-    abilityDropdown:SetPoint("TOPLEFT", abilityLabel, "BOTTOMLEFT", -18, 6)
-    UIDropDownMenu_SetWidth(abilityDropdown, 210)
+    local abilityDropdown = CreateFrame("Frame", "RaidLeadAssistAbilityDropdown", abilityRow, "UIDropDownMenuTemplate")
+    abilityDropdown:SetPoint("LEFT", abilityLabel, "RIGHT", -12, -1)
+    UIDropDownMenu_SetWidth(abilityDropdown, 178)
     frame.AbilityDropdown = abilityDropdown
 
-    local advancedButton = CreateFrame("Button", nil, editor, "UIPanelButtonTemplate")
+    local advancedButton = CreateFrame("Button", nil, abilityRow, "UIPanelButtonTemplate")
     advancedButton:SetSize(92, 22)
-    advancedButton:SetPoint("TOPRIGHT", 0, -86)
+    advancedButton:SetPoint("RIGHT", abilityRow, "RIGHT", 0, 0)
     advancedButton:SetText("Advanced")
     advancedButton:SetScript("OnClick", function() self:OpenAdvanced() end)
     frame.AdvancedButton = advancedButton
 
     local dragButton = CreateFrame("Button", nil, editor, "UIPanelButtonTemplate")
     dragButton:SetSize(118, 22)
-    dragButton:SetPoint("TOPRIGHT", 0, -114)
+    dragButton:SetPoint("TOP", advancedButton, "BOTTOM", 0, -6)
     dragButton:SetText("To Action Bar")
     dragButton:SetScript("OnClick", function() self:PickupSelected() end)
     frame.DragButton = dragButton
