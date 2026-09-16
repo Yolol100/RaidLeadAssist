@@ -48,6 +48,32 @@ local function releaseProvider(owner)
     owner.provider = nil
 end
 
+local function hideRegion(region)
+    if not region then return end
+    if type(region.SetTexture) == "function" then pcall(region.SetTexture, region, nil) end
+    if type(region.Hide) == "function" then region:Hide() end
+end
+
+local function removePortrait(frame)
+    if not frame then return end
+    if type(ButtonFrameTemplate_HidePortrait) == "function" then
+        pcall(ButtonFrameTemplate_HidePortrait, frame)
+    elseif type(PortraitFrameTemplate_HidePortrait) == "function" then
+        pcall(PortraitFrameTemplate_HidePortrait, frame)
+    end
+    hideRegion(frame.PortraitContainer)
+    hideRegion(frame.portrait)
+    hideRegion(frame.Portrait)
+    if frame.PortraitContainer and frame.PortraitContainer.portrait then
+        hideRegion(frame.PortraitContainer.portrait)
+    end
+    if frame.TitleText then
+        frame.TitleText:SetText("Change Name/Icon")
+        frame.TitleText:ClearAllPoints()
+        frame.TitleText:SetPoint("TOP", frame, "TOP", 0, -6)
+    end
+end
+
 function IconPicker:RefreshGrid()
     local provider = self.provider
     local count = provider and provider:GetNumIcons() or 0
@@ -131,21 +157,7 @@ function IconPicker:Initialize()
     frame:SetFrameStrata("DIALOG")
     frame:SetClampedToScreen(true)
     frame:Hide()
-    if frame.PortraitContainer then
-        frame.PortraitContainer:Hide()
-        if frame.PortraitContainer.portrait then
-            frame.PortraitContainer.portrait:SetTexture(nil)
-        end
-    end
-    if frame.portrait then
-        frame.portrait:SetTexture(nil)
-        frame.portrait:Hide()
-    end
-    if frame.TitleText then
-        frame.TitleText:SetText("Change Name/Icon")
-        frame.TitleText:ClearAllPoints()
-        frame.TitleText:SetPoint("TOP", frame, "TOP", 0, -6)
-    end
+    removePortrait(frame)
 
     local nameLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     nameLabel:SetPoint("TOPLEFT", 24, -62)
