@@ -198,6 +198,14 @@ function App:Initialize()
         end,
     })
 
+    -- UI initialization re-selects the stored boss so its controls are populated.
+    -- During a /reload inside an unknown encounter that must not re-enable timing
+    -- for a stale boss after the fail-closed check above.
+    if Encounter:IsActive() and not Encounter:HasKnownEncounter() then
+        Timeline:SetEncounter(nil)
+        Overlay:HideAll()
+    end
+
     Timeline:Initialize()
     Overlay:Initialize(self.db)
     self:RegisterSlashCommands()
