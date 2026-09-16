@@ -2,11 +2,41 @@ local _, ns = ...
 
 local UI = ns:GetModule("UI.BossMacroManager")
 
+local TACTICS_ROLE = "tactics-prepull"
+
 local function findTextRegion(frame, text)
     if not frame or type(frame.GetRegions) ~= "function" then return nil end
     for _, region in ipairs({ frame:GetRegions() }) do
         if type(region.GetText) == "function" and region:GetText() == text then return region end
     end
+end
+
+local function setShown(region, shown)
+    if not region then return end
+    if shown then
+        if type(region.Show) == "function" then region:Show() end
+    else
+        if type(region.Hide) == "function" then region:Hide() end
+    end
+end
+
+local function refreshAbilitySelectorVisibility(self, macro)
+    local frame = self.frame
+    if not frame then return end
+    local abilityRow = frame.AdvancedButton and frame.AdvancedButton:GetParent() or nil
+    local label = frame.AbilityLabel or findTextRegion(abilityRow, "Boss Ability:")
+    if label and not frame.AbilityLabel then frame.AbilityLabel = label end
+
+    local showSelector = not (type(macro) == "table" and macro.systemRole == TACTICS_ROLE)
+    setShown(label, showSelector)
+    setShown(frame.AbilityDropdown, showSelector)
+end
+
+local originalPopulateEditor = UI.PopulateEditor
+function UI:PopulateEditor(macro, ...)
+    local result = originalPopulateEditor(self, macro, ...)
+    refreshAbilitySelectorVisibility(self, macro)
+    return result
 end
 
 local originalInitialize = UI.Initialize
@@ -18,8 +48,8 @@ function UI:Initialize(database, callbacks)
     local bossRow = frame.BossDropdown and frame.BossDropdown:GetParent() or nil
     if bossRow then
         bossRow:ClearAllPoints()
-        bossRow:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -43)
-        bossRow:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -15, -43)
+        bossRow:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -41)
+        bossRow:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -15, -41)
     end
 
     local heroic = frame.DifficultyButtons and frame.DifficultyButtons.heroic or nil
@@ -39,9 +69,10 @@ function UI:Initialize(database, callbacks)
     local abilityRow = frame.AdvancedButton:GetParent()
     if not abilityRow then return end
     abilityRow:SetHeight(108)
+    frame.AbilityLabel = frame.AbilityLabel or findTextRegion(abilityRow, "Boss Ability:")
 
     frame.AbilityDropdown:ClearAllPoints()
-    frame.AbilityDropdown:SetPoint("TOPLEFT", abilityRow, "TOPLEFT", 72, 5)
+    frame.AbilityDropdown:SetPoint("TOPLEFT", abilityRow, "TOPLEFT", 72, 10)
     UIDropDownMenu_SetWidth(frame.AbilityDropdown, 184)
 
     frame.AdvancedButton:ClearAllPoints()
@@ -69,6 +100,8 @@ function UI:Initialize(database, callbacks)
             background:SetPoint("BOTTOMRIGHT", frame.Editor, "BOTTOMRIGHT", 0, 30)
         end
     end
+
+    refreshAbilitySelectorVisibility(self, self:GetSelectedMacro())
 end
 
 local originalInitializeTacticsFrame = UI.InitializeTacticsFrame
