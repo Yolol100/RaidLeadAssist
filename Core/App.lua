@@ -28,8 +28,6 @@ function App:SetDifficulty(key)
     self.db.selectedDifficultyKey = key
     Registry:SetActiveDifficulty(key)
 
-    -- Encounter start/recovery may change difficulty while the manager is open.
-    -- Keep the visible macro/tactics profile in lockstep without creating a callback loop.
     if UI.frame and UI.selectedDifficultyKey ~= key then
         UI:SelectDifficulty(key, false, true)
     end
@@ -111,6 +109,10 @@ function App:RegisterEvents()
     EventBus:On("ENCOUNTER_ENDED", self, function()
         Timeline:Reset()
         Overlay:NotifyMacroAcknowledged()
+    end)
+
+    EventBus:On("TIMELINE_CHANGED", self, function()
+        if UI.RefreshTestButton then UI:RefreshTestButton() end
     end)
 end
 
@@ -201,6 +203,29 @@ function App:Initialize()
             ManagedMacros:Pickup(macro)
             Overlay:RefreshBindings()
         end,
+        onTestMacro = function(macro, boss)
+            if not macro or not boss or not macro.sourceCallKey or macro.timingEnabled ~= true then
+                ns:Print("[RLA Test] Select a timed boss ability first.")
+                return
+            end
+            self:SetBossContext(boss, false)
+            local ok = Timeline:StartTestCall(macro.sourceCallKey)
+            if ok then
+                ns:Print("[RLA Test] " .. tostring(macro.body or macro.name or "Macro"))
+                Overlay:RefreshBindings()
+                if UI.RefreshTestButton then UI:RefreshTestButton() end
+            else
+                ns:Print("[RLA Test] Could not start the selected ability timer.")
+            end
+        end,
+        onStopTest = function()
+            if Timeline:StopTest() then ns:Print("[RLA Test] Stopped.") end
+            Overlay:NotifyMacroAcknowledged()
+            if UI.RefreshTestButton then UI:RefreshTestButton() end
+        end,
+        isTestActive = function(macro)
+            return macro and Timeline:IsTestActive(macro.sourceCallKey) or false
+        end,
         onMacroDeleted = function(macro)
             ManagedMacros:DeleteManaged(macro)
             Overlay:RefreshBindings()
@@ -211,9 +236,6 @@ function App:Initialize()
         end,
     })
 
-    -- UI initialization re-selects the stored boss so its controls are populated.
-    -- During a /reload inside an unknown encounter that must not re-enable timing
-    -- for a stale boss after the fail-closed check above.
     if Encounter:IsActive() and not Encounter:HasKnownEncounter() then
         Timeline:SetEncounter(nil)
         Overlay:HideAll()
