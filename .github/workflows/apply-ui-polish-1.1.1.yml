@@ -1,0 +1,214 @@
+name: Apply UI polish 1.1.1
+
+on:
+  push:
+    branches:
+      - fix/ui-polish-1.1.1-20260916
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/ui-polish-1.1.1-20260916
+          fetch-depth: 0
+      - name: Apply UI polish patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace_once(text, old, new, label):
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"{label}: expected 1 match, found {count}")
+              return text.replace(old, new, 1)
+
+          manager = Path('UI/BossMacroManager.lua')
+          text = manager.read_text(encoding='utf-8')
+
+          text = replace_once(text, '''local function removePortrait(frame)
+              if not frame then return end
+              if frame.PortraitContainer then
+                  frame.PortraitContainer:Hide()
+                  if frame.PortraitContainer.portrait then
+                      frame.PortraitContainer.portrait:SetTexture(nil)
+                  end
+              end
+              if frame.portrait then
+                  frame.portrait:SetTexture(nil)
+                  frame.portrait:Hide()
+              end
+              if frame.TitleText then
+                  frame.TitleText:ClearAllPoints()
+                  frame.TitleText:SetPoint("TOP", frame, "TOP", 0, -6)
+              end
+          end
+          ''', '''local function hideRegion(region)
+              if not region then return end
+              if type(region.SetTexture) == "function" then pcall(region.SetTexture, region, nil) end
+              if type(region.Hide) == "function" then region:Hide() end
+          end
+
+          local function removePortrait(frame)
+              if not frame then return end
+
+              if type(ButtonFrameTemplate_HidePortrait) == "function" then
+                  pcall(ButtonFrameTemplate_HidePortrait, frame)
+              elseif type(PortraitFrameTemplate_HidePortrait) == "function" then
+                  pcall(PortraitFrameTemplate_HidePortrait, frame)
+              end
+
+              hideRegion(frame.PortraitContainer)
+              hideRegion(frame.portrait)
+              hideRegion(frame.Portrait)
+
+              if frame.PortraitContainer and frame.PortraitContainer.portrait then
+                  hideRegion(frame.PortraitContainer.portrait)
+              end
+
+              if frame.TitleText then
+                  frame.TitleText:ClearAllPoints()
+                  frame.TitleText:SetPoint("TOP", frame, "TOP", 0, -6)
+              end
+          end
+          ''', 'manager portrait helper')
+
+          replacements = [
+              ('frame:SetSize(520, 430)', 'frame:SetSize(530, 438)', 'tactics size'),
+              ('context:SetPoint("TOPLEFT", 24, -56)', 'context:SetPoint("TOPLEFT", 18, -54)', 'tactics context left'),
+              ('context:SetPoint("TOPRIGHT", -24, -56)', 'context:SetPoint("TOPRIGHT", -18, -54)', 'tactics context right'),
+              ('background:SetPoint("TOPLEFT", 20, -102)', 'background:SetPoint("TOPLEFT", 18, -100)', 'tactics background left'),
+              ('background:SetPoint("BOTTOMRIGHT", -20, 54)', 'background:SetPoint("BOTTOMRIGHT", -18, 52)', 'tactics background right'),
+              ('scroll:SetPoint("TOPLEFT", 10, -10)', 'scroll:SetPoint("TOPLEFT", 8, -8)', 'tactics scroll left'),
+              ('scroll:SetPoint("BOTTOMRIGHT", -28, 10)', 'scroll:SetPoint("BOTTOMRIGHT", -26, 8)', 'tactics scroll right'),
+              ('edit:SetWidth(438)', 'edit:SetWidth(450)', 'tactics edit width'),
+              ('edit:SetHeight(280)', 'edit:SetHeight(288)', 'tactics edit height'),
+              ('reset:SetPoint("BOTTOMLEFT", 18, 14)', 'reset:SetPoint("BOTTOMLEFT", 18, 12)', 'tactics reset'),
+              ('save:SetPoint("BOTTOMRIGHT", -114, 14)', 'save:SetPoint("BOTTOMRIGHT", -114, 12)', 'tactics save'),
+              ('bossLabel:SetPoint("TOPLEFT", 22, -57)', 'bossLabel:SetPoint("TOPLEFT", 12, -57)', 'boss label'),
+              ('bossDropdown:SetPoint("TOPLEFT", 48, -45)', 'bossDropdown:SetPoint("TOPLEFT", 38, -46)', 'boss dropdown'),
+              ('UIDropDownMenu_SetWidth(bossDropdown, 190)', 'UIDropDownMenu_SetWidth(bossDropdown, 185)', 'boss dropdown width'),
+              ('newBoss:SetSize(46, 22)', 'newBoss:SetSize(50, 22)', 'new boss size'),
+              ('newBoss:SetPoint("TOPLEFT", 284, -51)', 'newBoss:SetPoint("TOPLEFT", 280, -51)', 'new boss position'),
+              ('renameBoss:SetSize(60, 22)', 'renameBoss:SetSize(62, 22)', 'rename size'),
+              ('deleteBoss:SetSize(26, 22)', 'deleteBoss:SetSize(22, 22)', 'delete size'),
+              ('deleteBoss:SetText("-")', 'deleteBoss:SetText("X")', 'delete text'),
+              ('difficultyLabelText:SetPoint("TOPLEFT", 22, -89)', 'difficultyLabelText:SetPoint("TOPLEFT", 12, -89)', 'difficulty label'),
+              ('heroicButton:SetPoint("TOPLEFT", 88, -83)', 'heroicButton:SetPoint("TOPLEFT", 82, -83)', 'heroic position'),
+              ('tacticsButton:SetSize(104, 22)', 'tacticsButton:SetSize(116, 22)', 'tactics button size'),
+              ('tacticsButton:SetPoint("TOPRIGHT", -18, -83)', 'tacticsButton:SetPoint("TOPRIGHT", -14, -83)', 'tactics button position'),
+              ('grid:SetPoint("TOPLEFT", 14, -118)', 'grid:SetPoint("TOPLEFT", 14, -116)', 'grid position'),
+              ('editor:SetPoint("TOPLEFT", 14, -321)', 'editor:SetPoint("TOPLEFT", 14, -318)', 'editor position'),
+              ('selectedButton:SetNormalTexture("Interface\\\\Buttons\\\\UI-EmptySlot")', 'selectedButton:SetNormalTexture("Interface\\\\Buttons\\\\UI-Quickslot2")', 'selected icon frame'),
+              ('selectedIcon:SetSize(38, 38)', 'selectedIcon:SetSize(42, 42)', 'selected icon size'),
+              ('selectedName:SetPoint("TOPLEFT", selectedButton, "TOPRIGHT", 4, -3)', 'selectedName:SetPoint("TOPLEFT", selectedButton, "TOPRIGHT", 6, -4)', 'selected name'),
+              ('changeButton:SetPoint("TOPLEFT", selectedButton, "TOPRIGHT", 4, -28)', 'changeButton:SetPoint("TOPLEFT", selectedButton, "TOPRIGHT", 6, -30)', 'change button'),
+              ('abilityLabel:SetPoint("TOPLEFT", 8, -72)', 'abilityLabel:SetPoint("TOPLEFT", 8, -74)', 'ability label'),
+              ('advancedButton:SetPoint("TOPRIGHT", 0, -84)', 'advancedButton:SetPoint("TOPRIGHT", 0, -86)', 'advanced position'),
+              ('dragButton:SetPoint("TOPRIGHT", 0, -112)', 'dragButton:SetPoint("TOPRIGHT", 0, -114)', 'action bar position'),
+              ('commandsLabel:SetPoint("TOPLEFT", 8, -132)', 'commandsLabel:SetPoint("TOPLEFT", 8, -136)', 'commands label'),
+              ('bodyBackground:SetPoint("TOPLEFT", 0, -149)', 'bodyBackground:SetPoint("TOPLEFT", 0, -154)', 'body top'),
+              ('bodyBackground:SetPoint("BOTTOMRIGHT", 0, 28)', 'bodyBackground:SetPoint("BOTTOMRIGHT", 0, 30)', 'body bottom'),
+              ('charCount:SetPoint("TOP", bodyBackground, "BOTTOM", 0, -2)', 'charCount:SetPoint("TOP", bodyBackground, "BOTTOM", 0, -3)', 'char count'),
+          ]
+          for old, new, label in replacements:
+              text = replace_once(text, old, new, label)
+
+          text = replace_once(text,
+              '''    deleteBoss:SetText("X")
+              deleteBoss:SetScript("OnClick", function() self:DeleteBoss() end)
+          ''',
+              '''    deleteBoss:SetText("X")
+              deleteBoss:SetScript("OnClick", function() self:DeleteBoss() end)
+              deleteBoss:SetScript("OnEnter", function(owner)
+                  if not GameTooltip then return end
+                  GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
+                  GameTooltip:SetText("Delete Boss", 1, 0.82, 0)
+                  GameTooltip:AddLine("Removes the boss and all Heroic/Mythic macros.", 1, 1, 1, true)
+                  GameTooltip:Show()
+              end)
+              deleteBoss:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
+          ''', 'delete tooltip')
+          manager.write_text(text, encoding='utf-8')
+
+          picker = Path('UI/IconPicker.lua')
+          text = picker.read_text(encoding='utf-8')
+          text = replace_once(text, '''local function releaseProvider(owner)
+              if owner.provider and type(owner.provider.Release) == "function" then owner.provider:Release() end
+              owner.provider = nil
+          end
+          ''', '''local function releaseProvider(owner)
+              if owner.provider and type(owner.provider.Release) == "function" then owner.provider:Release() end
+              owner.provider = nil
+          end
+
+          local function hideRegion(region)
+              if not region then return end
+              if type(region.SetTexture) == "function" then pcall(region.SetTexture, region, nil) end
+              if type(region.Hide) == "function" then region:Hide() end
+          end
+
+          local function removePortrait(frame)
+              if not frame then return end
+              if type(ButtonFrameTemplate_HidePortrait) == "function" then
+                  pcall(ButtonFrameTemplate_HidePortrait, frame)
+              elseif type(PortraitFrameTemplate_HidePortrait) == "function" then
+                  pcall(PortraitFrameTemplate_HidePortrait, frame)
+              end
+
+              hideRegion(frame.PortraitContainer)
+              hideRegion(frame.portrait)
+              hideRegion(frame.Portrait)
+              if frame.PortraitContainer and frame.PortraitContainer.portrait then
+                  hideRegion(frame.PortraitContainer.portrait)
+              end
+
+              if frame.TitleText then
+                  frame.TitleText:SetText("Change Name/Icon")
+                  frame.TitleText:ClearAllPoints()
+                  frame.TitleText:SetPoint("TOP", frame, "TOP", 0, -6)
+              end
+          end
+          ''', 'picker portrait helper')
+          text = replace_once(text, '''    if frame.PortraitContainer then
+              frame.PortraitContainer:Hide()
+              if frame.PortraitContainer.portrait then
+                  frame.PortraitContainer.portrait:SetTexture(nil)
+              end
+          end
+          if frame.portrait then
+              frame.portrait:SetTexture(nil)
+              frame.portrait:Hide()
+          end
+          if frame.TitleText then
+              frame.TitleText:SetText("Change Name/Icon")
+              frame.TitleText:ClearAllPoints()
+              frame.TitleText:SetPoint("TOP", frame, "TOP", 0, -6)
+          end
+          ''', '''    removePortrait(frame)
+          ''', 'picker initialization portrait block')
+          picker.write_text(text, encoding='utf-8')
+
+          toc = Path('RaidLeadAssist.toc')
+          text = toc.read_text(encoding='utf-8')
+          text = replace_once(text, '## Version: 1.1.0', '## Version: 1.1.1', 'version')
+          toc.write_text(text, encoding='utf-8')
+          PY
+
+          rm -f .github/workflows/apply-ui-polish-1.1.1.yml
+          git diff --check
+          grep -q 'ButtonFrameTemplate_HidePortrait' UI/BossMacroManager.lua
+          grep -q 'ButtonFrameTemplate_HidePortrait' UI/IconPicker.lua
+          grep -q 'UI-Quickslot2' UI/BossMacroManager.lua
+          grep -q '## Version: 1.1.1' RaidLeadAssist.toc
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Polish Blizzard UI alignment and portraits'
+          git push origin HEAD:fix/ui-polish-1.1.1-20260916
