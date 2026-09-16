@@ -32,7 +32,7 @@ jobs:
           test ! -e .github/workflows/apply-ui-fidelity-1.1.5.yml
           test ! -e .github/workflows/apply-ui-layout-timing-1.1.6.yml
           grep -q '^## Interface: 120100$' RaidLeadAssist.toc
-          grep -q '^## Version: 1.1.11$' RaidLeadAssist.toc
+          grep -q '^## Version: 1.1.12$' RaidLeadAssist.toc
           grep -q '^Services/TestModeService.lua$' RaidLeadAssist.toc
           grep -q '^Services/MigrationPolishService.lua$' RaidLeadAssist.toc
           grep -q '^Services/TacticsMacroService.lua$' RaidLeadAssist.toc
@@ -65,11 +65,14 @@ jobs:
           grep -q 'function Timeline:StopTest' Services/TestModeService.lua
           grep -q 'Stop Test' UI/RaidLeaderPolish.lua
           grep -q '\[RLA Preview\]' UI/RaidLeaderPolish.lua
-          grep -q 'frame.AbilityDropdown:SetPoint("TOPLEFT", abilityRow, "TOPLEFT", 72, 5)' UI/LayoutHotfix.lua
+          grep -q 'frame.AbilityDropdown:SetPoint("TOPLEFT", abilityRow, "TOPLEFT", 72, 10)' UI/LayoutHotfix.lua
           grep -q 'frame.AdvancedButton:SetPoint("TOPLEFT", abilityRow, "TOPLEFT", 88, -48)' UI/LayoutHotfix.lua
-          grep -q 'bossRow:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -43)' UI/LayoutHotfix.lua
+          grep -q 'bossRow:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -41)' UI/LayoutHotfix.lua
           grep -q 'difficultyRow:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -76)' UI/LayoutHotfix.lua
           grep -q 'frame.Editor:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -310)' UI/LayoutHotfix.lua
+          grep -q 'TACTICS_ROLE = "tactics-prepull"' UI/LayoutHotfix.lua
+          grep -q 'macro.systemRole == TACTICS_ROLE' UI/LayoutHotfix.lua
+          grep -q 'setShown(frame.AbilityDropdown, showSelector)' UI/LayoutHotfix.lua
           grep -q 'hint:Hide()' UI/LayoutHotfix.lua
           grep -q 'systemRole = ROLE' Services/TacticsMacroService.lua
           grep -q 'name = "Pull Tactics"' Services/TacticsMacroService.lua
