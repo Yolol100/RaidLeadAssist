@@ -31,7 +31,10 @@ jobs:
           test ! -e .github/scripts/apply_ui_layout_114.py
           test ! -e .github/workflows/apply-ui-fidelity-1.1.5.yml
           test ! -e .github/workflows/apply-ui-layout-timing-1.1.6.yml
-          grep -q '^## Version: 1.1.6$' RaidLeadAssist.toc
+          grep -q '^## Interface: 120100$' RaidLeadAssist.toc
+          grep -q '^## Version: 1.1.8$' RaidLeadAssist.toc
+          grep -q '^Services/TestModeService.lua$' RaidLeadAssist.toc
+          grep -q '^UI/RaidLeaderPolish.lua$' RaidLeadAssist.toc
           grep -q 'Boss Tactics' UI/BossMacroManager.lua
           grep -q 'selectedDifficultyKey' Services/BossMacroService.lua
           grep -q 'ButtonFrameTemplate_HidePortrait' UI/BossMacroManager.lua
@@ -52,14 +55,21 @@ jobs:
           grep -q 'spellIDs = { 1287426 }' Encounters/VenomousAbyss/Nekzali.lua
           grep -q 'iconSpellID = 1289855' Encounters/VenomousAbyss/Nekzali.lua
           grep -q 'Bloodlust on pull.' Encounters/VenomousAbyss/Nekzali.lua
-          grep -q 'Soak Raid -> Tank -> Tank' Encounters/VenomousAbyss/Sszorak.lua
+          test "$(grep -c 'warning = "Soak Raid -> Tank -> Tank"' Encounters/VenomousAbyss/Sszorak.lua)" -eq 1
           grep -q '1305902' Encounters/VenomousAbyss/Vashnik.lua
           grep -q 'iconSpellID = 1310099' Encounters/VenomousAbyss/TwinFangs.lua
           grep -q 'HasActionableDirectBossmodTimerForCall' Services/TimelineService.lua
           grep -q 'and self:IsActionable(timer)' Services/TimelineService.lua
           grep -q 'matching Blizzard-native event remains the authoritative fallback' Services/TimelineService.lua
+          grep -q 'function Timeline:StartTestCall' Services/TestModeService.lua
+          grep -q 'function Timeline:StopTest' Services/TestModeService.lua
+          grep -q 'Stop Test' UI/RaidLeaderPolish.lua
+          grep -q '\[RLA Preview\]' UI/RaidLeaderPolish.lua
+          grep -q 'ButtonFrameTemplate_HideButtonBar' UI/RaidLeaderPolish.lua
           python3 - <<'PY'
           from pathlib import Path
+          import re
+
           toc = Path('RaidLeadAssist.toc').read_text(encoding='utf-8').splitlines()
           missing = []
           for line in toc:
@@ -71,6 +81,15 @@ jobs:
                   missing.append(str(path))
           if missing:
               raise SystemExit('Missing TOC files: ' + ', '.join(missing))
+
+          for path in Path('Encounters/VenomousAbyss').glob('*.lua'):
+              text = path.read_text(encoding='utf-8')
+              for line in text.splitlines():
+                  visible = ('explanation' in line or 'action =' in line or 'warning =' in line)
+                  if visible and '{{' in line:
+                      raise SystemExit(f'Visible placeholder in {path}: {line.strip()}')
+                  if ('action =' in line or 'warning =' in line) and re.search(r'"[A-Z0-9][A-Z0-9 _+→/—-]{6,}"', line):
+                      raise SystemExit(f'Caps callout in {path}: {line.strip()}')
           PY
       - name: Parse Lua sources
         shell: bash
