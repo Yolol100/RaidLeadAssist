@@ -60,19 +60,6 @@ jobs:
           s = p.read_text(encoding='utf-8')
           s = s.replace('## Version: 1.1.4', '## Version: 1.1.5', 1)
           p.write_text(s, encoding='utf-8')
-
-          p = Path('.github/workflows/validation.yml')
-          s = p.read_text(encoding='utf-8')
-          s = s.replace("grep -q '^## Version: 1.1.4$' RaidLeadAssist.toc", "grep -q '^## Version: 1.1.5$' RaidLeadAssist.toc", 1)
-          marker = "          test ! -e .github/workflows/apply-ui-layout-1.1.4.yml\n"
-          if 'apply-ui-fidelity-1.1.5.yml' not in s:
-              s = s.replace(marker, marker + "          test ! -e .github/workflows/apply-ui-fidelity-1.1.5.yml\n", 1)
-          s = s.replace("          grep -q 'if #name <= 7 then return name end' UI/BossMacroManager.lua\n", "", 1)
-          s = s.replace("          grep -q 'name:SetPoint(\"TOP\", button, \"BOTTOM\"' UI/BossMacroManager.lua\n", "", 1)
-          if "name:SetSize(36, 10)" not in s:
-              anchor = "          grep -q 'frame.TitleContainer:SetPoint(\"TOPLEFT\"' UI/BossMacroManager.lua\n"
-              s = s.replace(anchor, anchor + "          grep -q 'frame.TitleContainer and frame.TitleContainer.TitleText' UI/BossMacroManager.lua\n          grep -q 'name:SetSize(36, 10)' UI/BossMacroManager.lua\n          grep -q 'name:SetPoint(\"BOTTOM\", button, \"BOTTOM\", 0, 2)' UI/BossMacroManager.lua\n", 1)
-          p.write_text(s, encoding='utf-8')
           PY
 
           git diff --check
@@ -89,7 +76,7 @@ jobs:
           set -euo pipefail
           git config user.name "Andrew Baeten"
           git config user.email "Andrew_Baeten@hotmail.com"
-          git add UI/BossMacroManager.lua UI/IconPicker.lua RaidLeadAssist.toc .github/workflows/validation.yml
+          git add UI/BossMacroManager.lua UI/IconPicker.lua RaidLeadAssist.toc
           if git diff --cached --quiet; then
             exit 0
           fi
