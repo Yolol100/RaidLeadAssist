@@ -215,12 +215,13 @@ function TimelineService:IsBlizzardSuppressed()
     return next(self.blizzardSuppressionSources) ~= nil
 end
 
-function TimelineService:HasDirectBossmodTimerForCall(call)
+function TimelineService:HasActionableDirectBossmodTimerForCall(call)
     if type(call) ~= "table" or type(call.key) ~= "string" or call.key == "" then return false end
     local now = GetTime()
     for _, timer in pairs(self.timers) do
         if timer.call and timer.call.key == call.key
             and not isBlizzardRepresentation(timer.providerName, timer)
+            and self:IsActionable(timer)
             and (timer.paused == true or (isFiniteNumber(timer.expiration) and timer.expiration > now)) then
             return true
         end
@@ -231,7 +232,14 @@ end
 function TimelineService:CanUseSuppressedBlizzardFallback(data)
     if not self.encounterKey or type(data) ~= "table" then return false end
     local call = Registry:MatchCall(self.encounterKey, publicValue(data.key), publicValue(data.name))
-    return call ~= nil and not self:HasDirectBossmodTimerForCall(call)
+
+    -- DBM intentionally classifies cd/cdcount timers as cooldown estimates while
+    -- next/cast timers can be exact. When DBM asks consumers to ignore Blizzard's
+    -- timeline, do not let a non-actionable approximate DBM bar suppress the
+    -- native exact timeline event RLA needs for PRESS/PREPARE guidance. This keeps
+    -- the DBM-only setup fail-closed: exact DBM wins when available, otherwise the
+    -- matching Blizzard-native event remains the authoritative fallback.
+    return call ~= nil and not self:HasActionableDirectBossmodTimerForCall(call)
 end
 
 function TimelineService:SetBlizzardSuppressedByProvider(sourceName, suppressed)
@@ -256,7 +264,7 @@ function TimelineService:SetBlizzardSuppressedByProvider(sourceName, suppressed)
     if nowSuppressed then
         for id, timer in pairs(self.timers) do
             if isBlizzardRepresentation(timer.providerName, timer)
-                and (not timer.call or self:HasDirectBossmodTimerForCall(timer.call)) then
+                and (not timer.call or self:HasActionableDirectBossmodTimerForCall(timer.call)) then
                 self.timers[id] = nil
                 changedTimers = true
             end
