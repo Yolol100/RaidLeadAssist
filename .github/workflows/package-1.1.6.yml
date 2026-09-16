@@ -1,0 +1,37 @@
+name: Package RaidLeadAssist 1.1.6
+
+on:
+  push:
+    branches:
+      - fix/ui-layout-timing-1.1.6
+    paths:
+      - .github/workflows/package-1.1.6.yml
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Build clean addon ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(grep '^## Version:' RaidLeadAssist.toc | awk '{print $3}')" = "1.1.6"
+          mkdir -p package/RaidLeadAssist
+          cp Bootstrap.lua RaidLeadAssist.toc package/RaidLeadAssist/
+          cp -R Core Encounters Services UI package/RaidLeadAssist/
+          find package -type d -name .git -prune -exec rm -rf {} +
+          (cd package && zip -r ../RaidLeadAssist-1.1.6.zip RaidLeadAssist >/dev/null)
+          unzip -l RaidLeadAssist-1.1.6.zip | grep -q 'RaidLeadAssist/RaidLeadAssist.toc'
+          ! unzip -l RaidLeadAssist-1.1.6.zip | grep -q '.github'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RaidLeadAssist-1.1.6-package
+          path: RaidLeadAssist-1.1.6.zip
+          if-no-files-found: error
+          retention-days: 7
