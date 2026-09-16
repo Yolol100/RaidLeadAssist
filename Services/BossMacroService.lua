@@ -105,10 +105,8 @@ local function registryCallForKey(encounterKey, callKey, preferredDifficulty)
     end
 end
 
-local function defaultTacticsText(encounterKey, difficultyKey)
-    local profile = type(encounterKey) == "string" and Registry:GetProfile(encounterKey, difficultyKey) or nil
-    local lines = profile and profile.explanation or nil
-    if type(lines) ~= "table" then return "" end
+local function tacticsTextFromLines(lines)
+    if type(lines) ~= "table" then return nil end
     local result = {}
     for index = 1, #lines do
         if type(lines[index]) == "string" and lines[index] ~= "" then
@@ -116,6 +114,24 @@ local function defaultTacticsText(encounterKey, difficultyKey)
         end
     end
     return table.concat(result, "\n")
+end
+
+local function defaultTacticsText(encounterKey, difficultyKey)
+    local profile = type(encounterKey) == "string" and Registry:GetProfile(encounterKey, difficultyKey) or nil
+    return tacticsTextFromLines(profile and profile.explanation) or ""
+end
+
+local function legacyTacticsText(encounterKey, difficultyKey)
+    local profile = type(encounterKey) == "string" and Registry:GetProfile(encounterKey, difficultyKey) or nil
+    return tacticsTextFromLines(profile and profile.legacyExplanation)
+end
+
+local function listContainsExact(values, candidate)
+    if type(values) ~= "table" or type(candidate) ~= "string" then return false end
+    for index = 1, #values do
+        if values[index] == candidate then return true end
+    end
+    return false
 end
 
 local function ensureDifficultyProfile(boss, difficultyKey)
@@ -189,6 +205,17 @@ local function reconcileCallsFromProfile(service, boss, encounter, difficultyKey
             else
                 local call = callsByKey[sourceKey]
                 if call then
+                    if listContainsExact(call.legacyAbilities, macro.name) then
+                        macro.name = call.ability
+                    end
+                    local currentWarning = customWarning(service.database, encounter.key, difficultyKey, call.key) or call.warning or call.action or call.ability
+                    local body = type(macro.body) == "string" and macro.body or ""
+                    for _, legacyWarning in ipairs(type(call.legacyWarnings) == "table" and call.legacyWarnings or {}) do
+                        if body == "/rw " .. tostring(legacyWarning) then
+                            macro.body = "/rw " .. tostring(currentWarning or "")
+                            break
+                        end
+                    end
                     macro.spellIDs = copyArray(call.spellIDs)
                     macro.timerNames = copyArray(call.timerNames)
                     local iconSpellID = Util.ToNumericID(call.iconSpellID) or Util.ToNumericID(macro.spellIDs[1])
@@ -329,7 +356,8 @@ function BossMacroService:NormalizeStoredProfiles()
                     if value then normalized[#normalized + 1] = value end
                 end
                 profile.macros = normalized
-                if profile.tactics == nil then
+                local legacyTactics = legacyTacticsText(boss.sourceEncounterKey, difficultyKey)
+                if profile.tactics == nil or (legacyTactics and profile.tactics == legacyTactics) then
                     profile.tactics = defaultTacticsText(boss.sourceEncounterKey, difficultyKey)
                 end
             end

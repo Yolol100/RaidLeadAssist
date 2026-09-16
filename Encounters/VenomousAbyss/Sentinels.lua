@@ -116,9 +116,13 @@ Registry:Register({
     strategyStatus = "Heroic raid-lead profile refreshed against current 2026-09 split/stasis strategy and Blizzard hotfixes; raid groups hold their physical sides after Stasis while tanks swap Sentinels; Mythic Protovenom retained separately; PASS-LIVE pending",
     profiles = {
         heroic = {
-            explanation = {
+            legacyExplanation = {
                 "{{GROUP_SPLIT:RED:GREEN}}",
                 "AFTER STASIS — RAID HOLDS SIDES; TANKS SWAP BOSSES",
+            },
+            explanation = {
+                "{{GROUP_SPLIT:RED:GREEN}}",
+                "After Stasis, the raid holds sides while tanks swap bosses.",
             },
             calls = heroicCalls,
         },

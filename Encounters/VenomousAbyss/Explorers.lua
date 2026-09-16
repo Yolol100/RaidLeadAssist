@@ -104,7 +104,8 @@ Registry:Register({
     strategyStatus = "Heroic fish order set to Gebbo → Nama → Iku with separate manual calls; Mythic crate-breaker route retained separately; exact-ID guidance is sequence-aware; PASS-LIVE pending",
     profiles = {
         heroic = {
-            explanation = { "GEBBO → NAMA → IKU" },
+            legacyExplanation = { "GEBBO → NAMA → IKU" },
+            explanation = { "Fish order: Gebbo → Nama → Iku." },
             calls = heroicCalls,
         },
         mythic = {

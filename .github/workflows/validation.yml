@@ -30,7 +30,8 @@ jobs:
           test ! -e .github/workflows/apply-ui-layout-1.1.4.yml
           test ! -e .github/scripts/apply_ui_layout_114.py
           test ! -e .github/workflows/apply-ui-fidelity-1.1.5.yml
-          grep -q '^## Version: 1.1.5$' RaidLeadAssist.toc
+          test ! -e .github/workflows/apply-ui-layout-timing-1.1.6.yml
+          grep -q '^## Version: 1.1.6$' RaidLeadAssist.toc
           grep -q 'Boss Tactics' UI/BossMacroManager.lua
           grep -q 'selectedDifficultyKey' Services/BossMacroService.lua
           grep -q 'ButtonFrameTemplate_HidePortrait' UI/BossMacroManager.lua
@@ -40,8 +41,17 @@ jobs:
           grep -q 'contentAnchor = frame.Inset or frame' UI/BossMacroManager.lua
           grep -q 'name:SetSize(36, 10)' UI/BossMacroManager.lua
           grep -q 'name:SetPoint("BOTTOM", button, "BOTTOM", 0, 2)' UI/BossMacroManager.lua
-          grep -q 'local abilityRow = CreateFrame' UI/BossMacroManager.lua
-          grep -q 'reconcileCallsFromProfile' Services/BossMacroService.lua
+          grep -q 'bossRow:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -45)' UI/BossMacroManager.lua
+          grep -q 'difficultyRow:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -78)' UI/BossMacroManager.lua
+          grep -q 'moveLeft:SetPoint("TOPLEFT", grid, "BOTTOMLEFT", 8, -2)' UI/BossMacroManager.lua
+          grep -q 'advancedButton:SetPoint("TOPLEFT", abilityRow, "TOPLEFT", 88, -34)' UI/BossMacroManager.lua
+          ! grep -q 'Drag icons to reorder' UI/BossMacroManager.lua
+          ! grep -q 'addHorizontalBar(frame' UI/BossMacroManager.lua
+          grep -q 'legacyTacticsText' Services/BossMacroService.lua
+          grep -q 'legacyWarnings' Services/BossMacroService.lua
+          grep -q 'spellIDs = { 1287426 }' Encounters/VenomousAbyss/Nekzali.lua
+          grep -q 'iconSpellID = 1289855' Encounters/VenomousAbyss/Nekzali.lua
+          grep -q 'Bloodlust on pull.' Encounters/VenomousAbyss/Nekzali.lua
           grep -q 'Soak Raid -> Tank -> Tank' Encounters/VenomousAbyss/Sszorak.lua
           grep -q '1305902' Encounters/VenomousAbyss/Vashnik.lua
           grep -q 'iconSpellID = 1310099' Encounters/VenomousAbyss/TwinFangs.lua

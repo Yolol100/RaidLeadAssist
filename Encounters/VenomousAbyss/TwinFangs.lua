@@ -99,9 +99,13 @@ Registry:Register({
     strategyStatus = "Heroic uses three fresh Ravenous Feast soak teams because Feasted adds 800% repeat-hit damage; exact-ID guidance stays sequence-aware; Mythic remains separate; source-reviewed 2026-09-14; PASS-LIVE pending",
     profiles = {
         heroic = {
-            explanation = {
+            legacyExplanation = {
                 "FEAST = 3 FRESH GROUPS — ONE HIT EACH",
                 "NO ONE SOAKS TWO FEAST HITS",
+            },
+            explanation = {
+                "Ravenous Feast: use three fresh groups, one hit per group.",
+                "No player should soak two Feast hits.",
             },
             calls = heroicCalls,
         },
