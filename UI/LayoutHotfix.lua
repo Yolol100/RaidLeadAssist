@@ -9,7 +9,21 @@ local function findTextRegion(frame, text)
     end
 end
 
+local function setAbilityControlsVisible(frame, macro)
+    if not frame then return end
+    local abilityRow = frame.AdvancedButton and frame.AdvancedButton:GetParent() or nil
+    local abilityLabel = abilityRow and findTextRegion(abilityRow, "Boss Ability:") or nil
+    local isPullTactics = type(macro) == "table" and macro.systemRole == "tactics-prepull"
+    local showAbility = not isPullTactics
+
+    if abilityLabel then abilityLabel:SetShown(showAbility) end
+    if frame.AbilityDropdown then frame.AbilityDropdown:SetShown(showAbility) end
+    if frame.AdvancedButton then frame.AdvancedButton:SetEnabled(macro ~= nil and showAbility) end
+end
+
 local originalInitialize = UI.Initialize
+local originalPopulateEditor = UI.PopulateEditor
+
 function UI:Initialize(database, callbacks)
     originalInitialize(self, database, callbacks)
     local frame = self.frame
@@ -18,8 +32,8 @@ function UI:Initialize(database, callbacks)
     local bossRow = frame.BossDropdown and frame.BossDropdown:GetParent() or nil
     if bossRow then
         bossRow:ClearAllPoints()
-        bossRow:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -43)
-        bossRow:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -15, -43)
+        bossRow:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -41)
+        bossRow:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -15, -41)
     end
 
     local heroic = frame.DifficultyButtons and frame.DifficultyButtons.heroic or nil
@@ -40,8 +54,14 @@ function UI:Initialize(database, callbacks)
     if not abilityRow then return end
     abilityRow:SetHeight(108)
 
+    local abilityLabel = findTextRegion(abilityRow, "Boss Ability:")
+    if abilityLabel then
+        abilityLabel:ClearAllPoints()
+        abilityLabel:SetPoint("LEFT", abilityRow, "LEFT", 8, -5)
+    end
+
     frame.AbilityDropdown:ClearAllPoints()
-    frame.AbilityDropdown:SetPoint("TOPLEFT", abilityRow, "TOPLEFT", 72, 5)
+    frame.AbilityDropdown:SetPoint("TOPLEFT", abilityRow, "TOPLEFT", 72, 10)
     UIDropDownMenu_SetWidth(frame.AbilityDropdown, 184)
 
     frame.AdvancedButton:ClearAllPoints()
@@ -69,6 +89,14 @@ function UI:Initialize(database, callbacks)
             background:SetPoint("BOTTOMRIGHT", frame.Editor, "BOTTOMRIGHT", 0, 30)
         end
     end
+
+    setAbilityControlsVisible(frame, self:GetSelectedMacro())
+end
+
+function UI:PopulateEditor(macro)
+    local result = originalPopulateEditor(self, macro)
+    setAbilityControlsVisible(self.frame, macro)
+    return result
 end
 
 local originalInitializeTacticsFrame = UI.InitializeTacticsFrame
