@@ -33,8 +33,8 @@ end
 
 local function shortName(name)
     name = tostring(name or "")
-    if #name <= 8 then return name end
-    return name:sub(1, 7) .. "…"
+    if #name <= 10 then return name end
+    return name:sub(1, 9) .. "…"
 end
 
 local function validDifficulty(key)
@@ -817,7 +817,7 @@ function BossMacroManager:Initialize(database, callbacks)
 
     local newBoss = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
     newBoss:SetSize(50, 22)
-    newBoss:SetPoint("TOPLEFT", 280, -51)
+    newBoss:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -106, -51)
     newBoss:SetText("New")
     newBoss:SetScript("OnClick", function() self:CreateBoss() end)
 
@@ -902,16 +902,29 @@ function BossMacroManager:Initialize(database, callbacks)
         selected:SetBlendMode("ADD")
         selected:SetVertexColor(1, 0.78, 0.08, 1)
         selected:SetPoint("CENTER", 0, 0)
-        selected:SetSize(62, 62)
+        selected:SetSize(56, 56)
         selected:Hide()
         button.Selected = selected
 
         local name = button:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmallOutline")
         name:SetPoint("BOTTOM", 0, 2)
-        name:SetWidth(50)
+        name:SetWidth(58)
+        name:SetWordWrap(false)
         name:SetJustifyH("CENTER")
         button.Name = name
 
+        button:SetScript("OnEnter", function(btn)
+            if not btn.macroId or not GameTooltip then return end
+            local macro = BossMacros:FindMacroById(btn.macroId)
+            if not macro then return end
+            GameTooltip:SetOwner(btn, "ANCHOR_RIGHT")
+            GameTooltip:SetText(macro.name or "Macro", 1, 0.82, 0)
+            if type(macro.body) == "string" and macro.body ~= "" then
+                GameTooltip:AddLine(macro.body, 1, 1, 1, true)
+            end
+            GameTooltip:Show()
+        end)
+        button:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
         button:SetScript("OnClick", function(btn) if btn.macroId then self:SelectMacro(btn.macroId) end end)
         button:SetScript("OnDragStart", function(btn)
             if not btn.macroId then return end

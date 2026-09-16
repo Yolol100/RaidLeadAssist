@@ -48,7 +48,7 @@ local function calls(coilCall, eggAction, eggWarning, eggActionTemplate, eggWarn
     local result = {
         waves, coilCall, heart,
         manualCall("warden", "Doomscale Warden", "Kill Warden before eggs",
-            "Warden: kill first; eggs after protection is gone.", "Warden"),
+            "Warden: kill first; eggs after protection is gone.", "Warden", 1302950),
         manualCall("eggs", "Doomscale Eggs", eggAction, eggWarning, "Eggs", 1299650, eggActionTemplate, eggWarningTemplate),
         serpents,
     }
@@ -58,7 +58,7 @@ local function calls(coilCall, eggAction, eggWarning, eggActionTemplate, eggWarn
     end
     if includeMythic then result[#result + 1] = incubation() end
     result[#result + 1] = manualCall("phase3", "Phase 3", "Execute final burn plan",
-        "Phase 3: execute the final burn plan.", "Final phase")
+        "Phase 3: execute the final burn plan.", "Final phase", 1301510)
     result[#result + 1] = bite(includeMythic)
     result[#result + 1] = circling
     return result

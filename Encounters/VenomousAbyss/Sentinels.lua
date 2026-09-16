@@ -9,6 +9,7 @@ local heroicCalls = {
         warning = "GREEN — SOAK DROPLETS",
         voice = "Soak droplets",
         timing = false,
+        iconSpellID = 1284434,
     },
     {
         key = "blob",
@@ -20,12 +21,13 @@ local heroicCalls = {
         iconSpellID = 1284251,
     },
     {
-        key = "return_lines",
-        ability = "Returning Venom",
+        key = "living_venom",
+        ability = "Living Venom",
         action = "GREEN — DODGE RETURN LINES",
         warning = "GREEN — DODGE RETURN LINES",
         voice = "Dodge return lines",
         timing = false,
+        iconSpellID = 1284207,
     },
     {
         key = "miasma",
@@ -91,6 +93,7 @@ local mythicCalls = {
         warningTemplate = "After Stasis: {{team_a}} / {{team_b}} hold sides; tanks swap bosses.",
         voice = "Tanks swap bosses",
         timing = false,
+        iconSpellID = 1284588,
         uiGroup = "shared",
     },
     {

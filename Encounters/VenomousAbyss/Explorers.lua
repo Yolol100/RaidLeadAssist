@@ -33,12 +33,13 @@ local heroicCalls = {
         iconSpellID = 1292779,
     },
     {
-        key = "mushroom",
-        ability = "Gebbo Wave",
+        key = "explosive_surprise",
+        ability = "Explosive Surprise",
         action = "USE MUSHROOM FOR WAVE",
         warning = "USE MUSHROOM FOR WAVE",
         voice = "Use mushroom",
         timing = false,
+        iconSpellID = 1297625,
     },
     {
         key = "thud",
@@ -51,12 +52,13 @@ local heroicCalls = {
         pressSeconds = 4,
     },
     {
-        key = "elements",
-        ability = "Frostfire",
+        key = "frostfire_volley",
+        ability = "Frostfire Volley",
         action = "SPREAD FIRE/FROST — CLEAR WITH OPPOSITE",
         warning = "SPREAD FIRE/FROST — CLEAR WITH OPPOSITE",
         voice = "Spread and clear opposite",
         timing = false,
+        iconSpellID = 1295886,
     },
 }
 
