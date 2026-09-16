@@ -1,0 +1,39 @@
+name: Package RaidLeadAssist 1.1.3
+
+on:
+  push:
+    branches:
+      - fix/dbm-native-fallback-1.1.3
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build clean addon ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf package RaidLeadAssist-1.1.3.zip
+          mkdir -p package/RaidLeadAssist
+          cp RaidLeadAssist.toc package/RaidLeadAssist/
+          while IFS= read -r line; do
+            line="${line%$'\r'}"
+            [[ -z "$line" || "$line" == '##'* ]] && continue
+            src="${line//\\//}"
+            mkdir -p "package/RaidLeadAssist/$(dirname "$src")"
+            cp "$src" "package/RaidLeadAssist/$src"
+          done < RaidLeadAssist.toc
+          test -f package/RaidLeadAssist/RaidLeadAssist.toc
+          grep -q '^## Version: 1.1.3$' package/RaidLeadAssist/RaidLeadAssist.toc
+          (cd package && zip -qr ../RaidLeadAssist-1.1.3.zip RaidLeadAssist)
+          unzip -l RaidLeadAssist-1.1.3.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RaidLeadAssist-1.1.3
+          path: RaidLeadAssist-1.1.3.zip
+          if-no-files-found: error
+          retention-days: 7
