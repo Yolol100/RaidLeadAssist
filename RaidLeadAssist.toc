@@ -2,7 +2,7 @@
 ## Title: Raid Lead Assist
 ## Notes: Blizzard-style boss macro manager with Heroic/Mythic profiles, tactics, sorting, and encounter-aware timing.
 ## Author: RaidLeadAssist Contributors
-## Version: 1.1.8
+## Version: 1.1.9
 ## SavedVariables: RaidLeadAssistDB
 ## OptionalDeps: DBM-Core, BigWigs
 ## Category: Dungeons & Raids
@@ -42,6 +42,7 @@ Services/TimelineService.lua
 Services/TestModeService.lua
 Services/EncounterService.lua
 Services/BossMacroService.lua
+Services/MigrationPolishService.lua
 Services/ManagedMacroService.lua
 Services/ActionBarOverlayService.lua
 UI/IconPicker.lua
