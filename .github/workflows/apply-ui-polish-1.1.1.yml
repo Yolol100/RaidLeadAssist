@@ -22,6 +22,7 @@ jobs:
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
+          import re
 
           def replace_once(text, old, new, label):
               count = text.count(old)
@@ -31,7 +32,6 @@ jobs:
 
           manager = Path('UI/BossMacroManager.lua')
           text = manager.read_text(encoding='utf-8')
-
           text = replace_once(text, '''local function removePortrait(frame)
               if not frame then return end
               if frame.PortraitContainer then
@@ -57,21 +57,17 @@ jobs:
 
           local function removePortrait(frame)
               if not frame then return end
-
               if type(ButtonFrameTemplate_HidePortrait) == "function" then
                   pcall(ButtonFrameTemplate_HidePortrait, frame)
               elseif type(PortraitFrameTemplate_HidePortrait) == "function" then
                   pcall(PortraitFrameTemplate_HidePortrait, frame)
               end
-
               hideRegion(frame.PortraitContainer)
               hideRegion(frame.portrait)
               hideRegion(frame.Portrait)
-
               if frame.PortraitContainer and frame.PortraitContainer.portrait then
                   hideRegion(frame.PortraitContainer.portrait)
               end
-
               if frame.TitleText then
                   frame.TitleText:ClearAllPoints()
                   frame.TitleText:SetPoint("TOP", frame, "TOP", 0, -6)
@@ -121,78 +117,22 @@ jobs:
               text = replace_once(text, old, new, label)
 
           text = replace_once(text,
-              '''    deleteBoss:SetText("X")
-              deleteBoss:SetScript("OnClick", function() self:DeleteBoss() end)
-          ''',
-              '''    deleteBoss:SetText("X")
-              deleteBoss:SetScript("OnClick", function() self:DeleteBoss() end)
-              deleteBoss:SetScript("OnEnter", function(owner)
-                  if not GameTooltip then return end
-                  GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
-                  GameTooltip:SetText("Delete Boss", 1, 0.82, 0)
-                  GameTooltip:AddLine("Removes the boss and all Heroic/Mythic macros.", 1, 1, 1, true)
-                  GameTooltip:Show()
-              end)
-              deleteBoss:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
-          ''', 'delete tooltip')
+              '    deleteBoss:SetText("X")\n    deleteBoss:SetScript("OnClick", function() self:DeleteBoss() end)\n',
+              '    deleteBoss:SetText("X")\n    deleteBoss:SetScript("OnClick", function() self:DeleteBoss() end)\n    deleteBoss:SetScript("OnEnter", function(owner)\n        if not GameTooltip then return end\n        GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")\n        GameTooltip:SetText("Delete Boss", 1, 0.82, 0)\n        GameTooltip:AddLine("Removes the boss and all Heroic/Mythic macros.", 1, 1, 1, true)\n        GameTooltip:Show()\n    end)\n    deleteBoss:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)\n',
+              'delete tooltip')
           manager.write_text(text, encoding='utf-8')
 
           picker = Path('UI/IconPicker.lua')
           text = picker.read_text(encoding='utf-8')
-          text = replace_once(text, '''local function releaseProvider(owner)
-              if owner.provider and type(owner.provider.Release) == "function" then owner.provider:Release() end
-              owner.provider = nil
-          end
-          ''', '''local function releaseProvider(owner)
-              if owner.provider and type(owner.provider.Release) == "function" then owner.provider:Release() end
-              owner.provider = nil
-          end
+          text = replace_once(text,
+              'local function releaseProvider(owner)\n    if owner.provider and type(owner.provider.Release) == "function" then owner.provider:Release() end\n    owner.provider = nil\nend\n',
+              'local function releaseProvider(owner)\n    if owner.provider and type(owner.provider.Release) == "function" then owner.provider:Release() end\n    owner.provider = nil\nend\n\nlocal function hideRegion(region)\n    if not region then return end\n    if type(region.SetTexture) == "function" then pcall(region.SetTexture, region, nil) end\n    if type(region.Hide) == "function" then region:Hide() end\nend\n\nlocal function removePortrait(frame)\n    if not frame then return end\n    if type(ButtonFrameTemplate_HidePortrait) == "function" then\n        pcall(ButtonFrameTemplate_HidePortrait, frame)\n    elseif type(PortraitFrameTemplate_HidePortrait) == "function" then\n        pcall(PortraitFrameTemplate_HidePortrait, frame)\n    end\n    hideRegion(frame.PortraitContainer)\n    hideRegion(frame.portrait)\n    hideRegion(frame.Portrait)\n    if frame.PortraitContainer and frame.PortraitContainer.portrait then\n        hideRegion(frame.PortraitContainer.portrait)\n    end\n    if frame.TitleText then\n        frame.TitleText:SetText("Change Name/Icon")\n        frame.TitleText:ClearAllPoints()\n        frame.TitleText:SetPoint("TOP", frame, "TOP", 0, -6)\n    end\nend\n',
+              'picker portrait helper')
 
-          local function hideRegion(region)
-              if not region then return end
-              if type(region.SetTexture) == "function" then pcall(region.SetTexture, region, nil) end
-              if type(region.Hide) == "function" then region:Hide() end
-          end
-
-          local function removePortrait(frame)
-              if not frame then return end
-              if type(ButtonFrameTemplate_HidePortrait) == "function" then
-                  pcall(ButtonFrameTemplate_HidePortrait, frame)
-              elseif type(PortraitFrameTemplate_HidePortrait) == "function" then
-                  pcall(PortraitFrameTemplate_HidePortrait, frame)
-              end
-
-              hideRegion(frame.PortraitContainer)
-              hideRegion(frame.portrait)
-              hideRegion(frame.Portrait)
-              if frame.PortraitContainer and frame.PortraitContainer.portrait then
-                  hideRegion(frame.PortraitContainer.portrait)
-              end
-
-              if frame.TitleText then
-                  frame.TitleText:SetText("Change Name/Icon")
-                  frame.TitleText:ClearAllPoints()
-                  frame.TitleText:SetPoint("TOP", frame, "TOP", 0, -6)
-              end
-          end
-          ''', 'picker portrait helper')
-          text = replace_once(text, '''    if frame.PortraitContainer then
-              frame.PortraitContainer:Hide()
-              if frame.PortraitContainer.portrait then
-                  frame.PortraitContainer.portrait:SetTexture(nil)
-              end
-          end
-          if frame.portrait then
-              frame.portrait:SetTexture(nil)
-              frame.portrait:Hide()
-          end
-          if frame.TitleText then
-              frame.TitleText:SetText("Change Name/Icon")
-              frame.TitleText:ClearAllPoints()
-              frame.TitleText:SetPoint("TOP", frame, "TOP", 0, -6)
-          end
-          ''', '''    removePortrait(frame)
-          ''', 'picker initialization portrait block')
+          pattern = re.compile(r'    if frame\.PortraitContainer then\n.*?    if frame\.TitleText then\n.*?    end\n\n    local nameLabel', re.S)
+          text, count = pattern.subn('    removePortrait(frame)\n\n    local nameLabel', text, count=1)
+          if count != 1:
+              raise SystemExit(f'picker initialization portrait block: expected 1 match, found {count}')
           picker.write_text(text, encoding='utf-8')
 
           toc = Path('RaidLeadAssist.toc')
