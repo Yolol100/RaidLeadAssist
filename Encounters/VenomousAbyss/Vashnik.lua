@@ -28,26 +28,26 @@ end
 
 local killAddsHeroic = timedCall(
     "imbibe", "Imbibe",
-    "KILL ADDS",
-    "KILL ADDS",
+    "Adds: kill them before they reach the center.",
+    "Adds: kill them before they reach the center.",
     "Kill adds", { 1283164 }, 8, 5
 )
 local staggerDispelsHeroic = manualCall(
     "stagger_dispels", "Exploding Infection",
-    "STAGGER DISPELS",
-    "STAGGER DISPELS",
+    "Dispels: stagger them.",
+    "Dispels: stagger them.",
     "Stagger dispels", 1295166
 )
 local dodgeCrossHeroic = timedCall(
     "froth", "Plague Froth",
-    "DODGE CROSS",
-    "DODGE CROSS",
+    "Plague Froth: dodge the cross.",
+    "Plague Froth: dodge the cross.",
     "Dodge cross", { 1281907 }, 6, 3
 )
 local soakBileHeroic = timedCall(
     "catalyst", "Malignant Catalyst",
-    "SOAK BILE",
-    "SOAK BILE",
+    "Catalyst: soak the bile circles.",
+    "Catalyst: soak the bile circles.",
     "Soak bile", { 1282525, 1282509 }, 7, 4
 )
 
@@ -95,7 +95,7 @@ Registry:Register({
     strategyStatus = "Heroic uses the current 2026-09 permanent Shadow/Purple + Fire/Orange simple strategy; old Blood/Red Heroic route removed; Mythic mechanics remain separate; PASS-LIVE pending",
     profiles = {
         heroic = {
-            legacyExplanation = { "PURPLE + ORANGE ONLY — BL ON PULL" },
+            legacyExplanation = { "Use Purple and Orange assignments only; Bloodlust on pull." },
             explanation = { "Use Purple and Orange assignments only; Bloodlust on pull." },
             calls = { killAddsHeroic, staggerDispelsHeroic, dodgeCrossHeroic, soakBileHeroic },
         },
