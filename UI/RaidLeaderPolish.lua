@@ -21,6 +21,30 @@ local function findButton(frame, text)
     end
 end
 
+local function findTextRegion(frame, text)
+    if not frame or type(frame.GetRegions) ~= "function" then return nil end
+    local regions = { frame:GetRegions() }
+    for _, region in ipairs(regions) do
+        if type(region.GetText) == "function" and region:GetText() == text then return region end
+    end
+end
+
+local function hideLegacySeparator(frame)
+    if not frame or type(frame.GetRegions) ~= "function" then return end
+    local regions = { frame:GetRegions() }
+    for _, region in ipairs(regions) do
+        if type(region.GetObjectType) == "function" and region:GetObjectType() == "Texture"
+            and type(region.GetWidth) == "function" and type(region.GetHeight) == "function" then
+            local width, height = region:GetWidth(), region:GetHeight()
+            local point, _, _, _, y = region:GetPoint(1)
+            if width and width > 500 and height and height <= 18 and point == "TOP"
+                and type(y) == "number" and math.abs(y + 126) <= 3 then
+                region:Hide()
+            end
+        end
+    end
+end
+
 function UI:RefreshTestButton()
     if not self.frame or not self.frame.TestButton then return end
     local macro = self:GetSelectedMacro()
@@ -44,18 +68,20 @@ function UI:Initialize(database, callbacks)
     frame:SetScale(tonumber(database and database.uiScale) or 1)
     hideButtonBar(frame)
 
-    if frame.AbilityDropdown then UIDropDownMenu_SetWidth(frame.AbilityDropdown, 208) end
+    if frame.AbilityDropdown then UIDropDownMenu_SetWidth(frame.AbilityDropdown, 184) end
     local advanced = frame.AdvancedButton
     local drag = frame.DragButton
     if advanced and drag then
+        local abilityRow = advanced:GetParent()
+        if abilityRow then abilityRow:SetHeight(86) end
         advanced:ClearAllPoints()
         advanced:SetSize(92, 22)
-        advanced:SetPoint("TOPLEFT", advanced:GetParent(), "TOPLEFT", 88, -34)
+        advanced:SetPoint("TOPLEFT", abilityRow, "TOPLEFT", 88, -52)
         drag:ClearAllPoints()
         drag:SetSize(112, 22)
         drag:SetPoint("LEFT", advanced, "RIGHT", 6, 0)
 
-        local test = CreateFrame("Button", nil, advanced:GetParent(), "UIPanelButtonTemplate")
+        local test = CreateFrame("Button", nil, abilityRow, "UIPanelButtonTemplate")
         test:SetSize(72, 22)
         test:SetPoint("LEFT", drag, "RIGHT", 6, 0)
         test:SetText("Test")
@@ -70,6 +96,37 @@ function UI:Initialize(database, callbacks)
             self:RefreshTestButton()
         end)
         frame.TestButton = test
+    end
+
+    local commandsLabel = frame.Editor and findTextRegion(frame.Editor, "Enter Macro Commands:") or nil
+    if commandsLabel then
+        commandsLabel:ClearAllPoints()
+        commandsLabel:SetPoint("TOPLEFT", frame.Editor, "TOPLEFT", 8, -158)
+    end
+    if frame.BodyEdit then
+        local scroll = frame.BodyEdit:GetParent()
+        local bodyBackground = scroll and scroll:GetParent()
+        if bodyBackground then
+            bodyBackground:ClearAllPoints()
+            bodyBackground:SetPoint("TOPLEFT", frame.Editor, "TOPLEFT", 0, -176)
+            bodyBackground:SetPoint("BOTTOMRIGHT", frame.Editor, "BOTTOMRIGHT", 0, 30)
+        end
+    end
+
+    local deleteButton = frame.DeleteButton
+    local newButton = findButton(frame, NEW or "New")
+    local exitButton = findButton(frame, EXIT or "Exit")
+    if deleteButton then
+        deleteButton:ClearAllPoints()
+        deleteButton:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 8, 16)
+    end
+    if newButton then
+        newButton:ClearAllPoints()
+        newButton:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -106, 16)
+    end
+    if exitButton then
+        exitButton:ClearAllPoints()
+        exitButton:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -8, 16)
     end
     self:RefreshTestButton()
 end
@@ -90,6 +147,16 @@ function UI:InitializeTacticsFrame()
     frame:SetSize(530, 390)
     frame:SetScale(tonumber(self.database and self.database.uiScale) or 1)
     hideButtonBar(frame)
+    if frame.Inset then
+        frame.Inset:ClearAllPoints()
+        frame.Inset:SetPoint("TOPLEFT", frame, "TOPLEFT", 5, -31)
+        frame.Inset:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -5, 5)
+    end
+    if frame.Context then
+        frame.Context:ClearAllPoints()
+        frame.Context:SetPoint("TOPLEFT", frame.Inset or frame, "TOPLEFT", 10, -8)
+        frame.Context:SetPoint("TOPRIGHT", frame.Inset or frame, "TOPRIGHT", -10, -8)
+    end
 
     if frame.BodyEdit then
         frame.BodyEdit:SetHeight(224)
@@ -148,12 +215,37 @@ function UI:RenameBoss(...)
 end
 
 local originalPickerOpen = IconPicker.Open
-function IconPicker:Open(anchorFrame, ...)
+function IconPicker:Open(anchorFrame, name, icon, callback, cancelCallback)
     if inCombat() then ns:Print("Icon editing is unavailable during combat.") return end
-    local result = originalPickerOpen(self, anchorFrame, ...)
+    if tonumber(icon) == 134400 then icon = "Interface\\Icons\\INV_Misc_Note_01" end
+    local result = originalPickerOpen(self, anchorFrame, name, icon, callback, cancelCallback)
     if self.frame then
         hideButtonBar(self.frame)
+        hideLegacySeparator(self.frame)
         self.frame:SetScale(anchorFrame and type(anchorFrame.GetScale) == "function" and (anchorFrame:GetScale() or 1) or 1)
+        local nameLabel = findTextRegion(self.frame, "Enter Macro Name (Max 16 Characters):")
+        local selectedLabel = findTextRegion(self.frame, "Currently Selected")
+        local chooseLabel = findTextRegion(self.frame, "Choose an Icon:")
+        if nameLabel then
+            nameLabel:ClearAllPoints()
+            nameLabel:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 24, -48)
+        end
+        if selectedLabel then
+            selectedLabel:ClearAllPoints()
+            selectedLabel:SetPoint("TOPRIGHT", self.frame, "TOPRIGHT", -70, -49)
+        end
+        if chooseLabel then
+            chooseLabel:ClearAllPoints()
+            chooseLabel:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 24, -126)
+        end
+        if self.frame.FilterDropdown then
+            self.frame.FilterDropdown:ClearAllPoints()
+            self.frame.FilterDropdown:SetPoint("TOPRIGHT", self.frame, "TOPRIGHT", -26, -117)
+        end
+        if self.frame.NameEdit then
+            self.frame.NameEdit:ClearAllPoints()
+            self.frame.NameEdit:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 28, -69)
+        end
         for _, button in ipairs(self.buttons or {}) do
             if button.Selected then
                 button.Selected:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
