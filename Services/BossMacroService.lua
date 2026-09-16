@@ -20,6 +20,21 @@ local function copyArray(source)
     return result
 end
 
+local function cloneTable(value, seen)
+    if type(value) ~= "table" then return value end
+    seen = seen or {}
+    if seen[value] then return nil end
+    local copy = {}
+    seen[value] = copy
+    for key, child in pairs(value) do
+        local keyType = type(key)
+        if keyType == "string" or keyType == "number" then
+            copy[key] = cloneTable(child, seen)
+        end
+    end
+    return copy
+end
+
 local function spellIcon(spellID)
     local numericID = Util.ToNumericID(spellID)
     if not numericID then return nil end
@@ -63,13 +78,56 @@ local function maxBossOrder(database)
     return highest
 end
 
-local function registryCallForKey(encounterKey, callKey)
+local function validDifficulty(difficultyKey)
+    return Constants.DIFFICULTIES[difficultyKey] ~= nil
+end
+
+local function selectedDifficulty(service, difficultyKey)
+    if validDifficulty(difficultyKey) then return difficultyKey end
+    local selected = service.database and service.database.selectedDifficultyKey or nil
+    if validDifficulty(selected) then return selected end
+    return Constants.DIFFICULTY_ORDER[1]
+end
+
+local function registryCallForKey(encounterKey, callKey, preferredDifficulty)
     if type(encounterKey) ~= "string" or type(callKey) ~= "string" then return nil end
-    for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
-        local profile = Registry:GetProfile(encounterKey, difficultyKey)
+    if validDifficulty(preferredDifficulty) then
+        local profile = Registry:GetProfile(encounterKey, preferredDifficulty)
         local call = profile and profile.callsByKey and profile.callsByKey[callKey] or nil
         if call then return call end
     end
+    for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
+        if difficultyKey ~= preferredDifficulty then
+            local profile = Registry:GetProfile(encounterKey, difficultyKey)
+            local call = profile and profile.callsByKey and profile.callsByKey[callKey] or nil
+            if call then return call end
+        end
+    end
+end
+
+local function defaultTacticsText(encounterKey, difficultyKey)
+    local profile = type(encounterKey) == "string" and Registry:GetProfile(encounterKey, difficultyKey) or nil
+    local lines = profile and profile.explanation or nil
+    if type(lines) ~= "table" then return "" end
+    local result = {}
+    for index = 1, #lines do
+        if type(lines[index]) == "string" and lines[index] ~= "" then
+            result[#result + 1] = lines[index]
+        end
+    end
+    return table.concat(result, "\n")
+end
+
+local function ensureDifficultyProfile(boss, difficultyKey)
+    if type(boss.difficulties) ~= "table" then boss.difficulties = {} end
+    local profile = boss.difficulties[difficultyKey]
+    if type(profile) ~= "table" then
+        profile = {}
+        boss.difficulties[difficultyKey] = profile
+    end
+    if type(profile.macros) ~= "table" then profile.macros = {} end
+    if type(profile.tactics) ~= "string" then profile.tactics = nil end
+    return profile
 end
 
 local function macroFromCall(service, encounter, difficultyKey, call)
@@ -79,6 +137,7 @@ local function macroFromCall(service, encounter, difficultyKey, call)
     local iconSpellID = Util.ToNumericID(call.iconSpellID) or Util.ToNumericID(spellIDs[1])
     return {
         id = nextMacroId(service.database),
+        difficultyKey = difficultyKey,
         name = call.ability or call.action or call.key,
         body = "/rw " .. tostring(warning or ""),
         sourceCallKey = call.key,
@@ -94,16 +153,64 @@ local function macroFromCall(service, encounter, difficultyKey, call)
     }
 end
 
-local function addCallsFromProfile(service, boss, encounter, difficultyKey, seen)
+local function addCallsFromProfile(service, boss, encounter, difficultyKey)
+    local target = ensureDifficultyProfile(boss, difficultyKey)
     local profile = Registry:GetProfile(encounter.key, difficultyKey)
     if not profile or type(profile.calls) ~= "table" then return end
+
+    local seen = {}
+    for _, macro in ipairs(target.macros) do
+        if type(macro) == "table" and type(macro.sourceCallKey) == "string" then
+            seen[macro.sourceCallKey] = true
+        end
+    end
+
     for index = 1, #profile.calls do
         local call = profile.calls[index]
         if call and type(call.key) == "string" and not seen[call.key] then
             seen[call.key] = true
-            boss.macros[#boss.macros + 1] = macroFromCall(service, encounter, difficultyKey, call)
+            target.macros[#target.macros + 1] = macroFromCall(service, encounter, difficultyKey, call)
         end
     end
+end
+
+local function macroBelongsToDifficulty(encounterKey, macro, difficultyKey)
+    if type(encounterKey) ~= "string" or type(macro) ~= "table" or type(macro.sourceCallKey) ~= "string" then
+        return false
+    end
+    local profile = Registry:GetProfile(encounterKey, difficultyKey)
+    return profile and profile.callsByKey and profile.callsByKey[macro.sourceCallKey] ~= nil or false
+end
+
+local function normalizeMacro(service, boss, difficultyKey, macro)
+    if type(macro) ~= "table" then return nil end
+    if not tonumber(macro.id) then macro.id = nextMacroId(service.database) end
+    macro.difficultyKey = difficultyKey
+    macro.name = type(macro.name) == "string" and macro.name:sub(1, 16) or "Macro"
+    macro.body = type(macro.body) == "string" and macro.body or "/rw "
+    macro.spellIDs = type(macro.spellIDs) == "table" and macro.spellIDs or {}
+    macro.timerNames = type(macro.timerNames) == "table" and macro.timerNames or {}
+    if not macro.iconSpellID then
+        local call = registryCallForKey(boss.sourceEncounterKey, macro.sourceCallKey, difficultyKey)
+        macro.iconSpellID = Util.ToNumericID(call and call.iconSpellID) or Util.ToNumericID(macro.spellIDs[1])
+    end
+    if macro.iconMode ~= "custom" then macro.iconMode = "ability" end
+    local prepare, press = Constants.GetCallTiming({
+        prepareSeconds = macro.prepareSeconds,
+        pressSeconds = macro.pressSeconds,
+    }, service.database.timingLead)
+    macro.prepareSeconds = prepare
+    macro.pressSeconds = press
+    return macro
+end
+
+local function appendIfMissingById(macros, macro)
+    local id = tonumber(macro and macro.id)
+    for _, current in ipairs(macros or {}) do
+        if id and tonumber(current and current.id) == id then return false end
+    end
+    macros[#macros + 1] = macro
+    return true
 end
 
 function BossMacroService:Initialize(database)
@@ -129,23 +236,72 @@ function BossMacroService:Initialize(database)
 end
 
 function BossMacroService:NormalizeStoredProfiles()
+    local migrationDifficulty = selectedDifficulty(self)
+
     for _, boss in pairs(self.database.bossProfiles or {}) do
-        if type(boss) == "table" and type(boss.macros) == "table" then
-            for _, macro in ipairs(boss.macros) do
-                if type(macro) == "table" then
-                    macro.spellIDs = type(macro.spellIDs) == "table" and macro.spellIDs or {}
-                    macro.timerNames = type(macro.timerNames) == "table" and macro.timerNames or {}
-                    if not macro.iconSpellID then
-                        local call = registryCallForKey(boss.sourceEncounterKey, macro.sourceCallKey)
-                        macro.iconSpellID = Util.ToNumericID(call and call.iconSpellID) or Util.ToNumericID(macro.spellIDs[1])
+        if type(boss) == "table" then
+            for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
+                ensureDifficultyProfile(boss, difficultyKey)
+            end
+
+            -- Schema <= 8 stored one flat macro list per boss. Preserve those IDs
+            -- in the most appropriate difficulty and clone only when the same
+            -- encounter call exists in both modes. Manual macros remain in the
+            -- user's currently selected mode so action-bar markers are not split.
+            if type(boss.macros) == "table" and #boss.macros > 0 then
+                for _, legacyMacro in ipairs(boss.macros) do
+                    if type(legacyMacro) == "table" then
+                        local targets = {}
+                        if type(boss.sourceEncounterKey) == "string" and type(legacyMacro.sourceCallKey) == "string" then
+                            for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
+                                if macroBelongsToDifficulty(boss.sourceEncounterKey, legacyMacro, difficultyKey) then
+                                    targets[#targets + 1] = difficultyKey
+                                end
+                            end
+                        end
+                        if #targets == 0 then targets[1] = migrationDifficulty end
+
+                        local primary = targets[1]
+                        for _, difficultyKey in ipairs(targets) do
+                            if difficultyKey == migrationDifficulty then primary = difficultyKey break end
+                        end
+
+                        local primaryMacro = normalizeMacro(self, boss, primary, legacyMacro)
+                        appendIfMissingById(ensureDifficultyProfile(boss, primary).macros, primaryMacro)
+
+                        for _, difficultyKey in ipairs(targets) do
+                            if difficultyKey ~= primary then
+                                local cloned = cloneTable(legacyMacro) or {}
+                                cloned.id = nextMacroId(self.database)
+                                cloned.managedMacroIndex = nil
+                                normalizeMacro(self, boss, difficultyKey, cloned)
+                                appendIfMissingById(ensureDifficultyProfile(boss, difficultyKey).macros, cloned)
+                            end
+                        end
                     end
-                    if macro.iconMode ~= "custom" then macro.iconMode = "ability" end
-                    local prepare, press = Constants.GetCallTiming({
-                        prepareSeconds = macro.prepareSeconds,
-                        pressSeconds = macro.pressSeconds,
-                    }, self.database.timingLead)
-                    macro.prepareSeconds = prepare
-                    macro.pressSeconds = press
+                end
+                boss.macros = nil
+            end
+
+            for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
+                local profile = ensureDifficultyProfile(boss, difficultyKey)
+                local normalized = {}
+                for _, macro in ipairs(profile.macros) do
+                    local value = normalizeMacro(self, boss, difficultyKey, macro)
+                    if value then normalized[#normalized + 1] = value end
+                end
+                profile.macros = normalized
+                if profile.tactics == nil then
+                    profile.tactics = defaultTacticsText(boss.sourceEncounterKey, difficultyKey)
+                end
+            end
+
+            if boss.defaultProfile and type(boss.sourceEncounterKey) == "string" then
+                local encounter = Registry:Get(boss.sourceEncounterKey)
+                if encounter then
+                    for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
+                        addCallsFromProfile(self, boss, encounter, difficultyKey)
+                    end
                 end
             end
         end
@@ -167,11 +323,12 @@ function BossMacroService:SeedDefaultBosses()
                 sourceEncounterKey = encounter.key,
                 defaultProfile = true,
                 order = order,
-                macros = {},
+                difficulties = {},
             }
-            local seen = {}
             for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
-                addCallsFromProfile(self, boss, encounter, difficultyKey, seen)
+                local profile = ensureDifficultyProfile(boss, difficultyKey)
+                profile.tactics = defaultTacticsText(encounter.key, difficultyKey)
+                addCallsFromProfile(self, boss, encounter, difficultyKey)
             end
             self.database.bossProfiles[bossId] = boss
         end
@@ -215,8 +372,12 @@ function BossMacroService:CreateBoss(name, encounterID)
         sourceEncounterKey = nil,
         defaultProfile = false,
         order = maxBossOrder(self.database) + 1,
-        macros = {},
+        difficulties = {},
     }
+    for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
+        local profile = ensureDifficultyProfile(boss, difficultyKey)
+        profile.tactics = ""
+    end
     self.database.bossProfiles[id] = boss
     self.database.selectedBossId = id
     return boss
@@ -243,45 +404,77 @@ function BossMacroService:DeleteBoss(id)
     return true
 end
 
-function BossMacroService:GetMacros(bossId)
+function BossMacroService:GetDifficultyProfile(bossId, difficultyKey)
     local boss = self:GetBoss(bossId)
-    if not boss then return {} end
-    if type(boss.macros) ~= "table" then boss.macros = {} end
-    return boss.macros
+    if not boss then return nil end
+    difficultyKey = selectedDifficulty(self, difficultyKey)
+    return ensureDifficultyProfile(boss, difficultyKey), difficultyKey
 end
 
-function BossMacroService:GetAbilityOptions(bossId)
+function BossMacroService:GetMacros(bossId, difficultyKey)
+    local profile = self:GetDifficultyProfile(bossId, difficultyKey)
+    return profile and profile.macros or {}
+end
+
+function BossMacroService:GetAllMacros(bossId)
+    local boss = self:GetBoss(bossId)
+    if not boss then return {} end
+    local result = {}
+    for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
+        local profile = ensureDifficultyProfile(boss, difficultyKey)
+        for _, macro in ipairs(profile.macros) do result[#result + 1] = macro end
+    end
+    return result
+end
+
+function BossMacroService:GetTactics(bossId, difficultyKey)
+    local boss = self:GetBoss(bossId)
+    if not boss then return "" end
+    difficultyKey = selectedDifficulty(self, difficultyKey)
+    local profile = ensureDifficultyProfile(boss, difficultyKey)
+    if profile.tactics == nil then profile.tactics = defaultTacticsText(boss.sourceEncounterKey, difficultyKey) end
+    return profile.tactics or ""
+end
+
+function BossMacroService:SetTactics(bossId, difficultyKey, text)
+    local boss = self:GetBoss(bossId)
+    if not boss then return false, "Unknown boss." end
+    difficultyKey = selectedDifficulty(self, difficultyKey)
+    local profile = ensureDifficultyProfile(boss, difficultyKey)
+    profile.tactics = type(text) == "string" and text or ""
+    return true, profile.tactics
+end
+
+function BossMacroService:ResetTactics(bossId, difficultyKey)
+    local boss = self:GetBoss(bossId)
+    if not boss then return false, "Unknown boss." end
+    difficultyKey = selectedDifficulty(self, difficultyKey)
+    local profile = ensureDifficultyProfile(boss, difficultyKey)
+    profile.tactics = defaultTacticsText(boss.sourceEncounterKey, difficultyKey)
+    return true, profile.tactics
+end
+
+function BossMacroService:GetAbilityOptions(bossId, difficultyKey)
     local boss = self:GetBoss(bossId)
     if not boss or type(boss.sourceEncounterKey) ~= "string" then return {} end
-
-    local difficultyOrder = {}
-    local preferred = self.database and self.database.selectedDifficultyKey or nil
-    if preferred and Constants.DIFFICULTIES[preferred] then
-        difficultyOrder[#difficultyOrder + 1] = preferred
-    end
-    for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
-        if difficultyKey ~= preferred then difficultyOrder[#difficultyOrder + 1] = difficultyKey end
-    end
-
-    local result, seen = {}, {}
-    for _, difficultyKey in ipairs(difficultyOrder) do
-        local profile = Registry:GetProfile(boss.sourceEncounterKey, difficultyKey)
-        for _, call in ipairs(profile and profile.calls or {}) do
-            if call and type(call.key) == "string" and not seen[call.key] then
-                seen[call.key] = true
-                local prepare, press = Constants.GetCallTiming(call, self.database.timingLead)
-                local spellIDs = copyArray(call.spellIDs)
-                result[#result + 1] = {
-                    sourceCallKey = call.key,
-                    name = call.ability or call.action or call.key,
-                    spellIDs = spellIDs,
-                    timerNames = copyArray(call.timerNames),
-                    iconSpellID = Util.ToNumericID(call.iconSpellID) or Util.ToNumericID(spellIDs[1]),
-                    timingEnabled = call.timing ~= false,
-                    prepareSeconds = prepare,
-                    pressSeconds = press,
-                }
-            end
+    difficultyKey = selectedDifficulty(self, difficultyKey)
+    local profile = Registry:GetProfile(boss.sourceEncounterKey, difficultyKey)
+    local result = {}
+    for _, call in ipairs(profile and profile.calls or {}) do
+        if call and type(call.key) == "string" then
+            local prepare, press = Constants.GetCallTiming(call, self.database.timingLead)
+            local spellIDs = copyArray(call.spellIDs)
+            result[#result + 1] = {
+                difficultyKey = difficultyKey,
+                sourceCallKey = call.key,
+                name = call.ability or call.action or call.key,
+                spellIDs = spellIDs,
+                timerNames = copyArray(call.timerNames),
+                iconSpellID = Util.ToNumericID(call.iconSpellID) or Util.ToNumericID(spellIDs[1]),
+                timingEnabled = call.timing ~= false,
+                prepareSeconds = prepare,
+                pressSeconds = press,
+            }
         end
     end
     return result
@@ -289,22 +482,30 @@ end
 
 function BossMacroService:FindMacroById(id)
     local numericID = tonumber(id)
-    if not numericID then return nil, nil end
+    if not numericID then return nil, nil, nil end
     for _, boss in pairs(self.database and self.database.bossProfiles or {}) do
-        if type(boss) == "table" and type(boss.macros) == "table" then
-            for index = 1, #boss.macros do
-                if tonumber(boss.macros[index].id) == numericID then return boss.macros[index], boss end
+        if type(boss) == "table" then
+            for _, difficultyKey in ipairs(Constants.DIFFICULTY_ORDER) do
+                local profile = ensureDifficultyProfile(boss, difficultyKey)
+                for index = 1, #profile.macros do
+                    if tonumber(profile.macros[index].id) == numericID then
+                        profile.macros[index].difficultyKey = difficultyKey
+                        return profile.macros[index], boss, difficultyKey
+                    end
+                end
             end
         end
     end
 end
 
-function BossMacroService:CreateMacro(bossId)
+function BossMacroService:CreateMacro(bossId, difficultyKey)
     local boss = self:GetBoss(bossId)
     if not boss then return nil, "Unknown boss." end
-    if type(boss.macros) ~= "table" then boss.macros = {} end
+    difficultyKey = selectedDifficulty(self, difficultyKey)
+    local macros = ensureDifficultyProfile(boss, difficultyKey).macros
     local macro = {
         id = nextMacroId(self.database),
+        difficultyKey = difficultyKey,
         name = "New Macro",
         body = "/rw ",
         sourceCallKey = nil,
@@ -318,36 +519,73 @@ function BossMacroService:CreateMacro(bossId)
         pressSeconds = Constants.PRESS_SECONDS,
         managedMacroIndex = nil,
     }
-    boss.macros[#boss.macros + 1] = macro
+    macros[#macros + 1] = macro
     return macro
 end
 
-function BossMacroService:DeleteMacro(bossId, macroId)
+function BossMacroService:DeleteMacro(bossId, macroId, difficultyKey)
     local boss = self:GetBoss(bossId)
-    if not boss or type(boss.macros) ~= "table" then return false, "Unknown boss." end
-    for index = 1, #boss.macros do
-        if tonumber(boss.macros[index].id) == tonumber(macroId) then
-            local removed = table.remove(boss.macros, index)
+    if not boss then return false, "Unknown boss." end
+    difficultyKey = selectedDifficulty(self, difficultyKey)
+    local macros = ensureDifficultyProfile(boss, difficultyKey).macros
+    for index = 1, #macros do
+        if tonumber(macros[index].id) == tonumber(macroId) then
+            local removed = table.remove(macros, index)
             return true, removed
         end
     end
     return false, "Unknown macro."
 end
 
+function BossMacroService:MoveMacro(bossId, macroId, targetMacroId, difficultyKey)
+    local boss = self:GetBoss(bossId)
+    if not boss then return false, "Unknown boss." end
+    difficultyKey = selectedDifficulty(self, difficultyKey)
+    local macros = ensureDifficultyProfile(boss, difficultyKey).macros
+    local sourceIndex, targetIndex
+    for index = 1, #macros do
+        local id = tonumber(macros[index].id)
+        if id == tonumber(macroId) then sourceIndex = index end
+        if id == tonumber(targetMacroId) then targetIndex = index end
+    end
+    if not sourceIndex or not targetIndex then return false, "Unknown macro." end
+    if sourceIndex == targetIndex then return true end
+    local moving = table.remove(macros, sourceIndex)
+    -- Drop onto a slot means the dragged macro takes that slot's original
+    -- position. Keep the original target index after removal.
+    table.insert(macros, math.max(1, math.min(targetIndex, #macros + 1)), moving)
+    return true
+end
+
+function BossMacroService:MoveMacroByOffset(bossId, macroId, delta, difficultyKey)
+    local boss = self:GetBoss(bossId)
+    if not boss then return false, "Unknown boss." end
+    difficultyKey = selectedDifficulty(self, difficultyKey)
+    local macros = ensureDifficultyProfile(boss, difficultyKey).macros
+    local sourceIndex
+    for index = 1, #macros do
+        if tonumber(macros[index].id) == tonumber(macroId) then sourceIndex = index break end
+    end
+    if not sourceIndex then return false, "Unknown macro." end
+    local targetIndex = math.max(1, math.min(#macros, sourceIndex + (tonumber(delta) or 0)))
+    if targetIndex == sourceIndex then return true end
+    local moving = table.remove(macros, sourceIndex)
+    table.insert(macros, targetIndex, moving)
+    return true
+end
+
 function BossMacroService:UpdateMacro(bossId, macroId, draft)
     local boss = self:GetBoss(bossId)
-    if not boss or type(boss.macros) ~= "table" then return false, "Unknown boss." end
-    local macro
-    for index = 1, #boss.macros do
-        if tonumber(boss.macros[index].id) == tonumber(macroId) then macro = boss.macros[index] break end
-    end
-    if not macro then return false, "Unknown macro." end
+    if not boss then return false, "Unknown boss." end
+    local macro, macroBoss, difficultyKey = self:FindMacroById(macroId)
+    if not macro or not macroBoss or macroBoss.id ~= boss.id then return false, "Unknown macro." end
 
     local name = trim(draft and draft.name)
     local body = type(draft and draft.body) == "string" and draft.body or ""
     if name == "" then return false, "Macro name cannot be empty." end
     if body == "" then return false, "Macro commands cannot be empty." end
 
+    macro.difficultyKey = difficultyKey
     macro.name = name:sub(1, 16)
     macro.body = body
     macro.sourceCallKey = type(draft.sourceCallKey) == "string" and draft.sourceCallKey or nil
@@ -386,6 +624,7 @@ end
 
 function BossMacroService:GetRegistryCall(boss, macro, difficultyKey)
     if not boss or not macro or not boss.sourceEncounterKey or not macro.sourceCallKey then return nil end
+    difficultyKey = selectedDifficulty(self, difficultyKey or macro.difficultyKey)
     local profile = Registry:GetProfile(boss.sourceEncounterKey, difficultyKey)
     return profile and profile.callsByKey and profile.callsByKey[macro.sourceCallKey] or nil
 end
@@ -437,6 +676,7 @@ end
 
 function BossMacroService:GetBestTimer(boss, macro, timeline)
     if not macro or macro.timingEnabled ~= true or not timeline then return nil end
+    if macro.difficultyKey and macro.difficultyKey ~= self.database.selectedDifficultyKey then return nil end
 
     if macro.sourceCallKey and type(timeline.GetActionableTimerForCall) == "function" then
         local timer, remaining = timeline:GetActionableTimerForCall(macro.sourceCallKey)
@@ -460,10 +700,12 @@ function BossMacroService:GetBestTimer(boss, macro, timeline)
 end
 
 function BossMacroService:GetTimingState(boss, macro, timeline)
+    if macro and macro.difficultyKey and macro.difficultyKey ~= self.database.selectedDifficultyKey then return nil end
     local timer, remaining = self:GetBestTimer(boss, macro, timeline)
     if not timer or type(remaining) ~= "number" then return nil end
 
-    local defaultCall = self:GetRegistryCall(boss, macro, self.database.selectedDifficultyKey)
+    local difficultyKey = macro and macro.difficultyKey or self.database.selectedDifficultyKey
+    local defaultCall = self:GetRegistryCall(boss, macro, difficultyKey)
     local timingCall = {
         prepareSeconds = tonumber(macro.prepareSeconds) or (defaultCall and defaultCall.prepareSeconds),
         pressSeconds = tonumber(macro.pressSeconds) or (defaultCall and defaultCall.pressSeconds),
@@ -482,6 +724,7 @@ end
 function BossMacroService:AcknowledgeMacro(macroId, timeline)
     local macro, boss = self:FindMacroById(macroId)
     if not macro or not boss or not timeline then return false end
+    if macro.difficultyKey and macro.difficultyKey ~= self.database.selectedDifficultyKey then return false end
 
     if macro.sourceCallKey and type(timeline.AcknowledgeCall) == "function"
         and timeline:AcknowledgeCall(macro.sourceCallKey) then

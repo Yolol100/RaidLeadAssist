@@ -238,7 +238,7 @@ function ManagedMacroService:ReconcileIndices()
     if self.reconciling then return end
     self.reconciling = true
     for _, boss in ipairs(BossMacros:GetBossesOrdered()) do
-        for _, macro in ipairs(BossMacros:GetMacros(boss.id)) do
+        for _, macro in ipairs(BossMacros:GetAllMacros(boss.id)) do
             macro.managedMacroIndex = self:GetMacroIndex(macro.id)
         end
     end
