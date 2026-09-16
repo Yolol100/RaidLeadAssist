@@ -18,6 +18,11 @@ local FILTERS = {
     { key = "item", label = "Item Icons" },
 }
 
+local function trim(value)
+    if type(value) ~= "string" then return "" end
+    return value:match("^%s*(.-)%s*$") or ""
+end
+
 local function ensureMacroUI()
     if C_AddOns and type(C_AddOns.LoadAddOn) == "function" then
         pcall(C_AddOns.LoadAddOn, "Blizzard_MacroUI")
@@ -242,7 +247,12 @@ function IconPicker:Initialize()
     okay:SetText(OKAY or "Okay")
     okay:SetScript("OnClick", function()
         local callback = self.callback
-        local pickedName = frame.NameEdit:GetText() or ""
+        local pickedName = trim(frame.NameEdit:GetText())
+        if pickedName == "" then
+            ns:Print("Macro name cannot be empty.")
+            frame.NameEdit:SetFocus()
+            return
+        end
         local pickedIcon = self.selectedIcon
         self.accepted = true
         self:Close()
