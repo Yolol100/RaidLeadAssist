@@ -9,6 +9,7 @@ on:
 permissions:
   contents: read
 
+# Temporary audit workflow; removed before the product PR.
 jobs:
   validation:
     runs-on: ubuntu-24.04
