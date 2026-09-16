@@ -176,6 +176,7 @@ function App:Initialize()
 
     UI:Initialize(self.db, {
         getManagedOverhead = function(macroId) return ManagedMacros:GetManagedOverhead(macroId) end,
+        getMacroMaxLength = function() return ManagedMacros:GetMacroBodyMax() end,
         onBossSelected = function(boss, userInitiated)
             self:SetBossContext(boss, userInitiated ~= true)
         end,
