@@ -1032,13 +1032,13 @@ function BossMacroManager:Initialize(database, callbacks)
     abilityRow:SetHeight(62)
 
     local abilityLabel = abilityRow:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    abilityLabel:SetPoint("TOPLEFT", abilityRow, "TOPLEFT", 8, -10)
+    abilityLabel:SetPoint("LEFT", abilityRow, "LEFT", 8, -10)
     abilityLabel:SetWidth(74)
     abilityLabel:SetJustifyH("LEFT")
     abilityLabel:SetText("Boss Ability:")
 
     local abilityDropdown = CreateFrame("Frame", "RaidLeadAssistAbilityDropdown", abilityRow, "UIDropDownMenuTemplate")
-    abilityDropdown:SetPoint("LEFT", abilityRow, "LEFT", 72, 11)
+    abilityDropdown:SetPoint("LEFT", abilityRow, "LEFT", 72, -10)
     UIDropDownMenu_SetWidth(abilityDropdown, 246)
     frame.AbilityDropdown = abilityDropdown
 
