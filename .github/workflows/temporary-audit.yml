@@ -1,0 +1,353 @@
+name: temporary-audit
+
+on:
+  push:
+    branches:
+      - feature/blizzard-boss-macro-manager
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Lua
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lua5.4
+
+      - name: Lua syntax check
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' file; do
+            luac5.4 -p "$file"
+          done < <(find . -name '*.lua' -print0)
+
+      - name: TOC and module graph audit
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          root = Path('.')
+          toc_lines = []
+          for raw in (root / 'RaidLeadAssist.toc').read_text(encoding='utf-8').splitlines():
+              line = raw.strip()
+              if line and not line.startswith('#'):
+                  toc_lines.append(line)
+
+          missing = [p for p in toc_lines if not (root / p).is_file()]
+          assert not missing, f'TOC references missing files: {missing}'
+
+          listed_lua = {p for p in toc_lines if p.endswith('.lua')}
+          repo_lua = {
+              p.relative_to(root).as_posix()
+              for p in root.rglob('*.lua')
+              if '.git/' not in p.as_posix()
+          }
+          assert listed_lua == repo_lua, (
+              f'Runtime closure mismatch. Unlisted={sorted(repo_lua-listed_lua)} '
+              f'Missing={sorted(listed_lua-repo_lua)}'
+          )
+
+          removed_fragments = (
+              'AssignmentRegistry', 'SetupRegistry', 'AssignmentService',
+              'SettingsFrame.lua', 'MainFrame.lua', 'ProductivityPanel.lua',
+              'SentinelsPanel.lua', 'TimingGuidanceService.lua',
+          )
+          stale_paths = [p for p in toc_lines if any(x in p for x in removed_fragments)]
+          assert not stale_paths, f'Legacy paths remain in TOC: {stale_paths}'
+
+          registration = {}
+          gets = []
+          for index, rel in enumerate(toc_lines):
+              if not rel.endswith('.lua'):
+                  continue
+              text = (root / rel).read_text(encoding='utf-8')
+              for name in re.findall(r'ns:RegisterModule\("([^"]+)"', text):
+                  assert name not in registration, f'Duplicate module registration: {name}'
+                  registration[name] = (rel, index)
+              for name in re.findall(r'ns:GetModule\("([^"]+)"', text):
+                  gets.append((rel, index, name))
+
+          unresolved = [(rel, name) for rel, _, name in gets if name not in registration]
+          assert not unresolved, f'Unresolved module dependencies: {unresolved}'
+
+          late = []
+          for rel, index, name in gets:
+              provider, provider_index = registration[name]
+              if provider_index >= index:
+                  late.append((rel, name, provider))
+          assert not late, f'Modules loaded after their consumers: {late}'
+
+          print(f'TOC closure OK: {len(toc_lines)} runtime files, {len(registration)} registered modules')
+          PY
+
+      - name: Controlled runtime scenarios
+        run: |
+          cat > /tmp/rla_audit.lua <<'LUA'
+          local failures = 0
+          local scenarios = 0
+          local function check(name, condition, detail)
+              scenarios = scenarios + 1
+              if condition then
+                  print('PASS ' .. name)
+              else
+                  failures = failures + 1
+                  print('FAIL ' .. name .. (detail and (' :: ' .. tostring(detail)) or ''))
+              end
+          end
+
+          _G.issecretvalue = function() return false end
+          _G.GetTime = function() return _G.__now or 100 end
+          _G.IsInRaid = function() return false end
+          _G.UnitIsGroupLeader = function() return false end
+          _G.UnitIsGroupAssistant = function() return false end
+          _G.C_Spell = { GetSpellTexture = function(id) return id and (id + 1000000) or nil end }
+          _G.GetSpellTexture = function(id) return id and (id + 1000000) or nil end
+
+          local printed = {}
+          local ns = { modules = {} }
+          function ns:RegisterModule(name, module)
+              assert(type(name) == 'string' and type(module) == 'table')
+              assert(not self.modules[name], 'duplicate module ' .. name)
+              self.modules[name] = module
+          end
+          function ns:GetModule(name)
+              assert(self.modules[name], 'missing module ' .. tostring(name))
+              return self.modules[name]
+          end
+          function ns:Print(message) printed[#printed + 1] = tostring(message) end
+          local function load_module(path)
+              local chunk, err = loadfile(path)
+              assert(chunk, err)
+              return chunk('RaidLeadAssist', ns)
+          end
+
+          load_module('Core/Constants.lua')
+          load_module('Core/Util.lua')
+          local RLAConstants = ns:GetModule('Core.Constants')
+
+          -- Constants/timing boundaries.
+          check('timing-wait', RLAConstants.GetGuidanceState({}, 9, true) == RLAConstants.CallState.WAIT)
+          check('timing-prepare', RLAConstants.GetGuidanceState({}, 5, true) == RLAConstants.CallState.PREPARE)
+          check('timing-press', RLAConstants.GetGuidanceState({}, 3, true) == RLAConstants.CallState.PRESS)
+          check('timing-late', RLAConstants.GetGuidanceState({}, -0.5, true) == RLAConstants.CallState.LATE)
+          check('timing-expired', RLAConstants.GetGuidanceState({}, -2, true) == RLAConstants.CallState.IDLE)
+          local p, q = RLAConstants.GetCallTiming({ prepareSeconds = 2, pressSeconds = 9 }, {prepare=6, press=2})
+          check('invalid-inverted-timing-falls-back', p == 6 and q == 2, tostring(p) .. '/' .. tostring(q))
+          check('approximate-not-actionable-state', RLAConstants.GetGuidanceState({}, 2, false) == RLAConstants.CallState.IDLE)
+
+          -- Database migration and malformed input normalization.
+          _G.RaidLeadAssistDB = {
+              schemaVersion = 7,
+              selectedBossKey = 'nekzali',
+              selectedDifficultyKey = 'normal',
+              timingLead = {prepare = 1, press = 9},
+              uiScale = 99,
+              position = {point='BAD', relativePoint='CENTER', x=0, y=0},
+              nextBossId = -2,
+              nextMacroId = 'bad',
+          }
+          load_module('Core/Database.lua')
+          local Database = ns:GetModule('Core.Database')
+          Database:Initialize()
+          local migrated = Database:Get()
+          check('db-schema-migrated', migrated.schemaVersion == 8)
+          check('db-selected-boss-id-migrated', migrated.selectedBossId == 'encounter:nekzali', migrated.selectedBossId)
+          check('db-invalid-difficulty-reset', migrated.selectedDifficultyKey == 'heroic')
+          check('db-invalid-timing-reset', migrated.timingLead.prepare == 5 and migrated.timingLead.press == 3)
+          check('db-scale-clamped', migrated.uiScale == 1.10, migrated.uiScale)
+          check('db-position-reset', migrated.position.point == 'CENTER' and migrated.position.y == 40)
+          check('db-serials-normalized', migrated.nextBossId == 1 and migrated.nextMacroId == 1)
+
+          _G.RaidLeadAssistDB = {schemaVersion = 99, selectedBossKey='nekzali'}
+          Database:Initialize()
+          check('newer-schema-detected', Database:HasNewerSchema())
+          check('newer-schema-marker-preserved', Database:Get().schemaVersion == 99, Database:Get().schemaVersion)
+
+          -- Fake registry to execute the real BossMacroService in isolation.
+          local heroicA = {key='a', ability='Ability A', warning='Warn A', spellIDs={101}, iconSpellID=999, prepareSeconds=7, pressSeconds=4}
+          local heroicB = {key='b', ability='Ability B', warning='Warn B', timerNames={'|cffffffffTimer B|r (2)'}, timing=false, iconSpellID=202}
+          local mythicA = {key='a', ability='Ability A Mythic', warning='Warn A Mythic', spellIDs={101}, prepareSeconds=8, pressSeconds=5}
+          local mythicC = {key='c', ability='Ability C', warning='Warn C', spellIDs={303}, prepareSeconds=6, pressSeconds=2}
+          local function profile(calls)
+              local by = {}
+              for _, c in ipairs(calls) do by[c.key] = c end
+              return {calls=calls, callsByKey=by}
+          end
+          local profiles = {heroic=profile({heroicA, heroicB}), mythic=profile({mythicA, mythicC})}
+          local Registry = {}
+          function Registry:GetOrdered() return {{key='boss', name='Boss One', encounterID=123}} end
+          function Registry:GetProfile(key, difficulty) if key == 'boss' then return profiles[difficulty] end end
+          ns:RegisterModule('Encounters.Registry', Registry)
+
+          load_module('Services/BossMacroService.lua')
+          local BossMacros = ns:GetModule('Services.BossMacroService')
+          local db = {
+              bossProfiles={}, deletedDefaultBosses={}, pendingMacroSync={},
+              nextBossId=1, nextMacroId=1, selectedBossKey='boss', selectedDifficultyKey='heroic',
+              customMessages={}, timingLead={prepare=5, press=3},
+          }
+          BossMacros:Initialize(db)
+          local boss = BossMacros:GetBoss('encounter:boss')
+          local macros = BossMacros:GetMacros(boss.id)
+          check('default-boss-seeded', boss and boss.encounterID == 123)
+          check('difficulty-call-keys-deduplicated', #macros == 3, #macros)
+          local byKey = {}
+          for _, m in ipairs(macros) do byKey[m.sourceCallKey] = m end
+          check('explicit-ability-icon-retained', byKey.a.iconSpellID == 999, byKey.a.iconSpellID)
+          check('timing-disabled-call-retained', byKey.b.timingEnabled == false)
+          check('ability-icon-resolves', BossMacros:GetIcon(byKey.a) == 1000999, BossMacros:GetIcon(byKey.a))
+
+          local created = assert(BossMacros:CreateMacro(boss.id))
+          local ok, updated = BossMacros:UpdateMacro(boss.id, created.id, {
+              name='Longer Than Sixteen Character Name', body='/rw hello',
+              iconMode='custom', customIcon='134400', timingEnabled=true,
+              prepareSeconds=2, pressSeconds=9, spellID='303', timerName='Timer C'
+          })
+          check('macro-update-succeeds', ok == true)
+          check('macro-name-truncated', #updated.name <= 16, updated.name)
+          check('macro-icon-normalized', updated.customIcon == 134400, updated.customIcon)
+          check('macro-invalid-timing-normalized', updated.prepareSeconds == 5 and updated.pressSeconds == 3, tostring(updated.prepareSeconds)..'/'..tostring(updated.pressSeconds))
+          check('macro-spell-id-normalized', updated.spellIDs[1] == 303)
+          check('macro-timer-alias-normalized', updated.timerNames[1] == 'Timer C')
+
+          local timeline = {timers={}}
+          function timeline:IsActionable(timer) return timer.precision == 'exact' and timer.faded ~= true end
+          function timeline:GetActionableTimerForCall() return nil end
+          function timeline:AcknowledgeCall() return false end
+          timeline.timers.x = {key=303, name='Timer C', precision='exact', faded=false, expiration=102, duration=10, startedAt=92}
+          _G.__now = 100
+          local timing = BossMacros:GetTimingState(boss, updated, timeline)
+          check('raw-spell-fallback-timer-match', timing and timing.remaining == 2, timing and timing.remaining)
+          check('custom-timing-press-state', timing and timing.state == RLAConstants.CallState.PRESS, timing and timing.state)
+          check('ack-fallback-marks-raw-timer', BossMacros:AcknowledgeMacro(updated.id, timeline) == true and timeline.timers.x.acknowledged == true)
+
+          -- Managed WoW macro lifecycle with API doubles.
+          local charMacros = {}
+          local picked = nil
+          local combat = false
+          _G.Constants = {MacroConsts={MAX_ACCOUNT_MACROS=120, MAX_CHARACTER_MACROS=18, MAX_MACRO_LENGTH=255}}
+          _G.GetNumMacros = function() return 0, #charMacros end
+          _G.GetMacroInfo = function(index)
+              local item = charMacros[index - 120]
+              if not item then return nil end
+              return item.name, item.icon, item.body
+          end
+          _G.CreateMacro = function(name, icon, body, perCharacter)
+              assert(perCharacter == true)
+              charMacros[#charMacros+1] = {name=name, icon=icon, body=body}
+              return 120 + #charMacros
+          end
+          _G.EditMacro = function(index, name, icon, body)
+              local item = assert(charMacros[index - 120])
+              item.name, item.icon, item.body = name or item.name, icon or item.icon, body or item.body
+              return index
+          end
+          _G.DeleteMacro = function(index)
+              table.remove(charMacros, index - 120)
+          end
+          _G.PickupMacro = function(index) picked = index end
+          _G.InCombatLockdown = function() return combat end
+          _G.C_Timer = {After=function(_, callback) callback() end}
+          _G.CreateFrame = function()
+              return {RegisterEvent=function() end, SetScript=function(self, kind, fn) self[kind]=fn end}
+          end
+
+          load_module('Services/ManagedMacroService.lua')
+          local Managed = ns:GetModule('Services.ManagedMacroService')
+          local managedDb = {pendingMacroSync={}}
+          local ackId = nil
+          Managed:Initialize(managedDb, function(id) ackId=id end)
+
+          local mm = {id=777, name='12345678901234567890', body='/rw managed', iconMode='custom', customIcon=134400, spellIDs={}}
+          local valid, managedBody = Managed:ValidateMacro(mm)
+          check('managed-body-valid', valid == true)
+          check('managed-marker-appended', managedBody:match('/run RLA_P%(777%)') ~= nil, managedBody)
+          check('managed-overhead-counted', #managedBody == #mm.body + Managed:GetManagedOverhead(mm.id), #managedBody)
+          local tooLong = {id=778, name='x', body=string.rep('x', 255), iconMode='custom', customIcon=134400, spellIDs={}}
+          check('managed-over-limit-rejected', Managed:ValidateMacro(tooLong) == false)
+
+          local synced, idx = Managed:SyncMacro(mm, true)
+          check('managed-create-character-macro', synced and idx == 121 and #charMacros == 1, tostring(idx)..'/'..#charMacros)
+          check('managed-name-truncated-16', #charMacros[1].name == 16, charMacros[1].name)
+          mm.body='/rw edited'
+          local synced2, idx2 = Managed:SyncMacro(mm, true)
+          check('managed-edit-no-duplicate', synced2 and idx2 == 121 and #charMacros == 1 and charMacros[1].body:find('/rw edited',1,true) == 1)
+          check('managed-id-roundtrip', Managed:GetManagedIdByMacroIndex(121) == 777)
+          check('managed-pickup', Managed:Pickup(mm) == true and picked == 121, picked)
+
+          combat = true
+          mm.body='/rw queued'
+          local qok, qreason = Managed:SyncMacro(mm, true)
+          check('combat-sync-deferred', qok == false and qreason == 'combat' and managedDb.pendingMacroSync['777'] == 'sync')
+          local before = charMacros[1].body
+          check('combat-sync-no-write', before:find('/rw edited',1,true) == 1)
+          combat = false
+          Managed:FlushQueue()
+          check('post-combat-sync-flushed', managedDb.pendingMacroSync['777'] == nil and charMacros[1].body:find('/rw queued',1,true) == 1)
+
+          combat = true
+          local dok, dreason = Managed:DeleteManaged(mm, true)
+          check('combat-delete-deferred', dok == false and dreason == 'combat' and managedDb.pendingMacroSync['777'] == 'delete')
+          check('combat-delete-no-write', #charMacros == 1)
+          combat = false
+          Managed:FlushQueue()
+          check('post-combat-delete-flushed', #charMacros == 0 and managedDb.pendingMacroSync['777'] == nil)
+
+          local pm = {id=779, name='pickup', body='/rw x', iconMode='custom', customIcon=134400, spellIDs={}}
+          combat = true
+          picked = nil
+          local pok, preason = Managed:Pickup(pm)
+          check('combat-pickup-blocked', pok == false and preason == 'combat' and picked == nil)
+          combat = false
+
+          -- Real overlay state methods with lightweight visual doubles.
+          ns:RegisterModule('Services.TimelineService', {})
+          load_module('Services/ActionBarOverlayService.lua')
+          local Overlay = ns:GetModule('Services.ActionBarOverlayService')
+          local function texture()
+              return {
+                  color=nil, shown=false,
+                  SetColorTexture=function(self,r,g,b,a) self.color={r,g,b,a} end,
+                  SetWidth=function(self,v) self.width=v end,
+                  SetHeight=function(self,v) self.height=v end,
+                  ClearAllPoints=function() end,
+                  SetPoint=function() end,
+                  Show=function(self) self.shown=true end,
+                  Hide=function(self) self.shown=false end,
+              }
+          end
+          local function dummy_overlay()
+              local o = {shown=false, button={GetWidth=function() return 40 end, GetHeight=function() return 40 end}}
+              o.Progress={
+                  SetMinMaxValues=function(self,a,b) self.min,self.max=a,b end,
+                  SetValue=function(self,v) self.value=v end,
+                  SetStatusBarColor=function(self,r,g,b,a) self.color={r,g,b,a} end,
+              }
+              o.Edge=texture(); o.Veil=texture()
+              o.BorderTop=texture(); o.BorderBottom=texture(); o.BorderLeft=texture(); o.BorderRight=texture()
+              o.Countdown={text=nil,color=nil,SetText=function(self,v) self.text=v end,SetTextColor=function(self,...) self.color={...} end}
+              function o:Show() self.shown=true end
+              function o:Hide() self.shown=false end
+              function o:GetWidth() return 40 end
+              function o:GetHeight() return 40 end
+              return o
+          end
+          local o1=dummy_overlay(); Overlay:ApplyState(o1,{state=RLAConstants.CallState.WAIT,remaining=20,duration=40})
+          check('overlay-wait-white', o1.shown and o1.Progress.value == 20 and o1.Countdown.text == '20')
+          local o2=dummy_overlay(); Overlay:ApplyState(o2,{state=RLAConstants.CallState.PREPARE,remaining=4,duration=40})
+          check('overlay-prepare-amber', o2.BorderTop.color and o2.BorderTop.color[1] == 1 and o2.BorderTop.color[2] == 0.72)
+          local o3=dummy_overlay(); Overlay:ApplyState(o3,{state=RLAConstants.CallState.PRESS,remaining=2,duration=40})
+          check('overlay-press-red', o3.Veil.color and o3.Veil.color[1] == 0.95 and o3.Veil.color[4] > 0)
+          local o4=dummy_overlay(); Overlay:ApplyState(o4,{state=RLAConstants.CallState.LATE,remaining=-0.2,duration=40})
+          check('overlay-late-now', o4.Countdown.text == 'NOW' and o4.BorderTop.color[2] == 0.02)
+
+          print(('SCENARIOS %d FAILURES %d'):format(scenarios, failures))
+          if failures > 0 then os.exit(1) end
+          LUA
+          lua5.4 /tmp/rla_audit.lua
