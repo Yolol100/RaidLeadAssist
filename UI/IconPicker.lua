@@ -165,26 +165,26 @@ function IconPicker:Initialize()
     frame:Hide()
     removePortrait(frame)
 
-    -- Keep the close button's click target intact, but make its artwork slightly
-    -- smaller and shift the X itself right so it is visually centered in the box.
+    -- Final compact close control from the in-game screenshot pass. Keep the
+    -- clickable button and its artwork owned here so reopening the picker cannot
+    -- be overridden by a later layout shim.
     if frame.CloseButton then
         frame.CloseButton:ClearAllPoints()
-        frame.CloseButton:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 4, 0)
+        frame.CloseButton:SetSize(18, 18)
+        frame.CloseButton:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 6, 0)
 
-        local closeWidth = frame.CloseButton:GetWidth() or 0
-        local closeHeight = frame.CloseButton:GetHeight() or 0
         local function polishCloseTexture(texture, xOffset, yOffset)
-            if not texture or closeWidth <= 4 or closeHeight <= 4 then return end
+            if not texture then return end
             texture:ClearAllPoints()
             texture:SetPoint("CENTER", frame.CloseButton, "CENTER", xOffset or 0, yOffset or 0)
-            texture:SetSize(closeWidth - 4, closeHeight - 4)
+            texture:SetSize(14, 14)
         end
 
-        polishCloseTexture(frame.CloseButton:GetNormalTexture(), 2, 0)
-        polishCloseTexture(frame.CloseButton:GetPushedTexture(), 3, -1)
-        polishCloseTexture(frame.CloseButton:GetHighlightTexture(), 2, 0)
+        polishCloseTexture(frame.CloseButton:GetNormalTexture(), 1, 0)
+        polishCloseTexture(frame.CloseButton:GetPushedTexture(), 2, -1)
+        polishCloseTexture(frame.CloseButton:GetHighlightTexture(), 1, 0)
         if type(frame.CloseButton.GetDisabledTexture) == "function" then
-            polishCloseTexture(frame.CloseButton:GetDisabledTexture(), 2, 0)
+            polishCloseTexture(frame.CloseButton:GetDisabledTexture(), 1, 0)
         end
     end
 
