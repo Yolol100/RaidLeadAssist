@@ -2,10 +2,32 @@ local _, ns = ...
 
 local Util = {}
 
-local secretPredicate = _G.issecretvalue
+local secretValuePredicate = _G.issecretvalue
+local secretTablePredicate = _G.issecrettable
+local tableAccessPredicate = _G.canaccesstable
+
+local function predicateTrue(predicate, value)
+    if type(predicate) ~= "function" then return false end
+    local ok, result = pcall(predicate, value)
+    return ok and result == true
+end
 
 function Util.IsSecret(value)
-    return secretPredicate and secretPredicate(value) or false
+    return predicateTrue(secretValuePredicate, value)
+end
+
+function Util.IsSecretTable(value)
+    return type(value) == "table" and predicateTrue(secretTablePredicate, value)
+end
+
+function Util.CanAccessTable(value)
+    if type(value) ~= "table" then return false end
+    if Util.IsSecret(value) or Util.IsSecretTable(value) then return false end
+    if type(tableAccessPredicate) == "function" then
+        local ok, canAccess = pcall(tableAccessPredicate, value)
+        if not ok or canAccess ~= true then return false end
+    end
+    return true
 end
 
 function Util.Clamp(value, minimum, maximum)
@@ -63,7 +85,6 @@ function Util.GetSpellIcon(spellID)
     end
     return C_Spell and C_Spell.GetSpellTexture and C_Spell.GetSpellTexture(spellID) or nil
 end
-
 
 function Util.CopyDefaults(target, defaults)
     target = type(target) == "table" and target or {}
