@@ -28,6 +28,7 @@ local function safeTimelineCall(methodName, ...)
 
     local ok, result = pcall(api, ...)
     if not ok or Util.IsSecret(result) then return nil end
+    if type(result) == "table" and not Util.CanAccessTable(result) then return nil end
     return result
 end
 
@@ -68,7 +69,7 @@ function BlizzardProvider:SeedExistingEvents()
     if type(C_EncounterTimeline.GetEventList) ~= "function" then return end
 
     local eventIDs = safeTimelineCall("GetEventList")
-    if Util.IsSecret(eventIDs) or type(eventIDs) ~= "table" then return end
+    if type(eventIDs) ~= "table" then return end
 
     for _, rawEventID in ipairs(eventIDs) do
         local eventID = normalizeEventID(rawEventID)
@@ -76,7 +77,7 @@ function BlizzardProvider:SeedExistingEvents()
             local state = safeTimelineCall("GetEventState", eventID)
             if not Util.IsSecret(state) and (state == ACTIVE or state == PAUSED) then
                 local info = safeTimelineCall("GetEventInfo", eventID)
-                if type(info) == "table" and not Util.IsSecret(info) then
+                if type(info) == "table" and Util.CanAccessTable(info) then
                     self:AddEvent(info, eventID, self:GetSafeRemaining(eventID))
                     if state == PAUSED then
                         self.sink:ProviderTimerPaused("Blizzard", tostring(eventID), true)
@@ -88,7 +89,7 @@ function BlizzardProvider:SeedExistingEvents()
 end
 
 function BlizzardProvider:AddEvent(info, fallbackEventID, durationOverride)
-    if Util.IsSecret(info) or type(info) ~= "table" then return end
+    if type(info) ~= "table" or not Util.CanAccessTable(info) then return end
     if Util.IsSecret(info.source) or info.source ~= 0 then return end
     if Util.IsSecret(info.duration) or not isFiniteNumber(info.duration) then return end
     if Util.IsSecret(info.isApproximate)
@@ -120,7 +121,7 @@ end
 function BlizzardProvider:OnEvent(eventName, ...)
     if eventName == "ENCOUNTER_TIMELINE_EVENT_ADDED" then
         local info = ...
-        if Util.IsSecret(info) or type(info) ~= "table" then return end
+        if type(info) ~= "table" or not Util.CanAccessTable(info) then return end
         local eventID = normalizeEventID(info.id)
         self:AddEvent(info, eventID)
         if eventID then
