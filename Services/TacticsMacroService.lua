@@ -50,9 +50,9 @@ end
 
 local function syncForProfile(service, boss, difficultyKey)
     local profile = boss and boss.difficulties and boss.difficulties[difficultyKey] or nil
-    if type(profile) ~= "table" or type(profile.macros) ~= "table" then return end
+    if type(profile) ~= "table" or type(profile.macros) ~= "table" then return nil end
     local body = buildBody(profile.tactics)
-    if body == "" then return end
+    if body == "" then return nil end
 
     local macro = findMacro(profile)
     if not macro then
@@ -82,6 +82,14 @@ local function syncForProfile(service, boss, difficultyKey)
         macro.customIcon = "Interface\\Icons\\INV_Misc_Note_01"
         macro.timingEnabled = false
     end
+    return macro
+end
+
+local function syncManagedMacro(macro)
+    if type(macro) ~= "table" then return end
+    local ok, managed = pcall(ns.GetModule, ns, "Services.ManagedMacroService")
+    if not ok or type(managed) ~= "table" or type(managed.SyncMacro) ~= "function" then return end
+    managed:SyncMacro(macro, false)
 end
 
 local function syncAll(service)
@@ -102,20 +110,30 @@ end
 
 function BossMacros:SetTactics(bossId, difficultyKey, text)
     local ok, result = originalSetTactics(self, bossId, difficultyKey, text)
+    local macro
     if ok then
         local boss = self:GetBoss(bossId)
-        syncForProfile(self, boss, difficultyKey)
+        macro = syncForProfile(self, boss, difficultyKey)
+        syncManagedMacro(macro)
     end
-    return ok, result
+    return ok, result, macro
 end
 
 function BossMacros:ResetTactics(bossId, difficultyKey)
     local ok, result = originalResetTactics(self, bossId, difficultyKey)
+    local macro
     if ok then
         local boss = self:GetBoss(bossId)
-        syncForProfile(self, boss, difficultyKey)
+        macro = syncForProfile(self, boss, difficultyKey)
+        syncManagedMacro(macro)
     end
-    return ok, result
+    return ok, result, macro
+end
+
+function BossMacros:GetTacticsMacro(bossId, difficultyKey)
+    local boss = self:GetBoss(bossId)
+    local profile = boss and boss.difficulties and boss.difficulties[difficultyKey] or nil
+    return findMacro(profile)
 end
 
 ns:RegisterModule("Services.TacticsMacroService", BossMacros)
