@@ -68,16 +68,23 @@ jobs:
           grep -q 'frame.AbilityDropdown:SetPoint("TOPLEFT", abilityRow, "TOPLEFT", 72, 10)' UI/LayoutHotfix.lua
           grep -q 'frame.AdvancedButton:SetPoint("TOPLEFT", abilityRow, "TOPLEFT", 88, -48)' UI/LayoutHotfix.lua
           grep -q 'bossRow:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -41)' UI/LayoutHotfix.lua
+          grep -q 'bossLabel:SetPoint("LEFT", bossRow, "LEFT", 0, 4)' UI/LayoutHotfix.lua
+          grep -q 'deleteBoss:SetPoint("RIGHT", bossRow, "RIGHT", 0, 4)' UI/LayoutHotfix.lua
           grep -q 'difficultyRow:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -76)' UI/LayoutHotfix.lua
           grep -q 'frame.Editor:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -310)' UI/LayoutHotfix.lua
           grep -q 'TACTICS_ROLE = "tactics-prepull"' UI/LayoutHotfix.lua
           grep -q 'macro.systemRole == TACTICS_ROLE' UI/LayoutHotfix.lua
           grep -q 'setShown(frame.AbilityDropdown, showSelector)' UI/LayoutHotfix.lua
+          grep -q 'frame.RLAAdvancedBackgroundFixed' UI/LayoutHotfix.lua
+          grep -q 'hideButtonBar(frame)' UI/LayoutHotfix.lua
+          grep -q 'frame.Inset:SetPoint("TOPLEFT", frame, "TOPLEFT", 5, -31)' UI/LayoutHotfix.lua
+          grep -q 'frame.Inset:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -5, 5)' UI/LayoutHotfix.lua
           grep -q 'hint:Hide()' UI/LayoutHotfix.lua
           grep -q 'systemRole = ROLE' Services/TacticsMacroService.lua
           grep -q 'name = "Pull Tactics"' Services/TacticsMacroService.lua
           grep -q 'BODY_LIMIT = 228' Services/TacticsMacroService.lua
-          grep -q 'button:SetNormalTexture(nil)' UI/IconPicker.lua
+          ! grep -q 'button:SetNormalTexture(nil)' UI/IconPicker.lua
+          grep -q 'button:SetHighlightTexture("Interface\\\\Buttons\\\\ButtonHilight-Square", "ADD")' UI/IconPicker.lua
           grep -q 'scrollText:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 66, 35)' UI/IconPicker.lua
           grep -q 'difficultyLabel:SetPoint("LEFT", difficultyRow, "LEFT", 0, -2)' UI/LayoutHotfix.lua
           python3 - <<'PY'
