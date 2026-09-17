@@ -50,11 +50,21 @@ end
 
 local function syncForProfile(service, boss, difficultyKey)
     local profile = boss and boss.difficulties and boss.difficulties[difficultyKey] or nil
-    if type(profile) ~= "table" or type(profile.macros) ~= "table" then return nil end
+    if type(profile) ~= "table" or type(profile.macros) ~= "table" then return nil, nil end
     local body = buildBody(profile.tactics)
-    if body == "" then return nil end
-
     local macro = findMacro(profile)
+
+    if body == "" then
+        if not macro then return nil, nil end
+        for index = #profile.macros, 1, -1 do
+            if profile.macros[index] == macro then
+                table.remove(profile.macros, index)
+                break
+            end
+        end
+        return nil, macro
+    end
+
     if not macro then
         macro = {
             id = nextMacroId(service),
@@ -85,11 +95,22 @@ local function syncForProfile(service, boss, difficultyKey)
     return macro
 end
 
-local function syncManagedMacro(macro)
-    if type(macro) ~= "table" then return end
+local function getManagedMacroService()
     local ok, managed = pcall(ns.GetModule, ns, "Services.ManagedMacroService")
-    if not ok or type(managed) ~= "table" or type(managed.SyncMacro) ~= "function" then return end
+    if not ok or type(managed) ~= "table" then return nil end
+    return managed
+end
+
+local function syncManagedMacro(macro)
+    local managed = getManagedMacroService()
+    if type(macro) ~= "table" or not managed or type(managed.SyncMacro) ~= "function" then return end
     managed:SyncMacro(macro, false)
+end
+
+local function deleteManagedMacro(macro)
+    local managed = getManagedMacroService()
+    if type(macro) ~= "table" or not managed or type(managed.DeleteManaged) ~= "function" then return end
+    managed:DeleteManaged(macro, false)
 end
 
 local function syncAll(service)
@@ -110,22 +131,22 @@ end
 
 function BossMacros:SetTactics(bossId, difficultyKey, text)
     local ok, result = originalSetTactics(self, bossId, difficultyKey, text)
-    local macro
+    local macro, removed
     if ok then
         local boss = self:GetBoss(bossId)
-        macro = syncForProfile(self, boss, difficultyKey)
-        syncManagedMacro(macro)
+        macro, removed = syncForProfile(self, boss, difficultyKey)
+        if removed then deleteManagedMacro(removed) else syncManagedMacro(macro) end
     end
     return ok, result, macro
 end
 
 function BossMacros:ResetTactics(bossId, difficultyKey)
     local ok, result = originalResetTactics(self, bossId, difficultyKey)
-    local macro
+    local macro, removed
     if ok then
         local boss = self:GetBoss(bossId)
-        macro = syncForProfile(self, boss, difficultyKey)
-        syncManagedMacro(macro)
+        macro, removed = syncForProfile(self, boss, difficultyKey)
+        if removed then deleteManagedMacro(removed) else syncManagedMacro(macro) end
     end
     return ok, result, macro
 end
