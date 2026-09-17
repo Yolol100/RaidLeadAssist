@@ -1,7 +1,6 @@
 local _, ns = ...
 
 local UI = ns:GetModule("UI.BossMacroManager")
-local BossMacros = ns:GetModule("Services.BossMacroService")
 
 local TACTICS_ROLE = "tactics-prepull"
 
@@ -62,28 +61,24 @@ local function refreshMacroSlotChrome(self)
     end
 end
 
-local function installTacticsActionBarDrag(self)
+local function installActionBarDrag(self)
     for _, button in ipairs(self.macroButtons or {}) do
-        if not button.RLATacticsActionBarDrag then
-            button.RLATacticsActionBarDrag = true
+        if not button.RLAActionBarDrag then
+            button.RLAActionBarDrag = true
             button:SetScript("OnDragStart", function(btn)
                 if not btn.macroId then return end
-                local macro = BossMacros:FindMacroById(btn.macroId)
-                if type(macro) == "table" and macro.systemRole == TACTICS_ROLE then
-                    self:SelectMacro(btn.macroId)
-                    self.draggingMacroId = nil
-                    btn:UnlockHighlight()
-                    if self.callbacks and self.callbacks.onPickupMacro then
-                        self.callbacks.onPickupMacro(macro, self:GetBoss())
-                    end
-                    return
-                end
-
-                -- Preserve the existing grid-reorder behavior for every normal
-                -- macro. Only Pull Tactics is converted into an action-bar drag.
                 self:SelectMacro(btn.macroId)
-                self.draggingMacroId = btn.macroId
-                btn:LockHighlight()
+                self.draggingMacroId = nil
+                btn:UnlockHighlight()
+
+                local macro = self:GetSelectedMacro()
+                if macro and self.callbacks and self.callbacks.onPickupMacro then
+                    self.callbacks.onPickupMacro(macro, self:GetBoss())
+                end
+            end)
+            button:SetScript("OnDragStop", function(btn)
+                self.draggingMacroId = nil
+                btn:UnlockHighlight()
             end)
         end
     end
@@ -124,7 +119,10 @@ function UI:Initialize(database, callbacks)
     local frame = self.frame
     if not frame or not frame.AbilityDropdown or not frame.AdvancedButton then return end
 
-    installTacticsActionBarDrag(self)
+    -- Every macro tile now behaves like the selected-macro icon: dragging it
+    -- picks up the managed General Macro so it can be dropped on an action bar.
+    -- Grid ordering remains available through the dedicated < / > buttons.
+    installActionBarDrag(self)
 
     local bossRow = frame.BossDropdown and frame.BossDropdown:GetParent() or nil
     if bossRow then
