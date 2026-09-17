@@ -242,19 +242,23 @@ function IconPicker:Initialize()
         local col = (index - 1) % columns
         local row = math.floor((index - 1) / columns)
         button:SetPoint("TOPLEFT", 24 + (col * 55), -14 - (row * 49))
-        button:SetNormalTexture("Interface\\Buttons\\UI-Quickslot2")
+
+        -- Do not draw Blizzard's Quickslot normal texture in the icon list.
+        -- It can sit over/around icon art and also produces visible empty squares
+        -- for provider entries whose texture is not currently available.
+        button:SetNormalTexture(nil)
         button:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
 
         local iconTexture = button:CreateTexture(nil, "ARTWORK")
-        iconTexture:SetPoint("TOPLEFT", 3, -3)
-        iconTexture:SetPoint("BOTTOMRIGHT", -3, 3)
+        iconTexture:SetAllPoints(button)
         iconTexture:SetTexCoord(0.07, 0.93, 0.07, 0.93)
         button.Icon = iconTexture
 
         local selected = button:CreateTexture(nil, "OVERLAY")
-        selected:SetTexture("Interface\\Buttons\\CheckButtonHilight")
+        selected:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
         selected:SetBlendMode("ADD")
-        selected:SetAllPoints()
+        selected:SetPoint("CENTER", 0, 0)
+        selected:SetSize(54, 54)
         selected:Hide()
         button.Selected = selected
 
@@ -268,7 +272,8 @@ function IconPicker:Initialize()
     end
 
     local scrollText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    scrollText:SetPoint("BOTTOM", 0, 37)
+    scrollText:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 66, 35)
+    scrollText:SetJustifyH("LEFT")
     frame.ScrollText = scrollText
 
     local okay = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
