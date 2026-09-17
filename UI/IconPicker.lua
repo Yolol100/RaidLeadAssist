@@ -138,7 +138,6 @@ function IconPicker:Open(anchorFrame, name, icon, callback, cancelCallback)
     self.selectedIcon = icon or 134400
     self.frame.NameEdit:SetText(name or "")
     self.frame.NameEdit:HighlightText()
-    self.frame.SelectedIcon:SetTexture(self.selectedIcon)
     self:SetFilter("all")
 
     self.frame:ClearAllPoints()
@@ -166,42 +165,26 @@ function IconPicker:Initialize()
     frame:Hide()
     removePortrait(frame)
 
+    -- UIPanelCloseButtonDefaultAnchors uses x=1. Move only this picker close
+    -- button two pixels farther right without changing any other frame.
+    if frame.CloseButton then
+        frame.CloseButton:ClearAllPoints()
+        frame.CloseButton:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 3, 0)
+    end
+
+    -- Icon-picker geometry is anchored directly to the picker frame. Keeping each
+    -- control independent prevents a later adjustment to one row from cascading
+    -- into neighboring controls.
     local nameLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    nameLabel:SetPoint("TOPLEFT", 24, -62)
+    nameLabel:SetPoint("TOPLEFT", frame, "TOPLEFT", 24, -48)
     nameLabel:SetText("Enter Macro Name (Max 16 Characters):")
 
     local nameEdit = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
     nameEdit:SetSize(250, 28)
-    nameEdit:SetPoint("TOPLEFT", nameLabel, "BOTTOMLEFT", 4, -5)
+    nameEdit:SetPoint("TOPLEFT", frame, "TOPLEFT", 28, -69)
     nameEdit:SetAutoFocus(false)
     nameEdit:SetMaxLetters(16)
     frame.NameEdit = nameEdit
-
-    local selectedLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    selectedLabel:SetPoint("TOPRIGHT", -70, -63)
-    selectedLabel:SetText("Currently Selected")
-
-    local selectedSub = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    selectedSub:SetPoint("TOP", selectedLabel, "BOTTOM", 0, -2)
-    selectedSub:SetText("Click to view in the list")
-
-    local selectedButton = CreateFrame("Button", nil, frame)
-    selectedButton:SetSize(50, 50)
-    selectedButton:SetPoint("LEFT", selectedLabel, "RIGHT", 10, -8)
-    selectedButton:SetNormalTexture("Interface\\Buttons\\UI-Quickslot2")
-    local selectedIcon = selectedButton:CreateTexture(nil, "ARTWORK")
-    selectedIcon:SetPoint("TOPLEFT", 3, -3)
-    selectedIcon:SetPoint("BOTTOMRIGHT", -3, 3)
-    selectedIcon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
-    frame.SelectedIcon = selectedIcon
-    selectedButton:SetScript("OnClick", function()
-        if not self.provider then return end
-        local index = self.provider:GetIndexOfIcon(self.selectedIcon)
-        if index then
-            self.offset = math.max(1, index - math.floor(self.pageSize / 2))
-            self:RefreshGrid()
-        end
-    end)
 
     local separator = frame:CreateTexture(nil, "ARTWORK")
     separator:SetTexture("Interface\\ClassTrainerFrame\\UI-ClassTrainer-HorizontalBar")
@@ -210,11 +193,11 @@ function IconPicker:Initialize()
     separator:SetTexCoord(0, 1, 0, 0.25)
 
     local chooseLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    chooseLabel:SetPoint("TOPLEFT", 24, -146)
+    chooseLabel:SetPoint("TOPLEFT", frame, "TOPLEFT", 24, -126)
     chooseLabel:SetText("Choose an Icon:")
 
     local filterDropdown = CreateFrame("Frame", "RaidLeadAssistIconFilterDropdown", frame, "UIDropDownMenuTemplate")
-    filterDropdown:SetPoint("TOPRIGHT", -26, -137)
+    filterDropdown:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -20, -117)
     UIDropDownMenu_SetWidth(filterDropdown, 150)
     UIDropDownMenu_Initialize(filterDropdown, function(_, level)
         if level ~= 1 then return end
@@ -229,8 +212,8 @@ function IconPicker:Initialize()
     frame.FilterDropdown = filterDropdown
 
     local gridBackground = CreateFrame("Frame", nil, frame, "TooltipBackdropTemplate")
-    gridBackground:SetPoint("TOPLEFT", 20, -178)
-    gridBackground:SetPoint("BOTTOMRIGHT", -20, 54)
+    gridBackground:SetPoint("TOPLEFT", frame, "TOPLEFT", 20, -178)
+    gridBackground:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -20, 45)
     gridBackground:EnableMouseWheel(true)
     gridBackground:SetScript("OnMouseWheel", function(_, delta) self:Scroll(delta) end)
 
@@ -241,7 +224,8 @@ function IconPicker:Initialize()
         button:SetSize(45, 45)
         local col = (index - 1) % columns
         local row = math.floor((index - 1) / columns)
-        button:SetPoint("TOPLEFT", 24 + (col * 55), -14 - (row * 49))
+        -- 31 px left/right and 14 px top/bottom padding around the complete grid.
+        button:SetPoint("TOPLEFT", gridBackground, "TOPLEFT", 31 + (col * 55), -14 - (row * 49))
 
         -- This button intentionally has no normal texture. Empty provider slots are
         -- hidden in RefreshGrid, so no Quickslot frame can cover icon artwork.
@@ -263,20 +247,22 @@ function IconPicker:Initialize()
         button:SetScript("OnClick", function(btn)
             if not btn.iconValue then return end
             self.selectedIcon = btn.iconValue
-            frame.SelectedIcon:SetTexture(self.selectedIcon)
             self:RefreshGrid()
         end)
         self.buttons[index] = button
     end
 
     local scrollText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    scrollText:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 66, 35)
-    scrollText:SetJustifyH("LEFT")
+    -- Button centers are 24 px above the bottom (12 px + half of 24 px).
+    -- Anchor the counter to that exact center and to the frame's horizontal center.
+    scrollText:SetPoint("CENTER", frame, "BOTTOM", 0, 24)
+    scrollText:SetJustifyH("CENTER")
     frame.ScrollText = scrollText
 
     local okay = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
     okay:SetSize(90, 24)
-    okay:SetPoint("BOTTOMRIGHT", -108, 12)
+    -- The Cancel button ends at x=-20, matching the icon-grid right margin.
+    okay:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -118, 12)
     okay:SetText(OKAY or "Okay")
     okay:SetScript("OnClick", function()
         local callback = self.callback
