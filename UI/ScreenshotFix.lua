@@ -17,8 +17,8 @@ local function findTextRegion(frame, text)
     end
 end
 
--- Final screenshot-only alignment pass. Keep this deliberately narrow so no
--- unrelated controls are moved by future tuning of these four items.
+-- Screenshot-only alignment pass. Keep every adjustment scoped to the exact
+-- control shown in the screenshots so unrelated UI geometry stays untouched.
 local originalInitialize = UI.Initialize
 function UI:Initialize(database, callbacks)
     local result = originalInitialize(self, database, callbacks)
@@ -44,17 +44,41 @@ function UI:Initialize(database, callbacks)
         frame.SaveButton:SetPoint("TOPRIGHT", frame.Editor, "TOPRIGHT", -2, -1)
     end
 
-    -- Main-window bottom buttons only.
+    -- Main-window New / Exit only. Their original right offsets are -106 / -8;
+    -- use -111 / -13 to move both exactly 5 px left without moving their parent.
     local newButton = findButton(frame, NEW or "New")
     if newButton then
         newButton:ClearAllPoints()
-        newButton:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -108, 16)
+        newButton:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -111, 16)
     end
 
     local exitButton = findButton(frame, EXIT or "Exit")
     if exitButton then
         exitButton:ClearAllPoints()
-        exitButton:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -10, 16)
+        exitButton:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -13, 16)
+    end
+
+    return result
+end
+
+-- Advanced Timer Matching dialog only. Re-anchor the Apply / Cancel pair after
+-- the base frame is created. Cancel remains attached to Apply, so moving Apply
+-- 5 px left moves the pair together and does not affect fields or labels above.
+local originalInitializeAdvancedFrame = UI.InitializeAdvancedFrame
+function UI:InitializeAdvancedFrame()
+    local result = originalInitializeAdvancedFrame(self)
+    local frame = self.advancedFrame
+    if not frame then return result end
+
+    local apply = findButton(frame, APPLY or "Apply")
+    local cancel = findButton(frame, CANCEL or "Cancel")
+    if apply then
+        apply:ClearAllPoints()
+        apply:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -117, 14)
+    end
+    if cancel and apply then
+        cancel:ClearAllPoints()
+        cancel:SetPoint("LEFT", apply, "RIGHT", 10, 0)
     end
 
     return result
