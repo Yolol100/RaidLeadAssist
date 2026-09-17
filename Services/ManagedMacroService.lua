@@ -7,6 +7,8 @@ local ManagedMacroService = {
     acknowledgeCallback = nil,
     frame = nil,
     reconciling = false,
+    migrating = false,
+    migrationWarningShown = false,
 }
 
 local function accountMacroMax()
@@ -53,22 +55,40 @@ local function macroInfo(index)
     return { index = index, name = name, icon = icon, body = body or "" }
 end
 
+local function generalMacroRange()
+    local accountCount = select(1, GetNumMacros())
+    return 1, tonumber(accountCount) or 0
+end
+
 local function characterMacroRange()
-    local accountCount, characterCount = GetNumMacros()
+    local _, characterCount = GetNumMacros()
     local base = accountMacroMax()
     local first = base + 1
     local last = base + (tonumber(characterCount) or 0)
-    return first, last, tonumber(accountCount) or 0, tonumber(characterCount) or 0
+    return first, last
 end
 
-local function findByMarker(macroId)
-    local first, last = characterMacroRange()
+local function findInRangeByMarker(macroId, first, last)
     local numericId = tonumber(macroId)
     if not numericId then return nil end
     for index = first, last do
         local info = macroInfo(index)
         if info and parseManagedId(info.body) == numericId then return info end
     end
+end
+
+local function findGeneralByMarker(macroId)
+    local first, last = generalMacroRange()
+    return findInRangeByMarker(macroId, first, last)
+end
+
+local function findCharacterByMarker(macroId)
+    local first, last = characterMacroRange()
+    return findInRangeByMarker(macroId, first, last)
+end
+
+local function findByMarker(macroId)
+    return findGeneralByMarker(macroId)
 end
 
 local function safeName(macro)
@@ -79,6 +99,12 @@ end
 
 local function inCombat()
     return type(InCombatLockdown) == "function" and InCombatLockdown() == true
+end
+
+local function deleteMacroAt(index)
+    if not index then return true end
+    local ok, result = pcall(DeleteMacro, index)
+    return ok and result ~= false
 end
 
 function ManagedMacroService:GetManagedOverhead(macroId)
@@ -128,25 +154,35 @@ function ManagedMacroService:SyncMacro(macro, silent)
     local body = bodyOrError
     local name = safeName(macro)
     local icon = BossMacros:GetIcon(macro)
-    local existing = findByMarker(macro.id)
+    local existing = findGeneralByMarker(macro.id)
+    local legacyCharacter = findCharacterByMarker(macro.id)
     local index
 
     if existing then
         local ok, result = pcall(EditMacro, existing.index, name, icon, body)
         if not ok or not result then
-            local message = "Could not update the managed WoW macro."
+            local message = "Could not update the managed General Macro."
             if not silent then ns:Print(message) end
             return false, message
         end
         index = tonumber(result) or existing.index
     else
-        local ok, result = pcall(CreateMacro, name, icon, body, true)
+        -- false means account-wide: the macro is stored under WoW's General Macros,
+        -- not under the current character's character-specific macro tab.
+        local ok, result = pcall(CreateMacro, name, icon, body, false)
         if not ok or not result then
-            local message = "Could not create a character macro. Check whether your character macro slots are full."
+            local message = "Could not create a General Macro. Check whether your General Macro slots are full."
             if not silent then ns:Print(message) end
             return false, message
         end
         index = tonumber(result)
+    end
+
+    -- Older RaidLeadAssist builds created character-specific macros. Once the
+    -- General Macro exists successfully, remove that legacy copy so there is only
+    -- one managed WoW macro for this RLA macro id.
+    if legacyCharacter then
+        deleteMacroAt(legacyCharacter.index)
     end
 
     macro.managedMacroIndex = index
@@ -165,14 +201,19 @@ function ManagedMacroService:DeleteManaged(macroOrId, silent)
         return false, "combat"
     end
 
-    local existing = findByMarker(macroId)
-    if existing then
-        local ok = pcall(DeleteMacro, existing.index)
-        if not ok then
-            local message = "Could not delete the managed WoW macro."
-            if not silent then ns:Print(message) end
-            return false, message
-        end
+    local general = findGeneralByMarker(macroId)
+    if general and not deleteMacroAt(general.index) then
+        local message = "Could not delete the managed General Macro."
+        if not silent then ns:Print(message) end
+        return false, message
+    end
+
+    -- Also clean up a legacy character-specific copy left by older versions.
+    local character = findCharacterByMarker(macroId)
+    if character and not deleteMacroAt(character.index) then
+        local message = "Could not delete the legacy character macro."
+        if not silent then ns:Print(message) end
+        return false, message
     end
 
     self:ClearQueue(macroId)
@@ -234,6 +275,29 @@ function ManagedMacroService:FlushQueue()
     end
 end
 
+function ManagedMacroService:MigrateCharacterMacros()
+    if self.migrating or inCombat() then return end
+    self.migrating = true
+
+    local failed = 0
+    for _, boss in ipairs(BossMacros:GetBossesOrdered()) do
+        for _, macro in ipairs(BossMacros:GetAllMacros(boss.id)) do
+            if findCharacterByMarker(macro.id) then
+                local ok = self:SyncMacro(macro, true)
+                if not ok then failed = failed + 1 end
+            end
+        end
+    end
+
+    self.migrating = false
+    if failed > 0 and not self.migrationWarningShown then
+        self.migrationWarningShown = true
+        ns:Print(("Could not move %d RaidLeadAssist macro(s) to General Macros. Check whether your General Macro slots are full."):format(failed))
+    elseif failed == 0 then
+        self.migrationWarningShown = false
+    end
+end
+
 function ManagedMacroService:ReconcileIndices()
     if self.reconciling then return end
     self.reconciling = true
@@ -267,15 +331,19 @@ function ManagedMacroService:Initialize(database, acknowledgeCallback)
     frame:RegisterEvent("UPDATE_MACROS")
     frame:RegisterEvent("PLAYER_ENTERING_WORLD")
     frame:SetScript("OnEvent", function(_, eventName)
+        if inCombat() then return end
         if eventName == "PLAYER_REGEN_ENABLED" then
             self:FlushQueue()
         end
-        if not inCombat() then self:ReconcileIndices() end
+        self:MigrateCharacterMacros()
+        self:ReconcileIndices()
     end)
     self.frame = frame
 
     if not inCombat() then
         C_Timer.After(0, function()
+            if inCombat() then return end
+            self:MigrateCharacterMacros()
             self:ReconcileIndices()
             self:FlushQueue()
         end)
