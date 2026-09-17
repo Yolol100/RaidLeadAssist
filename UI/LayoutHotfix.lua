@@ -11,6 +11,19 @@ local function findTextRegion(frame, text)
     end
 end
 
+local function findButton(frame, text)
+    if not frame or type(frame.GetChildren) ~= "function" then return nil end
+    for _, child in ipairs({ frame:GetChildren() }) do
+        if type(child.GetText) == "function" and child:GetText() == text then return child end
+    end
+end
+
+local function hideButtonBar(frame)
+    if frame and type(ButtonFrameTemplate_HideButtonBar) == "function" then
+        pcall(ButtonFrameTemplate_HideButtonBar, frame)
+    end
+end
+
 local function setShown(region, shown)
     if not region then return end
     if shown then
@@ -89,10 +102,32 @@ function UI:Initialize(database, callbacks)
         bossRow:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -41)
         bossRow:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -15, -41)
 
-        -- UIDropDownMenuTemplate draws its visible box slightly below the frame's
-        -- anchor. Lift it two pixels so it visually centers with New/Rename/X.
+        -- Keep the dropdown fixed and lift only Boss:, New, Rename and X so the
+        -- four controls visually share the dropdown's horizontal center line.
         frame.BossDropdown:ClearAllPoints()
         frame.BossDropdown:SetPoint("LEFT", bossRow, "LEFT", 36, 1)
+
+        local bossLabel = findTextRegion(bossRow, "Boss:")
+        if bossLabel then
+            bossLabel:ClearAllPoints()
+            bossLabel:SetPoint("LEFT", bossRow, "LEFT", 0, 4)
+        end
+
+        local deleteBoss = findButton(bossRow, "X")
+        local renameBoss = findButton(bossRow, "Rename")
+        local newBoss = findButton(bossRow, "New")
+        if deleteBoss then
+            deleteBoss:ClearAllPoints()
+            deleteBoss:SetPoint("RIGHT", bossRow, "RIGHT", 0, 4)
+        end
+        if renameBoss and deleteBoss then
+            renameBoss:ClearAllPoints()
+            renameBoss:SetPoint("RIGHT", deleteBoss, "LEFT", -4, 0)
+        end
+        if newBoss and renameBoss then
+            newBoss:ClearAllPoints()
+            newBoss:SetPoint("RIGHT", renameBoss, "LEFT", -4, 0)
+        end
     end
 
     local heroic = frame.DifficultyButtons and frame.DifficultyButtons.heroic or nil
@@ -153,6 +188,23 @@ function UI:Initialize(database, callbacks)
     self:RefreshDifficultyButtons()
     refreshMacroSlotChrome(self)
     refreshAbilitySelectorVisibility(self, self:GetSelectedMacro())
+end
+
+local originalInitializeAdvancedFrame = UI.InitializeAdvancedFrame
+function UI:InitializeAdvancedFrame()
+    originalInitializeAdvancedFrame(self)
+    local frame = self.advancedFrame
+    if not frame or frame.RLAAdvancedBackgroundFixed then return end
+    frame.RLAAdvancedBackgroundFixed = true
+
+    -- Match the dark content/background treatment used by the main and tactics
+    -- windows instead of leaving ButtonFrameTemplate's grey button-bar area visible.
+    hideButtonBar(frame)
+    if frame.Inset then
+        frame.Inset:ClearAllPoints()
+        frame.Inset:SetPoint("TOPLEFT", frame, "TOPLEFT", 5, -31)
+        frame.Inset:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -5, 5)
+    end
 end
 
 local originalInitializeTacticsFrame = UI.InitializeTacticsFrame
