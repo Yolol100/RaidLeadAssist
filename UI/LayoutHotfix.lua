@@ -32,10 +32,48 @@ local function refreshAbilitySelectorVisibility(self, macro)
     setShown(frame.AbilityDropdown, showSelector)
 end
 
+local function refreshMacroSlotChrome(self)
+    for _, button in ipairs(self.macroButtons or {}) do
+        local normal = type(button.GetNormalTexture) == "function" and button:GetNormalTexture() or nil
+        if normal and type(normal.SetAlpha) == "function" then
+            normal:SetAlpha(button.macroId and 0 or 1)
+        end
+    end
+
+    local frame = self.frame
+    local selectedButton = frame and frame.SelectedIcon and frame.SelectedIcon:GetParent() or nil
+    local selectedNormal = selectedButton and type(selectedButton.GetNormalTexture) == "function" and selectedButton:GetNormalTexture() or nil
+    if selectedNormal and type(selectedNormal.SetAlpha) == "function" then
+        selectedNormal:SetAlpha(frame.SelectedIcon:GetTexture() and 0 or 1)
+    end
+end
+
+local originalRefreshMacroGrid = UI.RefreshMacroGrid
+function UI:RefreshMacroGrid(...)
+    local result = originalRefreshMacroGrid(self, ...)
+    refreshMacroSlotChrome(self)
+    return result
+end
+
+local originalRefreshDifficultyButtons = UI.RefreshDifficultyButtons
+function UI:RefreshDifficultyButtons(...)
+    local result = originalRefreshDifficultyButtons(self, ...)
+    for key, button in pairs(self.frame and self.frame.DifficultyButtons or {}) do
+        button:SetButtonState("NORMAL", false)
+        if key == self.selectedDifficultyKey then
+            button:LockHighlight()
+        else
+            button:UnlockHighlight()
+        end
+    end
+    return result
+end
+
 local originalPopulateEditor = UI.PopulateEditor
 function UI:PopulateEditor(macro, ...)
     local result = originalPopulateEditor(self, macro, ...)
     refreshAbilitySelectorVisibility(self, macro)
+    refreshMacroSlotChrome(self)
     return result
 end
 
@@ -50,6 +88,11 @@ function UI:Initialize(database, callbacks)
         bossRow:ClearAllPoints()
         bossRow:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -41)
         bossRow:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -15, -41)
+
+        -- UIDropDownMenuTemplate draws its visible box slightly below the frame's
+        -- anchor. Lift it two pixels so it visually centers with New/Rename/X.
+        frame.BossDropdown:ClearAllPoints()
+        frame.BossDropdown:SetPoint("LEFT", bossRow, "LEFT", 36, 1)
     end
 
     local heroic = frame.DifficultyButtons and frame.DifficultyButtons.heroic or nil
@@ -58,6 +101,12 @@ function UI:Initialize(database, callbacks)
         difficultyRow:ClearAllPoints()
         difficultyRow:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -76)
         difficultyRow:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -15, -76)
+
+        local difficultyLabel = findTextRegion(difficultyRow, "Difficulty:")
+        if difficultyLabel then
+            difficultyLabel:ClearAllPoints()
+            difficultyLabel:SetPoint("LEFT", difficultyRow, "LEFT", 0, -2)
+        end
     end
 
     if frame.Editor then
@@ -101,6 +150,8 @@ function UI:Initialize(database, callbacks)
         end
     end
 
+    self:RefreshDifficultyButtons()
+    refreshMacroSlotChrome(self)
     refreshAbilitySelectorVisibility(self, self:GetSelectedMacro())
 end
 
