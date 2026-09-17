@@ -124,7 +124,7 @@ function App:PrintStatus()
         if ManagedMacros:GetMacroIndex(macro.id) then managed = managed + 1 end
     end
 
-    ns:Print(("Boss Macro Manager v%s | boss=%s | difficulty=%s | macros=%d | on action bars=%d"):format(
+    ns:Print(("Boss Macro Manager v%s | boss=%s | difficulty=%s | macros=%d | managed General Macros=%d"):format(
         tostring(ns.version),
         boss and boss.name or "none",
         tostring(self.db.selectedDifficultyKey or "heroic"),
