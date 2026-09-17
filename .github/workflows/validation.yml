@@ -66,7 +66,8 @@ jobs:
           grep -q 'Stop Test' UI/RaidLeaderPolish.lua
           grep -q '\[RLA Preview\]' UI/RaidLeaderPolish.lua
           grep -q 'frame.AbilityDropdown:SetPoint("TOPLEFT", abilityRow, "TOPLEFT", 72, 10)' UI/LayoutHotfix.lua
-          grep -q 'frame.AdvancedButton:SetPoint("TOPLEFT", abilityRow, "TOPLEFT", 88, -48)' UI/LayoutHotfix.lua
+          grep -q 'frame.AbilityLabel:SetPoint("LEFT", abilityRow, "LEFT", 8, -5)' UI/LayoutHotfix.lua
+          grep -q 'frame.AdvancedButton:SetPoint("TOPLEFT", abilityRow, "TOPLEFT", 88, -42)' UI/LayoutHotfix.lua
           grep -q 'bossRow:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -41)' UI/LayoutHotfix.lua
           grep -q 'bossLabel:SetPoint("LEFT", bossRow, "LEFT", 0, 4)' UI/LayoutHotfix.lua
           grep -q 'deleteBoss:SetPoint("RIGHT", bossRow, "RIGHT", 0, 4)' UI/LayoutHotfix.lua
@@ -85,7 +86,15 @@ jobs:
           grep -q 'BODY_LIMIT = 228' Services/TacticsMacroService.lua
           ! grep -q 'button:SetNormalTexture(nil)' UI/IconPicker.lua
           grep -q 'button:SetHighlightTexture("Interface\\\\Buttons\\\\ButtonHilight-Square", "ADD")' UI/IconPicker.lua
-          grep -q 'scrollText:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 66, 35)' UI/IconPicker.lua
+          ! grep -q 'Currently Selected' UI/IconPicker.lua
+          ! grep -q 'Click to view in the list' UI/IconPicker.lua
+          grep -q 'frame.CloseButton:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 3, 0)' UI/IconPicker.lua
+          grep -q 'filterDropdown:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -20, -117)' UI/IconPicker.lua
+          grep -q 'gridBackground:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -20, 45)' UI/IconPicker.lua
+          grep -q 'button:SetPoint("TOPLEFT", gridBackground, "TOPLEFT", 31 + (col \* 55), -14 - (row \* 49))' UI/IconPicker.lua
+          grep -q 'scrollText:SetPoint("CENTER", frame, "BOTTOM", 0, 24)' UI/IconPicker.lua
+          grep -q 'okay:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -118, 12)' UI/IconPicker.lua
+          ! grep -q 'self.frame.FilterDropdown:SetPoint' UI/RaidLeaderPolish.lua
           grep -q 'difficultyLabel:SetPoint("LEFT", difficultyRow, "LEFT", 0, -2)' UI/LayoutHotfix.lua
           python3 - <<'PY'
           from pathlib import Path
