@@ -2,29 +2,33 @@
 
 Raid Lead Assist is a World of Warcraft Retail add-on for boss-specific raid-leader macros, per-difficulty tactics, and encounter-aware action-bar timing guidance.
 
+Current add-on version: **1.1.13**.
+
 ## What it does
 
 - Preloads boss profiles from the bundled encounter definitions.
-- Keeps **Heroic** and **Mythic** data separate per boss.
-- Shows only the macros and tactics for the selected difficulty.
+- Keeps **Heroic** and **Mythic** macros, ordering, ability links, timing settings and tactics separate per boss.
 - Lets you create, rename, edit, delete and reorder macros per boss and difficulty.
-- Provides editable raid-leader tactics per boss/difficulty, seeded from the bundled encounter strategy notes.
-- Uses Blizzard-style macro configuration and icon selection.
-- Creates managed character macros that can be picked up and placed on action bars.
+- Provides editable boss tactics and generates a dedicated **Pull Tactics** raid-warning macro from that text.
+- Stores managed Raid Lead Assist macros in WoW **General Macros** so they are account-wide rather than character-specific.
+- Lets every macro tile, the large selected-macro icon, and the **To Action Bar** button pick up the managed General Macro for placement on an action bar.
 - Matches supported DBM, BigWigs or Blizzard encounter timers to linked boss abilities.
-- Adds a full-button timing overlay to managed action-bar macros: white progress/countdown, amber prepare state, and red press/late state.
-- Defers macro create/edit/delete work until combat ends when required by WoW protected-action rules.
+- Adds a full-button timing overlay to managed action-bar macros: progress/countdown, prepare state, press-now state and a short late state.
+- Defers protected macro changes until combat ends when required by WoW.
 
 ## Requirements
 
-- World of Warcraft Retail
-- DBM or BigWigs is optional; Blizzard native encounter timers are used as a fallback when available.
+- World of Warcraft Retail.
+- DBM or BigWigs is optional. Blizzard native encounter timers are used as a fallback when available.
 
 ## Installation
 
-1. Place the `RaidLeadAssist` folder in `World of Warcraft/_retail_/Interface/AddOns/`.
-2. Make sure `RaidLeadAssist.toc` is directly inside that folder.
-3. Enable **Raid Lead Assist** in the WoW AddOns menu.
+1. Extract the release ZIP.
+2. Place the `RaidLeadAssist` folder in `World of Warcraft/_retail_/Interface/AddOns/`.
+3. Confirm `RaidLeadAssist.toc` is directly inside that folder.
+4. Enable **Raid Lead Assist** in the WoW AddOns menu.
+
+The generated GitHub Actions ZIP contains only the TOC and the runtime files listed by the TOC. Repository-only files such as this README and `.github/` are not included in the installable add-on package.
 
 ## Usage
 
@@ -35,7 +39,7 @@ Available commands:
 - `/rla` or `/rla toggle` — open or close the Boss Macro Manager
 - `/rla show` — show it
 - `/rla hide` — hide it
-- `/rla status` — show the selected boss, difficulty, macro count and timer-provider status
+- `/rla status` — show the selected boss, difficulty, macro count, managed General Macro count and timer-provider status
 - `/rla provider` — show detected timer providers
 - `/rla resetpos` — reset the manager position
 
@@ -43,65 +47,70 @@ The AddOn Compartment entry also opens the Boss Macro Manager.
 
 ## Heroic and Mythic profiles
 
-Choose **Heroic** or **Mythic** in the Boss Macro Manager. Each boss keeps separate:
+Choose **Heroic** or **Mythic** in the Boss Macro Manager. Changing difficulty changes the visible macro and tactics profile immediately. Encounter start/recovery also selects the supported difficulty from the live encounter when WoW supplies it.
 
-- macro list;
-- macro ordering;
-- boss-ability links and timing settings;
-- tactics text.
+Existing older SavedVariables are migrated to the difficulty-aware structure. Existing IDs are preserved where possible. A linked encounter macro that belongs to both difficulties receives an independent managed-macro ID in the other difficulty so action-bar markers stay unambiguous.
 
-Changing difficulty immediately changes the visible macro/tactics profile. Encounter start and recovery also select Heroic/Mythic from the live encounter difficulty when WoW supplies a supported difficulty ID.
+## General Macros and action-bar placement
 
-Existing pre-1.1 SavedVariables are migrated to the new difficulty-aware structure. Existing macro IDs are preserved where possible; a macro tied to an encounter call used by both modes is cloned for the other mode with a new managed-macro ID so action-bar markers remain unambiguous.
+Raid Lead Assist appends a small internal `/run RLA_P(...)` marker to every managed WoW macro. The marker lets the add-on identify an action-bar macro and acknowledge its timer occurrence after it is pressed. The marker counts toward WoW's macro-length limit, so the editor includes that overhead in its character counter.
 
-## Macro ordering
+Managed macros live in WoW **General Macros**. Older Raid Lead Assist character-specific macros are migrated to General Macros outside combat; the old character copy is removed only after the General Macro has been created successfully.
 
-Drag a macro onto another macro slot to reorder it. The `<` and `>` buttons provide a deterministic fallback. The order is saved independently for each boss and difficulty and survives `/reload` through SavedVariables.
+To place a macro on an action bar, use any of these methods outside combat:
+
+- drag a macro tile from the grid;
+- drag the large selected-macro icon below the grid;
+- click **To Action Bar** and then place the macro.
+
+Macro ordering inside Raid Lead Assist is changed with the `<` and `>` buttons. Dragging a macro tile is reserved for action-bar placement.
 
 ## Boss tactics
 
-Use **Boss Tactics** to view/edit tactics for the currently selected boss and difficulty. Bundled bosses start from the strategy explanation in their encounter definition; **Reset Default** restores that bundled text. Custom bosses start with an empty tactics page.
+Use **Boss Tactics** for the selected boss/difficulty. Bundled bosses start with their included strategy text; **Reset Default** restores that text.
 
-## Boss Macro Manager
+When tactics contain text, Raid Lead Assist maintains a **Pull Tactics** macro containing as many `/rw` lines as fit safely within WoW's macro-length limit. Saving or resetting tactics updates the managed General Macro. Clearing the tactics text removes the generated Pull Tactics entry and its managed WoW macro instead of leaving stale tactics behind.
 
-A macro can contain normal WoW macro commands and can optionally be linked to a bundled boss ability or to an advanced timer match.
-
-The manager stores a small internal marker in managed WoW character macros so Raid Lead Assist can identify the macro after it has been placed on an action bar. That marker counts toward WoW's macro-length limit; the editor includes it in the displayed character count and blocks an over-limit save.
-
-Creating or editing a Raid Lead Assist entry does not require the macro to already be on an action bar. Use **To Action Bar** or drag the selected macro to pick up the managed WoW macro and place it normally.
+Pull Tactics is intentionally not linked to a boss timer, so it does not receive the automatic timer overlay.
 
 ## Timing overlay
 
-When a macro belongs to the currently selected difficulty, is linked to a supported timer, and the current timer is exact/actionable, Raid Lead Assist overlays the complete action button:
+When a macro belongs to the active difficulty, is linked to a supported timer, and the current timer is exact/actionable, Raid Lead Assist overlays the action button:
 
-- **white progress/countdown** — the mechanic is approaching;
-- **amber border/countdown** — prepare window;
-- **red full-button veil and border** — press-now window;
-- **red NOW state** — the short late/grace window immediately after the deadline.
+- normal progress/countdown while the mechanic approaches;
+- amber prepare state;
+- red press-now state;
+- red `NOW` state during the short late/grace window.
 
-Approximate, faded, unmatched, unsupported, wrong-boss, or wrong-difficulty timer data is not promoted to exact automatic guidance.
+Approximate, faded, unmatched, unsupported, wrong-boss or wrong-difficulty timer data is not promoted to automatic press guidance.
+
+Provider priority is DBM, then BigWigs, then Blizzard. The timeline service deduplicates matching occurrences and retains Blizzard-native timing as a fallback when a boss-mod timer is not precise enough for automatic guidance.
 
 ## Combat safety
 
-WoW restricts macro and action-bar changes during combat. Raid Lead Assist therefore:
+WoW restricts macro and action-bar changes during combat. Raid Lead Assist therefore does not create, edit, delete or pick up managed macros while `InCombatLockdown()` is active. Required synchronization/deletion is queued and retried after `PLAYER_REGEN_ENABLED`. The visual timing overlay remains separate from protected action-button behavior.
 
-- does not create, edit, delete or pick up managed macros while `InCombatLockdown()` is active;
-- queues managed macro synchronization/deletion and retries it after `PLAYER_REGEN_ENABLED`;
-- keeps timing overlay presentation separate from protected action-button behavior.
+## Bundled raid data
+
+The repository currently includes Heroic/Mythic profiles for all eight bosses in **The Venomous Abyss**. Provider integration has been source-checked against the current DBM and BigWigs timer callback/message contracts used by those raid modules.
 
 ## Repository structure
 
-- `Core/` — database, events, constants, bootstrap controller and AddOn Compartment
-- `Encounters/` — bundled boss definitions with Heroic/Mythic profiles and tactics source text
+- `Core/` — database, events, constants, application controller and AddOn Compartment
+- `Encounters/` — bundled boss definitions, Heroic/Mythic profiles and tactics source text
 - `Services/Providers/` — DBM, BigWigs and Blizzard timer adapters
-- `Services/TimelineService.lua` — canonical timer state and deduplication
+- `Services/TimelineService.lua` — canonical timer state, precision handling and deduplication
 - `Services/EncounterService.lua` — encounter/difficulty detection and reload recovery
 - `Services/BossMacroService.lua` — boss/difficulty macro state, tactics, ordering, ability linkage and timer matching
-- `Services/ManagedMacroService.lua` — managed WoW macro lifecycle and combat queue
+- `Services/TacticsMacroService.lua` — generated Pull Tactics macro lifecycle
+- `Services/ManagedMacroService.lua` — General Macro lifecycle, migration and combat queue
 - `Services/ActionBarOverlayService.lua` — action-button timing presentation
-- `UI/` — Boss Macro Manager, tactics editor and icon picker
-- `RaidLeadAssist.toc` — WoW add-on manifest
+- `UI/` — Boss Macro Manager, layout polish and icon picker
+- `RaidLeadAssist.toc` — WoW add-on manifest and runtime load order
+- `.github/workflows/validation.yml` — source checks, Lua parse and minimal runtime ZIP build
 
 ## Validation boundary
 
-Repository/source validation can verify manifest closure, Lua syntax, module ordering, storage/migration contracts, difficulty isolation, ordering logic, timer/provider contracts and package structure. Final acceptance of real protected-action behavior, taint, drag/drop rendering, UI-scale clipping and real DBM/BigWigs/Blizzard action-bar timing still requires an in-game World of Warcraft test.
+CI verifies repository hygiene, TOC closure/load list, Lua 5.1 syntax, key General Macro and action-bar contracts, final UI anchors, encounter-data invariants, timer-provider safeguards and package contents. The package is built from the TOC so repository-only files cannot accidentally ship with the add-on.
+
+Final acceptance of protected-action behavior, taint, real drag/drop rendering, UI-scale clipping and live DBM/BigWigs/Blizzard timing still requires an in-game World of Warcraft test. Source/CI validation cannot prove those runtime behaviors by itself.
