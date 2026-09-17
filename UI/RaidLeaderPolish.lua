@@ -223,29 +223,9 @@ function IconPicker:Open(anchorFrame, name, icon, callback, cancelCallback)
         hideButtonBar(self.frame)
         hideLegacySeparator(self.frame)
         self.frame:SetScale(anchorFrame and type(anchorFrame.GetScale) == "function" and (anchorFrame:GetScale() or 1) or 1)
-        local nameLabel = findTextRegion(self.frame, "Enter Macro Name (Max 16 Characters):")
-        local selectedLabel = findTextRegion(self.frame, "Currently Selected")
-        local chooseLabel = findTextRegion(self.frame, "Choose an Icon:")
-        if nameLabel then
-            nameLabel:ClearAllPoints()
-            nameLabel:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 24, -48)
-        end
-        if selectedLabel then
-            selectedLabel:ClearAllPoints()
-            selectedLabel:SetPoint("TOPRIGHT", self.frame, "TOPRIGHT", -70, -49)
-        end
-        if chooseLabel then
-            chooseLabel:ClearAllPoints()
-            chooseLabel:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 24, -126)
-        end
-        if self.frame.FilterDropdown then
-            self.frame.FilterDropdown:ClearAllPoints()
-            self.frame.FilterDropdown:SetPoint("TOPRIGHT", self.frame, "TOPRIGHT", -26, -117)
-        end
-        if self.frame.NameEdit then
-            self.frame.NameEdit:ClearAllPoints()
-            self.frame.NameEdit:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 28, -69)
-        end
+
+        -- IconPicker.lua owns all picker geometry. This wrapper only applies
+        -- non-positional polish so reopening the picker cannot override anchors.
         for _, button in ipairs(self.buttons or {}) do
             if button.Selected then
                 button.Selected:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
