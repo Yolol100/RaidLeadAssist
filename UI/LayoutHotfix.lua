@@ -208,6 +208,23 @@ function UI:Initialize(database, callbacks)
         frame.Editor:ClearAllPoints()
         frame.Editor:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -310)
         frame.Editor:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -15, 42)
+        if frame.SaveButton then
+            frame.SaveButton:ClearAllPoints()
+            frame.SaveButton:SetPoint("TOPRIGHT", frame.Editor, "TOPRIGHT", -2, -1)
+        end
+    end
+
+    -- Final screenshot-verified bottom-row alignment. Keep these controls scoped
+    -- to the main window so tactics/advanced dialogs are unaffected.
+    local mainNew = findButton(frame, NEW or "New")
+    local mainExit = findButton(frame, EXIT or "Exit")
+    if mainNew then
+        mainNew:ClearAllPoints()
+        mainNew:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -113, 16)
+    end
+    if mainExit then
+        mainExit:ClearAllPoints()
+        mainExit:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -15, 16)
     end
 
     local abilityRow = frame.AdvancedButton:GetParent()
@@ -219,7 +236,8 @@ function UI:Initialize(database, callbacks)
     -- moving one control when fine-tuning another.
     if frame.AbilityLabel then
         frame.AbilityLabel:ClearAllPoints()
-        frame.AbilityLabel:SetPoint("LEFT", abilityRow, "LEFT", 8, 5)
+        frame.AbilityLabel:SetPoint("RIGHT", frame.AdvancedButton, "LEFT", -10, 0)
+        frame.AbilityLabel:SetJustifyH("RIGHT")
     end
 
     frame.AbilityDropdown:ClearAllPoints()
@@ -271,6 +289,17 @@ function UI:InitializeAdvancedFrame()
         frame.Inset:ClearAllPoints()
         frame.Inset:SetPoint("TOPLEFT", frame, "TOPLEFT", 5, -31)
         frame.Inset:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -5, 5)
+    end
+
+    local apply = findButton(frame, APPLY or "Apply")
+    local cancel = findButton(frame, CANCEL or "Cancel")
+    if apply then
+        apply:ClearAllPoints()
+        apply:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -119, 14)
+    end
+    if cancel and apply then
+        cancel:ClearAllPoints()
+        cancel:SetPoint("LEFT", apply, "RIGHT", 10, 0)
     end
 end
 
