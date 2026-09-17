@@ -33,11 +33,17 @@ jobs:
           test ! -e .github/workflows/apply-ui-layout-timing-1.1.6.yml
           grep -q '^## Interface: 120100$' RaidLeadAssist.toc
           grep -q '^## Version: 1.1.12$' RaidLeadAssist.toc
-          grep -q '^Services/TestModeService.lua$' RaidLeadAssist.toc
-          grep -q '^Services/MigrationPolishService.lua$' RaidLeadAssist.toc
-          grep -q '^Services/TacticsMacroService.lua$' RaidLeadAssist.toc
-          grep -q '^UI/RaidLeaderPolish.lua$' RaidLeadAssist.toc
-          grep -q '^UI/LayoutHotfix.lua$' RaidLeadAssist.toc
+          ! grep -Eq '^[^#].*/' RaidLeadAssist.toc
+          grep -Fqx 'Services\TestModeService.lua' RaidLeadAssist.toc
+          grep -Fqx 'Services\MigrationPolishService.lua' RaidLeadAssist.toc
+          grep -Fqx 'Services\TacticsMacroService.lua' RaidLeadAssist.toc
+          grep -Fqx 'UI\RaidLeaderPolish.lua' RaidLeadAssist.toc
+          grep -Fqx 'UI\LayoutHotfix.lua' RaidLeadAssist.toc
+          grep -q 'secretTablePredicate = _G.issecrettable' Core/Util.lua
+          grep -q 'tableAccessPredicate = _G.canaccesstable' Core/Util.lua
+          grep -q 'function Util.CanAccessTable' Core/Util.lua
+          grep -q 'not Util.CanAccessTable(result)' Services/Providers/BlizzardProvider.lua
+          grep -q 'not Util.CanAccessTable(info)' Services/Providers/BlizzardProvider.lua
           grep -q 'Boss Tactics' UI/BossMacroManager.lua
           grep -q 'selectedDifficultyKey' Services/BossMacroService.lua
           grep -q 'ButtonFrameTemplate_HidePortrait' UI/BossMacroManager.lua
