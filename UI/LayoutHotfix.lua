@@ -155,12 +155,19 @@ function UI:Initialize(database, callbacks)
     abilityRow:SetHeight(108)
     frame.AbilityLabel = frame.AbilityLabel or findTextRegion(abilityRow, "Boss Ability:")
 
+    -- Keep the label, dropdown and button row as independent anchors. This avoids
+    -- moving one control when fine-tuning another.
+    if frame.AbilityLabel then
+        frame.AbilityLabel:ClearAllPoints()
+        frame.AbilityLabel:SetPoint("LEFT", abilityRow, "LEFT", 8, -5)
+    end
+
     frame.AbilityDropdown:ClearAllPoints()
     frame.AbilityDropdown:SetPoint("TOPLEFT", abilityRow, "TOPLEFT", 72, 10)
     UIDropDownMenu_SetWidth(frame.AbilityDropdown, 184)
 
     frame.AdvancedButton:ClearAllPoints()
-    frame.AdvancedButton:SetPoint("TOPLEFT", abilityRow, "TOPLEFT", 88, -48)
+    frame.AdvancedButton:SetPoint("TOPLEFT", abilityRow, "TOPLEFT", 88, -42)
     if frame.DragButton then
         frame.DragButton:ClearAllPoints()
         frame.DragButton:SetPoint("LEFT", frame.AdvancedButton, "RIGHT", 6, 0)
