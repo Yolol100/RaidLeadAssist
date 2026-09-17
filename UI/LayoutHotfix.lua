@@ -61,6 +61,19 @@ local function refreshMacroSlotChrome(self)
     end
 end
 
+local function pickupSelectedMacro(self)
+    local macro = self:GetSelectedMacro()
+    if macro and self.callbacks and self.callbacks.onPickupMacro then
+        self.callbacks.onPickupMacro(macro, self:GetBoss())
+    end
+end
+
+local function cursorContainsMacro()
+    if type(GetCursorInfo) ~= "function" then return false end
+    local ok, kind = pcall(GetCursorInfo)
+    return ok and kind == "macro"
+end
+
 local function installActionBarDrag(self)
     for _, button in ipairs(self.macroButtons or {}) do
         if not button.RLAActionBarDrag then
@@ -70,17 +83,36 @@ local function installActionBarDrag(self)
                 self:SelectMacro(btn.macroId)
                 self.draggingMacroId = nil
                 btn:UnlockHighlight()
-
-                local macro = self:GetSelectedMacro()
-                if macro and self.callbacks and self.callbacks.onPickupMacro then
-                    self.callbacks.onPickupMacro(macro, self:GetBoss())
-                end
+                pickupSelectedMacro(self)
             end)
             button:SetScript("OnDragStop", function(btn)
                 self.draggingMacroId = nil
                 btn:UnlockHighlight()
             end)
         end
+    end
+
+    -- The large selected-macro icon below the grid is a separate Button. Treat it
+    -- like Blizzard's selected macro pickup control: pressing the icon picks up the
+    -- managed General Macro immediately, while OnDragStart remains as a fallback.
+    -- This makes Pull Tactics and every other selected macro draggable from the
+    -- exact preview icon shown in the editor, not only from the grid tiles.
+    local frame = self.frame
+    local selectedButton = frame and frame.SelectedIcon and frame.SelectedIcon:GetParent() or nil
+    if selectedButton and not selectedButton.RLASelectedActionBarDrag then
+        selectedButton.RLASelectedActionBarDrag = true
+        selectedButton:EnableMouse(true)
+        selectedButton:RegisterForDrag("LeftButton")
+        selectedButton:SetScript("OnMouseDown", function(_, mouseButton)
+            if mouseButton == "LeftButton" then
+                pickupSelectedMacro(self)
+            end
+        end)
+        selectedButton:SetScript("OnDragStart", function()
+            if not cursorContainsMacro() then
+                pickupSelectedMacro(self)
+            end
+        end)
     end
 end
 
@@ -119,9 +151,9 @@ function UI:Initialize(database, callbacks)
     local frame = self.frame
     if not frame or not frame.AbilityDropdown or not frame.AdvancedButton then return end
 
-    -- Every macro tile now behaves like the selected-macro icon: dragging it
-    -- picks up the managed General Macro so it can be dropped on an action bar.
-    -- Grid ordering remains available through the dedicated < / > buttons.
+    -- Every macro tile and the large selected-macro preview can place the managed
+    -- General Macro on the cursor for dropping onto an action bar. Grid ordering
+    -- remains available through the dedicated < / > buttons.
     installActionBarDrag(self)
 
     local bossRow = frame.BossDropdown and frame.BossDropdown:GetParent() or nil
