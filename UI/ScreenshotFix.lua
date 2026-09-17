@@ -45,17 +45,17 @@ function UI:Initialize(database, callbacks)
     end
 
     -- Main-window New / Exit only. Their original right offsets are -106 / -8;
-    -- use -118 / -20 to move both exactly 12 px left without moving their parent.
+    -- use -113 / -15 to move both exactly 7 px left without moving their parent.
     local newButton = findButton(frame, NEW or "New")
     if newButton then
         newButton:ClearAllPoints()
-        newButton:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -118, 16)
+        newButton:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -113, 16)
     end
 
     local exitButton = findButton(frame, EXIT or "Exit")
     if exitButton then
         exitButton:ClearAllPoints()
-        exitButton:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -20, 16)
+        exitButton:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -15, 16)
     end
 
     return result
@@ -63,7 +63,7 @@ end
 
 -- Advanced Timer Matching dialog only. Re-anchor the Apply / Cancel pair after
 -- the base frame is created. Cancel remains attached to Apply, so moving Apply
--- 12 px left moves the pair together and does not affect fields or labels above.
+-- 7 px left moves the pair together and does not affect fields or labels above.
 local originalInitializeAdvancedFrame = UI.InitializeAdvancedFrame
 function UI:InitializeAdvancedFrame()
     local result = originalInitializeAdvancedFrame(self)
@@ -74,7 +74,7 @@ function UI:InitializeAdvancedFrame()
     local cancel = findButton(frame, CANCEL or "Cancel")
     if apply then
         apply:ClearAllPoints()
-        apply:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -124, 14)
+        apply:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -119, 14)
     end
     if cancel and apply then
         cancel:ClearAllPoints()
