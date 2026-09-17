@@ -243,10 +243,8 @@ function IconPicker:Initialize()
         local row = math.floor((index - 1) / columns)
         button:SetPoint("TOPLEFT", 24 + (col * 55), -14 - (row * 49))
 
-        -- Do not draw Blizzard's Quickslot normal texture in the icon list.
-        -- It can sit over/around icon art and also produces visible empty squares
-        -- for provider entries whose texture is not currently available.
-        button:SetNormalTexture(nil)
+        -- This button intentionally has no normal texture. Empty provider slots are
+        -- hidden in RefreshGrid, so no Quickslot frame can cover icon artwork.
         button:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
 
         local iconTexture = button:CreateTexture(nil, "ARTWORK")
