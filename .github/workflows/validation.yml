@@ -77,6 +77,9 @@ jobs:
           grep -q 'systemRole = ROLE' Services/TacticsMacroService.lua
           grep -q 'name = "Pull Tactics"' Services/TacticsMacroService.lua
           grep -q 'BODY_LIMIT = 228' Services/TacticsMacroService.lua
+          grep -q 'button:SetNormalTexture(nil)' UI/IconPicker.lua
+          grep -q 'scrollText:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 66, 35)' UI/IconPicker.lua
+          grep -q 'difficultyLabel:SetPoint("LEFT", difficultyRow, "LEFT", 0, -2)' UI/LayoutHotfix.lua
           python3 - <<'PY'
           from pathlib import Path
           import re
@@ -110,3 +113,21 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq lua5.1
           find . -type f -name '*.lua' -print0 | xargs -0 -n1 luac -p
+      - name: Build addon ZIP
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf dist
+          mkdir -p dist/RaidLeadAssist
+          rsync -a --exclude='.git' --exclude='.github' --exclude='dist' ./ dist/RaidLeadAssist/
+          cd dist
+          zip -qr RaidLeadAssist-main.zip RaidLeadAssist
+      - name: Upload addon ZIP
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: RaidLeadAssist-main
+          path: dist/RaidLeadAssist-main.zip
+          if-no-files-found: error
+          retention-days: 30
