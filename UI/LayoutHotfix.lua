@@ -1,6 +1,7 @@
 local _, ns = ...
 
 local UI = ns:GetModule("UI.BossMacroManager")
+local BossMacros = ns:GetModule("Services.BossMacroService")
 
 local TACTICS_ROLE = "tactics-prepull"
 
@@ -61,6 +62,33 @@ local function refreshMacroSlotChrome(self)
     end
 end
 
+local function installTacticsActionBarDrag(self)
+    for _, button in ipairs(self.macroButtons or {}) do
+        if not button.RLATacticsActionBarDrag then
+            button.RLATacticsActionBarDrag = true
+            button:SetScript("OnDragStart", function(btn)
+                if not btn.macroId then return end
+                local macro = BossMacros:FindMacroById(btn.macroId)
+                if type(macro) == "table" and macro.systemRole == TACTICS_ROLE then
+                    self:SelectMacro(btn.macroId)
+                    self.draggingMacroId = nil
+                    btn:UnlockHighlight()
+                    if self.callbacks and self.callbacks.onPickupMacro then
+                        self.callbacks.onPickupMacro(macro, self:GetBoss())
+                    end
+                    return
+                end
+
+                -- Preserve the existing grid-reorder behavior for every normal
+                -- macro. Only Pull Tactics is converted into an action-bar drag.
+                self:SelectMacro(btn.macroId)
+                self.draggingMacroId = btn.macroId
+                btn:LockHighlight()
+            end)
+        end
+    end
+end
+
 local originalRefreshMacroGrid = UI.RefreshMacroGrid
 function UI:RefreshMacroGrid(...)
     local result = originalRefreshMacroGrid(self, ...)
@@ -95,6 +123,8 @@ function UI:Initialize(database, callbacks)
     originalInitialize(self, database, callbacks)
     local frame = self.frame
     if not frame or not frame.AbilityDropdown or not frame.AdvancedButton then return end
+
+    installTacticsActionBarDrag(self)
 
     local bossRow = frame.BossDropdown and frame.BossDropdown:GetParent() or nil
     if bossRow then
@@ -232,6 +262,23 @@ function UI:InitializeTacticsFrame()
             background:SetPoint("TOPLEFT", frame.Context, "BOTTOMLEFT", 0, -10)
             background:SetPoint("BOTTOMRIGHT", frame.Inset or frame, "BOTTOMRIGHT", -14, 46)
         end
+    end
+
+    -- Saving or resetting tactics can create/update the Pull Tactics macro.
+    -- Refresh only the macro grid/editor afterwards; no other layout is touched.
+    local save = findButton(frame, SAVE or "Save")
+    local reset = findButton(frame, "Reset Default")
+    if save then
+        save:HookScript("OnClick", function()
+            self:RefreshMacroGrid()
+            self:PopulateEditor(self:GetSelectedMacro())
+        end)
+    end
+    if reset then
+        reset:HookScript("OnClick", function()
+            self:RefreshMacroGrid()
+            self:PopulateEditor(self:GetSelectedMacro())
+        end)
     end
 end
 
