@@ -231,7 +231,7 @@ function IconPicker:Open(anchorFrame, name, icon, callback, cancelCallback)
                 button.Selected:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
                 button.Selected:ClearAllPoints()
                 button.Selected:SetPoint("CENTER", 0, 0)
-                button.Selected:SetSize(56, 56)
+                button.Selected:SetSize(48, 48)
             end
         end
         local regions = { self.frame:GetRegions() }

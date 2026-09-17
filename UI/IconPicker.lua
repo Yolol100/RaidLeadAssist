@@ -165,11 +165,27 @@ function IconPicker:Initialize()
     frame:Hide()
     removePortrait(frame)
 
-    -- UIPanelCloseButtonDefaultAnchors uses x=1. Move only this picker close
-    -- button two pixels farther right without changing any other frame.
+    -- Keep the close button's click target intact, but make its artwork slightly
+    -- smaller and shift the X itself right so it is visually centered in the box.
     if frame.CloseButton then
         frame.CloseButton:ClearAllPoints()
-        frame.CloseButton:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 3, 0)
+        frame.CloseButton:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 4, 0)
+
+        local closeWidth = frame.CloseButton:GetWidth() or 0
+        local closeHeight = frame.CloseButton:GetHeight() or 0
+        local function polishCloseTexture(texture, xOffset, yOffset)
+            if not texture or closeWidth <= 4 or closeHeight <= 4 then return end
+            texture:ClearAllPoints()
+            texture:SetPoint("CENTER", frame.CloseButton, "CENTER", xOffset or 0, yOffset or 0)
+            texture:SetSize(closeWidth - 4, closeHeight - 4)
+        end
+
+        polishCloseTexture(frame.CloseButton:GetNormalTexture(), 2, 0)
+        polishCloseTexture(frame.CloseButton:GetPushedTexture(), 3, -1)
+        polishCloseTexture(frame.CloseButton:GetHighlightTexture(), 2, 0)
+        if type(frame.CloseButton.GetDisabledTexture) == "function" then
+            polishCloseTexture(frame.CloseButton:GetDisabledTexture(), 2, 0)
+        end
     end
 
     -- Icon-picker geometry is anchored directly to the picker frame. Keeping each
@@ -197,7 +213,9 @@ function IconPicker:Initialize()
     chooseLabel:SetText("Choose an Icon:")
 
     local filterDropdown = CreateFrame("Frame", "RaidLeadAssistIconFilterDropdown", frame, "UIDropDownMenuTemplate")
-    filterDropdown:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -20, -117)
+    -- UIDropDownMenuTemplate's visible right edge sits inside its nominal frame.
+    -- The small correction below aligns the visible edge with the Cancel button.
+    filterDropdown:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -2, -117)
     UIDropDownMenu_SetWidth(filterDropdown, 150)
     UIDropDownMenu_Initialize(filterDropdown, function(_, level)
         if level ~= 1 then return end
@@ -221,11 +239,11 @@ function IconPicker:Initialize()
     self.pageSize = columns * rows
     for index = 1, self.pageSize do
         local button = CreateFrame("Button", nil, gridBackground)
-        button:SetSize(45, 45)
+        button:SetSize(40, 40)
         local col = (index - 1) % columns
         local row = math.floor((index - 1) / columns)
-        -- 31 px left/right and 14 px top/bottom padding around the complete grid.
-        button:SetPoint("TOPLEFT", gridBackground, "TOPLEFT", 31 + (col * 55), -14 - (row * 49))
+        -- Smaller icons keep the grid readable while preserving the same 10 x 7 page.
+        button:SetPoint("TOPLEFT", gridBackground, "TOPLEFT", 34 + (col * 55), -17 - (row * 49))
 
         -- This button intentionally has no normal texture. Empty provider slots are
         -- hidden in RefreshGrid, so no Quickslot frame can cover icon artwork.
@@ -240,7 +258,7 @@ function IconPicker:Initialize()
         selected:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
         selected:SetBlendMode("ADD")
         selected:SetPoint("CENTER", 0, 0)
-        selected:SetSize(54, 54)
+        selected:SetSize(48, 48)
         selected:Hide()
         button.Selected = selected
 

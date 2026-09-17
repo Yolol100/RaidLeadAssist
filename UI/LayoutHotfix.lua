@@ -159,7 +159,7 @@ function UI:Initialize(database, callbacks)
     -- moving one control when fine-tuning another.
     if frame.AbilityLabel then
         frame.AbilityLabel:ClearAllPoints()
-        frame.AbilityLabel:SetPoint("LEFT", abilityRow, "LEFT", 8, -5)
+        frame.AbilityLabel:SetPoint("LEFT", abilityRow, "LEFT", 8, 5)
     end
 
     frame.AbilityDropdown:ClearAllPoints()
@@ -167,7 +167,7 @@ function UI:Initialize(database, callbacks)
     UIDropDownMenu_SetWidth(frame.AbilityDropdown, 184)
 
     frame.AdvancedButton:ClearAllPoints()
-    frame.AdvancedButton:SetPoint("TOPLEFT", abilityRow, "TOPLEFT", 88, -42)
+    frame.AdvancedButton:SetPoint("TOPLEFT", abilityRow, "TOPLEFT", 88, -28)
     if frame.DragButton then
         frame.DragButton:ClearAllPoints()
         frame.DragButton:SetPoint("LEFT", frame.AdvancedButton, "RIGHT", 6, 0)
