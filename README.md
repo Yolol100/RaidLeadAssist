@@ -1,5 +1,9 @@
 # Raid Lead Assist
 
+> **Other engineering · Lua · World of Warcraft Retail · encounter-aware UI/runtime tooling**
+
+This project sits outside my primary WordPress portfolio and is included as additional engineering work.
+
 Raid Lead Assist is a World of Warcraft Retail add-on for boss-specific raid-leader macros, per-difficulty tactics, and encounter-aware action-bar timing guidance.
 
 Current add-on version: **1.1.13**.
