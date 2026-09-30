@@ -4,6 +4,19 @@
 
 This project sits outside my primary WordPress portfolio and is included as additional engineering work.
 
+**Developer profile:** [Andrew Baeten](https://github.com/Yolol100) · [Portfolio cases](https://andrewbaeten.nl/category/cases)
+
+## What it demonstrates
+
+| Area | Implementation |
+| --- | --- |
+| Encounter modelling | Boss- and difficulty-specific macro/tactics profiles |
+| Timer integration | DBM, BigWigs and Blizzard provider adapters with precision handling |
+| Protected actions | Combat-safe macro synchronization and deferred protected updates |
+| State migration | General Macro migration and stable managed identifiers |
+| UI/runtime | Boss Macro Manager, action-bar overlays and accessible interaction guards |
+| Packaging | TOC-driven validation and minimal runtime ZIP construction |
+
 Raid Lead Assist is a World of Warcraft Retail add-on for boss-specific raid-leader macros, per-difficulty tactics, and encounter-aware action-bar timing guidance.
 
 Current add-on version: **1.1.13**.
