@@ -1,125 +1,133 @@
 # Raid Lead Assist
 
-> **Portfolio status:** Flagship · active development · WoW raid-lead addon
+> **Other engineering · Lua · World of Warcraft Retail · encounter-aware UI/runtime tooling**
 
-## At a glance
+This project sits outside my primary WordPress portfolio and is included as additional engineering work.
 
-Raid Lead Assist is a fail-closed raid-leader callout and assignment panel for The Venomous Abyss. It supports separate Normal, Heroic and Mythic strategy profiles while leaving protected combat decisions to players.
+**Developer profile:** [Andrew Baeten](https://github.com/Yolol100) · [Portfolio cases](https://andrewbaeten.nl/category/cases)
 
-| Area | Evidence |
+## What it demonstrates
+
+| Area | Implementation |
 | --- | --- |
-| Audience | Raid leaders who need repeatable pre-pull plans and bounded manual callouts |
-| Stack | Lua, WoW Retail APIs and GitHub Actions validation |
-| Coverage | Eight encounters and 24 difficulty-specific profiles |
-| Safety | Unknown encounters, unsupported difficulties and stale or malformed state disable automation |
-| Quality | Validation workflow plus upstream-drift monitoring |
+| Encounter modelling | Boss- and difficulty-specific macro/tactics profiles |
+| Timer integration | DBM, BigWigs and Blizzard provider adapters with precision handling |
+| Protected actions | Combat-safe macro synchronization and deferred protected updates |
+| State migration | General Macro migration and stable managed identifiers |
+| UI/runtime | Boss Macro Manager, action-bar overlays and accessible interaction guards |
+| Packaging | TOC-driven validation and minimal runtime ZIP construction |
 
-## Quick start
+Raid Lead Assist is a World of Warcraft Retail add-on for boss-specific raid-leader macros, per-difficulty tactics, and encounter-aware action-bar timing guidance.
 
-1. Download a validated addon package from GitHub Releases when available.
-2. Extract it into the WoW Retail `Interface/AddOns` directory.
-3. Enable Raid Lead Assist and configure assignments outside combat.
-4. Use preview and preset tools before announcing a plan to raid chat.
+Current add-on version: **1.1.13**.
 
-## Runtime model
+## What it does
 
-```text
-encounter + difficulty context → validated strategy profile
-                               → pre-pull assignments / manual callouts
-                               → optional bounded timing feedback
-unknown or invalid state       → automatic behavior disabled
-```
+- Preloads boss profiles from the bundled encounter definitions.
+- Keeps **Heroic** and **Mythic** macros, ordering, ability links, timing settings and tactics separate per boss.
+- Lets you create, rename, edit, delete and reorder macros per boss and difficulty.
+- Provides editable boss tactics and generates a dedicated **Pull Tactics** raid-warning macro from that text.
+- Stores managed Raid Lead Assist macros in WoW **General Macros** so they are account-wide rather than character-specific.
+- Lets every macro tile, the large selected-macro icon, and the **To Action Bar** button pick up the managed General Macro for placement on an action bar.
+- Matches supported DBM, BigWigs or Blizzard encounter timers to linked boss abilities.
+- Adds a full-button timing overlay to managed action-bar macros: progress/countdown, prepare state, press-now state and a short late state.
+- Defers protected macro changes until combat ends when required by WoW.
 
-Raid Lead Assist (RLA) is a raid-leader callout panel for **The Venomous Abyss** with separate Normal, Heroic and Mythic strategy profiles. It provides pre-pull plans, boss-specific assignments, manual Raid Warning buttons, optional PREPARE/PRESS timing state and TTS/sound feedback.
+## Requirements
 
-RLA is deliberately fail-closed: uncertain encounter identity, unsupported difficulty, malformed/secret timing values, stale cross-encounter state or incomplete provider data disable automatic behavior rather than reuse an old profile. It is not a DBM/BigWigs replacement and does not automate protected combat decisions.
+- World of Warcraft Retail.
+- DBM or BigWigs is optional. Blizzard native encounter timers are used as a fallback when available.
 
-## Encounter, calls and assignments
+## Installation
 
-RLA supports eight encounters and 24 Normal/Heroic/Mythic profiles. During a supported encounter WoW's encounter/difficulty context locks the active profile. Unknown encounters and unsupported difficulties disable calls/timing. Pre-pull plans cannot be sent during an active encounter.
+1. Extract the release ZIP.
+2. Place the `RaidLeadAssist` folder in `World of Warcraft/_retail_/Interface/AddOns/`.
+3. Confirm `RaidLeadAssist.toc` is directly inside that folder.
+4. Enable **Raid Lead Assist** in the WoW AddOns menu.
 
-Assignments are configured before combat through `ASSIGN`, Settings or `/rla assignments`. PLAYER/GROUP, ROTATION, RULE and SEQUENCE fields are validated per boss/difficulty. Duplicate/overlapping players and hard group-size constraints are rejected where the tactic requires it. Rotation advances only after the matching manual Raid Warning succeeds.
+The generated GitHub Actions ZIP contains only the TOC and the runtime files listed by the TOC. Repository-only files such as this README and `.github/` are not included in the installable add-on package.
 
-The assignment window also owns local planning tools. `PREVIEW` validates the current unsaved draft and prints the exact assignment plan locally without saving it or sending anything to raid chat. `PRESETS` stores up to eight validated plans per boss/difficulty and `MY TASKS` prints the current player's direct, rotation and raid-group duties. Preview and announce share one bounded plan renderer, so the local inspection path cannot drift from the actual pre-pull assignment announcement. None of these tools add addon networking or live combat scanning; slash equivalents remain available for power users where applicable.
+## Usage
 
-## Timer sources
+Use `/rla` to open the Boss Macro Manager.
 
-RLA consumes public **DBM**, **BigWigs** and Blizzard Encounter Timeline timing. Among equally precise usable representations it prefers DBM, then BigWigs, then Blizzard. Exact/native sources may drive PREPARE/PRESS/TTS; approximate bars remain non-actionable previews.
+Available commands:
 
-Provider payloads are untrusted runtime input. Secret, malformed, stale or cross-encounter data is rejected/downgraded. Direct bossmod timers must resolve to the verified active encounter. Cross-provider occurrence reconciliation prevents duplicate calls/audio and a successful manual call acknowledges the occurrence so a late provider cannot immediately re-arm it.
+- `/rla` or `/rla toggle` — open or close the Boss Macro Manager
+- `/rla show` — show it
+- `/rla hide` — hide it
+- `/rla status` — show the selected boss, difficulty, macro count, managed General Macro count and timer-provider status
+- `/rla provider` — show detected timer providers
+- `/rla resetpos` — reset the manager position
 
-The current **source-reviewed** stable provider contracts are **DBM 12.1.8** and **BigWigs v424.3**. `docs/UPSTREAM_BASELINES.json` pins those release commits plus the exact watched current-`master` files re-reviewed on **2026-09-02**, and now also pins Blizzard's live generated `EncounterTimelineDocumentation.lua`. DBM 12.1.8 retains the public callback surface RLA consumes while adding Ula'tek/routing corrections and fixing approximate-prefix handling for next timers. BigWigs v424.3 retains the public timer callback surface; the reviewed v424.2 Coiled Altar phase-two race fix remains upstream-owned rather than duplicated in RLA.
+The AddOn Compartment entry also opens the Boss Macro Manager.
 
-Source review is deliberately separate from **live-tested** evidence. The current runtime doctor/live matrix still records DBM 12.1.6 and BigWigs v424.1 as the last live-tested contracts until fresh Retail evidence is collected. A newer source-reviewed pin therefore means “contract inspected and CI-compatible”, not “proved in a real raid client”. When a bossmod cannot provide a usable matching timer, RLA intentionally falls back to Blizzard Encounter Timeline data for supported calls. Manual calls remain available independently of bossmod timing.
+## Heroic and Mythic profiles
 
-## Ula'tek
+Choose **Heroic** or **Mythic** in the Boss Macro Manager. Changing difficulty changes the visible macro and tactics profile immediately. Encounter start/recovery also selects the supported difficulty from the live encounter when WoW supplies it.
 
-Ula'tek remains deliberately **manual-only** on every difficulty. Current DBM and BigWigs source can expose encounter timing, but source availability alone does not constitute stable live-validated exact scheduling for RLA. Every Ula'tek call therefore remains `timing=false` pending live Retail proof.
+Existing older SavedVariables are migrated to the difficulty-aware structure. Existing IDs are preserved where possible. A linked encounter macro that belongs to both difficulties receives an independent managed-macro ID in the other difficulty so action-bar markers stay unambiguous.
 
-Provider timer identity is kept separate from display spell identity; for example a provider drycode key used for Toxic Incubation cannot silently replace RLA's UI mechanic identity.
+## General Macros and action-bar placement
 
-## Operational controls
+Raid Lead Assist appends a small internal `/run RLA_P(...)` marker to every managed WoW macro. The marker lets the add-on identify an action-bar macro and acknowledge its timer occurrence after it is pressed. The marker counts toward WoW's macro-length limit, so the editor includes that overhead in its character counter.
 
-The main raid-control panel shows a themed `READY`/`CHECK` control next to Settings. It opens the same read-only doctor diagnostics used by `/rla doctor` rather than creating a second readiness state.
+Managed macros live in WoW **General Macros**. Older Raid Lead Assist character-specific macros are migrated to General Macros outside combat; the old character copy is removed only after the General Macro has been created successfully.
 
-Settings owns the default timing-lead editor beside `AUTO`. Defaults are PREPARE 5s / PRESS 3s, with bounded 2-30s and 1-10s ranges and PREPARE greater than PRESS. Encounter-specific call windows remain authoritative. Timing preferences cannot be changed during an active encounter or combat; the slash fallback follows the same boundary.
+To place a macro on an action bar, use any of these methods outside combat:
 
-- `/rla timing on|off`: automatic timing toggle, pre-pull only.
-- `/rla timing lead <prepare> <press>` / `/rla timing reset`: default lead-window fallbacks, pre-pull only.
-- `/rla assignments`: pre-pull assignment editor, including local `PREVIEW` before `ANNOUNCE`.
-- `/rla preset list|save|load|delete <name>`: local preset fallback for the active boss/difficulty.
-- `/rla my`: local personal-assignment fallback.
-- `/rla provider`: read-only provider/timer diagnostics.
-- `/rla doctor`: read-only readiness diagnostics.
-- `AUTO TIMING OFF`: user disabled automatic timing.
-- `MANUAL CALLS ONLY`: selected profile intentionally has no automatic timing.
+- drag a macro tile from the grid;
+- drag the large selected-macro icon below the grid;
+- click **To Action Bar** and then place the macro.
 
-## SavedVariables and privacy
+Macro ordering inside Raid Lead Assist is changed with the `<` and `>` buttons. Dragging a macro tile is reserved for action-bar placement.
 
-`RaidLeadAssistDB` schema 6 stores local settings, bounded timing leads, custom warning text, assignments, assignment presets and frame position. Migration is defensive and a newer unknown schema is preserved rather than blindly downgraded. RLA has no addon networking, telemetry or external storage; see `PRIVACY.md`.
+## Boss tactics
 
-## Architecture and audit evidence
+Use **Boss Tactics** for the selected boss/difficulty. Bundled bosses start with their included strategy text; **Reset Default** restores that text.
 
-- `docs/ARCHITECTURE.md`: what each layer owns, when it runs, for whom and why.
-- `docs/TEN_OF_TEN_ACCEPTANCE.md`: the **172-check** master audit, supplemented by focused post-audit release regressions.
-- `docs/LIVE_TEST_MATRIX.md`: evidence that can only be collected in the real Retail client.
-- `docs/AUDIT_SOURCES.md`: current Blizzard, GitHub, DBM/BigWigs and encounter source register.
-- `docs/RELEASE_PROCESS.md`: release-versus-repository-only change classification and the deliberate publication flow.
-- `scripts/audit_runtime.py`: TOC/runtime/copy/policy hygiene.
-- `scripts/audit_repository.py`: repository paths/encoding/secrets/module order/combat API/workflow/supply-chain governance.
+When tactics contain text, Raid Lead Assist maintains a **Pull Tactics** macro containing as many `/rw` lines as fit safely within WoW's macro-length limit. Saving or resetting tactics updates the managed General Macro. Clearing the tactics text removes the generated Pull Tactics entry and its managed WoW macro instead of leaving stale tactics behind.
 
-The repository audit explicitly blocks combat-log decision processing, aura/health/power/cast/position decision APIs, protected action automation, secure-action automation, dynamic code execution and addon networking from the shipped runtime. Approved App extension surfaces are explicitly documented and their exact patched method sets are CI-locked. Assignment preview/announce behavior stays under `Core/AssignmentIntegration.lua` and the shared `Services/AssignmentPlanService.lua`; productivity UI uses bounded callbacks instead of adding another App monkey patch.
+Pull Tactics is intentionally not linked to a boss timer, so it does not receive the automatic timer overlay.
 
-## Validation and release
+## Timing overlay
 
-Every push and pull request runs:
+When a macro belongs to the active difficulty, is linked to a supported timer, and the current timer is exact/actionable, Raid Lead Assist overlays the action button:
 
-- upstream-baseline schema validation;
-- runtime and repository master audits;
-- `git diff --check` source hygiene;
-- Lua 5.1 compile checks;
-- blocking Luacheck for every TOC runtime file;
-- TOC inventory/metadata checks;
-- every `tests/test_*.lua` behavioral/adversarial regression;
-- two independent runtime-only ZIP and SPDX-SBOM builds that must be byte-identical;
-- SHA-256 generation for the validated artifact.
+- normal progress/countdown while the mechanic approaches;
+- amber prepare state;
+- red press-now state;
+- red `NOW` state during the short late/grace window.
 
-Pull-request validation uses workflow concurrency so a superseded PR run is cancelled when a newer commit for the same PR starts. Normal `main` pushes still receive full source/reproducibility validation but do **not** publish a release automatically.
+Approximate, faded, unmatched, unsupported, wrong-boss or wrong-difficulty timer data is not promoted to automatic press guidance.
 
-The distributable ZIP is runtime-only: `RaidLeadAssist.toc` plus exactly the Lua files listed by that TOC. Repository documentation, tests, audit scripts and maintenance files are deliberately excluded from the addon package. Repository-only changes can therefore advance `main` without inventing a new addon version when the runtime package is unchanged.
+Provider priority is DBM, then BigWigs, then Blizzard. The timeline service deduplicates matching occurrences and retains Blizzard-native timing as a fallback when a boss-mod timer is not precise enough for automatic guidance.
 
-Release publication is deliberate. From the `main` branch, manually dispatch the **Validate source** workflow only after the TOC version, top changelog entry and optional versioned release notes represent a new immutable addon release. That dispatch rebuilds the exact source, verifies reproducibility, creates GitHub/Sigstore provenance plus the SPDX SBOM attestation, verifies both attestations and creates or verifies the version-locked prerelease/tag. Reusing an existing version for a different SHA fails closed. See `docs/RELEASE_PROCESS.md`.
+## Combat safety
 
-All third-party Actions are pinned to full commit SHAs and workflows use explicit least-privilege permissions. GitHub-native branch protection/rulesets, required CODEOWNER approval, secret scanning/push protection, Actions policy enforcement and Private Vulnerability Reporting remain repository-admin evidence rather than source-code claims. License selection is also an explicit owner/legal choice. These settings are not reported as enabled until the GitHub repository itself proves them.
+WoW restricts macro and action-bar changes during combat. Raid Lead Assist therefore does not create, edit, delete or pick up managed macros while `InCombatLockdown()` is active. Required synchronization/deletion is queued and retried after `PLAYER_REGEN_ENABLED`. The visual timing overlay remains separate from protected action-button behavior.
 
-## 10/10 boundary
+## Bundled raid data
 
-A source/release can be **TECHNICALLY GREEN** only when every applicable automated gate passes on the exact source or released SHA. A full product **10/10** additionally requires the applicable live-only checks — real raid pulls, provider combinations, `/reload` recovery, taint, CPU/frame-time, memory soak, UI scaling/accessibility/locales and post-hotfix tactic/timer accuracy — to be recorded as `PASS-LIVE`. Missing live evidence remains `MANUAL TEST NEEDED`.
+The repository currently includes Heroic/Mythic profiles for all eight bosses in **The Venomous Abyss**. Provider integration has been source-checked against the current DBM and BigWigs timer callback/message contracts used by those raid modules.
 
-## Project status, roadmap and support
+## Repository structure
 
-Raid Lead Assist is actively maintained against its documented encounter and difficulty contracts. New encounters or automation paths require explicit validation and fail-closed fallback behavior. Report reproducible defects through [GitHub Issues](https://github.com/Yolol100/RaidLeadAssist/issues) without character, account or private raid data.
+- `Core/` — database, events, constants, application controller and AddOn Compartment
+- `Encounters/` — bundled boss definitions, Heroic/Mythic profiles and tactics source text
+- `Services/Providers/` — DBM, BigWigs and Blizzard timer adapters
+- `Services/TimelineService.lua` — canonical timer state, precision handling and deduplication
+- `Services/EncounterService.lua` — encounter/difficulty detection and reload recovery
+- `Services/BossMacroService.lua` — boss/difficulty macro state, tactics, ordering, ability linkage and timer matching
+- `Services/TacticsMacroService.lua` — generated Pull Tactics macro lifecycle
+- `Services/ManagedMacroService.lua` — General Macro lifecycle, migration and combat queue
+- `Services/ActionBarOverlayService.lua` — action-button timing presentation
+- `UI/` — Boss Macro Manager, layout polish and icon picker
+- `RaidLeadAssist.toc` — WoW add-on manifest and runtime load order
+- `.github/workflows/validation.yml` — source checks, Lua parse and minimal runtime ZIP build
 
-## License
+## Validation boundary
 
-This repository currently has no open-source license. Reuse, redistribution and derivative works are not permitted without explicit permission from the copyright holder.
+CI verifies repository hygiene, TOC closure/load list, Lua 5.1 syntax, key General Macro and action-bar contracts, final UI anchors, encounter-data invariants, timer-provider safeguards and package contents. The package is built from the TOC so repository-only files cannot accidentally ship with the add-on.
+
+Final acceptance of protected-action behavior, taint, real drag/drop rendering, UI-scale clipping and live DBM/BigWigs/Blizzard timing still requires an in-game World of Warcraft test. Source/CI validation cannot prove those runtime behaviors by itself.

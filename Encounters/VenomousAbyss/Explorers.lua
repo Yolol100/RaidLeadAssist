@@ -1,86 +1,119 @@
 local _, ns = ...
 local Registry = ns:GetModule("Encounters.Registry")
 
-local function calls(crateAction, crateWarning, crateActionTemplate, crateWarningTemplate)
-    return {
-        {
-            key = "crates",
-            ability = "Throw Junk",
-            action = crateAction,
-            warning = crateWarning,
-            actionTemplate = crateActionTemplate,
-            warningTemplate = crateWarningTemplate,
-            voice = "Crates",
-            spellIDs = { 1291933 },
-            prepareSeconds = 6,
-            pressSeconds = 3,
-        },
-        {
-            key = "fish",
-            ability = "Final Ascension",
-            action = "Nama, then Iku, then Gebbo",
-            warning = "Fish: Nama, then Iku, then Gebbo.",
-            voice = "Fish",
-            spellIDs = { 1292779 },
-            prepareSeconds = 8,
-            pressSeconds = 5,
-        },
-        {
-            key = "thud",
-            ability = "Mighty Thud",
-            action = "Targets Star/Circle/Diamond; soakers stack",
-            warning = "Thud: targets Star/Circle/Diamond; soakers stack.",
-            voice = "Three soak points",
-            spellIDs = { 1296092 },
-            prepareSeconds = 7,
-            pressSeconds = 4,
-        },
-    }
-end
+local heroicCalls = {
+    {
+        key = "fish_gebbo",
+        ability = "Final Ascension",
+        action = "Fish now: Gebbo.",
+        warning = "Fish now: Gebbo.",
+        voice = "Fish Gebbo",
+        spellIDs = { 1292779 },
+        prepareSeconds = 8,
+        pressSeconds = 5,
+        sequenceKey = "fish",
+        sequenceKeys = { "fish_gebbo", "fish_nama", "fish_iku" },
+    },
+    {
+        key = "fish_nama",
+        ability = "Final Ascension — Nama",
+        action = "Fish now: Nama.",
+        warning = "Fish now: Nama.",
+        voice = "Fish Nama",
+        timing = false,
+        iconSpellID = 1292779,
+    },
+    {
+        key = "fish_iku",
+        ability = "Final Ascension — Iku",
+        action = "Fish now: Iku.",
+        warning = "Fish now: Iku.",
+        voice = "Fish Iku",
+        timing = false,
+        iconSpellID = 1292779,
+    },
+    {
+        key = "explosive_surprise",
+        ability = "Explosive Surprise",
+        action = "Use the mushroom for the wave.",
+        warning = "Use the mushroom for the wave.",
+        voice = "Use mushroom",
+        timing = false,
+        iconSpellID = 1297625,
+    },
+    {
+        key = "thud",
+        ability = "Mighty Thud",
+        action = "Soak the marks.",
+        warning = "Soak the marks.",
+        voice = "Soak marks",
+        spellIDs = { 1296092 },
+        prepareSeconds = 7,
+        pressSeconds = 4,
+    },
+    {
+        key = "frostfire_volley",
+        ability = "Frostfire Volley",
+        action = "Fire/Frost: spread, then clear with the opposite type.",
+        warning = "Fire/Frost: spread, then clear with the opposite type.",
+        voice = "Spread and clear opposite",
+        timing = false,
+        iconSpellID = 1295886,
+    },
+}
+
+local mythicCalls = {
+    {
+        key = "crates",
+        ability = "Throw Junk",
+        action = "Clear 15+ yards; breaker breaks crate",
+        warning = "Crate: clear 15+ yards, then break.",
+        actionTemplate = "Clear 15+ yards; {{rotation:crates}} breaks",
+        warningTemplate = "Crate: clear 15+ yards; {{rotation:crates}} break.",
+        voice = "Crates",
+        spellIDs = { 1291933 },
+        prepareSeconds = 6,
+        pressSeconds = 3,
+    },
+    {
+        key = "fish",
+        ability = "Final Ascension",
+        action = "Use planned fish order",
+        warning = "Fish: use the planned Mythic target.",
+        voice = "Fish",
+        spellIDs = { 1292779 },
+        prepareSeconds = 8,
+        pressSeconds = 5,
+    },
+    {
+        key = "thud",
+        ability = "Mighty Thud",
+        action = "Targets Star/Circle/Diamond; soakers stack",
+        warning = "Thud: targets Star/Circle/Diamond; soakers stack.",
+        voice = "Three soak points",
+        spellIDs = { 1296092 },
+        prepareSeconds = 7,
+        pressSeconds = 4,
+    },
+}
 
 Registry:Register({
     key = "explorers",
     name = "The Lost Explorers",
     encounterID = 3497,
-    strategyStatus = "12.1 Journal + current Wowhead/Raidstrats + Ready Check Pull recap + DBM/BigWigs source-reviewed 2026-08-19; player briefing split from raidleader prep; live validation pending",
+    strategyStatus = "Heroic fish order set to Gebbo → Nama → Iku with separate manual calls; Mythic crate-breaker route retained separately; exact-ID guidance is sequence-aware; PASS-LIVE pending",
     profiles = {
-        normal = {
-            explanation = {
-                "Keep all three bosses even and finish them together.",
-                "Crates appear: break them until a fish appears.",
-                "Fish order: Nama, then Iku, then Gebbo.",
-                "Feed the next fish before Final Ascension finishes.",
-                "Three players marked: go to Star, Circle and Diamond.",
-                "Soakers stack with each marked player before impact.",
-                "Frostfire circles: pair Fire with Frost and drop them together.",
-                "After they land, step into the opposite elemental patch.",
-                "Icebound Flames starts: interrupt it immediately.",
-            },
-            calls = calls(
-                "Open crates until fish appears",
-                "Crates: open them until fish appears."
-            ),
-        },
         heroic = {
-            explanation = {
-                "Keep Nama away; stack Iku and Gebbo together.",
-                "Spreading fire appears: keep it away from usable space.",
-            },
-            calls = calls(
-                "Open crates until fish appears",
-                "Crates: open them until fish appears."
-            ),
+            legacyExplanation = { "GEBBO → NAMA → IKU" },
+            explanation = { "Fish order: Gebbo → Nama → Iku." },
+            calls = heroicCalls,
         },
         mythic = {
             explanation = {
                 "Before a crate breaks, everyone else moves 15+ yards away.",
+                "Use the planned Mythic fish target and keep all three bosses controlled.",
             },
-            calls = calls(
-                "Clear 15+ yards; breaker opens",
-                "Crate: clear 15+ yards, then break.",
-                "Clear 15+ yards; {{rotation:crates}} breaks",
-                "Crate: clear 15+ yards; {{rotation:crates}} break."
-            ),
+            calls = mythicCalls,
         },
     },
 })

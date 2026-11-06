@@ -43,9 +43,6 @@ local function textAlias(module, text)
     return owner .. "|text:" .. text
 end
 
-local function validEventID(eventID)
-    return normalizeEventID(eventID) ~= nil
-end
 
 local function normalizeCounter(value)
     if Util.IsSecret(value) or not isFiniteNumber(value) then return nil end

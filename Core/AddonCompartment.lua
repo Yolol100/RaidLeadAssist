@@ -1,28 +1,17 @@
 local _, ns = ...
 
-local App = ns:GetModule("Core.App")
-local MainFrame = ns:GetModule("UI.MainFrame")
-local SettingsFrame = ns:GetModule("UI.SettingsFrame")
+local UI = ns:GetModule("UI.BossMacroManager")
 
-function RaidLeadAssist_Open(_, buttonName)
-    if buttonName == "RightButton" then
-        SettingsFrame:Open(App.activeBossKey)
-        return
-    end
-
-    if MainFrame:IsShown() then
-        MainFrame:Hide()
-    else
-        MainFrame:Show()
-    end
+function RaidLeadAssist_Open()
+    UI:Toggle()
 end
 
 function RaidLeadAssist_CompartmentEnter(_, menuButtonFrame)
     if not menuButtonFrame or not GameTooltip then return end
     GameTooltip:SetOwner(menuButtonFrame, "ANCHOR_LEFT")
-    GameTooltip:SetText("Raid Lead Assist", 0.36, 0.90, 0.58, 1)
-    GameTooltip:AddLine("Left-click: show/hide raid controls", 1, 1, 1)
-    GameTooltip:AddLine("Right-click: open settings", 0.72, 0.76, 0.72)
+    GameTooltip:SetText("Raid Lead Assist", 0.95, 0.82, 0.25, 1)
+    GameTooltip:AddLine("Open the Blizzard-style Boss Macro Manager", 1, 1, 1)
+    GameTooltip:AddLine("Create or edit boss macros, then place them on your action bar.", 0.78, 0.78, 0.78, true)
     GameTooltip:Show()
 end
 

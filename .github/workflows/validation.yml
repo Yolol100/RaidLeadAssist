@@ -1,0 +1,161 @@
+name: Validation
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validation:
+    name: validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Validate repository and runtime contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+
+          grep -q '^## Interface: 120100$' RaidLeadAssist.toc
+          grep -q '^## Version: 1.1.13$' RaidLeadAssist.toc
+          ! grep -Eq '^[^#].*/' RaidLeadAssist.toc
+          ! grep -Fqx 'UI\ScreenshotFix.lua' RaidLeadAssist.toc
+          test ! -e UI/ScreenshotFix.lua
+
+          grep -Fqx 'Services\MigrationPolishService.lua' RaidLeadAssist.toc
+          grep -Fqx 'Services\TacticsMacroService.lua' RaidLeadAssist.toc
+          grep -Fqx 'Services\ManagedMacroService.lua' RaidLeadAssist.toc
+          grep -Fqx 'Services\ActionBarOverlayService.lua' RaidLeadAssist.toc
+          grep -Fqx 'UI\RaidLeaderPolish.lua' RaidLeadAssist.toc
+          grep -Fqx 'UI\LayoutHotfix.lua' RaidLeadAssist.toc
+
+          grep -q 'CreateMacro, name, icon, body, false' Services/ManagedMacroService.lua
+          grep -q 'findGeneralByMarker' Services/ManagedMacroService.lua
+          grep -q 'findCharacterByMarker' Services/ManagedMacroService.lua
+          grep -q 'MigrateCharacterMacros' Services/ManagedMacroService.lua
+          grep -q 'managed General Macros=%d' Core/App.lua
+
+          grep -q 'local function installActionBarDrag' UI/LayoutHotfix.lua
+          grep -q 'button:SetScript("OnDragStart"' UI/LayoutHotfix.lua
+          grep -q 'selectedButton:SetScript("OnMouseDown"' UI/LayoutHotfix.lua
+          grep -q 'cursorContainsMacro' UI/LayoutHotfix.lua
+
+          grep -q 'systemRole = ROLE' Services/TacticsMacroService.lua
+          grep -q 'name = "Pull Tactics"' Services/TacticsMacroService.lua
+          grep -q 'BODY_LIMIT = 228' Services/TacticsMacroService.lua
+          grep -q 'return nil, macro' Services/TacticsMacroService.lua
+          grep -q 'deleteManagedMacro(removed)' Services/TacticsMacroService.lua
+
+          grep -q 'frame.AbilityLabel:SetPoint("RIGHT", frame.AdvancedButton, "LEFT", -10, 0)' UI/LayoutHotfix.lua
+          grep -q 'frame.SaveButton:SetPoint("TOPRIGHT", frame.Editor, "TOPRIGHT", -2, -1)' UI/LayoutHotfix.lua
+          grep -q 'mainNew:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -113, 16)' UI/LayoutHotfix.lua
+          grep -q 'mainExit:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -15, 16)' UI/LayoutHotfix.lua
+          grep -q 'apply:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -119, 14)' UI/LayoutHotfix.lua
+          grep -q 'frame.AdvancedButton:SetPoint("TOPLEFT", abilityRow, "TOPLEFT", 88, -28)' UI/LayoutHotfix.lua
+
+          grep -q 'frame.CloseButton:SetSize(18, 18)' UI/IconPicker.lua
+          grep -q 'frame.CloseButton:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 6, 0)' UI/IconPicker.lua
+          grep -q 'texture:SetSize(14, 14)' UI/IconPicker.lua
+          grep -q 'filterDropdown:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -2, -117)' UI/IconPicker.lua
+          grep -q 'button:SetSize(40, 40)' UI/IconPicker.lua
+          ! grep -q 'button:SetNormalTexture(nil)' UI/IconPicker.lua
+
+          grep -q 'secretTablePredicate = _G.issecrettable' Core/Util.lua
+          grep -q 'tableAccessPredicate = _G.canaccesstable' Core/Util.lua
+          grep -q 'not Util.CanAccessTable(result)' Services/Providers/BlizzardProvider.lua
+          grep -q 'not Util.CanAccessTable(info)' Services/Providers/BlizzardProvider.lua
+          grep -q 'HasActionableDirectBossmodTimerForCall' Services/TimelineService.lua
+          grep -q 'matching Blizzard-native event remains the authoritative fallback' Services/TimelineService.lua
+
+          grep -q 'spellIDs = { 1287426 }' Encounters/VenomousAbyss/Nekzali.lua
+          test "$(grep -Fc 'spellIDs = { 1292036, 1284103 }' Encounters/VenomousAbyss/Nekzali.lua)" -eq 2
+          test "$(grep -Fc 'warning = "Stasis: spread; find a 1+3 or 2+2 partner."' Encounters/VenomousAbyss/Sentinels.lua)" -eq 2
+          grep -q '1305902' Encounters/VenomousAbyss/Vashnik.lua
+          grep -q 'iconSpellID = 1310099' Encounters/VenomousAbyss/TwinFangs.lua
+
+          ! grep -q 'Creates managed character macros' README.md
+          grep -q 'General Macros' README.md
+          grep -q 'Dragging a macro tile is reserved for action-bar placement' README.md
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          toc = Path('RaidLeadAssist.toc').read_text(encoding='utf-8').splitlines()
+          runtime = []
+          missing = []
+          for line in toc:
+              line = line.strip()
+              if not line or line.startswith('##'):
+                  continue
+              path = Path(line.replace('\\', '/'))
+              runtime.append(path)
+              if not path.is_file():
+                  missing.append(str(path))
+          if missing:
+              raise SystemExit('Missing TOC files: ' + ', '.join(missing))
+          if len(runtime) != len(set(runtime)):
+              raise SystemExit('Duplicate runtime file in TOC')
+
+          for path in Path('Encounters/VenomousAbyss').glob('*.lua'):
+              text = path.read_text(encoding='utf-8')
+              for line in text.splitlines():
+                  visible = ('explanation' in line or 'action =' in line or 'warning =' in line)
+                  if visible and '{{' in line:
+                      raise SystemExit(f'Visible placeholder in {path}: {line.strip()}')
+                  callout = ('action =' in line or 'warning =' in line or 'actionTemplate =' in line or 'warningTemplate =' in line)
+                  if callout and re.search(r'"[A-Z0-9][A-Z0-9 _+→/—-]{6,}"', line):
+                      raise SystemExit(f'Caps callout in {path}: {line.strip()}')
+          PY
+
+      - name: Parse Lua sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq lua5.1
+          find . -type f -name '*.lua' -print0 | xargs -0 -n1 luac -p
+
+      - name: Build minimal addon ZIP
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf dist
+          mkdir -p dist/RaidLeadAssist
+          cp RaidLeadAssist.toc dist/RaidLeadAssist/RaidLeadAssist.toc
+          python3 - <<'PY'
+          from pathlib import Path
+          import shutil
+
+          target = Path('dist/RaidLeadAssist')
+          for raw in Path('RaidLeadAssist.toc').read_text(encoding='utf-8').splitlines():
+              raw = raw.strip()
+              if not raw or raw.startswith('##'):
+                  continue
+              src = Path(raw.replace('\\', '/'))
+              dst = target / src
+              dst.parent.mkdir(parents=True, exist_ok=True)
+              shutil.copy2(src, dst)
+          PY
+          test ! -e dist/RaidLeadAssist/README.md
+          test ! -e dist/RaidLeadAssist/.github
+          cd dist
+          zip -qr RaidLeadAssist-main.zip RaidLeadAssist
+
+      - name: Upload addon ZIP
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: RaidLeadAssist-main
+          path: dist/RaidLeadAssist-main.zip
+          if-no-files-found: error
+          retention-days: 30

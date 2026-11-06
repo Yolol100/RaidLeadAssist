@@ -1,120 +1,156 @@
 local _, ns = ...
 local Registry = ns:GetModule("Encounters.Registry")
 
-local function baseCalls(pyreAction, pyreWarning, pyreActionTemplate, pyreWarningTemplate)
-    local calls = {
-        {
-            key = "adds",
-            ability = "Restless Amani",
-            action = "Kill Amani before the Well",
-            warning = "Amani: kill them before the Well.",
-            voice = "Adds",
-            spellIDs = { 1295397, 1297630 },
-            prepareSeconds = 7,
-            pressSeconds = 4,
-        },
-        {
-            key = "barrage",
-            ability = "Possession Barrage",
-            action = "Clear boss-to-tank line",
-            warning = "Barrage: clear boss-to-tank line; tank runs out.",
-            voice = "Clear tank line",
-            spellIDs = { 1292036, 1284103 },
-            prepareSeconds = 7,
-            pressSeconds = 4,
-        },
-        {
-            key = "echoes",
-            ability = "Echoes of Jawae",
-            action = "Kill each Echo as it wakes",
-            warning = "Echoes: kill each one as it wakes.",
-            voice = "Echoes",
-            timing = false,
-            iconSpellID = 1289696,
-        },
-        {
-            key = "pyre",
-            ability = "Hungering Pyre",
-            action = pyreAction,
-            warning = pyreWarning,
-            actionTemplate = pyreActionTemplate,
-            warningTemplate = pyreWarningTemplate,
-            voice = "Pyre",
-            spellIDs = { 1305421, 1290679 },
-            prepareSeconds = 8,
-            pressSeconds = 5,
-        },
-    }
-    calls[#calls + 1] = {
+local heroicCalls = {
+    {
+        key = "adds",
+        ability = "Restless Amani",
+        action = "Kill adds before the Soulcoil Well",
+        warning = "Restless Amani: kill adds before the Soulcoil Well.",
+        legacyWarnings = { "KILL ADDS" },
+        voice = "Kill adds",
+        spellIDs = { 1295397, 1297630 },
+        iconSpellID = 1297630,
+        prepareSeconds = 7,
+        pressSeconds = 4,
+    },
+    {
+        key = "barrage",
+        ability = "Possession Barrage",
+        action = "Clear boss-to-tank line",
+        warning = "Barrage: clear boss-to-tank line; tank runs out.",
+        voice = "Clear tank line",
+        spellIDs = { 1292036, 1284103 },
+        prepareSeconds = 7,
+        pressSeconds = 4,
+    },
+    {
+        key = "rend",
+        ability = "Essence Rend",
+        action = "Move to the edge for dispel",
+        warning = "Essence Rend: move to the edge for dispel.",
+        legacyWarnings = { "DEBUFF — GO TO THE SIDE" },
+        voice = "Debuff side",
+        spellIDs = { 1287426 },
+        iconSpellID = 1287426,
+        prepareSeconds = 6,
+        pressSeconds = 3,
+    },
+    {
+        key = "burn_corpses",
+        ability = "Cremation",
+        legacyAbilities = { "Corpse Burn" },
+        action = "Use the flame to burn remaining corpses",
+        warning = "Cremation: burn the remaining corpses.",
+        legacyWarnings = { "BURN CORPSES" },
+        voice = "Burn corpses",
+        timing = false,
+        iconSpellID = 1289875,
+    },
+    {
+        key = "pyre",
+        ability = "Hungering Pyre",
+        action = "Melee and tanks soak on corpses",
+        warning = "Hungering Pyre: melee and tanks soak on corpses.",
+        legacyWarnings = { "MELEE + TANK — SOAK" },
+        voice = "Melee tank soak",
+        spellIDs = { 1305421 },
+        iconSpellID = 1289855,
+        prepareSeconds = 8,
+        pressSeconds = 5,
+    },
+}
+
+local mythicCalls = {
+    {
+        key = "adds",
+        ability = "Restless Amani",
+        action = "Kill Amani before the Well",
+        warning = "Restless Amani: kill them before the Well.",
+        legacyWarnings = { "Amani: kill them before the Well." },
+        voice = "Adds",
+        spellIDs = { 1295397, 1297630 },
+        iconSpellID = 1297630,
+        prepareSeconds = 7,
+        pressSeconds = 4,
+    },
+    {
+        key = "barrage",
+        ability = "Possession Barrage",
+        action = "Clear boss-to-tank line",
+        warning = "Barrage: clear boss-to-tank line; tank runs out.",
+        voice = "Clear tank line",
+        spellIDs = { 1292036, 1284103 },
+        prepareSeconds = 7,
+        pressSeconds = 4,
+    },
+    {
+        key = "grasping",
+        ability = "Grasping Depths",
+        action = "Assigned well group enters",
+        warning = "Grasping: assigned well group enter.",
+        actionTemplate = "{{rotation:well}} enter the Well",
+        warningTemplate = "Grasping: {{rotation:well}} enter; interrupt and kill Echo.",
+        voice = "Well group",
+        spellIDs = { 1293212 },
+        prepareSeconds = 8,
+        pressSeconds = 5,
+    },
+    {
+        key = "echoes",
+        ability = "Echoes of Jawae",
+        action = "Kill each Echo as it wakes",
+        warning = "Echoes: kill each one as it wakes.",
+        voice = "Echoes",
+        timing = false,
+        iconSpellID = 1289696,
+    },
+    {
+        key = "pyre",
+        ability = "Hungering Pyre",
+        action = "Assigned group soaks; everyone else out",
+        warning = "Hungering Pyre: assigned group soak; everyone else out.",
+        legacyWarnings = { "Pyre: assigned group soak; everyone else out." },
+        actionTemplate = "{{pyre_soakers}} soak; everyone else out",
+        warningTemplate = "Pyre: {{pyre_soakers}} soak; everyone else out.",
+        voice = "Pyre",
+        spellIDs = { 1305421 },
+        iconSpellID = 1289855,
+        prepareSeconds = 8,
+        pressSeconds = 5,
+    },
+    {
         key = "phase2",
         ability = "Phase 2",
-        action = "Bloodlust and burn boss",
-        warning = "Phase 2: Bloodlust and burn boss.",
+        action = "Bloodlust; burn before full energy",
+        warning = "Phase 2: Bloodlust; burn before full energy.",
         voice = "Phase two",
         timing = false,
         iconSpellID = 1299673,
-    }
-    return calls
-end
-
-local normalCalls = baseCalls(
-    "Melee soak together",
-    "Pyre: melee soak together."
-)
-local heroicCalls = baseCalls(
-    "Assigned group soaks Pyre",
-    "Pyre: assigned group soak together.",
-    "{{pyre_soakers}} soak Pyre",
-    "Pyre: {{pyre_soakers}} soak together."
-)
-local mythicCalls = baseCalls(
-    "Assigned group soaks Pyre",
-    "Pyre: assigned group soak together.",
-    "{{pyre_soakers}} soak Pyre",
-    "Pyre: {{pyre_soakers}} soak together."
-)
-table.insert(mythicCalls, 3, {
-    key = "grasping",
-    ability = "Grasping Depths",
-    action = "Assigned well group enters",
-    warning = "Grasping: assigned well group enter.",
-    actionTemplate = "{{rotation:well}} enter the Well",
-    warningTemplate = "Grasping: {{rotation:well}} enter; interrupt and kill Echo.",
-    voice = "Well group",
-    spellIDs = { 1293212 },
-    prepareSeconds = 8,
-    pressSeconds = 5,
-})
+    },
+}
 
 Registry:Register({
     key = "nekzali",
     name = "Nek'zali the Soulcoiler",
     encounterID = 3470,
-    strategyStatus = "12.1 Journal + current DBM/BigWigs source-reviewed 2026-09-02; Possession Barrage line-clear call added; live validation pending",
+    strategyStatus = "Heroic raid-lead profile refreshed against current 2026-09 guides; Mythic well/Pyre assignments retained separately; exact-ID timing only; PASS-LIVE pending",
     profiles = {
-        normal = {
-            explanation = {
-                "Possession Barrage: tank runs out; everyone else clears the boss-to-tank line so the spirits do not touch them.",
-                "Keep the Soulcoil Well clear; kill Amani before they enter.",
-                "At 50%, kill each Echo as it becomes active.",
-                "Hungering Pyre: melee stay in and soak together.",
-                "Ranged stay outside and spread for their fire circles.",
-                "Phase 2: Bloodlust and burn before full energy.",
-            },
-            calls = normalCalls,
-        },
         heroic = {
+            legacyExplanation = { "BL START" },
             explanation = {
-                "Possession Barrage: tank runs out; everyone else clears the boss-to-tank line so the spirits do not touch them.",
-                "Hungering Pyre: soak only with your assigned Pyre group.",
-                "Fire circle on you: move onto a dead Amani corpse.",
-                "Stay on the corpse until your fire explodes; keep 4+ yards from others.",
+                "Bloodlust on pull.",
+                "Essence Rend: targeted players move to the edge before the dispel.",
+                "Restless Amani: kill adds before they reach the Soulcoil Well.",
+                "Possession Barrage: tank runs out; everyone clears the boss-to-tank line.",
+                "Intermission: melee and tanks soak Hungering Pyre on add corpses.",
+                "Use Cremation flames to burn any remaining corpses.",
             },
             calls = heroicCalls,
         },
         mythic = {
             explanation = {
-                "Possession Barrage: tank runs out; everyone else clears the boss-to-tank line so the spirits do not touch them.",
+                "Possession Barrage: tank runs out; everyone clears the boss-to-tank line.",
                 "When your well group is called, enter the Soulcoil Well.",
                 "Inside: interrupt Soulcoiler's Curse and kill the Drowned Echo.",
                 "Leave after it dies; Soul Exhaustion means do not enter again.",

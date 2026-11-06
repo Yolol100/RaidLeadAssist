@@ -1,0 +1,317 @@
+local _, ns = ...
+
+local IconPicker = {
+    frame = nil,
+    provider = nil,
+    selectedIcon = 134400,
+    offset = 1,
+    pageSize = 70,
+    buttons = {},
+    callback = nil,
+    cancelCallback = nil,
+    accepted = false,
+}
+
+local FILTERS = {
+    { key = "all", label = "All Icons" },
+    { key = "spell", label = "Spell Icons" },
+    { key = "item", label = "Item Icons" },
+}
+
+local function trim(value)
+    if type(value) ~= "string" then return "" end
+    return value:match("^%s*(.-)%s*$") or ""
+end
+
+local function ensureMacroUI()
+    if C_AddOns and type(C_AddOns.LoadAddOn) == "function" then
+        pcall(C_AddOns.LoadAddOn, "Blizzard_MacroUI")
+    elseif type(LoadAddOn) == "function" then
+        pcall(LoadAddOn, "Blizzard_MacroUI")
+    end
+end
+
+local function createProvider(filterKey)
+    ensureMacroUI()
+    if not IconDataProviderMixin or not IconDataProviderExtraType then return nil end
+    local provider = CreateAndInitFromMixin(IconDataProviderMixin, IconDataProviderExtraType.Spellbook)
+    if filterKey == "spell" and IconDataProviderIconType then
+        provider:SetIconTypes({ IconDataProviderIconType.Spell })
+    elseif filterKey == "item" and IconDataProviderIconType then
+        provider:SetIconTypes({ IconDataProviderIconType.Item })
+    end
+    return provider
+end
+
+local function releaseProvider(owner)
+    if owner.provider and type(owner.provider.Release) == "function" then owner.provider:Release() end
+    owner.provider = nil
+end
+
+local function hideRegion(region)
+    if not region then return end
+    if type(region.SetTexture) == "function" then pcall(region.SetTexture, region, nil) end
+    if type(region.Hide) == "function" then region:Hide() end
+end
+
+local function removePortrait(frame)
+    if not frame then return end
+    if type(ButtonFrameTemplate_HidePortrait) == "function" then
+        pcall(ButtonFrameTemplate_HidePortrait, frame)
+    elseif type(PortraitFrameTemplate_HidePortrait) == "function" then
+        pcall(PortraitFrameTemplate_HidePortrait, frame)
+    end
+    hideRegion(frame.PortraitContainer)
+    hideRegion(frame.portrait)
+    hideRegion(frame.Portrait)
+    if frame.PortraitContainer then
+        hideRegion(frame.PortraitContainer.portrait)
+        hideRegion(frame.PortraitContainer.CircleMask)
+    end
+    if frame.TitleContainer then
+        frame.TitleContainer:ClearAllPoints()
+        frame.TitleContainer:SetPoint("TOPLEFT", frame, "TOPLEFT", 30, -1)
+        frame.TitleContainer:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -24, -1)
+    end
+    local titleText = frame.TitleContainer and frame.TitleContainer.TitleText or frame.TitleText
+    if titleText then
+        titleText:SetText("Change Name/Icon")
+    elseif type(frame.SetTitle) == "function" then
+        frame:SetTitle("Change Name/Icon")
+    end
+end
+
+function IconPicker:RefreshGrid()
+    local provider = self.provider
+    local count = provider and provider:GetNumIcons() or 0
+    local maxOffset = math.max(1, count - self.pageSize + 1)
+    self.offset = math.max(1, math.min(self.offset or 1, maxOffset))
+
+    for index = 1, #self.buttons do
+        local button = self.buttons[index]
+        local iconIndex = self.offset + index - 1
+        local icon = provider and provider:GetIconByIndex(iconIndex) or nil
+        button.iconIndex = icon and iconIndex or nil
+        button.iconValue = icon
+        button.Icon:SetTexture(icon or nil)
+        button:SetShown(icon ~= nil)
+        button.Selected:SetShown(icon ~= nil and tostring(icon) == tostring(self.selectedIcon))
+    end
+
+    if self.frame and self.frame.ScrollText then
+        if count <= self.pageSize then
+            self.frame.ScrollText:SetText("")
+        else
+            local last = math.min(count, self.offset + self.pageSize - 1)
+            self.frame.ScrollText:SetFormattedText("%d-%d / %d", self.offset, last, count)
+        end
+    end
+end
+
+function IconPicker:SetFilter(filterKey)
+    releaseProvider(self)
+    self.filterKey = filterKey or "all"
+    self.provider = createProvider(self.filterKey)
+    self.offset = 1
+    if self.frame and self.frame.FilterDropdown then
+        local label = "All Icons"
+        for _, item in ipairs(FILTERS) do if item.key == self.filterKey then label = item.label break end end
+        UIDropDownMenu_SetText(self.frame.FilterDropdown, label)
+    end
+    self:RefreshGrid()
+end
+
+function IconPicker:Scroll(delta)
+    if not self.provider then return end
+    local count = self.provider:GetNumIcons()
+    local maxOffset = math.max(1, count - self.pageSize + 1)
+    local stride = 10
+    self.offset = math.max(1, math.min(maxOffset, (self.offset or 1) - (delta * stride)))
+    self:RefreshGrid()
+end
+
+function IconPicker:Open(anchorFrame, name, icon, callback, cancelCallback)
+    self:Initialize()
+    self.callback = callback
+    self.cancelCallback = cancelCallback
+    self.accepted = false
+    self.selectedIcon = icon or 134400
+    self.frame.NameEdit:SetText(name or "")
+    self.frame.NameEdit:HighlightText()
+    self:SetFilter("all")
+
+    self.frame:ClearAllPoints()
+    if anchorFrame then
+        self.frame:SetPoint("TOPLEFT", anchorFrame, "TOPRIGHT", 6, -36)
+    else
+        self.frame:SetPoint("CENTER")
+    end
+    self.frame:Show()
+    self.frame.NameEdit:SetFocus()
+end
+
+function IconPicker:Close()
+    if self.frame then self.frame:Hide() end
+end
+
+function IconPicker:Initialize()
+    if self.frame then return end
+    ensureMacroUI()
+
+    local frame = CreateFrame("Frame", "RaidLeadAssistIconPicker", UIParent, "ButtonFrameTemplate")
+    frame:SetSize(642, 590)
+    frame:SetFrameStrata("DIALOG")
+    frame:SetClampedToScreen(true)
+    frame:Hide()
+    removePortrait(frame)
+
+    -- Final compact close control from the in-game screenshot pass. Keep the
+    -- clickable button and its artwork owned here so reopening the picker cannot
+    -- be overridden by a later layout shim.
+    if frame.CloseButton then
+        frame.CloseButton:ClearAllPoints()
+        frame.CloseButton:SetSize(18, 18)
+        frame.CloseButton:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 6, 0)
+
+        local function polishCloseTexture(texture, xOffset, yOffset)
+            if not texture then return end
+            texture:ClearAllPoints()
+            texture:SetPoint("CENTER", frame.CloseButton, "CENTER", xOffset or 0, yOffset or 0)
+            texture:SetSize(14, 14)
+        end
+
+        polishCloseTexture(frame.CloseButton:GetNormalTexture(), 1, 0)
+        polishCloseTexture(frame.CloseButton:GetPushedTexture(), 2, -1)
+        polishCloseTexture(frame.CloseButton:GetHighlightTexture(), 1, 0)
+        if type(frame.CloseButton.GetDisabledTexture) == "function" then
+            polishCloseTexture(frame.CloseButton:GetDisabledTexture(), 1, 0)
+        end
+    end
+
+    -- Icon-picker geometry is anchored directly to the picker frame. Keeping each
+    -- control independent prevents a later adjustment to one row from cascading
+    -- into neighboring controls.
+    local nameLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    nameLabel:SetPoint("TOPLEFT", frame, "TOPLEFT", 24, -48)
+    nameLabel:SetText("Enter Macro Name (Max 16 Characters):")
+
+    local nameEdit = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
+    nameEdit:SetSize(250, 28)
+    nameEdit:SetPoint("TOPLEFT", frame, "TOPLEFT", 28, -69)
+    nameEdit:SetAutoFocus(false)
+    nameEdit:SetMaxLetters(16)
+    frame.NameEdit = nameEdit
+
+    local separator = frame:CreateTexture(nil, "ARTWORK")
+    separator:SetTexture("Interface\\ClassTrainerFrame\\UI-ClassTrainer-HorizontalBar")
+    separator:SetSize(590, 16)
+    separator:SetPoint("TOP", 0, -126)
+    separator:SetTexCoord(0, 1, 0, 0.25)
+
+    local chooseLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    chooseLabel:SetPoint("TOPLEFT", frame, "TOPLEFT", 24, -126)
+    chooseLabel:SetText("Choose an Icon:")
+
+    local filterDropdown = CreateFrame("Frame", "RaidLeadAssistIconFilterDropdown", frame, "UIDropDownMenuTemplate")
+    -- UIDropDownMenuTemplate's visible right edge sits inside its nominal frame.
+    -- The small correction below aligns the visible edge with the Cancel button.
+    filterDropdown:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -2, -117)
+    UIDropDownMenu_SetWidth(filterDropdown, 150)
+    UIDropDownMenu_Initialize(filterDropdown, function(_, level)
+        if level ~= 1 then return end
+        for _, filter in ipairs(FILTERS) do
+            local info = UIDropDownMenu_CreateInfo()
+            info.text = filter.label
+            info.checked = self.filterKey == filter.key
+            info.func = function() self:SetFilter(filter.key) end
+            UIDropDownMenu_AddButton(info, level)
+        end
+    end)
+    frame.FilterDropdown = filterDropdown
+
+    local gridBackground = CreateFrame("Frame", nil, frame, "TooltipBackdropTemplate")
+    gridBackground:SetPoint("TOPLEFT", frame, "TOPLEFT", 20, -178)
+    gridBackground:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -20, 45)
+    gridBackground:EnableMouseWheel(true)
+    gridBackground:SetScript("OnMouseWheel", function(_, delta) self:Scroll(delta) end)
+
+    local columns, rows = 10, 7
+    self.pageSize = columns * rows
+    for index = 1, self.pageSize do
+        local button = CreateFrame("Button", nil, gridBackground)
+        button:SetSize(40, 40)
+        local col = (index - 1) % columns
+        local row = math.floor((index - 1) / columns)
+        -- Smaller icons keep the grid readable while preserving the same 10 x 7 page.
+        button:SetPoint("TOPLEFT", gridBackground, "TOPLEFT", 34 + (col * 55), -17 - (row * 49))
+
+        -- This button intentionally has no normal texture. Empty provider slots are
+        -- hidden in RefreshGrid, so no Quickslot frame can cover icon artwork.
+        button:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+
+        local iconTexture = button:CreateTexture(nil, "ARTWORK")
+        iconTexture:SetAllPoints(button)
+        iconTexture:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+        button.Icon = iconTexture
+
+        local selected = button:CreateTexture(nil, "OVERLAY")
+        selected:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
+        selected:SetBlendMode("ADD")
+        selected:SetPoint("CENTER", 0, 0)
+        selected:SetSize(48, 48)
+        selected:Hide()
+        button.Selected = selected
+
+        button:SetScript("OnClick", function(btn)
+            if not btn.iconValue then return end
+            self.selectedIcon = btn.iconValue
+            self:RefreshGrid()
+        end)
+        self.buttons[index] = button
+    end
+
+    local scrollText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    -- Button centers are 24 px above the bottom (12 px + half of 24 px).
+    -- Anchor the counter to that exact center and to the frame's horizontal center.
+    scrollText:SetPoint("CENTER", frame, "BOTTOM", 0, 24)
+    scrollText:SetJustifyH("CENTER")
+    frame.ScrollText = scrollText
+
+    local okay = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    okay:SetSize(90, 24)
+    -- The Cancel button ends at x=-20, matching the icon-grid right margin.
+    okay:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -118, 12)
+    okay:SetText(OKAY or "Okay")
+    okay:SetScript("OnClick", function()
+        local callback = self.callback
+        local pickedName = trim(frame.NameEdit:GetText())
+        if pickedName == "" then
+            ns:Print("Macro name cannot be empty.")
+            frame.NameEdit:SetFocus()
+            return
+        end
+        local pickedIcon = self.selectedIcon
+        self.accepted = true
+        self:Close()
+        if callback then callback(pickedName, pickedIcon) end
+    end)
+
+    local cancel = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    cancel:SetSize(90, 24)
+    cancel:SetPoint("LEFT", okay, "RIGHT", 8, 0)
+    cancel:SetText(CANCEL or "Cancel")
+    cancel:SetScript("OnClick", function() self:Close() end)
+
+    frame:SetScript("OnHide", function()
+        local cancelCallback = not self.accepted and self.cancelCallback or nil
+        releaseProvider(self)
+        self.callback = nil
+        self.cancelCallback = nil
+        self.accepted = false
+        if cancelCallback then cancelCallback() end
+    end)
+
+    self.frame = frame
+end
+
+ns:RegisterModule("UI.IconPicker", IconPicker)
